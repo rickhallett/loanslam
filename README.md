@@ -274,6 +274,7 @@ which commonly uses `1433`.
 - [Product brief](./docs/product-brief.md)
 - [Architecture & technical decisions](./docs/architecture.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
+- [Phase 0 human validation guide](./docs/phase-0-human-validation-guide.md)
 
 ## License
 
