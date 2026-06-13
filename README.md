@@ -96,9 +96,31 @@ Canonical brand throughout is **Loanslam** (`loanslam.co.uk`).
 
 ## Development
 
-Not yet scaffolded. Once the monorepo is in place, the Justfile will be the operator
-command front door (setup, local SQL Server, dev servers, tests, build). This section
-will document the concrete commands when the workspace lands.
+Application code is not yet scaffolded. The local SQL Server dependency is in
+place so backend work can start against the same persistence shape from day one.
+
+Start the local database from the repo root:
+
+```bash
+just local-db
+```
+
+This starts `loanslam-mssql`, waits for SQL Server to become healthy, creates the
+default `loanslam` database if needed, and prints the matching `DATABASE_URL`.
+
+Useful commands:
+
+```bash
+just mssql-up          # start SQL Server
+just mssql-wait        # wait for healthcheck
+just mssql-url         # print the local Prisma/app SQL Server URL
+just mssql-stop        # stop container, keep data volume
+just mssql-down        # remove container and data volume
+```
+
+Defaults live in [`.env.example`](./.env.example). The SQL Server host port
+defaults to `1434` so it can run alongside the reference `mal-ai-chat` local DB,
+which commonly uses `1433`.
 
 ## Documentation
 
