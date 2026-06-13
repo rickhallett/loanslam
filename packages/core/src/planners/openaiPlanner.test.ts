@@ -134,8 +134,8 @@ describe("OpenAI TurnPlanner config", () => {
     );
   });
 
-  it("defaults to the current GPT-5 mini-class planner model", () => {
-    expect(defaultOpenAiPlannerModel).toBe("gpt-5.4-mini");
+  it("defaults to the low-cost GPT-4o mini planner model", () => {
+    expect(defaultOpenAiPlannerModel).toBe("gpt-4o-mini");
   });
 });
 

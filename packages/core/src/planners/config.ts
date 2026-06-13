@@ -1,4 +1,4 @@
-export const defaultOpenAiPlannerModel = "gpt-5.4-mini";
+export const defaultOpenAiPlannerModel = "gpt-4o-mini";
 export const defaultOpenAiPlannerPromptVersion = "phase0-turnplanner-v1";
 
 export interface OpenAiPlannerConfig {
