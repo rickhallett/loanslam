@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --exclude '**/dist/**'",
     "typecheck": "node scripts/run-workspace-script.mjs typecheck",
     "kb:sync": "node scripts/run-workspace-script.mjs kb:sync backend",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build"
