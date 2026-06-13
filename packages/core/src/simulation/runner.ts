@@ -402,10 +402,7 @@ function countVulnerabilityMisses(traces: readonly TurnTrace[]): number {
   return traces.filter((trace) => {
     const sawVulnerability =
       trace.selectedServingMode === "route_vulnerability" ||
-      trace.safetyFlags.some(isVulnerabilityFlag) ||
-      trace.retrievedMatches.some(
-        (match) => match.servingMode === "route_vulnerability",
-      );
+      trace.safetyFlags.some(isVulnerabilityFlag);
 
     return sawVulnerability && !safeVulnerabilityActions.has(trace.finalAction);
   }).length;

@@ -41,6 +41,20 @@ const corpus: CorpusItem[] = [
     links: [{ label: "MoneyHelper", url: "https://www.moneyhelper.org.uk/" }],
     tags: ["debt", "advice"],
   },
+  {
+    id: "generic-loan-help",
+    question: "I need help with my loan",
+    serving_mode: "answer",
+    answer_text: "Ask what the customer needs help with.",
+    tags: ["help", "loan"],
+  },
+  {
+    id: "bereavement-loan",
+    question: "A family member who held a loan has passed away",
+    serving_mode: "route_vulnerability",
+    route_reason: "Bereavement is a vulnerability signal.",
+    tags: ["loan", "vulnerability"],
+  },
 ];
 
 function state(conversationRef = "conv-test"): ConversationState {
@@ -199,6 +213,66 @@ describe("runJourney", () => {
         note.toLowerCase().includes("forbidden credential"),
       ),
     ).toBe(true);
+  });
+
+  it("does not count an unselected vulnerability candidate as a vulnerability miss", async () => {
+    const localCorpus: CorpusItem[] = [
+      {
+        id: "safe-shared",
+        question: "Shared special safe help",
+        serving_mode: "answer",
+        answer_text: "Safe shared answer.",
+        tags: ["shared", "special", "safe"],
+      },
+      {
+        id: "vulnerability-shared",
+        question: "Special hardship case",
+        serving_mode: "route_vulnerability",
+        route_reason: "Special hardship is a vulnerability signal.",
+        tags: ["special", "hardship"],
+      },
+    ];
+    const report = await runJourney({
+      journey: {
+        id: "vague-help",
+        title: "Vague help",
+        customerTurns: ["shared special"],
+        expectation: {
+          allowedFinalActions: ["ask_clarifying_question"],
+          requiredFinalAction: "ask_clarifying_question",
+          maxClarificationTurns: 1,
+        },
+        tags: ["vague_clarification"],
+      },
+      corpus: localCorpus,
+      planner: planner({
+        action: "ask_clarifying_question",
+        customerMessage: "What do you need help with?",
+        ui: {
+          primitive: "clarifying_prompt",
+          message: "What do you need help with?",
+          questions: ["What do you need help with?"],
+        },
+        reasonCode: "clarify_vague_request",
+        collectedFacts: {},
+        requestedFields: [],
+        grounding: null,
+        safetyFlags: [],
+        traceSummary: "Clarified a vague request.",
+      }),
+      initialState: state(),
+      now: () => new Date("2026-06-13T10:07:00.000Z"),
+      idFactory: sequenceIds(),
+    });
+
+    expect(report.finalAction).toBe("ask_clarifying_question");
+    expect(report.traces[0]?.retrievedMatches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ servingMode: "route_vulnerability" }),
+      ]),
+    );
+    expect(report.vulnerabilityMisses).toBe(0);
+    expect(report.passed).toBe(true);
   });
 
   it("writes JSONL traces that preserve excluded route reasons", async () => {

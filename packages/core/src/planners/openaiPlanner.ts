@@ -189,10 +189,15 @@ function normalizeUiPlan(ui: unknown): unknown {
   }
 
   if (ui.primitive === "clarifying_prompt") {
+    const questions =
+      Array.isArray(ui.questions) && ui.questions.length > 0
+        ? ui.questions
+        : [String(ui.message ?? "")];
+
     return {
       primitive: ui.primitive,
       message: ui.message,
-      questions: ui.questions,
+      questions,
     };
   }
 
@@ -200,7 +205,7 @@ function normalizeUiPlan(ui: unknown): unknown {
     return {
       primitive: ui.primitive,
       message: ui.message,
-      choices: ui.choices,
+      choices: Array.isArray(ui.choices) ? ui.choices.slice(0, 6) : ui.choices,
     };
   }
 

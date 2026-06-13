@@ -82,6 +82,19 @@ describe("lexical retrieval", () => {
     expect(match.itemId).not.toBe("lost-job-or-redundancy");
   });
 
+  it("does not route vague generic help language from stop-word noise", () => {
+    for (const query of [
+      "I got a message and I do not know what I am meant to do.",
+      "Need help",
+      "I need help with my loan",
+    ]) {
+      const [match] = retrieveMatches(query, corpus);
+
+      expect(match?.servingMode).not.toBe("route_vulnerability");
+      expect(match?.servingMode).not.toBe("handoff_account_specific");
+    }
+  });
+
   it("uses deterministic item id ordering for tied scores", () => {
     const tiedItems: CorpusItem[] = [
       {

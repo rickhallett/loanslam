@@ -167,6 +167,17 @@ describe("TurnPlanner prompt", () => {
     expect(prompt.system).toContain("hardship");
     expect(prompt.system).toContain("excluded means refuse");
   });
+
+  it("directs vague low-risk requests to concise clarification", () => {
+    const prompt = buildTurnPlannerPrompt(plannerInput);
+
+    expect(prompt.system).toContain("vague, low-risk");
+    expect(prompt.system).toContain("clarifying_prompt");
+    expect(prompt.system).toContain(
+      "Do not use choice_list for vague low-risk requests",
+    );
+    expect(prompt.system).toContain("at most six choices");
+  });
 });
 
 describe("OpenAiTurnPlanner", () => {
@@ -236,5 +247,90 @@ describe("OpenAiTurnPlanner", () => {
     expect(
       turnPlanSchema.safeParse({ ...validPlan, action: "refund" }).success,
     ).toBe(false);
+  });
+
+  it("normalizes oversized choice lists to the allowed UI limit", async () => {
+    const choices = Array.from({ length: 7 }, (_, index) => ({
+      id: `choice-${index + 1}`,
+      label: `Choice ${index + 1}`,
+    }));
+    const parse = vi
+      .fn<OpenAiPlannerClient["responses"]["parse"]>()
+      .mockResolvedValue({
+        output_parsed: {
+          ...validPlan,
+          action: "ask_clarifying_question",
+          customerMessage: "What do you need help with?",
+          ui: {
+            primitive: "choice_list",
+            message: "What do you need help with?",
+            links: [],
+            questions: [],
+            choices,
+            fields: [],
+            reference: null,
+          },
+          grounding: null,
+        },
+      });
+    const client: OpenAiPlannerClient = { responses: { parse } };
+    const planner = new OpenAiTurnPlanner({
+      client,
+      config: {
+        provider: "openai",
+        apiKey: "test-key",
+        model: "gpt-test-model",
+        promptVersion: "phase0-test-prompt",
+      },
+    });
+
+    const result = await planner.planTurn(plannerInput);
+
+    expect(result.action).toBe("ask_clarifying_question");
+    expect(result.ui).toMatchObject({
+      primitive: "choice_list",
+      choices: choices.slice(0, 6),
+    });
+  });
+
+  it("normalizes an empty clarifying questions array from the message", async () => {
+    const parse = vi
+      .fn<OpenAiPlannerClient["responses"]["parse"]>()
+      .mockResolvedValue({
+        output_parsed: {
+          ...validPlan,
+          action: "ask_clarifying_question",
+          customerMessage: "What do you need help with?",
+          ui: {
+            primitive: "clarifying_prompt",
+            message: "What do you need help with?",
+            links: [],
+            questions: [],
+            choices: [],
+            fields: [],
+            reference: null,
+          },
+          grounding: null,
+        },
+      });
+    const client: OpenAiPlannerClient = { responses: { parse } };
+    const planner = new OpenAiTurnPlanner({
+      client,
+      config: {
+        provider: "openai",
+        apiKey: "test-key",
+        model: "gpt-test-model",
+        promptVersion: "phase0-test-prompt",
+      },
+    });
+
+    const result = await planner.planTurn(plannerInput);
+
+    expect(result.action).toBe("ask_clarifying_question");
+    expect(result.ui).toEqual({
+      primitive: "clarifying_prompt",
+      message: "What do you need help with?",
+      questions: ["What do you need help with?"],
+    });
   });
 });
