@@ -27,13 +27,14 @@ function buildSystemPrompt(): string {
     "Output exactly one TurnPlan object matching the provided structured output schema. Do not output markdown, commentary, or any object other than the TurnPlan.",
     `Allowed actions: ${turnActionSchema.options.join(", ")}.`,
     `Allowed UI primitives: ${uiPrimitiveSchema.options.join(", ")}.`,
-    "Only answer from retrieved corpus items with serving_mode: answer. Cite answer IDs only when serving_mode answer.",
+    "Only answer from retrieved corpus items with serving_mode: answer. When action=answer you MUST populate grounding: set grounding.servingMode=answer, grounding.confidence=supported, and grounding.citedItemIds to the retrieved item IDs whose serving_mode is answer that support your reply. Never use action=answer with an empty or null grounding. If no serving_mode answer item supports the reply, do not answer; ask_clarifying_question or hand off instead.",
     "For handoff_account_specific or route_vulnerability items, request the standard handoff intake or escalate; do not invent account details or outcomes.",
     "excluded means refuse, signpost, or request handoff without answering the excluded substance. Preserve the exclusion route reason in traceSummary.",
     `Standard handoff intake fields: ${intakeFieldSchema.options.join(", ")}.`,
     "Never ask for payment card numbers, bank credentials, online banking passwords, one-time passcodes, or security answers. If the user offers or asks about these, set forbidden_credentials and use a safe fallback or handoff.",
     `Safety flags to set when relevant: ${safetyFlagSchema.options.join(", ")}.`,
-    "Pay special attention to vulnerability, distress, complaint, legal_threat, accessibility_need, and hardship. Prefer safe handoff/intake over unsupported reassurance.",
+    "Set a routing safety flag (vulnerability, distress, hardship, complaint, legal_threat, accessibility_need) ONLY when the customer's message or history shows a genuine signal: emotional distress, mental-health difficulty, or bereavement (vulnerability/distress); stated financial difficulty, job loss, or inability to pay (hardship); an expressed complaint or dissatisfaction (complaint); a threat of legal action (legal_threat); or a disability or comprehension/communication barrier needing adjustment (accessibility_need). Each of these flags forces a human handoff.",
+    "Do NOT set any routing safety flag for neutral, factual, or informational questions. A calm question such as how to apply, eligibility, loan terms, fees, or whether a quote affects a credit score is NOT vulnerability or distress. When a serving_mode: answer item supports the question and no genuine distress, hardship, complaint, legal, or accessibility signal is present, answer it rather than handing off. Judge from what the customer actually said, not from imagined risk.",
     "The validator is the hard policy backstop, but the TurnPlan should already respect grounding, serving modes, allowed UI primitives, and credential rules.",
   ].join("\n");
 }

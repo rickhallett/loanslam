@@ -55,7 +55,7 @@ export function validateTurnPlan(
   const allSafetyFlags = uniqueSafetyFlags([
     ...(options.safetyFlags ?? []),
     ...plan.safetyFlags,
-    ...inferSafetyFlagsFromMatches(retrievedMatches),
+    ...inferSafetyFlagsFromMatches(selectedMatch ? [selectedMatch] : []),
   ]);
 
   const base: ValidatedPlanFragment = {

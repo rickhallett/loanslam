@@ -159,7 +159,7 @@ describe("validateTurnPlan", () => {
   it("overrides vulnerability matches and safety flags before normal answers", () => {
     const byRetrieval = validateTurnPlan(
       plan(),
-      [answerMatch, vulnerabilityMatch],
+      [vulnerabilityMatch, answerMatch],
       {},
     );
     const byFlag = validateTurnPlan(
@@ -179,6 +179,23 @@ describe("validateTurnPlan", () => {
         }),
       );
     }
+  });
+
+  it("does not route to handoff when a vulnerability item is only a lower-ranked retrieval candidate", () => {
+    // A calm, answerable question whose top/cited match is an answer item must not
+    // inherit a vulnerability route from an unrelated vulnerability item swept into
+    // the broad retrieval candidate set. Vulnerability routes only when it is the
+    // selected/top match or the planner sets a genuine vulnerability-family flag.
+    const result = validateTurnPlan(
+      plan(),
+      [answerMatch, vulnerabilityMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.selectedServingMode).toBe("answer");
+    expect(result.validatorOverrides).toEqual([]);
+    expect(result.safetyFlags).not.toContain("vulnerability");
   });
 
   it("overrides forbidden credential requests and never requests forbidden fields", () => {
