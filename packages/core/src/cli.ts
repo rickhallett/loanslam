@@ -192,10 +192,19 @@ function helpText(): string {
   ].join("\n");
 }
 
+function ignoreBrokenPipe(error: NodeJS.ErrnoException): void {
+  if (error.code !== "EPIPE") {
+    throw error;
+  }
+}
+
 if (
   process.argv[1]?.endsWith("cli.ts") ||
   process.argv[1]?.endsWith("cli.js")
 ) {
+  process.stdout.on("error", ignoreBrokenPipe);
+  process.stderr.on("error", ignoreBrokenPipe);
+
   const result = await runCli();
 
   if (result.stdout) {

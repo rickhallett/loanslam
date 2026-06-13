@@ -21,15 +21,15 @@ format-check:
 
 # Run one local TurnPlanner turn through the Phase 0 CLI.
 core-turn *args:
-    npm run core:turn -- {{args}}
+    @npm --silent run core:turn -- {{args}}
 
 # Run the Phase 0 journey simulation.
 core-simulate *args:
-    npm run core:simulate -- {{args}}
+    @npm --silent run core:simulate -- {{args}}
 
 # Compare configured Phase 0 planner models.
 core-compare *args:
-    npm run core:compare -- {{args}}
+    @npm --silent run core:compare -- {{args}}
 
 # Start the local SQL Server container.
 mssql-up:
