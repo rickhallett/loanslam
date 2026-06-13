@@ -1,0 +1,162 @@
+# Dev Decision Ledger
+#
+# Binding development decisions for this repo, with their rationale and — most
+# importantly — *where the risk and the insurance actually sit*, in terms
+# specific enough that a future agent inherits an accurate mental model rather
+# than a vague "we decided X".
+#
+# Rules for agents:
+#   - APPEND-ONLY. Never edit or delete a past entry's substance. To change a
+#     decision, add a new entry and set the old one's `status: superseded` with
+#     `superseded_by: <new id>`.
+#   - One entry per decision. Newest entries go last. IDs are `DD-NNNN`.
+#   - `status`: proposed | accepted | superseded | reversed.
+#   - Keep `insurance` (what is stable) and `risk` (what is volatile) concrete:
+#     name the file, the brief section, the layer. Future agents act on these.
+#   - This file is referenced from AGENTS.md (CLAUDE.md is a symlink to it).
+
+meta:
+  referenced_by: AGENTS.md  # CLAUDE.md -> AGENTS.md (symlink)
+  related_docs:
+    - docs/prd-journey-modelling.md
+    - docs/product-brief.md
+    - docs/architecture.md
+
+entries:
+  - id: DD-0001
+    date: 2026-06-13
+    title: >-
+      Seed the journey model on the synthetic KB now, rather than blocking on
+      the real call-centre corpus.
+    status: accepted
+    owner: Rick Hallett
+    decision: >-
+      Build the journey taxonomy, slot schemas, state x interrupt matrix, and
+      eval harness from docs/prd-journey-modelling.md against the synthetic KB
+      (backend/data/loanslam-synthetic-kb.json) as the interim seed. Do not wait
+      for the real operationalised corpus before locking the Phase 0 contract
+      spine (taxonomy, slot schemas, extract/signal types, conversation-state
+      shape, matrix axes, reason codes, invariants).
+
+    context: >-
+      The PRD's open question (sec 10) and risk (sec 9) ask whether to model
+      journeys on synthetic data now or hold for the real corpus. The choice
+      hinges on how much the model would have to change once real transcripts
+      arrive.
+
+    rationale: >-
+      The volatile part of the model is ADDITIVE. Real data extends the spec
+      (add matrix rows, re-rank cells) rather than invalidating the engine, the
+      slot framework, the invariants, or the state machine. Roughly 1 of ~7
+      artifacts moves materially, and within it only a bounded region. Seeding
+      early is therefore cheap insurance, not wasted work.
+
+    evidence:
+      - >-
+        Synthetic KB is 60 items with EXACTLY ONE item per intent -> a curated
+        enumeration, not a frequency-weighted sample of real traffic.
+      - >-
+        serving_mode split across the 60 items: 27 answer / 15
+        handoff_account_specific / 12 route_vulnerability / 6 excluded.
+      - >-
+        product-brief.md sec 12: the source sample is COLLECTIONS-ONLY (existing
+        applicants / borrowers) and explicitly "under-represents the
+        prospective-customer and general-public traffic the widget will also see".
+      - >-
+        Intent scan confirms it: account-balance, settlement-figure, arrears,
+        missed-payment, direct-debit, bereavement, plus product FAQ. Almost no
+        top-of-funnel / pre-application "shopping around" journey shape.
+
+    # Where the cheap insurance is: layers that barely move regardless of real
+    # data, because they are pinned by regulation or generic dialogue mechanics
+    # rather than by the corpus. Build on these with confidence.
+    insurance:
+      - layer: slot_schemas
+        volatility: near-zero (structural)
+        why: >-
+          The handoff PII set is regulatorily CLOSED -- name, DOB, address,
+          phone, email, situational context; never card / sort code / account
+          (brief sec 16, sec 2). Real transcripts cannot add a new PII slot
+          without breaking the boundary. Only elicitation phrasing and
+          required-vs-optional tuning move.
+      - layer: dispositions_and_serving_mode_axis
+        volatility: zero
+        why: >-
+          answer | handoff | vulnerability | refuse derive from the product
+          boundary (brief sec 4, sec 16), not corpus frequency. Of the six seed
+          categories, only #1 is "answer"; the rest are handoff/vulnerability
+          until loan integration lands -- a policy decision, not an empirical one.
+      - layer: invariants
+        volatility: zero
+        why: PRD sec 4.4 safety rules are independent of any corpus.
+      - layer: state_machine_shape
+        volatility: near-zero
+        why: >-
+          greeting / clarifying_intent / collecting_slot / confirming /
+          handed_off / answered / escalated are generic dialogue states, not
+          loan-specific.
+      - layer: interrupt_columns
+        volatility: low
+        why: >-
+          PRD sec 4.3 X-axis is universal conversational failure modes. Expect
+          +1-3 columns at most from real data (e.g. third-party-acting-on-behalf,
+          bereavement-as-interrupt), on a stable spine.
+
+    # Where the volatility is: concentrated, named, and bounded so it can be
+    # managed instead of feared.
+    risk:
+      - layer: journey_goal_axis_coverage
+        volatility: HIGH
+        detail: >-
+          The prospective-customer + general-public journey family is
+          essentially ABSENT from the seed and may need a whole new band of
+          matrix rows that the collections-only sample cannot inform at all.
+          Awkwardly, that band skews toward "answer" disposition -- exactly where
+          conversational collection drives the bot's deflection value
+          (brief sec 12, PRD sec 9).
+      - layer: goal_granularity_and_weighting
+        volatility: moderate-high
+        detail: >-
+          The one-item-per-intent KB will fragment under real data (e.g.
+          "payment issues" resolves into several distinct journeys with different
+          slot needs) and re-weight hard (collections dominates real inbound; the
+          seed is uniform). This re-ranks which matrix cells are launch-critical
+          (PRD sec 10) without changing the engine.
+      - layer: net_assessment
+        volatility: bounded
+        detail: >-
+          ~1 of ~7 artifacts moves materially, and within it only the
+          top-of-funnel region. The architecture is corpus-stable; the content
+          is corpus-volatile.
+
+    # How to keep the shift additive. Violating these turns a cheap re-rank into
+    # an expensive rewrite.
+    guardrails:
+      - >-
+        Do NOT over-fit slot schemas or required/optional sets to collections
+        journeys. Keep slots goal-agnostic so adding the prospective band is
+        purely additive.
+      - >-
+        Stub the prospective / general-public band as an explicitly DECLARED GAP
+        (known-unmodelled), NOT a covered matrix cell. Eval coverage must not
+        read green for a region that has never seen real or even synthetic data.
+      - >-
+        Eval simulated-user fuzzing may pre-populate plausible top-of-funnel
+        journeys to get the FRAME, but treat their weights as unknown. Only real
+        data supplies the true weights and the missing band.
+
+    revisit_when: >-
+      The real operationalised corpus or live-trial transcripts arrive
+      (PRD sec 9). Then: re-rank matrix cells by real contact volume; add the
+      prospective / general-public journey band as first-class rows; and re-open
+      this decision if slot schemas turn out to need goal-specific fields.
+
+    references:
+      - docs/prd-journey-modelling.md (sec 4, sec 9, sec 10)
+      - docs/product-brief.md (sec 2, sec 4, sec 12, sec 16)
+      - backend/data/loanslam-synthetic-kb.json
+      - contracts/src/kb.ts
+      - backend/src/config/kb.ts
+
+    supersedes: null
+    superseded_by: null
