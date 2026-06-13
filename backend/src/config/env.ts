@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { config } from 'dotenv';
 import { z } from 'zod';
 
-config({ path: resolve(import.meta.dirname, '../../../.env') });
-config({ path: resolve(import.meta.dirname, '../../.env') });
+config({ path: resolve(import.meta.dirname, '../../../.env'), quiet: true });
+config({ path: resolve(import.meta.dirname, '../../.env'), quiet: true });
 
 const optionalNonEmptyString = z.preprocess(
   (value) => (value === '' ? undefined : value),

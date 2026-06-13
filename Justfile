@@ -16,7 +16,7 @@ dev-widget:
     npm run dev:widget
 
 kb-sync:
-    npm run kb:sync
+    @npm --silent run kb:sync -w backend
 
 # Start the local SQL Server container.
 mssql-up:

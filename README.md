@@ -6,10 +6,10 @@ business-operations questions, detects vulnerability and escalation signals earl
 and routes anything account-specific to the human support team — it does not service
 accounts itself.
 
-> **Status: pre-implementation.** This repository currently holds the product brief,
-> architecture decisions, and a synthetic knowledge-base corpus. Application code
-> (backend, widget, contracts) is not yet scaffolded. Treat the documents in `docs/`
-> as the source of truth for scope and design.
+> **Status: implementation in progress.** The shared contracts, SQL Server
+> persistence, backend chat API, and OpenAI provider boundaries are scaffolded. The
+> widget is still pending. Treat the documents in `docs/` as the source of truth for
+> scope and design.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). The repository must not be copied, modified, repurposed, or
@@ -96,8 +96,8 @@ Canonical brand throughout is **Loanslam** (`loanslam.co.uk`).
 
 ## Development
 
-Application code is not yet scaffolded. The local SQL Server dependency is in
-place so backend work can start against the same persistence shape from day one.
+The local SQL Server dependency is in place so backend work can run against the
+same persistence shape from day one.
 
 Start the local database from the repo root:
 
@@ -111,6 +111,8 @@ default `loanslam` database if needed, and prints the matching `DATABASE_URL`.
 Useful commands:
 
 ```bash
+just install           # install npm workspace dependencies
+just verify            # run format, lint, typecheck, tests, and build
 just mssql-up          # start SQL Server
 just mssql-wait        # wait for healthcheck
 just mssql-url         # print the local Prisma/app SQL Server URL
@@ -121,6 +123,30 @@ just mssql-down        # remove container and data volume
 Defaults live in [`.env.example`](./.env.example). The SQL Server host port
 defaults to `1434` so it can run alongside the reference `mal-ai-chat` local DB,
 which commonly uses `1433`.
+
+## Provider Setup
+
+Configure the real OpenAI retrieval path before using the backend outside tests:
+
+```bash
+npm install
+cp .env.example .env
+just kb-sync
+# paste the printed OPENAI_VECTOR_STORE_ID into .env
+just verify
+```
+
+`just kb-sync` reads `data/public-info/loanslam-synthetic-kb.json`, creates or
+updates the OpenAI vector store named by `OPENAI_VECTOR_STORE_NAME`, uploads a
+generated Markdown knowledge-base file, and prints only:
+
+```text
+OPENAI_VECTOR_STORE_ID=<id>
+```
+
+The external ticket webhook contract is still pending. Until that contract is
+supplied, local handoff references are audit records; when `TICKET_WEBHOOK_URL` is
+configured, the backend posts a conservative signed envelope from the adapter.
 
 ## Documentation
 
