@@ -4,6 +4,7 @@ import {
   chatTurnResponseSchema,
   kbItemSchema,
   messageRequestSchema,
+  reasonCodeSchema,
   replySchema,
   serviceResponseSchema,
   servingModeSchema,
@@ -89,6 +90,33 @@ describe('request + audit schemas', () => {
     });
     expect(ev.reasonCode).toBeNull();
     expect(ev.payload).toEqual({});
+  });
+
+  it('accepts the slot-collection reason codes (journey modelling)', () => {
+    for (const code of [
+      'slot_asked',
+      'slot_filled',
+      'slot_corrected',
+      'slot_refused',
+      'collection_confirmed',
+      'budget_exhausted',
+    ]) {
+      expect(reasonCodeSchema.parse(code)).toBe(code);
+    }
+  });
+
+  it('accepts the extraction and collection-step audit event types', () => {
+    for (const type of ['extraction', 'collection_step']) {
+      const ev = auditEventSchema.parse({
+        id: 'evt_1',
+        conversationRef: 'conv_1',
+        requestRef: 'req_1',
+        type,
+        ts: '2026-06-13T00:00:00.000Z',
+        policyVersion: 'poc',
+      });
+      expect(ev.type).toBe(type);
+    }
   });
 
   it('round-trips a chat turn response', () => {

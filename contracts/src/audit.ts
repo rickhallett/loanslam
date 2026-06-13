@@ -19,6 +19,8 @@ export const auditEventTypeSchema = z.enum([
   'ticket_created', // handoff ticket pushed to the webhook adapter
   'intake_submitted', // a handoff form was submitted
   'conversation_reset',
+  'extraction', // structured slot/signal extraction result (journey modelling)
+  'collection_step', // a slot-filling step (asked / filled / corrected / refused)
   'failure', // any failure path (unsafe, fallback error, ticket error)
 ]);
 export type AuditEventType = z.infer<typeof auditEventTypeSchema>;
@@ -40,6 +42,13 @@ export const reasonCodeSchema = z.enum([
   'model_error_failclosed', // gate/model errored -> treated as vulnerability
   'rate_limited',
   'intake_complete', // handoff details collected
+  // ── Slot-filling collection (PRD §4.2, §5) ──────────────────────────────────
+  'slot_asked', // asked the customer for the next missing slot
+  'slot_filled', // accepted one or more slot values this turn
+  'slot_corrected', // customer corrected an earlier slot value
+  'slot_refused', // customer declined to provide a requested slot
+  'collection_confirmed', // customer confirmed the collected set (confidence gate)
+  'budget_exhausted', // clarification/turn budget hit -> escalate to a human
 ]);
 export type ReasonCode = z.infer<typeof reasonCodeSchema>;
 
