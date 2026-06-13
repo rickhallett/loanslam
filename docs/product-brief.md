@@ -14,6 +14,12 @@
 > The technology stack and architectural decisions live in `docs/architecture.md`
 > (session/cookie strategy, fail-closed vulnerability gate, grounding-adapter
 > contract, and the conventions emulated from the senior developer's reference repo).
+>
+> Delivery update: the original all-layer delivery sequence in §14 is superseded
+> for current implementation by `docs/llm-turn-planner-architecture.md`. Phase 0
+> proves the TurnPlanner engine, retrieval, policy/grounding validation, trace
+> evidence, journey simulation, and model comparison before the widget, deployment,
+> production audit store, real PII intake, or ticket webhook are built.
 
 ## 1. Product Aim
 
@@ -303,6 +309,11 @@ Before live customer traffic, the business must decide:
 - data-processing position for the model provider
 
 ## 14. Delivery Slices
+
+> Superseded for current implementation. Use the Phase 0 engine-proof sequence in
+> `docs/llm-turn-planner-architecture.md` first. Resume these all-layer product
+> slices only after the TurnPlanner exit gate has produced enough evidence to
+> productise the engine.
 
 Delivered as narrow vertical slices. Because deployment is a hard pass/fail gate, a deployable walking skeleton on AWS comes early, not last.
 

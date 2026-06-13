@@ -6,11 +6,16 @@ Technology stack and architectural conventions for the chat-widget MVP. The stac
 
 A TypeScript npm-workspace monorepo: a Vue 3 iframe widget, an Express 5 API, shared Zod contracts, SQL Server persistence via Prisma, and optional cloud AI/RAG adapters behind runtime switches.
 
+Current implementation starts with the Phase 0 TurnPlanner engine proof in
+`docs/llm-turn-planner-architecture.md`. The stack below remains the eventual
+productisation target after the engine, journey simulation suite, and model
+comparison harness have proved the core behaviour.
+
 - **Monorepo:** npm workspaces — `backend`, `widget`, `contracts`. TypeScript ES modules throughout. Justfile is the operator command front door.
 - **Widget:** Vue 3 iframe widget built with Vite. Uses shared contract schemas. Credentialed fetch with session cookies and CSRF headers. Intentionally thin: rendering, transport, local interaction state only.
 - **Contracts:** Zod schemas define request/response contracts; export chat response states and the `ServiceResponse` envelope; shared by backend and widget to keep wire behaviour aligned.
 - **API:** Node 24, Express 5, TypeScript. Middleware: Helmet, CORS, cookie parsing, JSON body parsing, pino HTTP logging. OpenAPI generated from route-local Zod registration. Endpoints: health, session create, message turn, identity intake, reset.
-- **Domain:** `ChatService` owns the fail-closed message pipeline: vulnerability gate -> classifier -> router -> response generation.
+- **Domain:** `ChatService` owns the fail-closed turn pipeline: conversation context -> retrieval -> constrained LLM turn planner -> policy/grounding validator -> audited response or handoff. Phase 0 implements this as a local engine and trace harness before the production API/widget/deployment layers.
 - **Persistence:** SQL Server via Prisma 7 (MSSQL adapter): sessions, transcript entries, client-message idempotency, audit events, UAT/evidence rows. Dockerized SQL Server for local dev and scratch verification.
 - **AI/RAG:** real API mode uses a managed knowledge-base retrieval path for grounded answers; classifier and vulnerability checks can switch to managed model services when enabled. All behind runtime switches.
 - **Infra:** backend builds into a Node 24 Alpine container; OpenTofu describes dev deployment. Shape: container registry -> managed container service -> managed SQL Server -> private static asset buckets behind CDN. Secrets and AI/RAG access injected via environment/config, never hardcoded.

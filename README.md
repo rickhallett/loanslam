@@ -7,9 +7,10 @@ and routes anything account-specific to the human support team — it does not s
 accounts itself.
 
 > **Status: pre-implementation.** This repository currently holds the product brief,
-> architecture decisions, and a synthetic knowledge-base corpus. Application code
-> (backend, widget, contracts) is not yet scaffolded. Treat the documents in `docs/`
-> as the source of truth for scope and design.
+> architecture decisions, a TurnPlanner engine-first companion architecture, and a
+> synthetic knowledge-base corpus. Application code (backend, widget, contracts) is
+> not yet scaffolded. Treat the documents in `docs/` as the source of truth for
+> scope and design.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). The repository must not be copied, modified, repurposed, or
@@ -21,6 +22,12 @@ A conversational front line that works alongside the existing support team. It i
 designed to be live and deployed on AWS within a fixed 30-day MVP window, run for a
 trial period, and have its performance measured. The trial is exploratory; no
 success-rate target is set.
+
+The current implementation priority is **Phase 0: TurnPlanner engine proof**. Build
+the core processing engine, retrieval, policy/grounding validator, local trace
+evidence, journey simulation suite, and model comparison harness before building the
+widget, AWS deployment, production audit store, real PII intake, or ticket webhook.
+See [`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
 
 Core behaviour:
 
@@ -50,6 +57,7 @@ The full set lives in [`docs/product-brief.md`](./docs/product-brief.md) §16.
 docs/                              Source-of-truth design documents
   product-brief.md                 Product scope, journeys, requirements, release rules
   architecture.md                  Stack and architectural decisions
+  llm-turn-planner-architecture.md Current Phase 0 engine-first direction
 data/
   public-info/
     loan-slam-faq.json             Mock public FAQ corpus
@@ -60,14 +68,17 @@ data/
 
 ## Planned architecture
 
-A TypeScript npm-workspace monorepo. Full detail and rationale in
-[`docs/architecture.md`](./docs/architecture.md).
+The eventual product remains a TypeScript npm-workspace monorepo. Full stack detail
+and rationale live in [`docs/architecture.md`](./docs/architecture.md). The first
+implementation phase is narrower: prove the TurnPlanner engine described in
+[`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
 
 - **Widget:** Vue 3 iframe widget (Vite), thin — rendering and transport only.
 - **API:** Node 24, Express 5, TypeScript; Helmet/CORS/CSRF; route-local OpenAPI.
 - **Contracts:** shared Zod schemas and the `ServiceResponse` envelope.
-- **Domain:** `ChatService` fail-closed pipeline — vulnerability gate → classifier →
-  router → response generation.
+- **Domain:** `ChatService` fail-closed turn pipeline — conversation context →
+  retrieval → constrained LLM turn planner → policy/grounding validator → audited
+  response or handoff.
 - **Persistence:** SQL Server via Prisma (sessions, transcripts, audit, evidence).
 - **AI / retrieval:** managed knowledge-base retrieval and model-backed checks behind
   runtime switches.
@@ -126,6 +137,7 @@ which commonly uses `1433`.
 
 - [Product brief](./docs/product-brief.md)
 - [Architecture & technical decisions](./docs/architecture.md)
+- [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
 
 ## License
 
