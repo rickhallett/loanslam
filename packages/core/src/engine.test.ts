@@ -199,4 +199,95 @@ describe("processTurn", () => {
     });
     expect(result.customerMessage).not.toContain("GBP 425");
   });
+
+  it("fails closed when the planner throws before returning a valid plan", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("Too big: expected array to have <=6 items");
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I need help with my loan",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:10:00.000Z"),
+      idFactory: idFactory(),
+      journeyId: "vague-clarification",
+      turnIndex: 0,
+    });
+
+    expect(result.finalAction).toBe("fallback");
+    expect(result.ui.message).not.toContain("Too big");
+    expect(result.ui.message).not.toContain("planner");
+    expect(result.plan).toMatchObject({
+      action: "fallback",
+      reasonCode: "planner_malformed_output",
+      grounding: null,
+    });
+    expect(result.validatorOverrides).toEqual([
+      expect.objectContaining({
+        code: "malformed_plan",
+        reason: expect.stringContaining("Too big"),
+        toAction: "fallback",
+      }),
+    ]);
+    expect(result.trace).toMatchObject({
+      journeyId: "vague-clarification",
+      proposedAction: "fallback",
+      finalAction: "fallback",
+      validatorOverrides: [
+        expect.objectContaining({
+          code: "malformed_plan",
+          toAction: "fallback",
+        }),
+      ],
+    });
+    expect(result.state.history).toEqual([
+      expect.objectContaining({
+        id: "inbound-1",
+        role: "customer",
+        content: "I need help with my loan",
+      }),
+      expect.objectContaining({
+        id: "outbound-1",
+        role: "assistant",
+        content: result.customerMessage,
+      }),
+    ]);
+  });
+
+  it("does not classify post-planner validation errors as malformed planner output", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "not_allowed",
+          customerMessage: "Invalid action.",
+          ui: {
+            primitive: "message",
+            message: "Invalid action.",
+            links: [],
+          },
+          reasonCode: "invalid_action",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "This should not validate.",
+        } as never;
+      },
+    };
+
+    await expect(
+      processTurn({
+        state: state(),
+        userMessage: "Where can I apply online?",
+        planner,
+        corpus,
+        now: new Date("2026-06-13T12:15:00.000Z"),
+        idFactory: idFactory(),
+      }),
+    ).rejects.toThrow();
+  });
 });

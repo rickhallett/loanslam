@@ -99,7 +99,10 @@ async function runTurn(
   args: string[],
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
-  const message = readOption(args, "--message") ?? args.join(" ").trim();
+  const normalizedArgs = stripOptionSeparator(args);
+  const message =
+    readRestOption(normalizedArgs, "--message") ??
+    normalizedArgs.join(" ").trim();
 
   if (!message) {
     return fail('Usage: core:turn -- --message "customer message"');
@@ -326,6 +329,26 @@ function readOption(args: string[], name: string): string | undefined {
 
   const value = args[index + 1]?.trim();
   return value || undefined;
+}
+
+function readRestOption(args: string[], name: string): string | undefined {
+  const index = args.indexOf(name);
+
+  if (index === -1) {
+    return undefined;
+  }
+
+  const values = args
+    .slice(index + 1)
+    .filter((value) => value !== "--")
+    .join(" ")
+    .trim();
+
+  return values || undefined;
+}
+
+function stripOptionSeparator(args: string[]): string[] {
+  return args[0] === "--" ? args.slice(1) : args;
 }
 
 function ok(stdout: string): CliResult {

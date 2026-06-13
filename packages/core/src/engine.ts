@@ -5,12 +5,18 @@ import type {
   CorpusItem,
   PlannerMetadata,
   TurnPlanner,
+  TurnPlan,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
 
-import { allowedActions, allowedUiPrimitives, policyVersion } from "./policy";
+import {
+  allowedActions,
+  allowedUiPrimitives,
+  buildFallbackCopy,
+  policyVersion,
+} from "./policy";
 import { retrieveMatches } from "./retriever";
-import { validateTurnPlan } from "./validator";
+import { type ValidatedPlanFragment, validateTurnPlan } from "./validator";
 
 export interface ProcessTurnInput {
   state: ConversationState;
@@ -39,18 +45,20 @@ export async function processTurn({
   const traceId = idFactory();
   const createdAt = now.toISOString();
   const retrievedMatches = retrieveMatches(userMessage, corpus);
-
-  const plan = await planner.planTurn({
+  const plannerInput = {
     conversationState: state,
     userMessage,
     retrievedMatches,
     allowedActions,
     allowedUiPrimitives,
     policyVersion,
-  });
+  };
 
-  const validated = validateTurnPlan(plan, retrievedMatches, {
-    safetyFlags: state.safetyFlags,
+  const { plan, validated } = await planAndValidateTurn({
+    planner,
+    plannerInput,
+    retrievedMatches,
+    stateSafetyFlags: state.safetyFlags,
   });
   const nextState = mergeState({
     state,
@@ -97,6 +105,74 @@ export async function processTurn({
     validatorOverrides: validated.validatorOverrides,
     trace,
   };
+}
+
+async function planAndValidateTurn({
+  planner,
+  plannerInput,
+  retrievedMatches,
+  stateSafetyFlags,
+}: {
+  planner: ProcessTurnInput["planner"];
+  plannerInput: Parameters<TurnPlanner["planTurn"]>[0];
+  retrievedMatches: ReturnType<typeof retrieveMatches>;
+  stateSafetyFlags: ConversationState["safetyFlags"];
+}): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
+  let plan: TurnPlan;
+
+  try {
+    plan = await planner.planTurn(plannerInput);
+  } catch (error) {
+    const reason = "I could not safely choose the next step from this message.";
+    const traceReason = plannerFailureReason(error);
+    const fallback = buildFallbackCopy(reason);
+    plan = {
+      action: fallback.action,
+      customerMessage: fallback.customerMessage,
+      ui: fallback.ui,
+      reasonCode: "planner_malformed_output",
+      collectedFacts: {},
+      requestedFields: [],
+      grounding: null,
+      safetyFlags: [],
+      traceSummary: traceReason,
+    };
+
+    return {
+      plan,
+      validated: {
+        plan,
+        finalAction: fallback.action,
+        ui: fallback.ui,
+        customerMessage: fallback.customerMessage,
+        requestedFields: [],
+        collectedFacts: {},
+        validatorOverrides: [
+          {
+            code: "malformed_plan",
+            reason: traceReason,
+            toAction: fallback.action,
+          },
+        ],
+        selectedServingMode: null,
+        selectedRouteReason: null,
+        safetyFlags: [...stateSafetyFlags],
+      },
+    };
+  }
+
+  return {
+    plan,
+    validated: validateTurnPlan(plan, retrievedMatches, {
+      safetyFlags: stateSafetyFlags,
+    }),
+  };
+}
+
+function plannerFailureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return `The planner response could not be validated. ${message}`;
 }
 
 const defaultPlannerMetadata: PlannerMetadata = {

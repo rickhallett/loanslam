@@ -281,6 +281,16 @@ function buildUxNotes({
   }
 
   if (
+    traces.some((trace) =>
+      trace.validatorOverrides.some(
+        (override) => override.code === "malformed_plan",
+      ),
+    )
+  ) {
+    notes.push("Malformed plan: planner output could not be validated.");
+  }
+
+  if (
     expectation.maxClarificationTurns !== undefined &&
     traces.filter((trace) => trace.finalAction === "ask_clarifying_question")
       .length === expectation.maxClarificationTurns
@@ -347,8 +357,8 @@ function detectForbiddenBehavior(
 
   if (marker === "malformed_plan") {
     return traces.some((trace) =>
-      trace.validatorOverrides.some(
-        (override) => override.code === "ui_action_mismatch",
+      trace.validatorOverrides.some((override) =>
+        ["malformed_plan", "ui_action_mismatch"].includes(override.code),
       ),
     );
   }

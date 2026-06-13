@@ -290,4 +290,72 @@ describe("runJourneySuite", () => {
       "answer-2",
     ]);
   });
+
+  it("continues after a malformed planner result and records the failure", async () => {
+    const journeys: JourneyFixture[] = [
+      {
+        id: "bad-model",
+        title: "Bad model output",
+        customerTurns: ["I need help with my loan"],
+        expectation: {
+          allowedFinalActions: ["fallback"],
+          requiredFinalAction: "fallback",
+          forbiddenBehaviors: [],
+        },
+        tags: ["malformed_model_output"],
+      },
+      {
+        id: "answer-after-bad-model",
+        title: "Answer after bad model output",
+        customerTurns: ["Can I apply on the website?"],
+        expectation: {
+          allowedFinalActions: ["answer"],
+          requiredServingModes: ["answer"],
+        },
+        tags: ["answerable_faq"],
+      },
+    ];
+    let callCount = 0;
+
+    const reports = await runJourneySuite({
+      journeys,
+      corpus,
+      plannerFactory: () => ({
+        async planTurn() {
+          callCount += 1;
+
+          if (callCount === 1) {
+            throw new Error("Too big: expected array to have <=6 items");
+          }
+
+          return supportedAnswerPlan();
+        },
+      }),
+      initialStateFactory: (journey) => state(`conv-${journey.id}`),
+      now: () => new Date("2026-06-13T10:20:00.000Z"),
+      idFactory: sequenceIds(),
+    });
+
+    expect(reports).toHaveLength(2);
+    expect(reports[0]).toMatchObject({
+      journeyId: "bad-model",
+      finalAction: "fallback",
+      validatorOverrideCount: 1,
+      passed: true,
+    });
+    expect(reports[0]?.traces[0]?.validatorOverrides).toEqual([
+      expect.objectContaining({
+        code: "malformed_plan",
+        toAction: "fallback",
+      }),
+    ]);
+    expect(reports[0]?.uxNotes).toContain(
+      "Malformed plan: planner output could not be validated.",
+    );
+    expect(reports[1]).toMatchObject({
+      journeyId: "answer-after-bad-model",
+      finalAction: "answer",
+      passed: true,
+    });
+  });
 });

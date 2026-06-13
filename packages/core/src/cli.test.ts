@@ -79,6 +79,24 @@ describe("Phase 0 CLI", () => {
     });
   });
 
+  it("preserves split message words from the documented Just command path", async () => {
+    let userMessage = "";
+    const result = await runCli(
+      ["turn", "--", "--message", "I", "need", "help", "with", "my", "loan"],
+      {},
+      () => ({
+        metadata,
+        async planTurn(input) {
+          userMessage = input.userMessage;
+          return plan;
+        },
+      }),
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(userMessage).toBe("I need help with my loan");
+  });
+
   it("runs simulation with an injected planner", async () => {
     const result = await runCli(["simulate"], {}, plannerFactory);
     const parsed = JSON.parse(result.stdout);
