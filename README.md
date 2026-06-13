@@ -112,6 +112,7 @@ Useful commands:
 
 ```bash
 just install           # install npm workspace dependencies
+just dev-full          # run DB, KB sync if needed, migrations, backend, and widget with .env settings
 just verify            # run format, lint, typecheck, tests, and build
 just mssql-up          # start SQL Server
 just mssql-wait        # wait for healthcheck

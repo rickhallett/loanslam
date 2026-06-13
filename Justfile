@@ -15,6 +15,46 @@ dev:
 dev-widget:
     npm run dev:widget
 
+# Start SQL Server, apply migrations, and launch backend + widget with real provider env.
+dev-full:
+    @set -e; \
+      if [ -z "${OPENAI_API_KEY:-}" ]; then \
+        echo "OPENAI_API_KEY is missing. Add it to .env before running just dev-full."; \
+        exit 1; \
+      fi; \
+      if [ -z "${DATABASE_URL:-}" ]; then \
+        DATABASE_URL="$(just mssql-url loanslam)"; \
+        export DATABASE_URL; \
+      fi; \
+      if [ -z "${OPENAI_VECTOR_STORE_ID:-}" ]; then \
+        echo "OPENAI_VECTOR_STORE_ID is missing; syncing the KB with OPENAI_API_KEY from .env."; \
+        vector_output="$(npm --silent run kb:sync -w backend)"; \
+        case "$vector_output" in \
+          OPENAI_VECTOR_STORE_ID=*) \
+            OPENAI_VECTOR_STORE_ID="${vector_output#OPENAI_VECTOR_STORE_ID=}"; \
+            export OPENAI_VECTOR_STORE_ID; \
+            printf '%s\n' "$vector_output"; \
+            ;; \
+          *) \
+            printf '%s\n' "$vector_output"; \
+            echo "Could not read OPENAI_VECTOR_STORE_ID from KB sync output."; \
+            exit 1; \
+            ;; \
+        esac; \
+      fi; \
+      just mssql-create-db loanslam; \
+      npm run prisma:migrate:deploy -w backend; \
+      api_base_url="${API_BASE_URL:-http://localhost:4010}"; \
+      widget_origin="${WIDGET_ORIGIN:-http://localhost:5173}"; \
+      printf 'Backend: %s\nWidget:  %s\n\n' "$api_base_url" "$widget_origin"; \
+      cleanup() { \
+        jobs -p | while read -r pid; do kill "$pid" 2>/dev/null || true; done; \
+      }; \
+      trap cleanup INT TERM EXIT; \
+      npm run dev:backend & \
+      VITE_API_BASE_URL="$api_base_url" npm run dev:widget & \
+      wait
+
 kb-sync:
     @npm --silent run kb:sync -w backend
 

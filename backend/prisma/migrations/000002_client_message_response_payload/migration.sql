@@ -1,4 +1,5 @@
-ALTER TABLE [dbo].[ClientMessage] ADD [responsePayload] NVARCHAR(MAX);
-ALTER TABLE [dbo].[ClientMessage] ADD [completedAt] DATETIME2;
-ALTER TABLE [dbo].[ClientMessage] ADD CONSTRAINT [ClientMessage_responsePayload_json]
+ALTER TABLE [dbo].[ClientMessage] ADD
+    [responsePayload] NVARCHAR(MAX),
+    [completedAt] DATETIME2,
+    CONSTRAINT [ClientMessage_responsePayload_json]
     CHECK ([responsePayload] IS NULL OR ISJSON([responsePayload]) = 1);
