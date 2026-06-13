@@ -120,7 +120,7 @@ Install workspace dependencies:
 npm install
 ```
 
-Run the Phase 0 core gates:
+Run the Phase 0 core quality gates:
 
 ```bash
 npm test
@@ -129,15 +129,62 @@ npm run build
 npm run format:check
 ```
 
-Real planner-backed commands require `OPENAI_API_KEY`; `OPENAI_MODEL` can override
-the default planner model. Generated Phase 0 evidence is written under
-`artifacts/phase0/` unless a command-specific output path is supplied.
+These commands do not call a model. They prove the local TypeScript workspace still
+parses, type-checks, builds, and passes its unit tests.
+
+### Phase 0 command guide
+
+The `core-*` commands run the engine proof from the terminal. They are for reviewing
+the TurnPlanner's behaviour before any widget, production API, database, or ticket
+webhook exists.
+
+They all use the same local pipeline:
+
+```text
+customer message or fixture
+-> synthetic corpus retrieval
+-> real TurnPlanner model call
+-> policy/grounding validator
+-> validated response plus trace evidence
+```
+
+Real planner-backed commands require `OPENAI_API_KEY`. `OPENAI_MODEL` can override
+the default planner model. Generated evidence is written under `artifacts/phase0/`
+unless a command-specific output path is supplied.
+
+Use `core-turn` when you want to manually probe one customer message and inspect the
+full engine result:
 
 ```bash
 just core-turn -- --message "How do I apply?"
+```
+
+This prints the `ValidatedTurnResult`: the proposed model plan, final enforced
+action, customer-facing copy, retrieved corpus items, selected `serving_mode`,
+validator overrides, and trace IDs.
+
+Use `core-simulate` when you want to run the representative journey suite against
+one configured planner:
+
+```bash
 just core-simulate -- --trace-output artifacts/phase0/traces.jsonl
+```
+
+This runs the broad Phase 0 fixtures and writes one JSONL trace row per turn. It is
+the quickest way to inspect what the engine did across answerable, handoff,
+vulnerability, excluded, repeated, topic-change, and malformed-plan journeys.
+
+Use `core-compare` when you want a stakeholder-readable report for a configured
+planner run:
+
+```bash
 just core-compare -- --output artifacts/phase0/comparison.json
 ```
+
+This writes a comparison JSON report plus a sibling JSONL trace file. The report
+summarises pass/fail envelopes, validator overrides, vulnerability misses,
+grounded-answer rate, unnecessary handoff rate, average turns, failure modes, and a
+recommendation. It is evidence for Phase 0 review, not production model approval.
 
 The local SQL Server dependency remains available for later productisation work so
 backend persistence can start against the same shape when Phase 0 earns it.
