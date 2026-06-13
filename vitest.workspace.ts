@@ -1,3 +1,1 @@
-import { defineWorkspace } from 'vitest/config';
-
-export default defineWorkspace(['contracts', 'backend', 'widget']);
+export default ['contracts', 'backend', 'widget'];
