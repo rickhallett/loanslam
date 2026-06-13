@@ -65,8 +65,10 @@ export interface ClientMessageRecord {
   sessionId: string;
   clientMessageId: string;
   requestRef: string;
+  responsePayload: JsonObject | null;
   created: boolean;
   createdAt: Date;
+  completedAt: Date | null;
 }
 
 export interface TicketHandoffInput {
@@ -101,6 +103,11 @@ export interface ChatRepository {
     clientMessageId: string,
     requestRef: string,
   ): Promise<ClientMessageRecord>;
+  completeClientMessage(
+    clientMessageRecordId: string,
+    responsePayload: JsonObject,
+  ): Promise<ClientMessageRecord>;
+  hasRequestActivity(sessionId: string, requestRef: string): Promise<boolean>;
   updateSessionState(
     sessionId: string,
     state: ConversationState,

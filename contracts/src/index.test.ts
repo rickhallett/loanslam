@@ -95,19 +95,18 @@ describe('chat contract schemas', () => {
     ).toBe(false);
   });
 
-  it('accepts intake submissions for the rendered minimum field set', () => {
+  it('requires intake submissions to match the rendered required field set', () => {
     expect(
-      handoffIntakeFormSchema.safeParse({
-        ...form,
-        fields: [
-          { name: 'name', label: 'Name', inputType: 'text', required: true },
-          {
-            name: 'situationalContext',
-            label: 'How can the support team help?',
-            inputType: 'textarea',
-            required: true,
-          },
-        ],
+      intakeSubmitRequestSchema.safeParse({
+        clientRequestId: 'client_req_123',
+        intake: {
+          name: 'Alex Customer',
+          dob: '1990-01-31',
+          address: '1 High Street, London',
+          phone: '+447700900123',
+          email: 'alex@example.com',
+          situationalContext: 'I need someone to look at my application.',
+        },
       }).success,
     ).toBe(true);
 
@@ -119,7 +118,7 @@ describe('chat contract schemas', () => {
           situationalContext: 'I need someone to look at my application.',
         },
       }).success,
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('uses state to discriminate whether a response must carry a form', () => {

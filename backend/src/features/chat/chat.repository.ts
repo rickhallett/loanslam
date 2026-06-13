@@ -57,7 +57,9 @@ type ClientMessageRow = {
   sessionId: string;
   clientMessageId: string;
   requestRef: string;
+  responsePayload: unknown;
   createdAt: Date;
+  completedAt: Date | null;
 };
 
 type TicketHandoffRow = {
@@ -159,6 +161,8 @@ export class PrismaChatRepository implements ChatRepository {
           sessionId,
           clientMessageId,
           requestRef,
+          responsePayload: null,
+          completedAt: null,
         },
       });
 
@@ -183,6 +187,31 @@ export class PrismaChatRepository implements ChatRepository {
 
       return mapClientMessage(existing, false);
     }
+  }
+
+  async completeClientMessage(
+    clientMessageRecordId: string,
+    responsePayload: JsonObject,
+  ): Promise<ClientMessageRecord> {
+    const clientMessage = await this.prisma.clientMessage.update({
+      where: { id: clientMessageRecordId },
+      data: {
+        responsePayload: serializeJson(responsePayload),
+        completedAt: new Date(),
+      },
+    });
+
+    return mapClientMessage(clientMessage, false);
+  }
+
+  async hasRequestActivity(sessionId: string, requestRef: string): Promise<boolean> {
+    const [transcriptCount, auditCount, ticketCount] = await this.prisma.$transaction([
+      this.prisma.transcriptEntry.count({ where: { sessionId, requestRef } }),
+      this.prisma.auditEvent.count({ where: { sessionId, requestRef } }),
+      this.prisma.ticketHandoff.count({ where: { sessionId, requestRef } }),
+    ]);
+
+    return transcriptCount + auditCount + ticketCount > 0;
   }
 
   async updateSessionState(
@@ -221,6 +250,7 @@ export class InMemoryChatRepository implements ChatRepository {
   private readonly sessions = new Map<string, ChatSessionRecord>();
   private readonly sessionIdsByConversationRef = new Map<string, string>();
   private readonly clientMessagesBySessionAndClientId = new Map<string, ClientMessageRecord>();
+  private readonly clientMessageKeysById = new Map<string, string>();
   readonly transcriptEntries: TranscriptEntryRecord[] = [];
   readonly auditEvents: AuditEventRecord[] = [];
   readonly ticketHandoffs: TicketHandoffRecord[] = [];
@@ -322,12 +352,54 @@ export class InMemoryChatRepository implements ChatRepository {
       sessionId,
       clientMessageId,
       requestRef,
+      responsePayload: null,
       created: true,
       createdAt: new Date(),
+      completedAt: null,
     };
 
     this.clientMessagesBySessionAndClientId.set(key, cloneClientMessage(clientMessage));
+    this.clientMessageKeysById.set(clientMessage.id, key);
     return Promise.resolve(cloneClientMessage(clientMessage));
+  }
+
+  completeClientMessage(
+    clientMessageRecordId: string,
+    responsePayload: JsonObject,
+  ): Promise<ClientMessageRecord> {
+    const key = this.clientMessageKeysById.get(clientMessageRecordId);
+    if (!key) {
+      throw new ChatRepositoryError(`Client message not found: ${clientMessageRecordId}`);
+    }
+
+    const existing = this.clientMessagesBySessionAndClientId.get(key);
+    if (!existing) {
+      throw new ChatRepositoryError(`Client message not found: ${clientMessageRecordId}`);
+    }
+
+    const updated: ClientMessageRecord = {
+      ...existing,
+      responsePayload: cloneJsonObject(responsePayload),
+      created: false,
+      completedAt: new Date(),
+    };
+
+    this.clientMessagesBySessionAndClientId.set(key, cloneClientMessage(updated));
+    return Promise.resolve(cloneClientMessage(updated));
+  }
+
+  hasRequestActivity(sessionId: string, requestRef: string): Promise<boolean> {
+    const hasTranscript = this.transcriptEntries.some(
+      (entry) => entry.sessionId === sessionId && entry.requestRef === requestRef,
+    );
+    const hasAudit = this.auditEvents.some(
+      (event) => event.sessionId === sessionId && event.requestRef === requestRef,
+    );
+    const hasTicket = this.ticketHandoffs.some(
+      (ticket) => ticket.sessionId === sessionId && ticket.requestRef === requestRef,
+    );
+
+    return Promise.resolve(hasTranscript || hasAudit || hasTicket);
   }
 
   updateSessionState(
@@ -434,8 +506,11 @@ function mapClientMessage(clientMessage: ClientMessageRow, created: boolean): Cl
     sessionId: clientMessage.sessionId,
     clientMessageId: clientMessage.clientMessageId,
     requestRef: clientMessage.requestRef,
+    responsePayload:
+      clientMessage.responsePayload === null ? null : toJsonObject(clientMessage.responsePayload),
     created,
     createdAt: new Date(clientMessage.createdAt),
+    completedAt: clientMessage.completedAt ? new Date(clientMessage.completedAt) : null,
   };
 }
 
@@ -489,7 +564,11 @@ function cloneSession(session: ChatSessionRecord): ChatSessionRecord {
 function cloneClientMessage(clientMessage: ClientMessageRecord): ClientMessageRecord {
   return {
     ...clientMessage,
+    responsePayload: clientMessage.responsePayload
+      ? cloneJsonObject(clientMessage.responsePayload)
+      : null,
     createdAt: new Date(clientMessage.createdAt),
+    completedAt: clientMessage.completedAt ? new Date(clientMessage.completedAt) : null,
   };
 }
 

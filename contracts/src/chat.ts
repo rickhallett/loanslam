@@ -83,17 +83,14 @@ export type HandoffIntakeForm = z.infer<typeof handoffIntakeFormSchema>;
 
 const intakeAnswersSchema = z
   .object({
-    name: z.string().min(1).optional(),
-    dob: z.string().min(1).optional(),
-    address: z.string().min(1).optional(),
-    phone: z.string().min(1).optional(),
-    email: z.string().email().optional(),
-    situationalContext: z.string().min(1).optional(),
+    name: z.string().trim().min(1),
+    dob: z.string().trim().min(1),
+    address: z.string().trim().min(1),
+    phone: z.string().trim().min(1),
+    email: z.string().trim().email(),
+    situationalContext: z.string().trim().min(1),
   })
-  .strict()
-  .refine((answers) => Object.values(answers).some((value) => value !== undefined), {
-    message: 'At least one intake field is required',
-  });
+  .strict();
 
 export const intakeSubmitRequestSchema = z
   .object({

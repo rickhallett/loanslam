@@ -59,7 +59,10 @@ model ClientMessage {
   sessionId       String   @db.UniqueIdentifier
   clientMessageId String   @db.NVarChar(128)
   requestRef      String   @db.NVarChar(64)
+  /// JSON-encoded completed ChatResponse. SQL Server is validated with ISJSON in the migration.
+  responsePayload String?  @db.NVarChar(Max)
   createdAt       DateTime @default(now()) @db.DateTime2
+  completedAt     DateTime? @db.DateTime2
 
   session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
