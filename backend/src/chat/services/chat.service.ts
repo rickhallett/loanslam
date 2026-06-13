@@ -16,13 +16,14 @@ import {
 } from '@loanslam/contracts';
 import type { IChatService, RequestContext, TurnOutcome } from '../../ports/chat.port.js';
 import type { ChatServiceDeps } from '../../composition/types.js';
-import type { TicketRequest } from '../../ports/ticket.port.js';
+import type { TicketRequest, TicketResult } from '../../ports/ticket.port.js';
 import {
   initialConversationState,
   type ConversationMessage,
   type ServerConversationState,
   type Session,
 } from '../../domain/conversation.js';
+import { getJourneySpec, type JourneyId } from '../../domain/journey.js';
 import {
   newConversationRef,
   newCsrfToken,
@@ -34,7 +35,8 @@ import { ServiceResponseFactory } from '../../common/serviceResponse.js';
 import { route, type RoutingDecision } from './router.js';
 import { runVulnerabilityGate } from './vulnerability.gate.js';
 import { buildReply } from './responder.js';
-import { validateIntake } from './intake.js';
+import { accountHandoffForm, validateIntake } from './intake.js';
+import { stepCollection } from './collection.js';
 import * as copy from '../templates/copy.js';
 
 /** Error class/name for audit payloads — never the message (avoids leaking PII). */
@@ -153,6 +155,16 @@ export class ChatService implements IChatService {
         return await this.handleVulnerable(session, ctx, grounding, gate.reasonCode, gate.category);
       }
 
+      // 2b. Mid-collection continuation: a free-text turn while gathering handoff
+      // slots. The vulnerability gate above still pre-empts; collection then
+      // bypasses re-classification and runs the deterministic slot-filling loop.
+      if (this.isCollecting(session.state) && session.state.journey !== null) {
+        return await this.handleCollectionTurn(session, ctx, input.text, {
+          journeyId: session.state.journey,
+          firstTurn: false,
+        });
+      }
+
       // 3. Classify (with retrieval context).
       const topHit = grounding.hits.length > 0 ? grounding.hits[0]! : null;
       const classification = await this.deps.model.classify({
@@ -193,6 +205,26 @@ export class ChatService implements IChatService {
         text: input.text,
         threshold: this.threshold(),
       });
+
+      // 5b. Collect-then-handoff routes run the slot-filling loop instead of a
+      // one-shot form. This is turn 1: begin collection (still offering the form
+      // as the fast-path affordance), pre-filling anything volunteered already.
+      const journeyId = decision.requiresIntake ? this.journeyForReason(decision.reasonCode) : null;
+      if (journeyId !== null) {
+        await this.writeAudit(session.conversationRef, ctx.requestRef, {
+          type: 'routing_decision',
+          reasonCode: decision.reasonCode,
+          replyMode: decision.replyMode,
+          groundingServingMode: grounding.topServingMode,
+        });
+        if (classification.customerGoal !== null) {
+          session.state.customerGoal = classification.customerGoal;
+        }
+        return await this.handleCollectionTurn(session, ctx, input.text, {
+          journeyId,
+          firstTurn: true,
+        });
+      }
 
       // 6. Respond — then audit the REALISED reply, since the responder may
       // safely downgrade 'answer' to 'fallback' (no/unfaithful grounding).
@@ -269,27 +301,13 @@ export class ChatService implements IChatService {
 
       // Carry the original route reason through to the ticket where we have it.
       const reasonCode: ReasonCode = session.state.handoff?.reasonCode ?? 'account_specific';
-      const { category, priority } = this.ticketRoutingFor(reasonCode);
-
-      const ticket = await this.deps.ticket.createTicket({
-        conversationRef: session.conversationRef,
-        reasonCode,
-        category,
-        priority,
-        contact: session.state.collected,
-        summary: session.state.customerGoal ?? 'Account handoff requested by customer.',
-      });
 
       await this.writeAudit(session.conversationRef, ctx.requestRef, {
         type: 'intake_submitted',
         reasonCode: 'intake_complete',
         payload: { fields: Object.keys(cleaned) },
       });
-      await this.writeAudit(session.conversationRef, ctx.requestRef, {
-        type: 'ticket_created',
-        reasonCode,
-        payload: { ticketRef: ticket.ticketRef, status: ticket.status, priority },
-      });
+      const ticket = await this.createHandoffTicket(session, ctx, reasonCode);
 
       session.state.handoff = { ticketRef: ticket.ticketRef, reasonCode };
       session.state.phase = 'handoff_pending';
@@ -430,6 +448,150 @@ export class ChatService implements IChatService {
       default:
         break;
     }
+  }
+
+  // ── Mixed-initiative slot collection (PRD §4.2) ─────────────────────────────
+
+  /** True while a collect-then-handoff journey is gathering slots. */
+  private isCollecting(state: ServerConversationState): boolean {
+    return state.slots !== null && state.phase === 'awaiting_intake';
+  }
+
+  /** The journey a collect-then-handoff route begins, or null. */
+  private journeyForReason(reasonCode: ReasonCode): JourneyId | null {
+    if (reasonCode === 'account_specific') return 'account_handoff';
+    if (reasonCode === 'change_request') return 'change_request';
+    return null;
+  }
+
+  /** The route reason a journey maps back to (drives ticket category/priority). */
+  private reasonForJourney(journeyId: JourneyId): ReasonCode {
+    return journeyId === 'change_request' ? 'change_request' : 'account_specific';
+  }
+
+  /**
+   * One conversational collection turn. Extracts slots from the message, runs
+   * the deterministic policy, and maps the step to a safe reply: ask the next
+   * slot (turn 1 offers the form; later turns ask conversationally), complete
+   * (create the ticket), or escalate to a human (refusal / budget exhausted).
+   * Slot *values* are merged into `collected`; audit payloads carry slot NAMES
+   * only — never values (brief §13, §16).
+   */
+  private async handleCollectionTurn(
+    session: Session,
+    ctx: RequestContext,
+    text: string,
+    opts: { journeyId: JourneyId; firstTurn: boolean },
+  ): Promise<TurnOutcome<ChatTurnResponse>> {
+    const journey = getJourneySpec(opts.journeyId);
+    const requestedSlots = journey.slots.map((s) => s.name);
+
+    const extracted = await this.deps.model.extract({ text, history: session.history, requestedSlots });
+    await this.writeAudit(session.conversationRef, ctx.requestRef, {
+      type: 'extraction',
+      payload: {
+        journey: opts.journeyId,
+        slots: Object.keys(extracted.slots), // names only, never values
+        signals: extracted.signals,
+        confidence: extracted.confidence,
+        source: extracted.source,
+      },
+    });
+
+    const step = stepCollection({
+      journey,
+      state: session.state.slots,
+      collected: session.state.collected,
+      extract: extracted,
+    });
+
+    // Merge accepted values into the single PII store (already credential-free).
+    session.state.collected = { ...session.state.collected, ...step.accepted };
+    session.state.journey = opts.journeyId;
+    session.state.slots = step.state;
+
+    await this.writeAudit(session.conversationRef, ctx.requestRef, {
+      type: 'collection_step',
+      reasonCode: step.reasonCode,
+      payload: {
+        outcome: step.outcome,
+        asked: step.ask?.slot ?? null,
+        accepted: Object.keys(step.accepted), // names only
+        corrected: step.corrected,
+      },
+    });
+
+    const reasonCode = this.reasonForJourney(opts.journeyId);
+
+    if (step.outcome === 'complete' || step.outcome === 'escalate') {
+      if (step.outcome === 'complete') {
+        await this.writeAudit(session.conversationRef, ctx.requestRef, {
+          type: 'intake_submitted',
+          reasonCode: 'intake_complete',
+          payload: { fields: Object.keys(session.state.collected) },
+        });
+      }
+      const ticket = await this.createHandoffTicket(session, ctx, reasonCode);
+      session.state.handoff = { ticketRef: ticket.ticketRef, reasonCode };
+      session.state.phase = 'handoff_pending';
+      session.state.pendingForm = null;
+
+      const reply: Reply = {
+        mode: 'handoff',
+        text: copy.handoffConfirmation(ticket.ticketRef),
+        ticketRef: ticket.ticketRef,
+      };
+      await this.recordOutbound(session, ctx.requestRef, reply);
+      await this.deps.repos.sessions.updateState(session.id, session.state);
+      return this.okTurn(session, ctx.requestRef, reply);
+    }
+
+    // outcome === 'ask'
+    let reply: Reply;
+    if (opts.firstTurn) {
+      // Offer the intake form as the fast-path affordance (unchanged behaviour).
+      const form = accountHandoffForm();
+      reply = { mode: 'intake_request', text: copy.accountIntakePrompt(), form };
+      session.state.pendingForm = form;
+      session.state.handoff = { ticketRef: null, reasonCode };
+    } else {
+      const ackKind = step.corrected
+        ? 'corrected'
+        : Object.keys(step.accepted).length > 0
+          ? 'filled'
+          : 'asked';
+      reply = {
+        mode: 'clarify',
+        text: copy.collectAck(step.ask?.prompt ?? copy.clarify(), ackKind),
+      };
+    }
+    session.state.phase = 'awaiting_intake';
+    await this.recordOutbound(session, ctx.requestRef, reply);
+    await this.deps.repos.sessions.updateState(session.id, session.state);
+    return this.okTurn(session, ctx.requestRef, reply);
+  }
+
+  /** Create a handoff ticket from the collected PII and audit it. */
+  private async createHandoffTicket(
+    session: Session,
+    ctx: RequestContext,
+    reasonCode: ReasonCode,
+  ): Promise<TicketResult> {
+    const { category, priority } = this.ticketRoutingFor(reasonCode);
+    const ticket = await this.deps.ticket.createTicket({
+      conversationRef: session.conversationRef,
+      reasonCode,
+      category,
+      priority,
+      contact: session.state.collected,
+      summary: session.state.customerGoal ?? 'Account handoff requested by customer.',
+    });
+    await this.writeAudit(session.conversationRef, ctx.requestRef, {
+      type: 'ticket_created',
+      reasonCode,
+      payload: { ticketRef: ticket.ticketRef, status: ticket.status, priority },
+    });
+    return ticket;
   }
 
   // ── Resilience (fail-safe, never drop a turn) ───────────────────────────────

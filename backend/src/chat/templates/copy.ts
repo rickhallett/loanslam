@@ -104,3 +104,18 @@ export function handoffConfirmation(ticketRef: string | null): string {
 export function duplicateAck(): string {
   return "I've already got that one — no need to send it again. Is there anything else I can help with?";
 }
+
+/**
+ * Wrap a slot elicitation prompt with a light acknowledgement of what just
+ * happened, for the conversational collection path. `prompt` is approved
+ * deterministic copy from the journey's slot schema.
+ */
+export function collectAck(prompt: string, kind: 'asked' | 'filled' | 'corrected'): string {
+  const lead =
+    kind === 'corrected'
+      ? "Thanks, I've updated that."
+      : kind === 'filled'
+        ? 'Thanks.'
+        : '';
+  return lead.length > 0 ? `${lead} ${prompt}` : prompt;
+}
