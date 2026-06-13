@@ -96,9 +96,23 @@ describe("TurnPlanner contract schemas", () => {
         title: "Settlement figure requests",
         serving_mode: "handoff_account_specific",
         question: "Can I get my settlement figure?",
+        route_reason:
+          "Settlement figures are account-specific and need a human handoff.",
         tags: ["settlement"],
       }),
     ).not.toThrow();
+  });
+
+  it("requires route_reason on policy-routing corpus items", () => {
+    const result = corpusItemSchema.safeParse({
+      id: "excluded-no-reason",
+      title: "Personal APR",
+      serving_mode: "excluded",
+      question: "What APR will I get?",
+      tags: ["apr"],
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("keeps handoff fields as exact enum values", () => {

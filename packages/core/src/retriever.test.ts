@@ -44,6 +44,11 @@ describe("lexical retrieval", () => {
       servingMode: "route_vulnerability",
     });
 
+    expect(topMatch("I cannot afford my repayments")).toMatchObject({
+      itemId: "cant-pay-this-month",
+      servingMode: "route_vulnerability",
+    });
+
     expect(
       topMatch("I'm in hardship and struggling financially"),
     ).toMatchObject({
@@ -61,6 +66,20 @@ describe("lexical retrieval", () => {
       itemId: "can-you-give-me-debt-advice",
       servingMode: "excluded",
     });
+  });
+
+  it("finds complaint escalation before weak lexical answer matches", () => {
+    expect(topMatch("I want to complain")).toMatchObject({
+      itemId: "i-want-to-make-a-complaint",
+      servingMode: "route_vulnerability",
+    });
+  });
+
+  it("does not boost vulnerability items without item-specific evidence", () => {
+    const match = topMatch("Do I need a job to apply?");
+
+    expect(match.servingMode).toBe("answer");
+    expect(match.itemId).not.toBe("lost-job-or-redundancy");
   });
 
   it("uses deterministic item id ordering for tied scores", () => {

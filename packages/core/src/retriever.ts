@@ -37,6 +37,7 @@ const stopTerms = new Set([
   "it",
   "me",
   "my",
+  "need",
   "of",
   "on",
   "or",
@@ -44,6 +45,7 @@ const stopTerms = new Set([
   "the",
   "this",
   "to",
+  "want",
   "what",
   "whats",
   "when",
@@ -54,6 +56,29 @@ const stopTerms = new Set([
   "your",
 ]);
 
+const safetyCueTerms = new Set([
+  "afford",
+  "arrear",
+  "bereavement",
+  "bills",
+  "complaint",
+  "debt",
+  "difficulty",
+  "distress",
+  "gambling",
+  "hardship",
+  "ill",
+  "iva",
+  "lost",
+  "mental",
+  "redundancy",
+  "rent",
+  "struggling",
+  "suicide",
+  "vulnerable",
+  "worried",
+]);
+
 export interface RetrieveMatchesOptions {
   limit?: number;
 }
@@ -62,6 +87,7 @@ export function normalizeSearchTerms(text: string): string[] {
   const terms = text
     .toLowerCase()
     .replace(/\bcan't\b/g, "cant")
+    .replace(/\bcannot\b/g, "cant")
     .replace(/\bwon't\b/g, "wont")
     .replace(/['’]s\b/g, "")
     .replace(/['’]/g, "")
@@ -69,7 +95,7 @@ export function normalizeSearchTerms(text: string): string[] {
     .trim()
     .split(/\s+/)
     .filter(Boolean)
-    .map(singularizeTerm)
+    .map(normalizeTerm)
     .filter((term) => !stopTerms.has(term));
 
   return [...new Set(terms)];
@@ -81,6 +107,7 @@ export function retrieveMatches(
   options: RetrieveMatchesOptions = {},
 ): RetrievedMatch[] {
   const queryTerms = normalizeSearchTerms(query);
+  const queryHasSafetyCue = queryTerms.some((term) => safetyCueTerms.has(term));
 
   if (queryTerms.length === 0) {
     return [];
@@ -89,10 +116,17 @@ export function retrieveMatches(
   const matches = items.flatMap((item) => {
     const termWeights = buildItemTermWeights(item);
     const matchedTerms = queryTerms.filter((term) => termWeights.has(term));
-    const score = matchedTerms.reduce(
+    const lexicalScore = matchedTerms.reduce(
       (total, term) => total + (termWeights.get(term) ?? 0),
       0,
     );
+    const safetyBoost =
+      queryHasSafetyCue &&
+      item.serving_mode === "route_vulnerability" &&
+      matchedTerms.some((term) => safetyCueTerms.has(term))
+        ? 20
+        : 0;
+    const score = lexicalScore + safetyBoost;
 
     if (score === 0) {
       return [];
@@ -146,7 +180,15 @@ function addTerms(
   }
 }
 
-function singularizeTerm(term: string): string {
+function normalizeTerm(term: string): string {
+  if (term === "job") {
+    return "employment";
+  }
+
+  if (["complain", "complaining", "complained"].includes(term)) {
+    return "complaint";
+  }
+
   if (term.length > 4 && term.endsWith("ies")) {
     return `${term.slice(0, -3)}y`;
   }

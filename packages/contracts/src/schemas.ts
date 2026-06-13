@@ -142,6 +142,15 @@ export const corpusItemSchema = z
         message: "answer_text is required when serving_mode is answer",
       });
     }
+
+    if (item.serving_mode !== "answer" && !item.route_reason) {
+      context.addIssue({
+        code: "custom",
+        path: ["route_reason"],
+        message:
+          "route_reason is required when serving_mode routes or excludes an item",
+      });
+    }
   });
 export type CorpusItem = z.infer<typeof corpusItemSchema>;
 
