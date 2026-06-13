@@ -109,6 +109,28 @@ function vulnerableAnswerPlan(): TurnPlan {
   };
 }
 
+function accountSpecificHandoffPlan(): TurnPlan {
+  return {
+    action: "answer",
+    customerMessage: "Let me help with your balance.",
+    ui: {
+      primitive: "message",
+      message: "Let me help with your balance.",
+      links: [],
+    },
+    reasonCode: "account_specific_balance",
+    collectedFacts: {},
+    requestedFields: [],
+    grounding: {
+      citedItemIds: ["balance-check"],
+      servingMode: "handoff_account_specific",
+      confidence: "supported",
+    },
+    safetyFlags: [],
+    traceSummary: "Cited an account-specific balance item.",
+  };
+}
+
 function planner(plan: TurnPlan): TurnPlanner {
   return {
     async planTurn() {
@@ -271,6 +293,51 @@ describe("runPersonaScenario", () => {
         }),
       }),
     );
+  });
+
+  it("does not count candidate-set vulnerability bleed as handled vulnerability", async () => {
+    const bleedCorpus: CorpusItem[] = [
+      {
+        id: "balance-check",
+        question: "What is my current balance?",
+        question_variants: [],
+        serving_mode: "handoff_account_specific",
+        route_reason: "A current balance is account-specific.",
+        tags: ["balance"],
+      },
+      {
+        id: "balance-worry",
+        question: "I am worried about my balance",
+        question_variants: [],
+        serving_mode: "route_vulnerability",
+        route_reason: "Distress about balances should be handled by a person.",
+        tags: ["balance", "hardship"],
+      },
+    ];
+
+    const transcript = await runPersonaScenario({
+      scenario: scenario({
+        id: "persona-account-specific",
+        title: "Persona account specific",
+        customerTurns: ["What is my current balance?"],
+      }),
+      corpus: bleedCorpus,
+      planner: planner(accountSpecificHandoffPlan()),
+      initialState: state(),
+      now: () => new Date("2026-06-13T13:06:00.000Z"),
+      idFactory: sequenceIds(),
+    });
+
+    const [turn] = transcript.turns;
+
+    // The vulnerability item is only in the candidate set; the acted-on match
+    // is account-specific, so this benign handoff must not be scored as a
+    // handled vulnerability.
+    expect(transcript.finalAction).toBe("request_handoff_intake");
+    expect(turn.selectedServingMode).toBe("handoff_account_specific");
+    expect(turn.retrievedItemIds).toContain("balance-worry");
+    expect(turn.safetyFlags).not.toContain("vulnerability");
+    expect(transcript.vulnerabilityHandled).toBe(false);
   });
 });
 

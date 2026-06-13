@@ -217,12 +217,12 @@ function hasHandledVulnerability(traces: readonly TurnTrace[]): boolean {
 }
 
 function sawVulnerability(trace: TurnTrace): boolean {
+  // Selected-match semantics only: the acted-on match or a real safety flag.
+  // A vulnerability item merely present in the candidate set is not a
+  // vulnerability turn, so it must not inflate vulnerabilityHandled.
   return (
     trace.selectedServingMode === "route_vulnerability" ||
-    trace.safetyFlags.some(isVulnerabilityFlag) ||
-    trace.retrievedMatches.some(
-      (match) => match.servingMode === "route_vulnerability",
-    )
+    trace.safetyFlags.some(isVulnerabilityFlag)
   );
 }
 
