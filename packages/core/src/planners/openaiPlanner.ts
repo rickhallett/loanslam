@@ -9,6 +9,7 @@ import {
   servingModeSchema,
   turnActionSchema,
   turnPlanSchema,
+  uiPrimitiveSchema,
 } from "@loanslam/contracts";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -86,84 +87,51 @@ export class OpenAiTurnPlanner implements TurnPlanner {
   }
 }
 
-const nonEmptyStringSchema = z.string().trim().min(1);
+const openAiStringSchema = z.string();
 
 const openAiApprovedLinkSchema = z.object({
-  label: nonEmptyStringSchema,
-  url: z.string().url().nullable(),
-  href: z.string().url().nullable(),
+  label: openAiStringSchema,
+  url: openAiStringSchema.nullable(),
+  href: openAiStringSchema.nullable(),
 });
 
-const openAiMessageUiSchema = z.object({
-  primitive: z.literal("message"),
-  message: nonEmptyStringSchema,
+const openAiUiPlanSchema = z.object({
+  primitive: uiPrimitiveSchema,
+  message: openAiStringSchema,
   links: z.array(openAiApprovedLinkSchema),
-});
-
-const openAiClarifyingPromptUiSchema = z.object({
-  primitive: z.literal("clarifying_prompt"),
-  message: nonEmptyStringSchema,
-  questions: z.array(nonEmptyStringSchema).min(1),
-});
-
-const openAiChoiceListUiSchema = z.object({
-  primitive: z.literal("choice_list"),
-  message: nonEmptyStringSchema,
-  choices: z
-    .array(
-      z.object({
-        id: nonEmptyStringSchema,
-        label: nonEmptyStringSchema,
-      }),
-    )
-    .min(1)
-    .max(6),
-});
-
-const openAiIntakeFormUiSchema = z.object({
-  primitive: z.literal("intake_form"),
-  message: nonEmptyStringSchema,
-  fields: z.array(intakeFieldSchema).min(1),
-});
-
-const openAiHandoffConfirmationUiSchema = z.object({
-  primitive: z.literal("handoff_confirmation"),
-  message: nonEmptyStringSchema,
+  questions: z.array(openAiStringSchema),
+  choices: z.array(
+    z.object({
+      id: openAiStringSchema,
+      label: openAiStringSchema,
+    }),
+  ),
+  fields: z.array(intakeFieldSchema),
   reference: z.string().trim().nullable(),
 });
 
-const openAiSafeFallbackUiSchema = z.object({
-  primitive: z.literal("safe_fallback"),
-  message: nonEmptyStringSchema,
-  links: z.array(openAiApprovedLinkSchema),
-});
-
-const openAiUiPlanSchema = z.discriminatedUnion("primitive", [
-  openAiMessageUiSchema,
-  openAiClarifyingPromptUiSchema,
-  openAiChoiceListUiSchema,
-  openAiIntakeFormUiSchema,
-  openAiHandoffConfirmationUiSchema,
-  openAiSafeFallbackUiSchema,
-]);
-
 const openAiGroundingDecisionSchema = z.object({
-  citedItemIds: z.array(nonEmptyStringSchema),
+  citedItemIds: z.array(openAiStringSchema),
   servingMode: servingModeSchema,
   confidence: z.enum(["supported", "partial", "unsupported"]),
-  notes: z.string().trim().nullable(),
+  notes: openAiStringSchema.nullable(),
 });
 
 const openAiTurnPlanOutputSchema = z.object({
   action: turnActionSchema,
-  customerMessage: nonEmptyStringSchema,
+  customerMessage: openAiStringSchema,
   ui: openAiUiPlanSchema,
-  reasonCode: nonEmptyStringSchema,
-  collectedFacts: z.record(z.string(), z.string()),
+  reasonCode: openAiStringSchema,
+  collectedFacts: z.array(
+    z.object({
+      key: openAiStringSchema,
+      value: openAiStringSchema,
+    }),
+  ),
   requestedFields: z.array(intakeFieldSchema),
   grounding: openAiGroundingDecisionSchema.nullable(),
   safetyFlags: z.array(safetyFlagSchema),
-  traceSummary: nonEmptyStringSchema,
+  traceSummary: openAiStringSchema,
 });
 
 function normalizeOpenAiParsedTurnPlan(parsed: unknown): unknown {
@@ -175,7 +143,32 @@ function normalizeOpenAiParsedTurnPlan(parsed: unknown): unknown {
     ...parsed,
     ui: normalizeUiPlan(parsed.ui),
     grounding: normalizeGrounding(parsed.grounding),
+    collectedFacts: normalizeCollectedFacts(parsed.collectedFacts),
   };
+}
+
+function normalizeCollectedFacts(collectedFacts: unknown): unknown {
+  if (!Array.isArray(collectedFacts)) {
+    return collectedFacts;
+  }
+
+  const facts: Record<string, string> = {};
+
+  for (const fact of collectedFacts) {
+    if (!isRecord(fact)) {
+      continue;
+    }
+
+    const key = String(fact.key ?? "");
+
+    if (!key) {
+      continue;
+    }
+
+    facts[key] = String(fact.value ?? "");
+  }
+
+  return facts;
 }
 
 function normalizeUiPlan(ui: unknown): unknown {
@@ -186,13 +179,56 @@ function normalizeUiPlan(ui: unknown): unknown {
   const links = Array.isArray(ui.links)
     ? ui.links.map(normalizeLink)
     : ui.links;
-  const reference = ui.reference === null ? undefined : ui.reference;
 
-  return {
-    ...ui,
-    ...(links === undefined ? {} : { links }),
-    ...(reference === undefined ? { reference: undefined } : { reference }),
-  };
+  if (ui.primitive === "message") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      links,
+    };
+  }
+
+  if (ui.primitive === "clarifying_prompt") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      questions: ui.questions,
+    };
+  }
+
+  if (ui.primitive === "choice_list") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      choices: ui.choices,
+    };
+  }
+
+  if (ui.primitive === "intake_form") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      fields: ui.fields,
+    };
+  }
+
+  if (ui.primitive === "handoff_confirmation") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      ...(ui.reference === null ? {} : { reference: ui.reference }),
+    };
+  }
+
+  if (ui.primitive === "safe_fallback") {
+    return {
+      primitive: ui.primitive,
+      message: ui.message,
+      links,
+    };
+  }
+
+  return ui;
 }
 
 function normalizeGrounding(grounding: unknown): unknown {

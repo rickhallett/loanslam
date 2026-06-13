@@ -201,6 +201,11 @@ describe("OpenAiTurnPlanner", () => {
       name: "turn_plan",
       strict: true,
     });
+    const schemaText = JSON.stringify(request.text?.format);
+    expect(schemaText).not.toContain("oneOf");
+    expect(schemaText).not.toContain('"format":"uri"');
+    expect(schemaText).not.toContain("minLength");
+    expect(schemaText).not.toContain("propertyNames");
   });
 
   it("rejects malformed parsed output with the TurnPlan schema", async () => {
