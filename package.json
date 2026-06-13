@@ -1,0 +1,35 @@
+{
+  "name": "loanslam",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <26"
+  },
+  "workspaces": [
+    "contracts",
+    "backend",
+    "widget"
+  ],
+  "scripts": {
+    "build": "node scripts/run-workspace-script.mjs build",
+    "dev": "npm run dev:backend",
+    "dev:backend": "node scripts/run-workspace-script.mjs dev backend",
+    "dev:widget": "node scripts/run-workspace-script.mjs dev widget",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "node scripts/run-workspace-script.mjs typecheck",
+    "kb:sync": "node scripts/run-workspace-script.mjs kb:sync backend",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.13.2",
+    "eslint": "^10.5.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0",
+    "vitest": "^4.1.8"
+  }
+}

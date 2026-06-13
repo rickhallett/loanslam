@@ -1,0 +1,5 @@
+data/public-info/*.json
+docker-compose.mssql.yml
+docs/*.md
+docs/superpowers/**/*.md
+README.md

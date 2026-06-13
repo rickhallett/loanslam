@@ -3,6 +3,21 @@ set dotenv-load
 default:
     @just --list
 
+install:
+    npm install
+
+verify:
+    npm run verify
+
+dev:
+    npm run dev:backend
+
+dev-widget:
+    npm run dev:widget
+
+kb-sync:
+    npm run kb:sync
+
 # Start the local SQL Server container.
 mssql-up:
     @if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \
