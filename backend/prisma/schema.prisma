@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model ChatSession {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  conversationRef String   @unique @db.NVarChar(64)
+  csrfTokenHash   String   @db.NVarChar(256)
+  state           String   @db.NVarChar(64)
+  /// JSON-encoded object. SQL Server is validated with ISJSON in the migration.
+  structuredState String   @db.NVarChar(Max)
+  createdAt       DateTime @default(now()) @db.DateTime2
+  updatedAt       DateTime @updatedAt @db.DateTime2
+
+  transcriptEntries TranscriptEntry[]
+  auditEvents       AuditEvent[]
+  clientMessages    ClientMessage[]
+  ticketHandoffs    TicketHandoff[]
+}
+
+model TranscriptEntry {
+  id         String   @id @default(uuid()) @db.UniqueIdentifier
+  sessionId  String   @db.UniqueIdentifier
+  requestRef String   @db.NVarChar(64)
+  direction  String   @db.NVarChar(32)
+  role       String   @db.NVarChar(32)
+  content    String   @db.NVarChar(Max)
+  /// JSON-encoded object. SQL Server is validated with ISJSON in the migration.
+  metadata   String   @db.NVarChar(Max)
+  createdAt  DateTime @default(now()) @db.DateTime2
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, requestRef])
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid()) @db.UniqueIdentifier
+  sessionId  String   @db.UniqueIdentifier
+  requestRef String   @db.NVarChar(64)
+  eventType  String   @db.NVarChar(128)
+  reasonCode String?  @db.NVarChar(128)
+  /// JSON-encoded object. SQL Server is validated with ISJSON in the migration.
+  payload    String   @db.NVarChar(Max)
+  createdAt  DateTime @default(now()) @db.DateTime2
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, requestRef])
+  @@index([eventType])
+}
+
+model ClientMessage {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  sessionId       String   @db.UniqueIdentifier
+  clientMessageId String   @db.NVarChar(128)
+  requestRef      String   @db.NVarChar(64)
+  createdAt       DateTime @default(now()) @db.DateTime2
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, clientMessageId])
+  @@index([requestRef])
+}
+
+model TicketHandoff {
+  id                String   @id @default(uuid()) @db.UniqueIdentifier
+  sessionId         String   @db.UniqueIdentifier
+  requestRef        String   @db.NVarChar(64)
+  provider          String   @db.NVarChar(128)
+  providerReference String   @db.NVarChar(256)
+  status            String   @db.NVarChar(64)
+  /// JSON-encoded object. SQL Server is validated with ISJSON in the migration.
+  payload           String   @db.NVarChar(Max)
+  createdAt         DateTime @default(now()) @db.DateTime2
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, requestRef])
+  @@index([provider, providerReference])
+}
