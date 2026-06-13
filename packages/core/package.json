@@ -11,6 +11,30 @@
     "./retriever": {
       "types": "./dist/retriever.d.ts",
       "default": "./src/retriever.ts"
+    },
+    "./engine": {
+      "types": "./dist/engine.d.ts",
+      "default": "./src/engine.ts"
+    },
+    "./planners/openai": {
+      "types": "./dist/planners/openaiPlanner.d.ts",
+      "default": "./src/planners/openaiPlanner.ts"
+    },
+    "./planners/config": {
+      "types": "./dist/planners/config.d.ts",
+      "default": "./src/planners/config.ts"
+    },
+    "./simulation/journeys": {
+      "types": "./dist/simulation/journeys.d.ts",
+      "default": "./src/simulation/journeys.ts"
+    },
+    "./simulation/runner": {
+      "types": "./dist/simulation/runner.d.ts",
+      "default": "./src/simulation/runner.ts"
+    },
+    "./simulation/report": {
+      "types": "./dist/simulation/report.d.ts",
+      "default": "./src/simulation/report.ts"
     }
   },
   "scripts": {
