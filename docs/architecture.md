@@ -11,11 +11,11 @@ Current implementation starts with the Phase 0 TurnPlanner engine proof in
 productisation target after the engine, journey simulation suite, and model
 comparison harness have proved the core behaviour.
 
-- **Monorepo:** npm workspaces — `backend`, `widget`, `contracts`. TypeScript ES modules throughout. Justfile is the operator command front door.
+- **Monorepo:** npm workspaces — `backend`, `widget`, `contracts`. TypeScript ES modules throughout, with TypeScript source imports that do not use `.js` specifiers. Justfile is the operator command front door.
 - **Widget:** Vue 3 iframe widget built with Vite. Uses shared contract schemas. Credentialed fetch with session cookies and CSRF headers. Intentionally thin: rendering, transport, local interaction state only.
 - **Contracts:** Zod schemas define request/response contracts; export chat response states and the `ServiceResponse` envelope; shared by backend and widget to keep wire behaviour aligned.
 - **API:** Node 24, Express 5, TypeScript. Middleware: Helmet, CORS, cookie parsing, JSON body parsing, pino HTTP logging. OpenAPI generated from route-local Zod registration. Endpoints: health, session create, message turn, identity intake, reset.
-- **Domain:** `ChatService` owns the fail-closed turn pipeline: conversation context -> retrieval -> constrained LLM turn planner -> policy/grounding validator -> audited response or handoff. Phase 0 implements this as a local engine and trace harness before the production API/widget/deployment layers.
+- **Domain:** `ChatService` eventually owns the fail-closed turn pipeline: conversation context -> retrieval -> constrained LLM turn planner -> policy/grounding validator -> audited response or handoff. Phase 0 proves this as a local `processTurn` engine and trace harness before the production API/widget/deployment layers.
 - **Persistence:** SQL Server via Prisma 7 (MSSQL adapter): sessions, transcript entries, client-message idempotency, audit events, UAT/evidence rows. Dockerized SQL Server for local dev and scratch verification.
 - **AI/RAG:** real API mode uses a managed knowledge-base retrieval path for grounded answers; classifier and vulnerability checks can switch to managed model services when enabled. All behind runtime switches.
 - **Infra:** backend builds into a Node 24 Alpine container; OpenTofu describes dev deployment. Shape: container registry -> managed container service -> managed SQL Server -> private static asset buckets behind CDN. Secrets and AI/RAG access injected via environment/config, never hardcoded.
@@ -49,9 +49,11 @@ The widget is embedded as an iframe on the client's WordPress site (a different 
 - Rationale for ordering: CHIPS first gives flexibility during the build and a fallback if the subdomain hits an unexpected snag; the subdomain is the stronger end state and the client agreed to it closer to deploy.
 - CSRF protection (custom header + double-submit token) applies in both cases. The session ID is never exposed to browser JavaScript; the non-secret conversation reference returned in responses is for support correlation only, not authentication.
 
-## Decision: vulnerability gate fails closed
+## Decision: vulnerability handling fails closed
 
-The vulnerability gate runs before classification. When it is model-backed and the model errors or times out, it must fail **closed**: treat the turn as a possible vulnerability and route to a human. Uncertainty routes to safety, never to normal flow. This backs a non-negotiable release rule in the product brief.
+The production vulnerability gate runs before normal routing. When it is model-backed and the model errors or times out, it must fail **closed**: treat the turn as a possible vulnerability and route to a human. Uncertainty routes to safety, never to normal flow. This backs a non-negotiable release rule in the product brief.
+
+Phase 0 proves the same safety boundary through one `TurnPlanner` call that proposes `safetyFlags`, followed by deterministic validation. Do not add a separate model-backed vulnerability detector during Phase 0 unless trace evidence shows the single-planner approach misses risk.
 
 ## Decision: grounding-adapter contract
 

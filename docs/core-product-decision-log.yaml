@@ -1,0 +1,172 @@
+version: 1
+title: Core Product Decision Log
+status: active
+updated: 2026-06-13
+authority:
+  role: Canonical record of accepted questions and answers from product and engine
+    alignment sessions.
+  application: Update the relevant source documents from accepted decisions as they
+    settle; keep AGENTS.md and README.md concise and pointer-oriented.
+  source_documents:
+    - AGENTS.md
+    - README.md
+    - docs/product-brief.md
+    - docs/architecture.md
+    - docs/llm-turn-planner-architecture.md
+    - data/public-info/loanslam-synthetic-kb.json
+decisions:
+  - id: D001
+    date: 2026-06-13
+    topic: Decision log location and authority
+    question: Where should the decision log live, and what authority should it have?
+    accepted_answer: Use docs/core-product-decision-log.yaml as the canonical record
+      of accepted Q&A from this grilling session. Product and engineering docs should
+      be updated from it as decisions settle. AGENTS.md and README.md stay concise
+      pointers; product-brief.md, architecture.md, and llm-turn-planner-architecture.md
+      carry the actual product and engineering contract.
+    status: accepted
+  - id: D002
+    date: 2026-06-13
+    topic: Phase 0 scaffolding boundary
+    question: What exactly is Phase 0 allowed to scaffold?
+    accepted_answer: Phase 0 may scaffold a TypeScript npm workspace only as far as
+      needed for the engine proof, including shared contracts, an engine package or
+      module, corpus loader/retriever, real planner adapter, CLI, simulation harness,
+      trace/report output, and tests. It must not scaffold the Vue widget, Express
+      production API, Prisma schema, SQL Server repositories, AWS/OpenTofu,
+      cookie/session machinery, or ticket webhook side effects. Do not build a
+      deterministic fake planner as a baseline or product-evidence path.
+    status: accepted
+  - id: D003
+    date: 2026-06-13
+    topic: Phase 0 engine terminology and TypeScript module style
+    question: What should we call the Phase 0 core, and what TypeScript module style
+      should implementation use?
+    accepted_answer: Use TurnPlanner for the swappable planner interface, processTurn
+      for the deterministic engine entrypoint, TurnPlan for the untrusted proposed
+      plan, and ValidatedTurnResult for the enforced output after policy and grounding
+      validation. Reserve ChatService for the later production backend wrapper. Phase
+      0 implementation must be actual TypeScript throughout; do not use .js import
+      specifiers in TypeScript source, including for module resolution.
+    status: accepted
+  - id: D004
+    date: 2026-06-13
+    topic: Serving mode behavior
+    question: What is the default customer-facing behavior for each serving_mode,
+      especially excluded?
+    accepted_answer: For answer, respond only from grounded answer_text and approved
+      links. For handoff_account_specific, do not answer the account-specific question;
+      collect handoff intake or route to a human. For route_vulnerability, stop normal
+      routing and use the vulnerability or escalation path with minimal context
+      collection. For excluded, do not answer the substance; use a safe refusal or
+      signpost response when the item has approved links, otherwise route to a human
+      fallback. Do not silently treat excluded as generic handoff, because that loses
+      the reason it was excluded.
+    status: accepted
+  - id: D005
+    date: 2026-06-13
+    topic: Handoff intake fields and Phase 0 PII priority
+    question: What are the standard handoff intake fields for Phase 0 traces and
+      later productisation?
+    accepted_answer: The canonical handoff intake fields are fullName, dateOfBirth,
+      address, phone, email, and situationSummary. In Phase 0 these may appear only
+      as requested or collected field names in simulated turns and traces, not as real
+      PII persistence or live ticket payloads. The engine must never request bank
+      details, card details, sort code, account number, online banking credentials,
+      or payment credentials. PII safety matters, but Phase 0 should not spend its
+      complexity budget building production-grade privacy infrastructure; the higher
+      priority is proving the decision engine and flexible customer handling.
+    status: accepted
+  - id: D006
+    date: 2026-06-13
+    topic: Phase 0 grounding rule
+    question: What is the Phase 0 grounding rule?
+    accepted_answer: Phase 0 uses a conservative, inspectable grounding rule without
+      brittle threshold gates. A customer-facing answer is allowed only when the final
+      result cites at least one retrieved corpus item with serving_mode answer. The
+      response may paraphrase only facts present in that item's answer_text and
+      approved links. If retrieval finds no answer item, or finds only
+      handoff_account_specific, route_vulnerability, or excluded items, the validator
+      must override away from answer. Phase 0 does not need a sophisticated semantic
+      unsupported-fact detector at the start; it needs traceable citations,
+      serving-mode enforcement, and journey tests that catch obvious invention. Scores
+      may be reported as evidence, but should not become brittle release gates until
+      observed runs justify them.
+    status: accepted
+  - id: D007
+    date: 2026-06-13
+    topic: Phase 0 validator responsibility
+    question: What is the validator's job in Phase 0?
+    accepted_answer: The validator is a policy and contract backstop, not a
+      taste-based conversation critic. It should override hard-rule violations such
+      as answering without serving_mode answer grounding, normal routing after
+      vulnerability or escalation, forbidden credential requests, identity
+      verification, account-specific answers, promised changes or outcomes,
+      unsupported UI primitives, and malformed schema. It should not override merely
+      because copy could be warmer, shorter, more natural, or because a different
+      clarification question might be better. UX-quality issues belong in journey
+      reports and model comparison metrics, not hard validator gates.
+    status: accepted
+  - id: D008
+    date: 2026-06-13
+    topic: Phase 0 vulnerability handling
+    question: Should Phase 0 implement a separate vulnerability detector before the
+      TurnPlanner, or let the TurnPlanner propose safety flags and have the validator
+      enforce fail-closed behavior?
+    accepted_answer: Phase 0 starts with a single TurnPlanner call that proposes
+      safetyFlags, plus deterministic validator enforcement. Do not build a separate
+      model-backed vulnerability gate in Phase 0. A separate vulnerability model is a
+      later hardening option if traces show the single-planner approach misses risk.
+      Journey tests must include vulnerability disclosures, indirect hardship,
+      complaint or legal threats, and malformed model cases. The validator must reject
+      normal answers or routing when vulnerability flags or route_vulnerability corpus
+      matches are present.
+    status: accepted
+  - id: D009
+    date: 2026-06-13
+    topic: Journey simulation assertions
+    question: What should the journey simulation suite assert?
+    accepted_answer: Journey simulations assert safety and UX envelopes rather than
+      exact wording. Each fixture should define customer turns, expected final action
+      or allowed actions, expected or forbidden serving_mode, required safety flags
+      when relevant, forbidden behaviors, max clarification turns where relevant, and
+      UX-quality notes that are reported but not hard-gated unless safety-relevant.
+      Forbidden behaviors include ungrounded answers, account-specific answers,
+      credential requests, normal routing after vulnerability, and promised outcomes.
+      Reports should include pass/fail plus metrics such as grounded answer rate,
+      unnecessary handoff rate, unsafe answer attempts, validator override rate,
+      vulnerability miss rate, repeated-question rate, malformed plan rate, and rough
+      cost or latency.
+    status: accepted
+  - id: D010
+    date: 2026-06-13
+    topic: Model comparison report purpose
+    question: What should the first model-comparison report decide, and what must it
+      not pretend to decide?
+    accepted_answer: The first model-comparison report ranks candidate planner
+      configurations for Phase 0 decision quality; it does not declare a production
+      model winner. It compares the same journey suite across planner configs and
+      reports safety pass rate, vulnerability miss rate, ungrounded answer attempts,
+      unnecessary handoff rate, validator override rate, repeated-question rate,
+      malformed plan rate, average turns to resolution, rough cost and latency, and
+      qualitative UX notes. It must not create brittle acceptance thresholds such as
+      a fixed score target. Instead, it identifies the current baseline, obvious
+      failure modes, corpus gaps, prompt or policy changes, and whether the engine is
+      credible enough to productise.
+    status: accepted
+  - id: D011
+    date: 2026-06-13
+    topic: Phase 0 exit gate and fake planner exclusion
+    question: What is enough evidence to pass the Phase 0 exit gate?
+    accepted_answer: Phase 0 does not use fake planners; deterministic fake planners
+      are a wasteful product-evidence path and should not be built as the baseline.
+      Narrow unit tests may construct TurnPlan objects directly to exercise validators,
+      but product confidence must come from real model-backed planner behavior. The
+      journey suite must be broad enough that the full C-suite could talk to it for an
+      hour across multiple personality types and come away feeling it does what was
+      promised. A suite that merely works for a few curated journeys is not enough.
+      Phase 0 passes only when it produces repeatable local runs, JSONL traces, model
+      comparison reports, a current baseline, visible failure modes, corpus gaps, UX
+      weaknesses, and a recommendation to productise, productise with named caveats,
+      or not productise yet.
+    status: accepted

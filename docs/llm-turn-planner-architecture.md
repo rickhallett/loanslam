@@ -88,6 +88,14 @@ conversation context -> retrieval -> LLM turn plan -> policy/grounding validator
 The LLM is allowed to reason over the conversation. It is not allowed to become the
 compliance boundary.
 
+Canonical Phase 0 terminology:
+
+- `processTurn`: the deterministic engine entrypoint
+- `TurnPlanner`: the swappable planner interface
+- `TurnPlan`: the untrusted proposed plan from the planner
+- `ValidatedTurnResult`: the enforced output after policy and grounding validation
+- `ChatService`: the later production backend wrapper, not the Phase 0 engine name
+
 ## Backend Responsibilities
 
 The eventual backend owns everything that must be deterministic, auditable, or
@@ -117,6 +125,13 @@ In Phase 0, only the engine-facing subset is built:
 
 Production concerns are represented as actions and traces, not implemented as full
 product infrastructure.
+
+Handoff intake in Phase 0 uses canonical field names only: `fullName`,
+`dateOfBirth`, `address`, `phone`, `email`, and `situationSummary`. These may appear
+in simulated turns, requested fields, collected-fact maps, and traces. Phase 0 must
+block requests for payment or bank credentials, but it should not spend its
+complexity budget on production-grade PII infrastructure before the decision engine
+has been proved.
 
 ## LLM Responsibilities
 
@@ -157,6 +172,8 @@ The model can:
 - choose an allowed UI primitive
 - phrase grounded answers in a natural support voice
 - summarize the reason for trace/review output
+- propose safety flags for vulnerability, distress, complaint, legal, accessibility,
+  hardship, and similar escalation risks
 
 The model cannot:
 
@@ -167,6 +184,11 @@ The model cannot:
 - decide to mutate customer records
 - promise ticket outcomes, eligibility, rates, dates, balances, or payment changes
 - continue normal routing after vulnerability or escalation is detected
+
+In Phase 0, vulnerability handling uses the same `TurnPlanner` call and its
+`safetyFlags`; it does not start with a separate model-backed vulnerability
+detector. A separate gate can be added later if trace evidence shows the single
+planner misses risk.
 
 ## UI Contract
 
@@ -190,6 +212,12 @@ returns.
 
 Treat model output as untrusted until it passes validation.
 
+The validator is a policy and contract backstop, not a taste-based conversation
+critic. It should enforce hard product rules and schema contracts. It should not
+override merely because a response could be warmer, shorter, more natural, or ask a
+better clarification question; those UX-quality signals belong in journey reports
+and model comparison.
+
 The validator should reject or override a turn plan when:
 
 - `action: "answer"` has no approved grounding source
@@ -202,6 +230,12 @@ The validator should reject or override a turn plan when:
 - the plan promises a loan change, repayment change, eligibility outcome, rate,
   balance, payment date, settlement figure, or account status
 - the requested UI primitive is not in the allowed set
+
+Phase 0 grounding should stay conservative and inspectable without brittle score
+thresholds. A customer-facing `answer` requires at least one cited retrieved corpus
+item with `serving_mode: "answer"`, and the phrased response must stay within that
+item's `answer_text` and approved links. Retrieval scores can be emitted as evidence,
+but they are not release gates until observed runs prove a threshold is useful.
 
 On rejection, the backend should route to the safest valid action and record the
 override. In Phase 0 that means a local trace entry; in the production product that
@@ -222,7 +256,9 @@ Suggested behaviour:
 - `answer`: model may phrase an answer, using the retrieved item as grounding
 - `handoff_account_specific`: collect standard handoff details and route to the team
 - `route_vulnerability`: route through the vulnerability/escalation path
-- `excluded`: refuse, fallback, signpost, or hand off depending on the item policy
+- `excluded`: do not answer the substance; use safe refusal or approved signposting
+  when the item has approved links, otherwise route to a human fallback. Preserve the
+  exclusion reason in traces and reports rather than collapsing it into generic handoff.
 
 This keeps the router small. Most of the release behaviour becomes data plus
 validation rather than branching code.
@@ -279,12 +315,15 @@ the model, prompt, retrieval set, and policy validator are varied?
 - a local corpus retriever using the approved/synthetic knowledge base
 - a policy and grounding validator
 - a swappable model adapter interface
-- at least one deterministic fake planner for baseline tests
 - at least one real model-backed planner
 - a local CLI and/or tiny HTTP server for manual probing
-- journey simulation fixtures covering multi-turn customer paths
+- a representative journey suite covering broad, messy, multi-turn customer paths
 - comparative reports across model/prompt/config variants
 - JSONL trace artifacts for every simulated turn
+
+Do not build a deterministic fake planner as a baseline or product-evidence path.
+Narrow unit tests may construct `TurnPlan` objects directly to exercise validator
+rules, but Phase 0 confidence must come from real model-backed planner behavior.
 
 ### Out Of Scope
 
@@ -338,8 +377,10 @@ Example trace:
 
 ### Journey Simulation
 
-The test suite should not only assert one-turn classification. It should simulate
-the paths customers actually take:
+The journey suite should not only assert one-turn classification or a few curated
+happy paths. It should be broad enough that the full C-suite could talk to it for an
+hour across multiple personality types and come away feeling the system does what
+was promised. It should simulate the paths customers actually take:
 
 - clear answerable FAQ question
 - vague first message followed by clarification
@@ -356,7 +397,13 @@ the paths customers actually take:
 - customer changes topic mid-flow
 - model returns malformed or unsafe output
 
-Each journey should assert the expected safety envelope rather than exact wording:
+Each journey should assert the expected safety and UX envelope rather than exact
+wording. Fixtures should define customer turns, expected final action or allowed
+actions, expected or forbidden `serving_mode`, required safety flags when relevant,
+forbidden behaviours, max clarification turns where relevant, and UX-quality notes
+that are reported but not hard-gated unless safety-relevant.
+
+Core envelope assertions include:
 
 - correct final action
 - no ungrounded regulated answer
@@ -392,7 +439,9 @@ type TurnPlanner = {
 ```
 
 Candidate models should run against the same journey suite and produce comparable
-trace output. This lets the team answer concrete questions:
+trace output. The first comparison report ranks candidate planner configurations for
+Phase 0 decision quality; it does not approve a production model or impose a fixed
+score threshold. This lets the team answer concrete questions:
 
 - Which model best distinguishes answerable general questions from account-specific
   requests?
@@ -403,11 +452,14 @@ trace output. This lets the team answer concrete questions:
 
 Without this evidence, choosing a model is taste dressed as engineering.
 
+The report should identify the current baseline, obvious failure modes, corpus gaps,
+prompt or policy changes, and whether the engine is credible enough to productise.
+
 ### Phase 0 Success Criteria
 
 Phase 0 succeeds when the team can demo and inspect:
 
-- a representative journey suite
+- a representative journey suite broad enough to support credible extended probing
 - repeatable local runs
 - model comparison reports
 - structured traces for every turn
@@ -432,6 +484,10 @@ evidence to answer:
 - What trace fields are genuinely useful for review?
 - Which failure modes must be designed into the production backend?
 
+The exit gate is not satisfied by a short suite that only works for a few journeys.
+It needs enough breadth, personality variance, and failure evidence to support a
+serious productisation decision.
+
 This exit gate is the point of the phase. It turns observed engine behaviour into
 product architecture.
 
@@ -454,16 +510,13 @@ pre-write every path.
 Recommended Phase 0 slices:
 
 1. Define the shared `TurnPlan`, `UiPlan`, grounding, safety flag, and trace schemas.
-2. Build a deterministic fake turn planner for local development and tests.
-3. Add retrieval over the approved knowledge base and enforce `serving_mode`.
-4. Add the policy/grounding validator and prove override behaviour.
-5. Add the real LLM-backed turn planner behind a runtime switch.
-6. Add the journey simulation harness and JSONL trace output.
-7. Add model comparison reports for candidate planner adapters.
-8. Add a small CLI and/or local HTTP server for demos and manual probes.
-
-The fake planner is important. It keeps local development predictable and prevents
-the real model from becoming a build dependency.
+2. Add retrieval over the approved knowledge base and enforce `serving_mode`.
+3. Add the policy/grounding validator and prove override behaviour with direct
+   `TurnPlan` fixtures where useful.
+4. Add the real LLM-backed turn planner behind a runtime switch.
+5. Add the representative journey simulation harness and JSONL trace output.
+6. Add model comparison reports for candidate planner adapters.
+7. Add a small CLI and/or local HTTP server for demos and manual probes.
 
 Recommended Phase 1 productisation slices, after the Phase 0 exit gate:
 
@@ -482,10 +535,10 @@ This variant still needs owner decisions before release:
 
 - which model/provider is approved for customer data
 - exact prompt and policy versioning strategy
-- grounding threshold and citation requirements
+- production grounding/citation policy after Phase 0 evidence
 - vulnerability/escalation taxonomy and approved copy
 - handoff intake fields and webhook contract
-- whether excluded items should fallback, refuse, signpost, or hand off by default
+- approved refusal/signpost/fallback copy for excluded items
 - transcript/audit retention and access controls
 
 ## Suggested Architecture Wording
@@ -500,7 +553,7 @@ vulnerability gate -> classifier -> router -> response generation.
 to:
 
 ```text
-ChatService owns the fail-closed turn pipeline:
+ChatService eventually owns the fail-closed turn pipeline:
 conversation context -> retrieval -> constrained LLM turn planner ->
 policy/grounding validator -> audited response or handoff.
 ```
