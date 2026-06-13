@@ -1,0 +1,23 @@
+{
+  "name": "@loanslam/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./corpus": {
+      "types": "./dist/corpus.d.ts",
+      "default": "./src/corpus.ts"
+    },
+    "./retriever": {
+      "types": "./dist/retriever.d.ts",
+      "default": "./src/retriever.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build --pretty false"
+  },
+  "dependencies": {
+    "@loanslam/contracts": "0.0.0"
+  }
+}
