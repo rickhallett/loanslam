@@ -3,6 +3,34 @@ set dotenv-load
 default:
     @just --list
 
+# Run the TypeScript/Vitest test suite.
+test:
+    npm test
+
+# Type-check all npm workspaces.
+typecheck:
+    npm run typecheck
+
+# Build all npm workspaces.
+build:
+    npm run build
+
+# Check formatting without changing files.
+format-check:
+    npm run format:check
+
+# Run one local TurnPlanner turn through the Phase 0 CLI.
+core-turn *args:
+    npm run core:turn -- {{args}}
+
+# Run the Phase 0 journey simulation.
+core-simulate *args:
+    npm run core:simulate -- {{args}}
+
+# Compare configured Phase 0 planner models.
+core-compare *args:
+    npm run core:compare -- {{args}}
+
 # Start the local SQL Server container.
 mssql-up:
     @if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \

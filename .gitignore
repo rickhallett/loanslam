@@ -1,1 +1,14 @@
 reference/
+node_modules/
+dist/
+coverage/
+.turbo/
+.vitest/
+*.tsbuildinfo
+
+# Phase 0 local evidence artifacts.
+traces/
+reports/
+exports/
+artifacts/
+*.jsonl
