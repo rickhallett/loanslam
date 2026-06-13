@@ -1,0 +1,181 @@
+import {
+  turnActionSchema,
+  uiPrimitiveSchema,
+  type ApprovedLink,
+  type IntakeField,
+  type SafetyFlag,
+  type TurnAction,
+  type UiPlan,
+  type UiPrimitive,
+} from "@loanslam/contracts";
+
+export const policyVersion = "phase0-turnplanner-policy-v1";
+
+export const allowedActions = [...turnActionSchema.options];
+export const allowedUiPrimitives = [...uiPrimitiveSchema.options];
+
+export const standardHandoffFields = [
+  "fullName",
+  "dateOfBirth",
+  "address",
+  "phone",
+  "email",
+  "situationSummary",
+] as const satisfies readonly IntakeField[];
+
+export const vulnerabilitySafetyFlags = [
+  "vulnerability",
+  "distress",
+  "hardship",
+  "complaint",
+  "legal_threat",
+  "accessibility_need",
+] as const satisfies readonly SafetyFlag[];
+
+export const handoffSafetyFlags = [
+  "account_specific_request",
+  "change_request",
+] as const satisfies readonly SafetyFlag[];
+
+const uiPrimitivesByAction = {
+  answer: ["message"],
+  ask_clarifying_question: ["clarifying_prompt", "choice_list"],
+  request_handoff_intake: ["intake_form"],
+  create_ticket: ["handoff_confirmation"],
+  escalate: ["intake_form", "handoff_confirmation"],
+  refuse: ["safe_fallback"],
+  fallback: ["safe_fallback"],
+} as const satisfies Record<TurnAction, readonly UiPrimitive[]>;
+
+const forbiddenCredentialTermPattern =
+  /\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|payment\s+credentials?)\b/i;
+
+const credentialCollectionPattern =
+  /\b(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|payment\s+credentials?)\b/i;
+
+const credentialWarningPattern =
+  /\b(never|do\s+not|don't|dont|should\s+not|must\s+not)\s+(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|payment\s+credentials?)\b/i;
+
+const accountPromisePattern =
+  /\b(your\s+)?(balance|settlement\s+figure|next\s+payment\s+date|repayment\s+date|interest\s+rate|apr|approval|application\s+result|payment\s+change|reduced\s+payment)\b|\b(approved|accepted|guaranteed|changed|will\s+be\s+paid|will\s+receive\s+funds)\b/i;
+
+export function allowedUiPrimitivesForAction(
+  action: TurnAction,
+): readonly UiPrimitive[] {
+  return uiPrimitivesByAction[action];
+}
+
+export function uiMatchesAction(action: TurnAction, ui: UiPlan): boolean {
+  return allowedUiPrimitivesForAction(action).includes(ui.primitive);
+}
+
+export function hasVulnerabilitySafetyFlag(
+  flags: readonly SafetyFlag[],
+): boolean {
+  const vulnerabilityFlags: readonly SafetyFlag[] = vulnerabilitySafetyFlags;
+  return flags.some((flag) => vulnerabilityFlags.includes(flag));
+}
+
+export function hasHandoffSafetyFlag(flags: readonly SafetyFlag[]): boolean {
+  const routeFlags: readonly SafetyFlag[] = handoffSafetyFlags;
+  return flags.some((flag) => routeFlags.includes(flag));
+}
+
+export function detectForbiddenCredentialRequest(text: string): boolean {
+  if (credentialWarningPattern.test(text)) {
+    return false;
+  }
+
+  return credentialCollectionPattern.test(text);
+}
+
+export function containsForbiddenCredentialTerm(text: string): boolean {
+  return forbiddenCredentialTermPattern.test(text);
+}
+
+export function detectPromisedAccountValueOrOutcome(text: string): boolean {
+  return accountPromisePattern.test(text);
+}
+
+export function buildFallbackCopy(reason: string): {
+  action: "fallback";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage =
+    "I cannot answer that safely from the information available here. I can pass this to the Loanslam team so they can help.";
+
+  return {
+    action: "fallback",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: `${customerMessage} ${reason}`,
+      links: [],
+    },
+  };
+}
+
+export function buildHandoffCopy(reason: string): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I cannot handle that directly in chat. I can collect a few contact details and pass this to the Loanslam team.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: `${customerMessage} ${reason}`,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
+export function buildVulnerabilityCopy(reason: string): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I am sorry you are dealing with this. I can pass this to the Loanslam team so a person can help you carefully.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: `${customerMessage} ${reason}`,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
+export function buildExcludedCopy(
+  reason: string,
+  links: readonly ApprovedLink[] = [],
+): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage =
+    "I cannot answer that in chat. I can signpost general information or pass this to the Loanslam team.";
+
+  return {
+    action: "refuse",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: `${customerMessage} ${reason}`,
+      links: [...links],
+    },
+  };
+}
