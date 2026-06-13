@@ -136,7 +136,10 @@ parses, type-checks, builds, and passes its unit tests.
 
 The `core-*` commands run the engine proof from the terminal. They are for reviewing
 the TurnPlanner's behaviour before any widget, production API, database, or ticket
-webhook exists.
+webhook exists. Phase 0 evidence is not just pass/fail fixtures: it should include
+the actual message/response sequences produced across different customer
+personalities, plus a way for a human reviewer to drive the same core engine by
+hand.
 
 They all use the same local pipeline:
 
@@ -186,6 +189,54 @@ summarises pass/fail envelopes, validator overrides, vulnerability misses,
 grounded-answer rate, unnecessary handoff rate, average turns, failure modes, and a
 recommendation. It is evidence for Phase 0 review, not production model approval.
 
+Use `core-persona-simulate` when you want hard data across customer personalities:
+
+```bash
+just core-persona-simulate -- \
+  --transcripts-output artifacts/phase0/persona-transcripts.jsonl \
+  --report-output artifacts/phase0/persona-report.json
+```
+
+The persona suite covers cooperative, adversarial, confused, terse, impatient,
+vulnerable, oversharing, legal-threat, topic-switching, low-literacy, and
+hostile-but-valid customers. The transcript JSONL preserves every user message,
+bot response, final action, proposed action, retrieved item IDs, safety flags,
+validator override codes, requested handoff fields, safe collected facts,
+validated UI plan, selected `serving_mode`, route reason, trace ID, and request
+reference. The report aggregates hard data such as handoff rate, answer
+rate, clarification rate, validator override rate, unsafe answer attempts,
+vulnerability handling, per-persona action counts, and failure modes.
+
+Use `core-chat` when you want to be the customer yourself, turn by turn:
+
+```bash
+just core-chat -- --trace
+```
+
+The chat loop keeps conversation state between turns and sends each message through
+`processTurn`. `--trace` prints compact trace details after each bot response.
+Type `/exit` or `/quit` to leave.
+
+Use `core-serve` when you want a thin local client/server relationship over the
+core engine:
+
+```bash
+just core-serve -- --port 8787
+```
+
+This is a dev-only lab API, not the production Express service. It stores sessions
+in memory and exposes only:
+
+```text
+POST /sessions
+POST /sessions/:conversationRef/messages
+GET  /sessions/:conversationRef
+POST /sessions/:conversationRef/reset
+```
+
+It exists so reviewers can get a feel for the engine over HTTP without pulling in
+SQL Server, auth, cookies, CSRF, ticket webhooks, widget state, or deployment.
+
 The local SQL Server dependency remains available for later productisation work so
 backend persistence can start against the same shape when Phase 0 earns it.
 
@@ -209,6 +260,9 @@ just mssql-down        # remove container and data volume
 just test              # run Vitest
 just typecheck         # type-check workspaces
 just build             # build workspaces
+just core-chat -- --trace
+just core-persona-simulate -- --transcripts-output artifacts/phase0/persona-transcripts.jsonl --report-output artifacts/phase0/persona-report.json
+just core-serve -- --port 8787
 ```
 
 Defaults live in [`.env.example`](./.env.example). The SQL Server host port

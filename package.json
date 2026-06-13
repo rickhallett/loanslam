@@ -12,7 +12,10 @@
     "format:check": "prettier --check \"package.json\" \"package-lock.json\" \"tsconfig*.json\" \"vitest.config.ts\" \"packages/**/*.ts\" \"packages/**/package.json\" \"packages/**/tsconfig.json\"",
     "core:turn": "tsx packages/core/src/cli.ts turn",
     "core:simulate": "tsx packages/core/src/cli.ts simulate",
-    "core:compare": "tsx packages/core/src/cli.ts compare"
+    "core:compare": "tsx packages/core/src/cli.ts compare",
+    "core:persona-simulate": "tsx packages/core/src/cli.ts persona-simulate",
+    "core:chat": "tsx packages/core/src/cli.ts chat",
+    "core:serve": "tsx packages/core/src/cli.ts serve"
   },
   "dependencies": {
     "openai": "^6.9.1",

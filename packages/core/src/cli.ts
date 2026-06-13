@@ -1,10 +1,13 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 
 import { type ConversationState, type TurnPlanner } from "@loanslam/contracts";
 
 import { loadCorpusFromFile } from "./corpus";
 import { processTurn } from "./engine";
+import { createLabServer } from "./lab/server";
 import {
   loadOpenAiPlannerConfig,
   PlannerConfigurationError,
@@ -14,11 +17,28 @@ import { policyVersion } from "./policy";
 import { buildModelComparisonReport } from "./simulation/report";
 import { journeyFixtures } from "./simulation/journeys";
 import { runJourneySuite } from "./simulation/runner";
+import { defaultPersonaScenarios } from "./simulation/personas";
+import {
+  runPersonaSuite,
+  writeTranscriptJsonl,
+} from "./simulation/personaRunner";
+import { buildPersonaReport } from "./simulation/personaReport";
 
 export interface CliResult {
   exitCode: number;
   stdout: string;
   stderr: string;
+}
+
+export interface CliIo {
+  readLine(prompt: string): Promise<string | null>;
+  writeLine(line: string): void;
+  close?(): void;
+  captureOutput?: boolean;
+}
+
+export interface CliOptions {
+  io?: CliIo;
 }
 
 type PlannerFactory = () => TurnPlanner & {
@@ -32,6 +52,7 @@ export async function runCli(
   env = process.env,
   plannerFactory: PlannerFactory = () =>
     new OpenAiTurnPlanner({ config: loadOpenAiPlannerConfig(env) }),
+  options: CliOptions = {},
 ): Promise<CliResult> {
   const [command, ...rest] = args;
 
@@ -50,6 +71,18 @@ export async function runCli(
 
     if (command === "compare") {
       return await runComparison(rest, plannerFactory);
+    }
+
+    if (command === "persona-simulate") {
+      return await runPersonaSimulation(rest, plannerFactory);
+    }
+
+    if (command === "chat") {
+      return await runInteractiveChat(rest, plannerFactory, options);
+    }
+
+    if (command === "serve") {
+      return await runServer(rest, plannerFactory);
     }
 
     return fail(`Unknown command: ${command}\n\n${helpText()}`);
@@ -140,6 +173,139 @@ async function runComparison(
   return ok(JSON.stringify({ outputPath, comparison }, null, 2));
 }
 
+async function runPersonaSimulation(
+  args: string[],
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  const transcriptOutputPath =
+    readOption(args, "--transcripts-output") ??
+    join(defaultTraceDir, `persona-transcripts-${Date.now()}.jsonl`);
+  const reportOutputPath =
+    readOption(args, "--report-output") ??
+    join(defaultTraceDir, `persona-report-${Date.now()}.json`);
+  const planner = plannerFactory();
+  const transcripts = await runPersonaSuite({
+    scenarios: defaultPersonaScenarios,
+    corpus: loadCorpusFromFile().items,
+    planner,
+  });
+  const report = buildPersonaReport({
+    runId: `phase0-persona-${Date.now()}`,
+    planner: planner.metadata,
+    transcripts,
+    transcriptOutputPath,
+  });
+
+  writeTranscriptJsonl(transcriptOutputPath, transcripts);
+  mkdirSync(dirname(reportOutputPath), { recursive: true });
+  writeFileSync(
+    reportOutputPath,
+    `${JSON.stringify(report, null, 2)}\n`,
+    "utf8",
+  );
+
+  return ok(
+    JSON.stringify(
+      {
+        transcriptCount: transcripts.length,
+        transcriptOutputPath,
+        reportOutputPath,
+        report,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function runInteractiveChat(
+  args: string[],
+  plannerFactory: PlannerFactory,
+  options: CliOptions,
+): Promise<CliResult> {
+  const showTrace = args.includes("--trace");
+  const io = options.io ?? createTerminalIo();
+  const outputLines: string[] = [];
+  let state = emptyConversationState("cli-chat");
+
+  try {
+    writeLine(io, outputLines, "Loanslam Phase 0 chat. Type /exit to leave.");
+
+    while (true) {
+      const message = await io.readLine("> ");
+
+      if (message === null) {
+        break;
+      }
+
+      const trimmed = message.trim();
+
+      if (!trimmed || trimmed === "/exit" || trimmed === "/quit") {
+        break;
+      }
+
+      const result = await processTurn({
+        state,
+        userMessage: trimmed,
+        planner: plannerFactory(),
+        corpus: loadCorpusFromFile().items,
+      });
+      state = result.state;
+      writeLine(io, outputLines, result.customerMessage);
+
+      if (showTrace) {
+        writeLine(
+          io,
+          outputLines,
+          JSON.stringify(
+            {
+              finalAction: result.finalAction,
+              selectedServingMode: result.trace.selectedServingMode,
+              safetyFlags: result.trace.safetyFlags,
+              validatorOverrides: result.validatorOverrides,
+              retrievedItemIds: result.trace.retrievedMatches.map(
+                (match) => match.itemId,
+              ),
+            },
+            null,
+            2,
+          ),
+        );
+      }
+    }
+  } finally {
+    io.close?.();
+  }
+
+  return ok(io.captureOutput === false ? "" : outputLines.join("\n"));
+}
+
+async function runServer(
+  args: string[],
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  if (args.includes("--help") || args.includes("-h")) {
+    return ok(serverHelpText());
+  }
+
+  const port = Number(readOption(args, "--port") ?? "8787");
+
+  if (!Number.isInteger(port) || port <= 0) {
+    return fail("--port must be a positive integer.");
+  }
+
+  const server = createLabServer({
+    corpus: loadCorpusFromFile().items,
+    plannerFactory,
+  });
+
+  await new Promise<void>((resolve) => {
+    server.listen(port, "127.0.0.1", resolve);
+  });
+
+  return ok(`Loanslam Phase 0 lab API listening on http://127.0.0.1:${port}`);
+}
+
 function emptyConversationState(conversationRef: string): ConversationState {
   return {
     conversationRef,
@@ -186,10 +352,52 @@ function helpText(): string {
     "  turn --message <text>             Run one real planner-backed turn",
     "  simulate [--trace-output <path>]  Run the representative journey suite",
     "  compare [--output <path>]         Write a model comparison report",
+    "  persona-simulate                  Run the persona scenario suite",
+    "  chat [--trace]                    Drive the engine turn by turn",
+    "  serve [--port <port>]             Start the dev-only lab API",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
   ].join("\n");
+}
+
+function serverHelpText(): string {
+  return [
+    "Loanslam Phase 0 lab API",
+    "",
+    "Usage:",
+    "  serve [--port <port>]",
+    "",
+    "Routes:",
+    "  POST /sessions",
+    "  POST /sessions/:conversationRef/messages",
+    "  GET  /sessions/:conversationRef",
+    "  POST /sessions/:conversationRef/reset",
+    "",
+    "This is a local lab surface over processTurn, not the production API.",
+  ].join("\n");
+}
+
+function createTerminalIo(): CliIo {
+  const terminal = createInterface({ input, output });
+
+  return {
+    captureOutput: false,
+    async readLine(prompt: string) {
+      return await terminal.question(prompt);
+    },
+    writeLine(line: string) {
+      output.write(`${line}\n`);
+    },
+    close() {
+      terminal.close();
+    },
+  };
+}
+
+function writeLine(io: CliIo, outputLines: string[], line: string): void {
+  outputLines.push(line);
+  io.writeLine(line);
 }
 
 function ignoreBrokenPipe(error: NodeJS.ErrnoException): void {

@@ -302,6 +302,89 @@ export const journeyReportSchema = z.object({
 });
 export type JourneyReport = z.infer<typeof journeyReportSchema>;
 
+export const personaProfileSchema = z.object({
+  id: nonEmptyStringSchema,
+  label: nonEmptyStringSchema,
+  traits: z.array(nonEmptyStringSchema).min(1),
+  styleNotes: nonEmptyStringSchema,
+});
+export type PersonaProfile = z.infer<typeof personaProfileSchema>;
+
+export const personaScenarioSchema = z.object({
+  id: nonEmptyStringSchema,
+  title: nonEmptyStringSchema,
+  description: z.string().trim().optional(),
+  persona: personaProfileSchema,
+  objective: nonEmptyStringSchema,
+  customerTurns: z.array(nonEmptyStringSchema).min(1),
+  tags: z.array(nonEmptyStringSchema).default([]),
+});
+export type PersonaScenario = z.infer<typeof personaScenarioSchema>;
+
+export const transcriptTurnSchema = z.object({
+  turnIndex: z.number().int().nonnegative(),
+  userMessage: nonEmptyStringSchema,
+  botMessage: nonEmptyStringSchema,
+  proposedAction: turnActionSchema,
+  finalAction: turnActionSchema,
+  selectedServingMode: servingModeSchema.nullable(),
+  selectedRouteReason: z.string().trim().nullable().optional(),
+  safetyFlags: z.array(safetyFlagSchema).default([]),
+  validatorOverrideCodes: z.array(nonEmptyStringSchema).default([]),
+  retrievedItemIds: z.array(nonEmptyStringSchema).default([]),
+  requestedFields: z.array(intakeFieldSchema).default([]),
+  collectedFacts: z.record(z.string(), z.string()).default({}),
+  ui: uiPlanSchema,
+  traceId: nonEmptyStringSchema,
+  requestRef: nonEmptyStringSchema,
+  createdAt: z.string().datetime(),
+});
+export type TranscriptTurn = z.infer<typeof transcriptTurnSchema>;
+
+export const conversationTranscriptSchema = z.object({
+  transcriptId: nonEmptyStringSchema,
+  scenarioId: nonEmptyStringSchema,
+  scenarioTitle: nonEmptyStringSchema,
+  persona: personaProfileSchema,
+  planner: plannerMetadataSchema,
+  policyVersion: nonEmptyStringSchema,
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime(),
+  turns: z.array(transcriptTurnSchema).min(1),
+  finalAction: turnActionSchema,
+  validatorOverrideCount: z.number().int().nonnegative(),
+  unsafeAnswerAttempts: z.number().int().nonnegative(),
+  vulnerabilityHandled: z.boolean(),
+  tags: z.array(nonEmptyStringSchema).default([]),
+});
+export type ConversationTranscript = z.infer<
+  typeof conversationTranscriptSchema
+>;
+
+export const personaReportSchema = z.object({
+  runId: nonEmptyStringSchema,
+  createdAt: z.string().datetime(),
+  planner: plannerMetadataSchema,
+  policyVersion: nonEmptyStringSchema,
+  metrics: z.object({
+    transcriptCount: z.number().int().nonnegative(),
+    turnCount: z.number().int().nonnegative(),
+    personaCount: z.number().int().nonnegative(),
+    handoffRate: z.number().min(0).max(1),
+    answerRate: z.number().min(0).max(1),
+    clarificationRate: z.number().min(0).max(1),
+    validatorOverrideRate: z.number().min(0).max(1),
+    unsafeAnswerAttempts: z.number().int().nonnegative(),
+    vulnerabilityHandledCount: z.number().int().nonnegative(),
+  }),
+  perPersonaActionCounts: z
+    .record(z.string(), z.record(z.string(), z.number().int().nonnegative()))
+    .default({}),
+  failureModes: z.array(nonEmptyStringSchema).default([]),
+  transcriptOutputPath: z.string().trim().optional(),
+});
+export type PersonaReport = z.infer<typeof personaReportSchema>;
+
 export const modelComparisonReportSchema = z.object({
   runId: nonEmptyStringSchema,
   createdAt: z.string().datetime(),

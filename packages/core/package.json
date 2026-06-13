@@ -35,6 +35,22 @@
     "./simulation/report": {
       "types": "./dist/simulation/report.d.ts",
       "default": "./src/simulation/report.ts"
+    },
+    "./simulation/personas": {
+      "types": "./dist/simulation/personas.d.ts",
+      "default": "./src/simulation/personas.ts"
+    },
+    "./simulation/persona-runner": {
+      "types": "./dist/simulation/personaRunner.d.ts",
+      "default": "./src/simulation/personaRunner.ts"
+    },
+    "./simulation/persona-report": {
+      "types": "./dist/simulation/personaReport.d.ts",
+      "default": "./src/simulation/personaReport.ts"
+    },
+    "./lab/server": {
+      "types": "./dist/lab/server.d.ts",
+      "default": "./src/lab/server.ts"
     }
   },
   "scripts": {

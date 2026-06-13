@@ -31,6 +31,18 @@ core-simulate *args:
 core-compare *args:
     @npm --silent run core:compare -- {{args}}
 
+# Run the Phase 0 persona scenario simulation.
+core-persona-simulate *args:
+    @npm --silent run core:persona-simulate -- {{args}}
+
+# Drive the Phase 0 engine turn by turn from the terminal.
+core-chat *args:
+    @npm --silent run core:chat -- {{args}}
+
+# Start the dev-only Phase 0 lab API over the core engine.
+core-serve *args:
+    @npm --silent run core:serve -- {{args}}
+
 # Start the local SQL Server container.
 mssql-up:
     @if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \
