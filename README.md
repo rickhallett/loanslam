@@ -6,11 +6,11 @@ business-operations questions, detects vulnerability and escalation signals earl
 and routes anything account-specific to the human support team — it does not service
 accounts itself.
 
-> **Status: pre-implementation.** This repository currently holds the product brief,
-> architecture decisions, a TurnPlanner engine-first companion architecture, and a
-> synthetic knowledge-base corpus. Application code (backend, widget, contracts) is
-> not yet scaffolded. Treat the documents in `docs/` as the source of truth for
-> scope and design.
+> **Status: Phase 0 engine proof.** This repository now includes the TurnPlanner
+> core workspace, contracts, retrieval, validator, trace simulation, and model
+> comparison harness. The product widget, production API, persistence, deployment,
+> and ticket side effects are intentionally not scaffolded yet. Treat the documents
+> in `docs/` as the source of truth for scope and design.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). The repository must not be copied, modified, repurposed, or
@@ -28,6 +28,9 @@ the core processing engine, retrieval, policy/grounding validator, local trace
 evidence, journey simulation suite, and model comparison harness before building the
 widget, AWS deployment, production audit store, real PII intake, or ticket webhook.
 See [`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
+Phase 0 evidence must come from real model-backed planner behaviour, not a fake
+planner baseline, and the journey suite must be broad enough for extended stakeholder
+probing across multiple customer personalities.
 
 Core behaviour:
 
@@ -58,6 +61,9 @@ docs/                              Source-of-truth design documents
   product-brief.md                 Product scope, journeys, requirements, release rules
   architecture.md                  Stack and architectural decisions
   llm-turn-planner-architecture.md Current Phase 0 engine-first direction
+packages/
+  contracts/                       Shared Zod contracts for Phase 0
+  core/                            TurnPlanner engine, retrieval, planner adapters, simulation
 data/
   public-info/
     loan-slam-faq.json             Mock public FAQ corpus
@@ -76,15 +82,16 @@ implementation phase is narrower: prove the TurnPlanner engine described in
 - **Widget:** Vue 3 iframe widget (Vite), thin — rendering and transport only.
 - **API:** Node 24, Express 5, TypeScript; Helmet/CORS/CSRF; route-local OpenAPI.
 - **Contracts:** shared Zod schemas and the `ServiceResponse` envelope.
-- **Domain:** `ChatService` fail-closed turn pipeline — conversation context →
-  retrieval → constrained LLM turn planner → policy/grounding validator → audited
-  response or handoff.
+- **Domain:** Phase 0 proves a local `processTurn` engine — conversation context →
+  retrieval → constrained `TurnPlanner` → policy/grounding validator → validated
+  trace/result. `ChatService` is the later production wrapper around the proven engine.
 - **Persistence:** SQL Server via Prisma (sessions, transcripts, audit, evidence).
 - **AI / retrieval:** managed knowledge-base retrieval and model-backed checks behind
   runtime switches.
 - **Infra:** Node Alpine container, OpenTofu; registry → managed container service →
   managed SQL Server → static assets behind CDN.
 - **Tooling:** Justfile as the operator front door; Vitest, ESLint, Prettier.
+  TypeScript source imports do not use `.js` specifiers.
 
 The widget is embedded in the client's WordPress site via an iframe; the session
 cookie strategy is CHIPS partitioned cookies now, moving to a same-site subdomain
@@ -96,19 +103,44 @@ closer to deploy (see `architecture.md`).
 mock FAQ and the observed support voice, treated as real for build and review. Each
 item carries a `serving_mode` discriminator that drives the answerable-vs-route gate:
 
-| serving_mode | Meaning |
-|---|---|
-| `answer` | Safe public/general info or policy/process; carries `answer_text`. |
-| `handoff_account_specific` | Needs the customer's real account data; routes to the team. |
-| `route_vulnerability` | Vulnerability/distress signal; routes to a human. |
-| `excluded` | Public but must not be served (e.g. rates, regulated advice); routes safely. |
+| serving_mode               | Meaning                                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `answer`                   | Safe public/general info or policy/process; carries `answer_text`.                                                          |
+| `handoff_account_specific` | Needs the customer's real account data; routes to the team.                                                                 |
+| `route_vulnerability`      | Vulnerability/distress signal; routes to a human.                                                                           |
+| `excluded`                 | Recognised subject that must not be answered substantively; refuse/signpost with approved links or route to human fallback. |
 
 Canonical brand throughout is **Loanslam** (`loanslam.co.uk`).
 
 ## Development
 
-Application code is not yet scaffolded. The local SQL Server dependency is in
-place so backend work can start against the same persistence shape from day one.
+Install workspace dependencies:
+
+```bash
+npm install
+```
+
+Run the Phase 0 core gates:
+
+```bash
+npm test
+npm run typecheck
+npm run build
+npm run format:check
+```
+
+Real planner-backed commands require `OPENAI_API_KEY`; `OPENAI_MODEL` can override
+the default planner model. Generated Phase 0 evidence is written under
+`artifacts/phase0/` unless a command-specific output path is supplied.
+
+```bash
+just core-turn -- --message "How do I apply?"
+just core-simulate -- --trace-output artifacts/phase0/traces.jsonl
+just core-compare -- --output artifacts/phase0/comparison.json
+```
+
+The local SQL Server dependency remains available for later productisation work so
+backend persistence can start against the same shape when Phase 0 earns it.
 
 Start the local database from the repo root:
 
@@ -127,6 +159,9 @@ just mssql-wait        # wait for healthcheck
 just mssql-url         # print the local Prisma/app SQL Server URL
 just mssql-stop        # stop container, keep data volume
 just mssql-down        # remove container and data volume
+just test              # run Vitest
+just typecheck         # type-check workspaces
+just build             # build workspaces
 ```
 
 Defaults live in [`.env.example`](./.env.example). The SQL Server host port
