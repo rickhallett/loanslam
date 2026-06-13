@@ -4,6 +4,7 @@ import {
   type IntakeField,
   type IntakeFieldName,
 } from '@loanslam/contracts';
+import { looksLikeCredential } from '../../domain/credentials.js';
 
 /**
  * The account-handoff intake form. The widget renders exactly this config; the
@@ -47,28 +48,10 @@ export interface IntakeValidationResult {
   cleaned: Partial<Record<IntakeFieldName, string>>;
 }
 
-// Defensive credential patterns. We never store these, even if the customer
-// pastes them into a free-text field (brief §16). The negative lookarounds keep
-// these from false-positiving on dates (1990-01-02) or matching inside a longer
-// digit run (an 11-digit phone number).
-//
-// Sort codes are caught in every SEPARATED form people actually type them —
-// "20-00-00", "20 00 00", "20.00.00" — with any of dash/space/dot. A bare,
-// run-together "200000" is deliberately NOT matched: it is indistinguishable
-// from a fragment of a phone number and would reject valid phone entries. Real
-// sort codes are written with separators. Account numbers are caught both
-// run-together (12345678) and grouped (1234 5678); cards across 13-19 digits.
-const CARD_NUMBER_RE = /(?<!\d)(?:\d[ .-]?){13,19}(?!\d)/;
-const SORT_CODE_RE = /(?<![\d.-])\d{2}[ .-]\d{2}[ .-]\d{2}(?![\d.-])/;
-const BANK_ACCOUNT_RE = /(?<!\d)\d{4}[ .-]?\d{4}(?!\d)/;
 // Basic email/date sanity (intentionally permissive — verification is a human job).
+// Credential detection lives in domain/credentials.ts (shared with the extractor).
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-/** True if a value looks like a card number, sort code, or bank account number. */
-function looksLikeCredential(value: string): boolean {
-  return CARD_NUMBER_RE.test(value) || SORT_CODE_RE.test(value) || BANK_ACCOUNT_RE.test(value);
-}
 
 function isIntakeFieldName(key: string): key is IntakeFieldName {
   return intakeFieldNameSchema.safeParse(key).success;

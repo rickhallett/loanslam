@@ -7,6 +7,8 @@ import type {
 import type {
   ClassificationInput,
   ClassificationResult,
+  ExtractInput,
+  ExtractResult,
   ModelAdapter,
   PhraseInput,
   VulnerabilityInput,
@@ -31,12 +33,14 @@ export interface FakeModelOptions {
   classification?: ClassificationResult;
   /** null simulates the model declining to phrase safely. */
   phrase?: string | null;
+  extract?: ExtractResult;
 }
 
 export class FakeModel implements ModelAdapter {
   detectCalls = 0;
   classifyCalls = 0;
   phraseCalls = 0;
+  extractCalls = 0;
 
   constructor(private readonly opts: FakeModelOptions = {}) {}
 
@@ -68,6 +72,18 @@ export class FakeModel implements ModelAdapter {
     this.phraseCalls += 1;
     if (this.opts.phrase === null) return null;
     return this.opts.phrase ?? `Phrased: ${input.groundedAnswerText}`;
+  }
+
+  async extract(_input: ExtractInput): Promise<ExtractResult> {
+    this.extractCalls += 1;
+    return (
+      this.opts.extract ?? {
+        slots: {},
+        signals: { correction: false, refusal: false, offTopic: false, question: false },
+        confidence: 0,
+        source: 'deterministic',
+      }
+    );
   }
 }
 

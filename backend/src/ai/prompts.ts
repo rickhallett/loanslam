@@ -1,5 +1,6 @@
 import type {
   ClassificationInput,
+  ExtractInput,
   PhraseInput,
   VulnerabilityInput,
 } from '../ports/model.port.js';
@@ -141,6 +142,64 @@ export function buildClassificationPrompt(input: ClassificationInput): ChatMessa
     `  question: ${retrieval.topQuestion ?? 'none'}`,
     '',
     'Return the JSON classification now.',
+  ].join('\n');
+
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+// ── Extraction (mixed-initiative slot filling) ───────────────────────────────
+
+/**
+ * Pull slot values and dialogue signals from the latest message. The model only
+ * extracts what the customer actually said into the REQUESTED slots; the policy
+ * decides what to do next. The exact JSON shape the model must return:
+ *   { "slots": { <requestedSlot>: string, ... },
+ *     "signals": { "correction": bool, "refusal": bool,
+ *                  "offTopic": bool, "question": bool },
+ *     "confidence": number (0..1) }
+ */
+export function buildExtractPrompt(input: ExtractInput): ChatMessage[] {
+  const system = [
+    'You extract structured details from a UK consumer-loans support chat.',
+    'You do NOT decide what happens next — you only report what the customer said.',
+    '',
+    'Extract ONLY these requested fields, and only when the customer actually',
+    `provided them: ${input.requestedSlots.join(', ') || '(none)'}.`,
+    'Do not infer or invent values. Omit a field if it was not given.',
+    '',
+    'CRITICAL: never return a bank card number, sort code, or account number in any',
+    'field. We must not collect payment credentials. If the customer pastes one,',
+    'omit it entirely.',
+    '',
+    'Also report dialogue signals about the latest message:',
+    '- correction: the customer is correcting a value they gave earlier.',
+    '- refusal: the customer declines to provide a requested field.',
+    '- offTopic: the customer changed the subject away from giving details.',
+    '- question: the customer asked a question.',
+    '',
+    'Respond with STRICT JSON only — no prose, no markdown, no code fences.',
+    'Schema:',
+    '{',
+    '  "slots": { "full_name"?: string, "date_of_birth"?: string, "email"?: string,',
+    '             "phone"?: string, "address"?: string, "context"?: string },',
+    '  "signals": { "correction": boolean, "refusal": boolean, "offTopic": boolean, "question": boolean },',
+    '  "confidence": number   // 0 to 1',
+    '}',
+  ].join('\n');
+
+  const user = [
+    'Conversation so far:',
+    recentHistory(input.history),
+    '',
+    'Latest customer message:',
+    input.text,
+    '',
+    `Fields to extract if present: ${input.requestedSlots.join(', ') || '(none)'}`,
+    '',
+    'Return the JSON extraction now.',
   ].join('\n');
 
   return [

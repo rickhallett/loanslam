@@ -1,6 +1,10 @@
+import type { IntakeFieldName } from '@loanslam/contracts';
 import type {
   ClassificationInput,
   ClassificationResult,
+  ExtractInput,
+  ExtractResult,
+  ExtractSignals,
   ModelAdapter,
   PhraseInput,
   ProposedAction,
@@ -8,6 +12,7 @@ import type {
   VulnerabilityVerdict,
 } from '../ports/model.port.js';
 import type { ConversationMessage } from '../domain/conversation.js';
+import { looksLikeCredential } from '../domain/credentials.js';
 import { config, type AppConfig } from '../config/env.js';
 
 /**
@@ -140,8 +145,79 @@ const CHANGE_REQUEST_PHRASES: string[] = [
   'stop my application',
 ];
 
+/** Conversational signal phrases for the deterministic extractor (PRD §4.3). */
+const CORRECTION_PHRASES: string[] = [
+  'actually',
+  'i meant',
+  'correction',
+  "that's wrong",
+  'thats wrong',
+  'change that',
+  'not right',
+  'mistake',
+  'sorry, it',
+];
+const REFUSAL_PHRASES: string[] = [
+  'rather not',
+  'prefer not',
+  "won't give",
+  'wont give',
+  "won't share",
+  'wont share',
+  "don't want to",
+  'dont want to',
+  'not comfortable',
+  'no thanks',
+  'not telling',
+  'why do you need',
+  'none of your',
+  'not sharing',
+];
+
+// Slot-shape patterns. Each excludes credential shapes by construction: an email
+// or YYYY-MM-DD date is never a card/sort/account; a phone requires 10-12 digits,
+// so a 6-digit sort code or 8-digit account number cannot land as a phone.
+const EMAIL_TOKEN_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+const DOB_TOKEN_RE = /\b\d{4}-\d{2}-\d{2}\b/;
+const PHONE_TOKEN_RE = /\+?\d[\d\s().-]{8,}\d/g;
+// Reliable name triggers only — weak ones like "I'm"/"I am" over-extract
+// ("I am struggling"), so they are deliberately excluded.
+const NAME_TRIGGER_RE = /(?:my name is|my name's|name is|name's|i am called|i'm called|call me)\s+(.+)/i;
+const NAME_STOPWORDS = new Set([
+  'and',
+  'but',
+  'or',
+  'so',
+  'because',
+  'my',
+  'the',
+  'to',
+  'for',
+  'please',
+  'thanks',
+  'thank',
+]);
+
 function normalise(text: string): string {
   return text.toLowerCase();
+}
+
+/** Extract a clean 1-3 token name after a reliable trigger, or null. */
+function extractName(text: string): string | null {
+  const m = text.match(NAME_TRIGGER_RE);
+  if (!m || m[1] === undefined) return null;
+  const tokens: string[] = [];
+  for (const rawToken of m[1].trim().split(/\s+/)) {
+    const hadPunct = /[.,!?;:]$/.test(rawToken);
+    const clean = rawToken.replace(/[.,!?;:]+$/, '');
+    if (!/^[a-z][a-z'’-]*$/i.test(clean)) break; // non-alphabetic -> name ended
+    if (NAME_STOPWORDS.has(clean.toLowerCase())) break;
+    tokens.push(clean);
+    if (hadPunct || tokens.length >= 3) break; // a comma/period ends the phrase
+  }
+  if (tokens.length === 0) return null;
+  const name = tokens.join(' ');
+  return looksLikeCredential(name) ? null : name;
 }
 
 /** Build the searchable text: latest message plus recent history content. */
@@ -198,6 +274,56 @@ export class DeterministicModelAdapter implements ModelAdapter {
   async phraseAnswer(input: PhraseInput): Promise<string | null> {
     // Faithful by construction: return the approved text unchanged.
     return input.groundedAnswerText;
+  }
+
+  async extract(input: ExtractInput): Promise<ExtractResult> {
+    const requested = new Set<IntakeFieldName>(input.requestedSlots);
+    const slots: Partial<Record<IntakeFieldName, string>> = {};
+    const text = input.text;
+
+    if (requested.has('email')) {
+      const m = text.match(EMAIL_TOKEN_RE);
+      if (m) {
+        const email = m[0].replace(/[.,;:!?]+$/, ''); // drop trailing punctuation
+        if (!looksLikeCredential(email)) slots.email = email;
+      }
+    }
+    if (requested.has('date_of_birth')) {
+      const m = text.match(DOB_TOKEN_RE);
+      if (m) slots.date_of_birth = m[0];
+    }
+    if (requested.has('phone')) {
+      // Scan ALL digit runs and take the first phone-shaped one (10-12 digits),
+      // so a DOB or other short number earlier in the message is skipped.
+      for (const raw of text.match(PHONE_TOKEN_RE) ?? []) {
+        const candidate = raw.trim();
+        const digits = candidate.replace(/\D/g, '');
+        if (digits.length >= 10 && digits.length <= 12 && !looksLikeCredential(candidate)) {
+          slots.phone = candidate;
+          break;
+        }
+      }
+    }
+    if (requested.has('full_name')) {
+      const name = extractName(text);
+      if (name !== null) slots.full_name = name;
+    }
+    // address / context are free-text: left to the form fast-path and the model
+    // extractor, not guessed deterministically.
+
+    const haystack = normalise(text);
+    const signals: ExtractSignals = {
+      question: text.includes('?'),
+      correction: CORRECTION_PHRASES.some((p) => haystack.includes(p)),
+      refusal: REFUSAL_PHRASES.some((p) => haystack.includes(p)),
+      offTopic: false, // deterministic rules can't reliably detect topic change
+    };
+
+    const extracted = Object.keys(slots).length > 0;
+    const anySignal = signals.question || signals.correction || signals.refusal;
+    const confidence = extracted ? 0.6 : anySignal ? 0.5 : 0.4;
+
+    return { slots, signals, confidence, source: 'deterministic' };
   }
 
   private actionForRetrieval(topServingMode: string | null, adequate: boolean): ProposedAction {

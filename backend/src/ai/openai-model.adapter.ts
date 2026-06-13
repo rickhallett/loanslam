@@ -1,7 +1,10 @@
 import { z } from 'zod';
+import type { IntakeFieldName } from '@loanslam/contracts';
 import type {
   ClassificationInput,
   ClassificationResult,
+  ExtractInput,
+  ExtractResult,
   ModelAdapter,
   PhraseInput,
   ProposedAction,
@@ -10,10 +13,12 @@ import type {
 } from '../ports/model.port.js';
 import type { Logger } from '../config/logger.js';
 import { logger as defaultLogger } from '../config/logger.js';
+import { looksLikeCredential } from '../domain/credentials.js';
 import { DeterministicModelAdapter } from './deterministic-model.adapter.js';
 import { getOpenAI, modelName } from './openai-client.js';
 import {
   buildClassificationPrompt,
+  buildExtractPrompt,
   buildPhrasePrompt,
   buildVulnerabilityPrompt,
   type ChatMessage,
@@ -81,6 +86,38 @@ const classificationSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const extractionSchema = z.object({
+  slots: z.record(z.string(), z.string()).default({}),
+  signals: z.object({
+    correction: z.boolean(),
+    refusal: z.boolean(),
+    offTopic: z.boolean(),
+    question: z.boolean(),
+  }),
+  confidence: z.number().min(0).max(1),
+});
+
+/**
+ * Sanitise model-returned slots: keep only keys the journey requested, drop
+ * empties, and drop anything credential-shaped. Defence in depth over the typed
+ * key restriction — the model output is never trusted raw (brief §16).
+ */
+function sanitiseSlots(
+  raw: Record<string, string>,
+  requested: IntakeFieldName[],
+): Partial<Record<IntakeFieldName, string>> {
+  const allowed = new Set<string>(requested);
+  const out: Partial<Record<IntakeFieldName, string>> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (!allowed.has(key)) continue;
+    const trimmed = value.trim();
+    if (trimmed.length === 0) continue;
+    if (looksLikeCredential(trimmed)) continue;
+    out[key as IntakeFieldName] = trimmed;
+  }
+  return out;
+}
+
 function parseJson(content: string | null): unknown {
   if (content === null) throw new Error('empty model content');
   // Tolerate accidental code fences without trusting the content otherwise.
@@ -141,6 +178,24 @@ export class OpenAiModelAdapter implements ModelAdapter {
       // Returning null makes the caller route to safe fallback copy.
       this.logger.warn({ err }, 'phrasing failed; routing to fallback');
       return null;
+    }
+  }
+
+  async extract(input: ExtractInput): Promise<ExtractResult> {
+    try {
+      const content = await this.call(buildExtractPrompt(input), true);
+      const parsed = extractionSchema.parse(parseJson(content));
+      return {
+        slots: sanitiseSlots(parsed.slots, input.requestedSlots),
+        signals: parsed.signals,
+        confidence: parsed.confidence,
+        source: 'model',
+      };
+    } catch (err) {
+      // Extraction is not safety-critical: degrade to the deterministic extractor
+      // rather than failing the turn.
+      this.logger.warn({ err }, 'extraction failed; using deterministic fallback');
+      return this.fallback.extract(input);
     }
   }
 

@@ -20,6 +20,14 @@ export interface ModelAdapter {
    * Returns null if it cannot phrase safely (caller then routes to fallback).
    */
   phraseAnswer(input: PhraseInput): Promise<string | null>;
+
+  /**
+   * Turn free text into structured slots + dialogue signals (PRD §4.2). The
+   * model only understands; the deterministic policy decides. Slot keys are
+   * always a subset of the requested (closed PII) set, and a credential-shaped
+   * value is never returned — defence in depth over the typed key restriction.
+   */
+  extract(input: ExtractInput): Promise<ExtractResult>;
 }
 
 export interface VulnerabilityInput {
