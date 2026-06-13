@@ -1,0 +1,38 @@
+{
+  "name": "loanslam-chat-widget",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Anonymous, regulated customer-support chat widget for Loanslam (POC).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "contracts",
+    "backend",
+    "widget"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace contracts && npm run build --workspace backend && npm run build --workspace widget",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:widget": "npm run dev --workspace widget",
+    "demo": "npm run demo --workspace backend"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

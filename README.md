@@ -6,10 +6,14 @@ business-operations questions, detects vulnerability and escalation signals earl
 and routes anything account-specific to the human support team — it does not service
 accounts itself.
 
-> **Status: pre-implementation.** This repository currently holds the product brief,
-> architecture decisions, and a synthetic knowledge-base corpus. Application code
-> (backend, widget, contracts) is not yet scaffolded. Treat the documents in `docs/`
-> as the source of truth for scope and design.
+> **Status: runnable local POC.** The TypeScript monorepo (backend, widget,
+> contracts) is implemented and runs locally end-to-end against an OpenAI-compatible
+> model, with a file-backed store as the demo default. The fail-closed pipeline,
+> knowledge-base grounding, vulnerability-first routing, ticket-via-webhook handoff,
+> and the full audit trail are all in place and tested. AWS infrastructure is NOT
+> provisioned yet — that is deliberately deferred until the POC is signed off (see
+> [`docs/poc-status.md`](./docs/poc-status.md)). The documents in `docs/` remain the
+> source of truth for scope and design.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). The repository must not be copied, modified, repurposed, or
@@ -96,9 +100,33 @@ Canonical brand throughout is **Loanslam** (`loanslam.co.uk`).
 
 ## Development
 
-Not yet scaffolded. Once the monorepo is in place, the Justfile will be the operator
-command front door (setup, local SQL Server, dev servers, tests, build). This section
-will document the concrete commands when the workspace lands.
+An npm-workspaces TypeScript monorepo. The Justfile is the operator command front
+door; `just` lists every recipe.
+
+```
+just setup          # install all workspace dependencies
+cp .env.example .env # add your OPENAI_API_KEY (any OpenAI-compatible endpoint)
+
+just demo           # drive the pipeline through every customer journey + print
+                    # the transcript and audit trail (the flagship demo)
+
+just dev-backend    # run the API on :8787 (file-backed store, hot reload)
+just dev-widget     # run the Vue iframe widget on :5173
+# then open demo/embed.html to see the widget embedded in a mock host page
+
+just check          # the full local gate: typecheck + lint + test + build
+just test           # 181 tests across contracts, backend, widget
+```
+
+Configuration lives in `.env` (see `.env.example`). The model provider is any
+OpenAI-compatible endpoint (`OPENAI_BASE_URL` / `OPENAI_MODEL`); set `AI_ENABLED=false`
+to run fully offline on the deterministic fallbacks. Persistence defaults to a
+file-backed store under `.data/`; the SQL Server/Prisma path (the production target)
+is wired behind the same seam and selected with `PERSISTENCE=sqlserver` plus a
+`DATABASE_URL` (`just sqlserver-up` starts a local SQL Server in Docker).
+
+See [`docs/poc-status.md`](./docs/poc-status.md) for what is built, what is verified,
+and what is deferred.
 
 ## Documentation
 

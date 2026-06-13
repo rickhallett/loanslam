@@ -1,0 +1,89 @@
+// Prisma schema for the Loanslam chat-widget POC — the PRODUCTION TARGET.
+//
+// Requires: `npm run prisma:generate` to emit the typed client, and a SQL
+// Server `DATABASE_URL` (see backend/docker-compose.sqlserver.yml). The demo
+// default uses the file-backed memory store and does NOT need this.
+//
+// JSON and long-text columns use NVarChar(Max); the app serialises structured
+// state into these columns and parses on read (see prisma-store.ts).
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// Server-owned session. `id` is the secret session id (cookie); the public
+/// `conversationRef` is the support/debug correlation reference.
+model Session {
+  id              String   @id
+  conversationRef String   @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  stateJson       String   @db.NVarChar(Max)
+  historyJson     String   @db.NVarChar(Max)
+  csrfToken       String
+
+  @@map("sessions")
+}
+
+/// Durable inbound/outbound message log (the reviewable transcript).
+model TranscriptEntry {
+  id              String   @id
+  conversationRef String
+  requestRef      String
+  direction       String
+  author          String
+  text            String   @db.NVarChar(Max)
+  replyMode       String?
+  ts              DateTime @default(now())
+
+  @@index([conversationRef])
+  @@map("transcript_entries")
+}
+
+/// One persisted audit event. Never dropped (brief §13, §16).
+model AuditEvent {
+  id                   String   @id
+  conversationRef      String
+  requestRef           String
+  type                 String
+  ts                   DateTime @default(now())
+  policyVersion        String
+  reasonCode           String?
+  replyMode            String?
+  groundingServingMode String?
+  payloadJson          String   @db.NVarChar(Max)
+
+  @@index([conversationRef])
+  @@map("audit_events")
+}
+
+/// De-dupes client retries within a session (brief §7).
+model Idempotency {
+  sessionId       String
+  clientMessageId String
+  createdAt       DateTime @default(now())
+
+  @@unique([sessionId, clientMessageId])
+  @@map("idempotency")
+}
+
+/// Handoff ticket pushed to the human team (mirrors TicketAdapter payload).
+model Ticket {
+  id              String   @id
+  conversationRef String
+  reasonCode      String
+  category        String
+  priority        String
+  contactJson     String   @db.NVarChar(Max)
+  summary         String   @db.NVarChar(Max)
+  status          String
+  ts              DateTime @default(now())
+
+  @@index([conversationRef])
+  @@map("tickets")
+}

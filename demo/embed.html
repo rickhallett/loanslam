@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brightpath Finance — Personal Loans Made Simple</title>
+    <style>
+      :root {
+        --bp-ink: #1c2733;
+        --bp-accent: #155e3b;
+        --bp-bg: #fbfbf9;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        color: var(--bp-ink);
+        background: var(--bp-bg);
+        line-height: 1.6;
+      }
+      .site-header {
+        background: #fff;
+        border-bottom: 1px solid #e6e6e1;
+        padding: 18px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .site-header__brand {
+        font-weight: 700;
+        font-size: 20px;
+        letter-spacing: 0.4px;
+      }
+      .site-header__nav a {
+        margin-left: 22px;
+        color: var(--bp-ink);
+        text-decoration: none;
+        font-size: 15px;
+      }
+      .hero {
+        background: linear-gradient(180deg, #f1f6f2 0%, var(--bp-bg) 100%);
+        padding: 64px 32px;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: 38px;
+        margin: 0 0 12px;
+      }
+      .hero p {
+        font-size: 18px;
+        max-width: 640px;
+        margin: 0 auto 24px;
+        color: #44505c;
+      }
+      .hero__cta {
+        display: inline-block;
+        background: var(--bp-accent);
+        color: #fff;
+        text-decoration: none;
+        padding: 12px 26px;
+        border-radius: 6px;
+        font-family: -apple-system, system-ui, sans-serif;
+        font-weight: 600;
+      }
+      main {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 48px 32px 120px;
+      }
+      main h2 {
+        font-size: 26px;
+        margin-top: 40px;
+      }
+      .cols {
+        display: flex;
+        gap: 28px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .cols .card {
+        flex: 1 1 240px;
+        background: #fff;
+        border: 1px solid #e6e6e1;
+        border-radius: 8px;
+        padding: 18px 20px;
+      }
+      .cols .card h3 {
+        margin-top: 0;
+      }
+      footer.site-footer {
+        background: #1c2733;
+        color: #cdd6df;
+        padding: 28px 32px;
+        font-size: 13px;
+        font-family: -apple-system, system-ui, sans-serif;
+      }
+
+      /* The embedded support widget, pinned bottom-right as it would be on the
+         client's live WordPress site. It is a cross-origin iframe so it cannot
+         touch the host page's cookies, DOM, or storage. */
+      .ls-chat-frame {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 380px;
+        height: 600px;
+        max-height: calc(100vh - 40px);
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 16px 48px rgba(15, 30, 50, 0.28);
+        background: #fff;
+        z-index: 9999;
+      }
+      @media (max-width: 460px) {
+        .ls-chat-frame {
+          width: calc(100vw - 24px);
+          right: 12px;
+          bottom: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__brand">Brightpath Finance</div>
+      <nav class="site-header__nav">
+        <a href="#loans">Loans</a>
+        <a href="#how">How it works</a>
+        <a href="#help">Help</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>Personal loans, made simple</h1>
+      <p>
+        Borrow with confidence from a UK lender that puts clarity first. Check
+        what you could borrow in minutes, with no impact on your credit score.
+      </p>
+      <a class="hero__cta" href="#loans">See your options</a>
+    </section>
+
+    <main>
+      <h2 id="how">A straightforward way to borrow</h2>
+      <p>
+        Brightpath Finance offers fixed-rate personal loans for home
+        improvements, vehicles, and consolidating existing borrowing. Every
+        application is assessed individually, and our UK-based team is on hand
+        if you need to talk something through.
+      </p>
+
+      <div class="cols">
+        <div class="card">
+          <h3>Clear repayments</h3>
+          <p>Fixed monthly payments for the life of your loan, with no surprises.</p>
+        </div>
+        <div class="card">
+          <h3>Quick decisions</h3>
+          <p>Most applicants get an indicative decision the same working day.</p>
+        </div>
+        <div class="card">
+          <h3>Real people</h3>
+          <p>Our support team is here when you need a hand, not just a chatbot.</p>
+        </div>
+      </div>
+
+      <h2 id="help">Questions before you apply?</h2>
+      <p>
+        Lots of customers want to understand the basics first: how much they
+        might be able to borrow, what happens after they apply, and how to get
+        in touch if their circumstances change. Our support assistant in the
+        bottom-right corner can help with general questions and will connect you
+        to a human whenever your query is about your specific account.
+      </p>
+      <p>
+        Representative example and full terms are provided during the
+        application. Brightpath Finance is a fictional company used to
+        demonstrate the embedded support widget.
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      Brightpath Finance is a demonstration site. The chat widget below is
+      embedded from a separate origin to show the real cross-site iframe setup.
+    </footer>
+
+    <!-- The widget dev server runs on :5173; swap for the deployed origin in prod. -->
+    <iframe
+      class="ls-chat-frame"
+      src="http://localhost:5173"
+      title="Loanslam customer support chat"
+      allow="clipboard-write"
+    ></iframe>
+  </body>
+</html>

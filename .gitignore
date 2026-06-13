@@ -1,1 +1,32 @@
+# Working notes (kept local)
 reference/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+**/coverage/
+
+# Vite
+.vite/
+**/.vite/
+
+# Local audit/transcript store (file-backed demo persistence)
+.data/
+**/.data/
+
+# Editor / OS
+.DS_Store
+*.log

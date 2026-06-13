@@ -1,0 +1,35 @@
+# Local SQL Server for the Loanslam POC production-target persistence path.
+#
+# Bring up:   docker compose -f docker-compose.sqlserver.yml up -d
+# Then set:   DATABASE_URL="sqlserver://localhost:1433;database=loanslam;user=sa;password=Ch4ng3Me_StrongP@ss!;encrypt=true;trustServerCertificate=true"
+#             PERSISTENCE=sqlserver
+# And run:    npm run prisma:generate && npm run prisma:push
+#
+# The SA password must satisfy SQL Server's complexity policy (>=8 chars with
+# upper, lower, digit, and symbol). Change it before any non-local use.
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: loanslam-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Ch4ng3Me_StrongP@ss!"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - loanslam_mssql_data:/var/opt/mssql
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  loanslam_mssql_data:
+    name: loanslam_mssql_data
