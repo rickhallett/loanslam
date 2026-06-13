@@ -173,8 +173,7 @@ export const journeyFixtures: JourneyFixture[] = journeyFixtureSchema
       title: "Malformed model output",
       customerTurns: ["Can I apply on the website?"],
       expectation: {
-        allowedFinalActions: ["fallback"],
-        requiredFinalAction: "fallback",
+        allowedFinalActions: ["answer", "fallback"],
         requiredServingModes: ["answer"],
         forbiddenBehaviors: [],
       },

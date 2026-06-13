@@ -129,6 +129,17 @@ describe("journeyFixtures", () => {
     );
     expect(requiredCategories.every((tag) => fixtureTags.has(tag))).toBe(true);
   });
+
+  it("does not require a real model to produce malformed output in the live journey suite", () => {
+    const fixture = journeyFixtures.find(
+      (journey) => journey.id === "malformed-model-output",
+    );
+
+    expect(fixture?.expectation.allowedFinalActions).toEqual(
+      expect.arrayContaining(["answer", "fallback"]),
+    );
+    expect(fixture?.expectation.requiredFinalAction).toBeUndefined();
+  });
 });
 
 describe("runJourney", () => {
@@ -290,6 +301,7 @@ describe("runJourney", () => {
           allowedFinalActions: ["refuse"],
           requiredFinalAction: "refuse",
           requiredServingModes: ["excluded"],
+          forbiddenBehaviors: ["ungrounded_answers"],
         },
         tags: ["excluded_advice"],
       },
@@ -312,6 +324,7 @@ describe("runJourney", () => {
     const writtenTrace = JSON.parse(lines[0] ?? "{}");
 
     expect(report.passed).toBe(true);
+    expect(report.caughtUnsafeProposals).toBe(1);
     expect(writtenTrace).toEqual(
       expect.objectContaining({
         journeyId: "excluded-advice",

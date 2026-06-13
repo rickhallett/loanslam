@@ -166,6 +166,11 @@ describe("TurnPlanner prompt", () => {
     expect(prompt.system).toContain("accessibility_need");
     expect(prompt.system).toContain("hardship");
     expect(prompt.system).toContain("excluded means refuse");
+    expect(prompt.system).toContain("Grounding is only for action=answer");
+    expect(prompt.system).toContain("set grounding=null");
+    expect(prompt.system).toContain("change_request");
+    expect(prompt.system).toContain("sensitive_overshare");
+    expect(prompt.system).toContain("whether to enter an IVA");
   });
 
   it("directs vague low-risk requests to concise clarification", () => {

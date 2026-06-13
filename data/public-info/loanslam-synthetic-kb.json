@@ -833,7 +833,7 @@
       "section": "existing_customer_support",
       "intent": "regulated-advice",
       "question": "Can you give me debt or financial advice?",
-      "question_variants": ["What should I do about my other debts?", "Can you advise me on my finances?", "Help me decide what to prioritise paying", "Tell me how to manage my money"],
+      "question_variants": ["What should I do about my other debts?", "Should I enter an IVA for this debt?", "Should I enter an IVA?", "Should I start a debt management plan?", "Can you advise me on my finances?", "Help me decide what to prioritise paying", "Tell me how to manage my money"],
       "serving_mode": "excluded",
       "answer_text": null,
       "links": [

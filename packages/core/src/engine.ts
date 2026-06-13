@@ -58,6 +58,7 @@ export async function processTurn({
     planner,
     plannerInput,
     retrievedMatches,
+    userMessage,
     stateSafetyFlags: state.safetyFlags,
   });
   const nextState = mergeState({
@@ -111,11 +112,13 @@ async function planAndValidateTurn({
   planner,
   plannerInput,
   retrievedMatches,
+  userMessage,
   stateSafetyFlags,
 }: {
   planner: ProcessTurnInput["planner"];
   plannerInput: Parameters<TurnPlanner["planTurn"]>[0];
   retrievedMatches: ReturnType<typeof retrieveMatches>;
+  userMessage: string;
   stateSafetyFlags: ConversationState["safetyFlags"];
 }): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
   let plan: TurnPlan;
@@ -165,6 +168,7 @@ async function planAndValidateTurn({
     plan,
     validated: validateTurnPlan(plan, retrievedMatches, {
       safetyFlags: stateSafetyFlags,
+      userMessage,
     }),
   };
 }

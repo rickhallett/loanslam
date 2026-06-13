@@ -86,6 +86,35 @@ const safetyCueTerms = new Set([
   "worried",
 ]);
 
+const activeSafetyCueTerms = new Set([
+  "afford",
+  "arrear",
+  "bills",
+  "difficulty",
+  "distress",
+  "gambling",
+  "hardship",
+  "lost",
+  "mental",
+  "redundancy",
+  "rent",
+  "struggling",
+  "suicide",
+  "vulnerable",
+  "worried",
+]);
+
+const adviceCueTerms = new Set([
+  "advice",
+  "advise",
+  "decide",
+  "prioritise",
+  "prioritize",
+  "should",
+]);
+
+const excludedAdviceTerms = new Set(["advice", "advise", "debt", "iva"]);
+
 export interface RetrieveMatchesOptions {
   limit?: number;
 }
@@ -115,6 +144,13 @@ export function retrieveMatches(
 ): RetrievedMatch[] {
   const queryTerms = normalizeSearchTerms(query);
   const queryHasSafetyCue = queryTerms.some((term) => safetyCueTerms.has(term));
+  const queryLooksLikeAdviceRequest = queryTerms.some((term) =>
+    adviceCueTerms.has(term),
+  );
+  const queryLooksLikeActiveSafetyEvent =
+    activeInsolvencyEventPattern.test(query) ||
+    activePaymentHardshipPattern.test(query) ||
+    queryTerms.some((term) => activeSafetyCueTerms.has(term));
 
   if (queryTerms.length === 0) {
     return [];
@@ -129,11 +165,19 @@ export function retrieveMatches(
     );
     const safetyBoost =
       queryHasSafetyCue &&
+      (!queryLooksLikeAdviceRequest || queryLooksLikeActiveSafetyEvent) &&
       item.serving_mode === "route_vulnerability" &&
       matchedTerms.some((term) => safetyCueTerms.has(term))
         ? 20
         : 0;
-    const score = lexicalScore + safetyBoost;
+    const excludedAdviceBoost =
+      queryLooksLikeAdviceRequest &&
+      !queryLooksLikeActiveSafetyEvent &&
+      item.serving_mode === "excluded" &&
+      matchedTerms.some((term) => excludedAdviceTerms.has(term))
+        ? 20
+        : 0;
+    const score = lexicalScore + safetyBoost + excludedAdviceBoost;
 
     if (score === 0) {
       return [];
@@ -160,6 +204,12 @@ export function retrieveMatches(
     })
     .slice(0, options.limit ?? matches.length);
 }
+
+const activeInsolvencyEventPattern =
+  /\b(i\s*(am|'m)|i\s+have|i've|already|currently)\b.{0,80}\b(setting\s+up|going\s+into|entered|entering|started|starting)\b.{0,80}\b(iva|debt\s+management|insolvency)\b/i;
+
+const activePaymentHardshipPattern =
+  /\b(can't|cannot|cant|unable\s+to|not\s+able\s+to|struggling\s+to)\s+pay\b/i;
 
 function buildItemTermWeights(item: CorpusItem): Map<string, number> {
   const termWeights = new Map<string, number>();

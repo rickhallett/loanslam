@@ -66,6 +66,30 @@ describe("lexical retrieval", () => {
       itemId: "can-you-give-me-debt-advice",
       servingMode: "excluded",
     });
+
+    expect(topMatch("Should I enter an IVA for this debt?")).toMatchObject({
+      itemId: "can-you-give-me-debt-advice",
+      servingMode: "excluded",
+    });
+  });
+
+  it("still routes stated IVA or debt-management events to vulnerability handling", () => {
+    expect(topMatch("I'm setting up an IVA")).toMatchObject({
+      itemId: "considering-debt-management-or-iva",
+      servingMode: "route_vulnerability",
+    });
+
+    expect(
+      topMatch("Should I contact you because I am struggling with debt?"),
+    ).toMatchObject({
+      servingMode: "route_vulnerability",
+    });
+
+    expect(
+      topMatch("Should I enter an IVA because I cannot pay?"),
+    ).toMatchObject({
+      servingMode: "route_vulnerability",
+    });
   });
 
   it("finds complaint escalation before weak lexical answer matches", () => {

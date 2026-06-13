@@ -31,6 +31,21 @@ const handoffMatch: RetrievedMatch = {
   },
 };
 
+const changeRequestMatch: RetrievedMatch = {
+  itemId: "change-payment-date",
+  score: 10,
+  servingMode: "handoff_account_specific",
+  matchedTerms: ["change", "payment", "date"],
+  item: {
+    id: "change-payment-date",
+    question: "Can I change my payment date?",
+    serving_mode: "handoff_account_specific",
+    route_reason:
+      "Changing a repayment date is a change to the customer's account.",
+    tags: ["repayment-date", "change", "account-specific", "handoff"],
+  },
+};
+
 const vulnerabilityMatch: RetrievedMatch = {
   itemId: "hardship-1",
   score: 10,
@@ -78,6 +93,42 @@ function plan(overrides: Partial<TurnPlan> = {}): TurnPlan {
     traceSummary: "Test plan.",
     ...overrides,
   };
+}
+
+function handoffPlan(overrides: Partial<TurnPlan> = {}): TurnPlan {
+  return plan({
+    action: "request_handoff_intake",
+    customerMessage:
+      "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+    ui: {
+      primitive: "intake_form",
+      message:
+        "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+    grounding: null,
+    safetyFlags: [],
+    traceSummary: "Route to the team.",
+    ...overrides,
+  });
+}
+
+function refusalPlan(overrides: Partial<TurnPlan> = {}): TurnPlan {
+  return plan({
+    action: "refuse",
+    customerMessage: "I cannot answer that in chat.",
+    ui: {
+      primitive: "safe_fallback",
+      message: "I cannot answer that in chat.",
+      links: [],
+    },
+    requestedFields: [],
+    grounding: null,
+    safetyFlags: [],
+    traceSummary: "Refused excluded substance.",
+    ...overrides,
+  });
 }
 
 describe("validateTurnPlan", () => {
@@ -229,6 +280,30 @@ describe("validateTurnPlan", () => {
     );
   });
 
+  it("treats requests for bank details as forbidden credential collection", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage: "Please send your bank details so we can update this.",
+        ui: {
+          primitive: "intake_form",
+          message: "Please send your bank details so we can update this.",
+          fields: ["fullName", "email"],
+        },
+        requestedFields: ["fullName", "email"],
+      }),
+      [handoffMatch],
+      {},
+    );
+
+    expect(result.customerMessage).not.toMatch(/bank details/i);
+    expect(result.safetyFlags).toContain("forbidden_credentials");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "forbidden_credential_request_blocked",
+      }),
+    );
+  });
+
   it("allows safe warnings not to share credentials", () => {
     const result = validateTurnPlan(
       plan({
@@ -271,6 +346,235 @@ describe("validateTurnPlan", () => {
       expect.objectContaining({
         code: "account_specific_promise_blocked",
       }),
+    );
+  });
+
+  it("accepts a compliant account-specific handoff without counting a validator rescue", () => {
+    const result = validateTurnPlan(handoffPlan(), [changeRequestMatch], {});
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["account_specific_request", "change_request"]),
+    );
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("does not treat safe handoff wording as an account-specific promise", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage:
+          "I cannot change your payment date in chat, but I can pass this to the team.",
+        ui: {
+          primitive: "intake_form",
+          message:
+            "I cannot change your payment date in chat, but I can pass this to the team.",
+          fields: standardHandoffFields,
+        },
+      }),
+      [changeRequestMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("still blocks definite account-specific promises in handoff copy", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage: "Your payment date has been changed.",
+        ui: {
+          primitive: "intake_form",
+          message: "Your payment date has been changed.",
+          fields: standardHandoffFields,
+        },
+      }),
+      [changeRequestMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).not.toMatch(/has been changed/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_specific_promise_blocked",
+      }),
+    );
+  });
+
+  it("blocks active promises to change account settings", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage: "We will move your payment date for you.",
+        ui: {
+          primitive: "intake_form",
+          message: "We will move your payment date for you.",
+          fields: standardHandoffFields,
+        },
+      }),
+      [changeRequestMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).not.toMatch(/move your payment date/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_specific_promise_blocked",
+      }),
+    );
+  });
+
+  it("blocks contracted active promises to change account settings", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage: "I'll update your payment date for you.",
+        ui: {
+          primitive: "intake_form",
+          message: "I'll update your payment date for you.",
+          fields: standardHandoffFields,
+        },
+      }),
+      [changeRequestMatch],
+      {},
+    );
+
+    expect(result.customerMessage).not.toMatch(/update your payment date/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_specific_promise_blocked",
+      }),
+    );
+  });
+
+  it("blocks first-person account-change promises", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        customerMessage: "I've changed your payment date.",
+        ui: {
+          primitive: "intake_form",
+          message: "I've changed your payment date.",
+          fields: standardHandoffFields,
+        },
+      }),
+      [changeRequestMatch],
+      {},
+    );
+
+    expect(result.customerMessage).not.toMatch(/changed your payment date/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_specific_promise_blocked",
+      }),
+    );
+  });
+
+  it("accepts a compliant vulnerability handoff without counting a validator rescue", () => {
+    const result = validateTurnPlan(handoffPlan(), [vulnerabilityMatch], {});
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.selectedServingMode).toBe("route_vulnerability");
+    expect(result.safetyFlags).toContain("vulnerability");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("accepts a compliant excluded refusal without counting a validator rescue", () => {
+    const result = validateTurnPlan(refusalPlan(), [excludedMatch], {});
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.selectedServingMode).toBe("excluded");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("does not accept excluded refusal that still gives regulated advice", () => {
+    const result = validateTurnPlan(
+      refusalPlan({
+        customerMessage: "You should enter an IVA for this debt.",
+        ui: {
+          primitive: "safe_fallback",
+          message: "You should enter an IVA for this debt.",
+          links: [],
+        },
+      }),
+      [excludedMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.customerMessage).not.toMatch(/should enter/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "non_answer_citation_blocked",
+      }),
+    );
+  });
+
+  it("does not accept excluded refusal that explains regulated IVA effects", () => {
+    const result = validateTurnPlan(
+      refusalPlan({
+        customerMessage:
+          "I cannot advise you, but an IVA lets you make one affordable monthly payment and may write off some debt.",
+        ui: {
+          primitive: "safe_fallback",
+          message:
+            "I cannot advise you, but an IVA lets you make one affordable monthly payment and may write off some debt.",
+          links: [],
+        },
+      }),
+      [excludedMatch],
+      {},
+    );
+
+    expect(result.customerMessage).not.toMatch(/affordable monthly payment/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "non_answer_citation_blocked",
+      }),
+    );
+  });
+
+  it("routes vulnerability safety flags ahead of excluded refusal", () => {
+    const result = validateTurnPlan(
+      refusalPlan({
+        safetyFlags: ["distress"],
+      }),
+      [excludedMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.ui.primitive).toBe("intake_form");
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["distress", "vulnerability"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "safety_flag_route_to_handoff",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
+  it("flags obvious sensitive overshare from the inbound customer message", () => {
+    const result = validateTurnPlan(handoffPlan(), [handoffMatch], {
+      userMessage:
+        "Here are my bank details and date of birth, please fix my payment.",
+    });
+
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+  });
+
+  it("flags natural sensitive overshare phrasing from the inbound customer message", () => {
+    const result = validateTurnPlan(handoffPlan(), [handoffMatch], {
+      userMessage:
+        "My DOB is 1 January 1980 and my account number is 12345678.",
+    });
+
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
     );
   });
 

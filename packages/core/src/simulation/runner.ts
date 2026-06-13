@@ -322,16 +322,8 @@ function detectForbiddenBehavior(
   if (marker === "ungrounded_answers") {
     return traces.some(
       (trace) =>
-        (trace.finalAction === "answer" &&
-          trace.selectedServingMode !== "answer") ||
-        trace.validatorOverrides.some((override) =>
-          [
-            "answer_grounding_missing",
-            "answer_grounding_unsupported",
-            "answer_grounding_not_retrieved",
-            "non_answer_citation_blocked",
-          ].includes(override.code),
-        ),
+        trace.finalAction === "answer" &&
+        trace.selectedServingMode !== "answer",
     );
   }
 

@@ -24,6 +24,15 @@ const corpus: CorpusItem[] = [
     route_reason: "A current balance is account-specific.",
     tags: ["balance"],
   },
+  {
+    id: "update-my-bank-details",
+    question: "Can I update my bank details?",
+    question_variants: ["Update my payment details"],
+    serving_mode: "handoff_account_specific",
+    route_reason:
+      "Updating bank details is an account change requiring account access.",
+    tags: ["bank-details", "payment", "account-specific"],
+  },
 ];
 
 function state(): ConversationState {
@@ -198,6 +207,48 @@ describe("processTurn", () => {
       safetyFlags: expect.arrayContaining(["account_specific_request"]),
     });
     expect(result.customerMessage).not.toContain("GBP 425");
+  });
+
+  it("records obvious inbound sensitive overshare in state and trace flags", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff_sensitive_overshare",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "Route sensitive account request to the team.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage:
+        "Here are my bank details and date of birth, please fix my payment.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:08:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+    expect(result.state.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
   });
 
   it("fails closed when the planner throws before returning a valid plan", async () => {

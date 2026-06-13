@@ -17,6 +17,7 @@ import {
   containsForbiddenCredentialTerm,
   detectForbiddenCredentialRequest,
   detectPromisedAccountValueOrOutcome,
+  detectSensitiveOvershare,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   standardHandoffFields,
@@ -25,6 +26,7 @@ import {
 
 export interface ValidateTurnPlanOptions {
   safetyFlags?: readonly SafetyFlag[];
+  userMessage?: string;
 }
 
 export interface ValidatedPlanFragment {
@@ -56,6 +58,7 @@ export function validateTurnPlan(
     ...(options.safetyFlags ?? []),
     ...plan.safetyFlags,
     ...inferSafetyFlagsFromMatches(selectedMatch ? [selectedMatch] : []),
+    ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
   ]);
 
   const base: ValidatedPlanFragment = {
@@ -76,21 +79,6 @@ export function validateTurnPlan(
     selectedMatch?.servingMode === "route_vulnerability"
       ? selectedMatch
       : undefined;
-  if (vulnerabilityMatch || hasVulnerabilitySafetyFlag(allSafetyFlags)) {
-    return applyVulnerabilityOverride(
-      base,
-      {
-        code: vulnerabilityMatch
-          ? "vulnerability_route_match"
-          : "safety_flag_route_to_handoff",
-        reason:
-          vulnerabilityMatch?.item?.route_reason ??
-          "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
-        toAction: "request_handoff_intake",
-      },
-      vulnerabilityMatch,
-    );
-  }
 
   if (detectForbiddenCredentialRequest(planText(plan))) {
     const handoff = buildHandoffCopy(
@@ -146,10 +134,6 @@ export function validateTurnPlan(
     );
   }
 
-  if (selectedMatch?.servingMode === "excluded") {
-    return applyServingModeOverride(base, selectedMatch);
-  }
-
   if (detectPromisedAccountValueOrOutcome(planText(plan))) {
     const copy =
       hasHandoffSafetyFlag(allSafetyFlags) ||
@@ -183,7 +167,31 @@ export function validateTurnPlan(
     );
   }
 
+  if (vulnerabilityMatch || hasVulnerabilitySafetyFlag(allSafetyFlags)) {
+    if (isCompliantRoutePlan(base, "route_vulnerability")) {
+      return acceptPolicyRoute(base, vulnerabilityMatch, ["vulnerability"]);
+    }
+
+    return applyVulnerabilityOverride(
+      base,
+      {
+        code: vulnerabilityMatch
+          ? "vulnerability_route_match"
+          : "safety_flag_route_to_handoff",
+        reason:
+          vulnerabilityMatch?.item?.route_reason ??
+          "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
+        toAction: "request_handoff_intake",
+      },
+      vulnerabilityMatch,
+    );
+  }
+
   if (selectedMatch && selectedMatch.servingMode !== "answer") {
+    if (isCompliantRoutePlan(base, selectedMatch.servingMode)) {
+      return acceptPolicyRoute(base, selectedMatch);
+    }
+
     return applyServingModeOverride(base, selectedMatch);
   }
 
@@ -253,11 +261,59 @@ function selectPolicyMatch(
 function inferSafetyFlagsFromMatches(
   retrievedMatches: readonly RetrievedMatch[],
 ): SafetyFlag[] {
-  return retrievedMatches.some(
-    (match) => match.servingMode === "route_vulnerability",
-  )
-    ? ["vulnerability"]
-    : [];
+  const flags: SafetyFlag[] = [];
+
+  for (const match of retrievedMatches) {
+    if (match.servingMode === "route_vulnerability") {
+      flags.push("vulnerability");
+    }
+
+    if (match.servingMode === "handoff_account_specific") {
+      flags.push("account_specific_request");
+    }
+
+    if (isChangeRequestMatch(match)) {
+      flags.push("change_request");
+    }
+  }
+
+  return uniqueSafetyFlags(flags);
+}
+
+function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
+  if (!detectSensitiveOvershare(message)) {
+    return [];
+  }
+
+  const flags: SafetyFlag[] = ["sensitive_overshare"];
+
+  if (containsForbiddenCredentialTerm(message)) {
+    flags.push("forbidden_credentials");
+  }
+
+  return flags;
+}
+
+function isChangeRequestMatch(match: RetrievedMatch): boolean {
+  if (match.servingMode !== "handoff_account_specific") {
+    return false;
+  }
+
+  const item = match.item;
+  const text = [
+    match.itemId,
+    item?.intent,
+    item?.question,
+    item?.route_reason,
+    ...(item?.tags ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /\b(change|changed|changing|move|moved|update|updating|switch)\b/.test(
+    text,
+  );
 }
 
 function answerGroundingFailure(
@@ -390,6 +446,69 @@ function applyVulnerabilityOverride(
   });
 }
 
+function acceptPolicyRoute(
+  base: ValidatedPlanFragment,
+  match?: RetrievedMatch,
+  extraSafetyFlags: readonly SafetyFlag[] = [],
+): ValidatedPlanFragment {
+  return {
+    ...base,
+    selectedServingMode: match?.servingMode ?? base.selectedServingMode,
+    selectedRouteReason: match?.item?.route_reason ?? base.selectedRouteReason,
+    safetyFlags: uniqueSafetyFlags([...base.safetyFlags, ...extraSafetyFlags]),
+  };
+}
+
+function isCompliantRoutePlan(
+  base: ValidatedPlanFragment,
+  servingMode: ServingMode,
+): boolean {
+  if (servingMode === "excluded") {
+    return (
+      base.finalAction === "refuse" &&
+      base.ui.primitive === "safe_fallback" &&
+      isSafeExcludedRefusal(base)
+    );
+  }
+
+  return (
+    base.finalAction === "request_handoff_intake" &&
+    base.ui.primitive === "intake_form" &&
+    sameFields(base.ui.fields, standardHandoffFields) &&
+    sameFields(base.requestedFields, standardHandoffFields)
+  );
+}
+
+function isSafeExcludedRefusal(base: ValidatedPlanFragment): boolean {
+  const text = [
+    base.customerMessage,
+    "message" in base.ui ? base.ui.message : "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    refusalLanguagePattern.test(text) && !regulatedAdvicePattern.test(text)
+  );
+}
+
+const refusalLanguagePattern =
+  /\b(i|we)\s+(cannot|can't|cant|am unable|are unable|won't|will not)\b|\bnot able\b|\bmust not\b|\bdo not\b/;
+
+const regulatedAdvicePattern =
+  /\byou\s+should\s+(enter|start|take|prioritise|prioritize|pay|choose|use|do)\b|\b(i|we)\s+(recommend|suggest|advise)\b|\bit\s+(is|would be)\s+(best|better|a good idea)\b|\b(iva|debt\s+management\s+plan)\b.{0,120}\b(lets?|allows?|means|may|can|could|will|write\s+off|reduce|affordable\s+monthly\s+payment|monthly\s+payment)\b/;
+
+function sameFields(
+  left: readonly IntakeField[],
+  right: readonly IntakeField[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((field) => right.includes(field)) &&
+    right.every((field) => left.includes(field))
+  );
+}
+
 function applyOverride(
   base: ValidatedPlanFragment,
   override: OverrideInput,
@@ -429,7 +548,6 @@ function planText(plan: TurnPlan): string {
   return [
     plan.customerMessage,
     "message" in plan.ui ? plan.ui.message : "",
-    plan.traceSummary,
   ].join(" ");
 }
 
