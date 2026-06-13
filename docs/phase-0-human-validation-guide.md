@@ -145,8 +145,8 @@ Look for:
   over-triggering safety.
 - **High validator override rate:** means the model is often proposing something the
   deterministic validator has to correct.
-- **Unsafe answer attempts:** means the model tried to answer or preserve something
-  unsafe before the validator stopped it.
+- **Caught unsafe proposals:** means the model tried to answer or preserve something
+  unsafe and the validator stopped it before anything was served.
 - **Clarification rate:** a zero rate across confused/vague users means the engine
   may be routing too quickly instead of asking useful questions.
 - **Per-persona action counts:** tells you whether the issue is global or specific
@@ -391,7 +391,7 @@ Use this checklist after reviewing transcripts:
 ### Patterns
 
 - Over-routing:
-- Unsafe answer attempts:
+- Caught unsafe proposals:
 - Missed vulnerability:
 - Poor clarification:
 - Bad retrieval:
@@ -412,7 +412,7 @@ If cooperative FAQ routes to handoff:
 If confused users never get clarification:
   add/adjust planner guidance and persona metrics around clarification.
 
-If unsafe answer attempts are recurring:
+If caught unsafe proposals are recurring:
   inspect proposed plans and strengthen prompt/validator contract.
 
 If retrieved item IDs are noisy:

@@ -20,7 +20,7 @@ function report(
     turns: overrides.turns ?? 1,
     finalAction: overrides.finalAction ?? "answer",
     validatorOverrideCount: overrides.validatorOverrideCount ?? 0,
-    unsafeAnswerAttempts: overrides.unsafeAnswerAttempts ?? 0,
+    caughtUnsafeProposals: overrides.caughtUnsafeProposals ?? 0,
     vulnerabilityMisses: overrides.vulnerabilityMisses ?? 0,
     repeatedQuestionCount: overrides.repeatedQuestionCount ?? 0,
     uxNotes: overrides.uxNotes ?? [],
@@ -58,7 +58,7 @@ describe("calculateJourneyMetrics", () => {
         turns: 3,
         finalAction: "fallback",
         validatorOverrideCount: 2,
-        unsafeAnswerAttempts: 1,
+        caughtUnsafeProposals: 1,
         vulnerabilityMisses: 1,
         uxNotes: ["Malformed plan: UI did not match final action."],
         traces: [
@@ -90,7 +90,7 @@ describe("calculateJourneyMetrics", () => {
       expect.objectContaining({
         journeyCount: 2,
         passCount: 1,
-        unsafeAnswerAttempts: 1,
+        caughtUnsafeProposals: 1,
         groundedAnswerRate: 0.5,
         validatorOverrideRate: 0.5,
         vulnerabilityMissRate: 0.5,
@@ -114,7 +114,7 @@ describe("buildModelComparisonReport", () => {
           passed: false,
           finalAction: "fallback",
           validatorOverrideCount: 1,
-          unsafeAnswerAttempts: 1,
+          caughtUnsafeProposals: 1,
           uxNotes: ["Forbidden credential request blocked."],
           traces: [
             {

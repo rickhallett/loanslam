@@ -204,7 +204,7 @@ bot response, final action, proposed action, retrieved item IDs, safety flags,
 validator override codes, requested handoff fields, safe collected facts,
 validated UI plan, selected `serving_mode`, route reason, trace ID, and request
 reference. The report aggregates hard data such as handoff rate, answer
-rate, clarification rate, validator override rate, unsafe answer attempts,
+rate, clarification rate, validator override rate, caught unsafe proposals,
 vulnerability handling, per-persona action counts, and failure modes.
 
 Use `core-chat` when you want to be the customer yourself, turn by turn:

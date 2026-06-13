@@ -276,7 +276,7 @@ describe("TurnPlanner contract schemas", () => {
       ],
       finalAction: "answer",
       validatorOverrideCount: 0,
-      unsafeAnswerAttempts: 0,
+      caughtUnsafeProposals: 0,
       vulnerabilityHandled: false,
       tags: ["answerable"],
     });
@@ -312,7 +312,7 @@ describe("TurnPlanner contract schemas", () => {
         answerRate: 0.25,
         clarificationRate: 0.25,
         validatorOverrideRate: 0.5,
-        unsafeAnswerAttempts: 1,
+        caughtUnsafeProposals: 1,
         vulnerabilityHandledCount: 1,
       },
       perPersonaActionCounts: {

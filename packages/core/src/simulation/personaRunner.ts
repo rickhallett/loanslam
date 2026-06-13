@@ -117,7 +117,7 @@ export async function runPersonaScenario({
     turns,
     finalAction: finalTrace.finalAction,
     validatorOverrideCount: countValidatorOverrides(traces),
-    unsafeAnswerAttempts: countUnsafeAnswerAttempts(traces),
+    caughtUnsafeProposals: countCaughtUnsafeProposals(traces),
     vulnerabilityHandled: hasHandledVulnerability(traces),
     tags: scenario.tags,
   });
@@ -200,7 +200,7 @@ function countValidatorOverrides(traces: readonly TurnTrace[]): number {
   );
 }
 
-function countUnsafeAnswerAttempts(traces: readonly TurnTrace[]): number {
+function countCaughtUnsafeProposals(traces: readonly TurnTrace[]): number {
   return traces.filter((trace) =>
     trace.validatorOverrides.some((override) =>
       unsafeOverrideCodes.has(override.code),

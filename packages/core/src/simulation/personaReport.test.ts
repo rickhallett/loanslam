@@ -65,7 +65,7 @@ function transcript(
     turns,
     finalAction: overrides.finalAction ?? turns.at(-1)?.finalAction ?? "answer",
     validatorOverrideCount: overrides.validatorOverrideCount ?? 0,
-    unsafeAnswerAttempts: overrides.unsafeAnswerAttempts ?? 0,
+    caughtUnsafeProposals: overrides.caughtUnsafeProposals ?? 0,
     vulnerabilityHandled: overrides.vulnerabilityHandled ?? false,
     tags: overrides.tags ?? [],
   };
@@ -91,7 +91,7 @@ describe("buildPersonaReport", () => {
           persona: vulnerable,
           finalAction: "request_handoff_intake",
           validatorOverrideCount: 1,
-          unsafeAnswerAttempts: 1,
+          caughtUnsafeProposals: 1,
           vulnerabilityHandled: true,
           turns: [
             turn({
@@ -139,7 +139,7 @@ describe("buildPersonaReport", () => {
           handoffRate: 1 / 3,
           clarificationRate: 1 / 3,
           validatorOverrideRate: 1 / 3,
-          unsafeAnswerAttempts: 1,
+          caughtUnsafeProposals: 1,
           vulnerabilityHandledCount: 1,
         }),
         perPersonaActionCounts: {
@@ -150,7 +150,7 @@ describe("buildPersonaReport", () => {
           },
         },
         failureModes: expect.arrayContaining([
-          "vulnerable-handoff: unsafe answer attempts 1",
+          "vulnerable-handoff: caught unsafe proposals 1",
           "vulnerable-handoff: vulnerability_route_match",
         ]),
       }),

@@ -419,7 +419,7 @@ metrics include:
 
 - grounded answer rate
 - unnecessary handoff rate
-- unsafe answer attempts
+- caught unsafe proposals
 - validator override rate
 - vulnerability miss rate
 - malformed plan rate

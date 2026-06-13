@@ -55,8 +55,8 @@ export function buildPersonaReport({
       turns.filter((turn) => turn.validatorOverrideCodes.length > 0).length,
       turnCount,
     ),
-    unsafeAnswerAttempts: transcripts.reduce(
-      (total, transcript) => total + transcript.unsafeAnswerAttempts,
+    caughtUnsafeProposals: transcripts.reduce(
+      (total, transcript) => total + transcript.caughtUnsafeProposals,
       0,
     ),
     vulnerabilityHandledCount: transcripts.filter(
@@ -101,9 +101,9 @@ function buildFailureModes(
   const modes = new Set<string>();
 
   for (const transcript of transcripts) {
-    if (transcript.unsafeAnswerAttempts > 0) {
+    if (transcript.caughtUnsafeProposals > 0) {
       modes.add(
-        `${transcript.scenarioId}: unsafe answer attempts ${transcript.unsafeAnswerAttempts}`,
+        `${transcript.scenarioId}: caught unsafe proposals ${transcript.caughtUnsafeProposals}`,
       );
     }
 

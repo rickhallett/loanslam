@@ -202,7 +202,7 @@ describe("runPersonaScenario", () => {
         scenarioTitle: "Persona answer",
         finalAction: "answer",
         validatorOverrideCount: 0,
-        unsafeAnswerAttempts: 0,
+        caughtUnsafeProposals: 0,
         vulnerabilityHandled: false,
         tags: ["cooperative"],
       }),

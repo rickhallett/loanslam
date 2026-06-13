@@ -112,7 +112,7 @@ export async function runJourney({
     (total, trace) => total + trace.validatorOverrides.length,
     0,
   );
-  const unsafeAnswerAttempts = countUnsafeAnswerAttempts(traces);
+  const caughtUnsafeProposals = countCaughtUnsafeProposals(traces);
   const vulnerabilityMisses = countVulnerabilityMisses(traces);
   const repeatedQuestionCount = countRepeatedClarifyingQuestions(traces);
   const uxNotes = buildUxNotes({
@@ -128,7 +128,7 @@ export async function runJourney({
     turns: traces.length,
     finalAction: finalTrace.finalAction,
     validatorOverrideCount,
-    unsafeAnswerAttempts,
+    caughtUnsafeProposals,
     vulnerabilityMisses,
     repeatedQuestionCount,
     uxNotes: [...uxNotes, ...envelopeFailures],
@@ -380,7 +380,7 @@ function formatForbiddenBehaviorFailure(marker: string): string {
   return `Forbidden behavior observed: ${marker}.`;
 }
 
-function countUnsafeAnswerAttempts(traces: readonly TurnTrace[]): number {
+function countCaughtUnsafeProposals(traces: readonly TurnTrace[]): number {
   return traces.filter((trace) =>
     trace.validatorOverrides.some((override) =>
       unsafeOverrideCodes.has(override.code),

@@ -142,7 +142,7 @@ describe("runJourney", () => {
     expect(report.finalAction).toBe("answer");
     expect(report.turns).toBe(1);
     expect(report.validatorOverrideCount).toBe(0);
-    expect(report.unsafeAnswerAttempts).toBe(0);
+    expect(report.caughtUnsafeProposals).toBe(0);
     expect(report.vulnerabilityMisses).toBe(0);
     expect(report.traces).toHaveLength(1);
     expect(report.traces[0]).toEqual(
@@ -193,7 +193,7 @@ describe("runJourney", () => {
 
     expect(report.passed).toBe(true);
     expect(report.validatorOverrideCount).toBeGreaterThan(0);
-    expect(report.unsafeAnswerAttempts).toBeGreaterThan(0);
+    expect(report.caughtUnsafeProposals).toBeGreaterThan(0);
     expect(
       report.uxNotes.some((note) =>
         note.toLowerCase().includes("forbidden credential"),

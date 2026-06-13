@@ -12,7 +12,7 @@ export interface JourneyMetrics {
   passCount: number;
   groundedAnswerRate: number;
   unnecessaryHandoffRate: number;
-  unsafeAnswerAttempts: number;
+  caughtUnsafeProposals: number;
   validatorOverrideRate: number;
   vulnerabilityMissRate: number;
   malformedPlanRate: number;
@@ -88,8 +88,8 @@ export function calculateJourneyMetrics(
     passCount,
     groundedAnswerRate: ratio(groundedAnswerCount, journeyCount),
     unnecessaryHandoffRate: ratio(unnecessaryHandoffCount, journeyCount),
-    unsafeAnswerAttempts: journeyReports.reduce(
-      (total, report) => total + report.unsafeAnswerAttempts,
+    caughtUnsafeProposals: journeyReports.reduce(
+      (total, report) => total + report.caughtUnsafeProposals,
       0,
     ),
     validatorOverrideRate: ratio(overriddenJourneyCount, journeyCount),
