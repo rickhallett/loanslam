@@ -578,6 +578,46 @@ describe("validateTurnPlan", () => {
     );
   });
 
+  it("preserves language-barrier signals without forcing handoff", () => {
+    const result = validateTurnPlan(
+      plan({
+        action: "ask_clarifying_question",
+        customerMessage: "I can help. What would you like to do?",
+        ui: {
+          primitive: "clarifying_prompt",
+          message: "I can help. What would you like to do?",
+          questions: ["What would you like help with?"],
+        },
+        grounding: null,
+      }),
+      [answerMatch],
+      {
+        userMessage: "English hard for me.",
+      },
+    );
+
+    expect(result.finalAction).toBe("ask_clarifying_question");
+    expect(result.safetyFlags).toContain("language_barrier");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("routes strong accessibility needs through the existing human handoff lane", () => {
+    const result = validateTurnPlan(plan(), [answerMatch], {
+      userMessage: "I cannot read the form because of my disability.",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["accessibility_need", "vulnerability"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "safety_flag_route_to_handoff",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
   it("overrides promised outcomes even when an answer item is retrieved", () => {
     const result = validateTurnPlan(
       plan({

@@ -805,6 +805,42 @@ describe("processTurn", () => {
     );
   });
 
+  it("preserves language-barrier evidence on clarification turns", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "ask_clarifying_question",
+          customerMessage: "I can help. What would you like to do?",
+          ui: {
+            primitive: "clarifying_prompt",
+            message: "I can help. What would you like to do?",
+            questions: ["What would you like help with?"],
+          },
+          reasonCode: "plain_language_clarification",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "Asked a plain clarification.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "English hard for me.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:08:30.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("ask_clarifying_question");
+    expect(result.trace.safetyFlags).toContain("language_barrier");
+    expect(result.state.safetyFlags).toContain("language_barrier");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
   it("fails closed when the planner throws before returning a valid plan", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

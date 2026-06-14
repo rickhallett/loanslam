@@ -15,7 +15,9 @@ import {
   buildHandoffCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
+  detectAccessibilityNeed,
   detectForbiddenCredentialRequest,
+  detectLanguageBarrier,
   detectPromisedAccountValueOrOutcome,
   detectSensitiveOvershare,
   hasHandoffSafetyFlag,
@@ -281,14 +283,22 @@ function inferSafetyFlagsFromMatches(
 }
 
 function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
-  if (!detectSensitiveOvershare(message)) {
-    return [];
+  const flags: SafetyFlag[] = [];
+
+  if (detectSensitiveOvershare(message)) {
+    flags.push("sensitive_overshare");
+
+    if (containsForbiddenCredentialTerm(message)) {
+      flags.push("forbidden_credentials");
+    }
   }
 
-  const flags: SafetyFlag[] = ["sensitive_overshare"];
+  if (detectLanguageBarrier(message)) {
+    flags.push("language_barrier");
+  }
 
-  if (containsForbiddenCredentialTerm(message)) {
-    flags.push("forbidden_credentials");
+  if (detectAccessibilityNeed(message)) {
+    flags.push("accessibility_need");
   }
 
   return flags;

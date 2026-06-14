@@ -71,6 +71,12 @@ const approvalPromisePattern =
 const sensitiveOversharePattern =
   /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide)|let\s+me\s+(send|share|give|provide))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|date\s+of\s+birth|dob)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
 
+const languageBarrierPattern =
+  /\b(english\s+(is\s+)?(hard|difficult|not\s+good)|english\s+hard\s+for\s+me|my\s+english\s+(is\s+)?(bad|poor|not\s+good)|i\s+(do\s+not|don't|dont|can't|cant|cannot)\s+(speak|read|write|understand)\s+english|not\s+much\s+english)\b/i;
+
+const accessibilityNeedPattern =
+  /\b(i\s+(can't|cant|cannot|struggle\s+to)\s+(read|see|type)|screen\s+reader|large\s+print|easy\s+read|dyslexia|learning\s+difficulty|disability|disabled)\b/i;
+
 export function allowedUiPrimitivesForAction(
   action: TurnAction,
 ): readonly UiPrimitive[] {
@@ -116,6 +122,14 @@ export function detectPromisedAccountValueOrOutcome(text: string): boolean {
 
 export function detectSensitiveOvershare(text: string): boolean {
   return sensitiveOversharePattern.test(text);
+}
+
+export function detectLanguageBarrier(text: string): boolean {
+  return languageBarrierPattern.test(text);
+}
+
+export function detectAccessibilityNeed(text: string): boolean {
+  return accessibilityNeedPattern.test(text);
 }
 
 export function buildFallbackCopy(reason: string): {
