@@ -7,6 +7,13 @@ import {
   personaProfileSchema,
   personaReportSchema,
   personaScenarioSchema,
+  stochasticAxisValuesSchema,
+  stochasticCoverageReportSchema,
+  stochasticFindingSchema,
+  stochasticHardFailureSchema,
+  stochasticProfileSchema,
+  stochasticRunArtifactSchema,
+  stochasticVerdictSchema,
   turnPlanSchema,
   turnTraceSchema,
 } from "./schemas";
@@ -331,5 +338,202 @@ describe("TurnPlanner contract schemas", () => {
     expect(report.perPersonaActionCounts.adversarial).toEqual({
       request_handoff_intake: 1,
     });
+  });
+
+  it("keeps STS profile and verdict values exact", () => {
+    expect(stochasticProfileSchema.options).toEqual([
+      "smoke",
+      "review",
+      "soak",
+    ]);
+    expect(stochasticVerdictSchema.options).toEqual([
+      "blocked",
+      "useful_with_findings",
+      "promote_to_v2_planning",
+    ]);
+  });
+
+  it("parses sampled STS coverage axes", () => {
+    expect(() =>
+      stochasticAxisValuesSchema.parse({
+        intent: "account_specific",
+        personaStyle: "impatient",
+        journeyShape: "topic_switch",
+        languageNoise: "vague",
+        riskMarker: "pii",
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects extra STS axis value keys", () => {
+    const result = stochasticAxisValuesSchema.safeParse({
+      intent: "account_specific",
+      personaStyle: "impatient",
+      journeyShape: "topic_switch",
+      languageNoise: "vague",
+      riskMarker: "pii",
+      intentt: "faq",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid STS coverage axis keys and values", () => {
+    expect(
+      stochasticCoverageReportSchema.safeParse({
+        axisCoverage: {
+          intentt: {
+            coveredValues: ["faq"],
+          },
+        },
+        coverageGaps: [],
+        highRiskIntentSpread: [],
+        hardFailureTemplateCoverage: [],
+      }).success,
+    ).toBe(false);
+
+    expect(
+      stochasticCoverageReportSchema.safeParse({
+        axisCoverage: {
+          intent: {
+            coveredValues: ["faq", "made_up_intent"],
+          },
+        },
+        coverageGaps: [],
+        highRiskIntentSpread: [],
+        hardFailureTemplateCoverage: [],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects blank optional STS replay commands in failures and findings", () => {
+    expect(
+      stochasticHardFailureSchema.safeParse({
+        category: "replayability_loss",
+        scenarioPath: "review/001/faq/cooperative/single-turn",
+        message: "Replay command was missing.",
+        replayCommand: "   ",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      stochasticFindingSchema.safeParse({
+        category: "weak_clarification",
+        message: "Clarification was safe but too vague.",
+        replayCommand: "",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires provisional promotion status for STS promotion verdicts", () => {
+    const base = {
+      seed: "2026-06-14-demo",
+      profile: "review",
+      stsVersion: "sts-v1",
+      templateSetVersion: "sts-templates-v1",
+      policyVersion: "phase0-turnplanner-policy-v1",
+      corpusFingerprint: "sha256-test",
+      generatedAt: "2026-06-14T12:00:00.000Z",
+      planner: {
+        provider: "openai",
+        model: "gpt-test",
+        promptVersion: "phase0-test",
+      },
+      scenarioCount: 1,
+      artifacts: {
+        runJson: "artifacts/phase0/stochastic-run-2026-06-14-demo.json",
+        scenariosJsonl:
+          "artifacts/phase0/stochastic-scenarios-2026-06-14-demo.jsonl",
+        tracesJsonl: "artifacts/phase0/stochastic-traces-2026-06-14-demo.jsonl",
+        summaryMarkdown:
+          "artifacts/phase0/stochastic-summary-2026-06-14-demo.md",
+      },
+      verdict: "promote_to_v2_planning",
+      verdictReasons: ["No hard failures observed."],
+      hardFailures: [],
+      findings: [],
+      coverage: {
+        axisCoverage: {},
+        coverageGaps: [],
+        highRiskIntentSpread: [],
+        hardFailureTemplateCoverage: [],
+      },
+      replay: {
+        fullRunCommand:
+          "just core-stochastic -- --seed 2026-06-14-demo --profile review",
+        topFindingCommands: [],
+        hardFailureCommands: [],
+      },
+    };
+
+    expect(stochasticRunArtifactSchema.safeParse(base).success).toBe(false);
+    expect(
+      stochasticRunArtifactSchema.safeParse({
+        ...base,
+        promotionStatus: "provisional",
+      }).success,
+    ).toBe(true);
+    expect(
+      stochasticRunArtifactSchema.safeParse({
+        ...base,
+        scenarioCount: 0,
+        promotionStatus: "provisional",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects provisional promotion status for non-promotion STS verdicts", () => {
+    const base = {
+      seed: "2026-06-14-demo",
+      profile: "review",
+      stsVersion: "sts-v1",
+      templateSetVersion: "sts-templates-v1",
+      policyVersion: "phase0-turnplanner-policy-v1",
+      corpusFingerprint: "sha256-test",
+      generatedAt: "2026-06-14T12:00:00.000Z",
+      planner: {
+        provider: "openai",
+        model: "gpt-test",
+        promptVersion: "phase0-test",
+      },
+      scenarioCount: 1,
+      artifacts: {
+        runJson: "artifacts/phase0/stochastic-run-2026-06-14-demo.json",
+        scenariosJsonl:
+          "artifacts/phase0/stochastic-scenarios-2026-06-14-demo.jsonl",
+        tracesJsonl: "artifacts/phase0/stochastic-traces-2026-06-14-demo.jsonl",
+        summaryMarkdown:
+          "artifacts/phase0/stochastic-summary-2026-06-14-demo.md",
+      },
+      verdict: "useful_with_findings",
+      verdictReasons: ["Useful behavioral findings observed."],
+      hardFailures: [],
+      findings: [],
+      coverage: {
+        axisCoverage: {},
+        coverageGaps: [],
+        highRiskIntentSpread: [],
+        hardFailureTemplateCoverage: [],
+      },
+      replay: {
+        fullRunCommand:
+          "just core-stochastic -- --seed 2026-06-14-demo --profile review",
+        topFindingCommands: [],
+        hardFailureCommands: [],
+      },
+    };
+
+    expect(
+      stochasticRunArtifactSchema.safeParse({
+        ...base,
+        promotionStatus: "provisional",
+      }).success,
+    ).toBe(false);
+    expect(
+      stochasticRunArtifactSchema.safeParse({
+        ...base,
+        promotionStatus: undefined,
+      }).success,
+    ).toBe(false);
   });
 });
