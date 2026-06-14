@@ -262,6 +262,7 @@ just typecheck         # type-check workspaces
 just build             # build workspaces
 just core-chat -- --trace
 just core-persona-simulate -- --transcripts-output artifacts/phase0/persona-transcripts.jsonl --report-output artifacts/phase0/persona-report.json
+just core-stochastic -- --profile review
 just core-serve -- --port 8787
 ```
 
@@ -275,6 +276,9 @@ which commonly uses `1433`.
 - [Architecture & technical decisions](./docs/architecture.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
 - [Phase 0 human validation guide](./docs/phase-0-human-validation-guide.md)
+- [StochasticTestSimulator PRD](./docs/prds/2026-06-14-stochastic-test-simulator-prd.md)
+- [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)
+- [StochasticTestSimulator implementation plan](./docs/superpowers/plans/2026-06-14-stochastic-test-simulator.md)
 
 ## License
 
