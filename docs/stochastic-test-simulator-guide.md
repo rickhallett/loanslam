@@ -91,7 +91,7 @@ roles are part of the spec.
 
 ## Required Artifacts
 
-Each run writes four artifacts under `artifacts/phase0/` unless `--output-dir`
+Each run writes five artifacts under `artifacts/phase0/` unless `--output-dir`
 overrides the destination.
 
 ```text
@@ -99,6 +99,7 @@ stochastic-run-<seed-or-timestamp>.json
 stochastic-scenarios-<seed-or-timestamp>.jsonl
 stochastic-traces-<seed-or-timestamp>.jsonl
 stochastic-summary-<seed-or-timestamp>.md
+stochastic-dashboard-<seed-or-timestamp>.html
 ```
 
 ### Run JSON
@@ -220,6 +221,7 @@ Summary: artifacts/phase0/stochastic-summary-2026-06-14-demo.md
 Run: artifacts/phase0/stochastic-run-2026-06-14-demo.json
 Scenarios: artifacts/phase0/stochastic-scenarios-2026-06-14-demo.jsonl
 Traces: artifacts/phase0/stochastic-traces-2026-06-14-demo.jsonl
+Dashboard: artifacts/phase0/stochastic-dashboard-2026-06-14-demo.html
 
 Replay full run:
 just core-stochastic -- --seed 2026-06-14-demo --profile review

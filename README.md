@@ -237,6 +237,17 @@ POST /sessions/:conversationRef/reset
 It exists so reviewers can get a feel for the engine over HTTP without pulling in
 SQL Server, auth, cookies, CSRF, ticket webhooks, widget state, or deployment.
 
+Use `lab-ui` in a second terminal when you want the local Vue engineer console:
+
+```bash
+just core-serve -- --port 8787
+just lab-ui
+```
+
+The console is separate from the customer widget. It keeps one server-owned
+session until reset and visualizes each turn's action, serving mode, retrieval,
+validator overrides, safety flags, requested fields, and raw trace JSON.
+
 The local SQL Server dependency remains available for later productisation work so
 backend persistence can start against the same shape when Phase 0 earns it.
 
@@ -264,6 +275,7 @@ just core-chat -- --trace
 just core-persona-simulate -- --transcripts-output artifacts/phase0/persona-transcripts.jsonl --report-output artifacts/phase0/persona-report.json
 just core-stochastic -- --profile review
 just core-serve -- --port 8787
+just lab-ui
 ```
 
 Defaults live in [`.env.example`](./.env.example). The SQL Server host port

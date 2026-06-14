@@ -47,6 +47,14 @@ core-chat *args:
 core-serve *args:
     @npm --silent run core:serve -- {{args}}
 
+# Start the local Phase 0 Vue lab console.
+lab-ui *args:
+    @npm --silent run lab-ui:dev -- {{args}}
+
+# Build the local Phase 0 Vue lab console.
+lab-ui-build:
+    @npm --silent run lab-ui:build
+
 # Start the local SQL Server container.
 mssql-up:
     @if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \

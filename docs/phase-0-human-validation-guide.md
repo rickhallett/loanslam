@@ -313,6 +313,16 @@ Start the lab API:
 just core-serve -- --port 8787
 ```
 
+For visual probing, start the local engineer console in a second terminal:
+
+```bash
+just lab-ui
+```
+
+Open the printed local URL. The page keeps one server session until reset and
+shows the transcript, hard-safety lane, engine diagnostics lane, UX-quality lane,
+decision fields, retrieval matches, validator overrides, state, and raw turn JSON.
+
 Create a session:
 
 ```bash
