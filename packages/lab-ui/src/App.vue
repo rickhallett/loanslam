@@ -223,7 +223,7 @@ function analyseTurn(result: ValidatedTurnResult): LaneStatus[] {
 
   return [
     {
-      label: "Hard Safety",
+      label: "HARD_SAFETY",
       tone: hardIssues.length > 0 ? "danger" : "ok",
       summary:
         hardIssues.length > 0
@@ -235,7 +235,7 @@ function analyseTurn(result: ValidatedTurnResult): LaneStatus[] {
           : ["Validator result stayed inside the hard policy envelope."],
     },
     {
-      label: "Engine Diagnostics",
+      label: "ENGINE_DIAGNOSTICS",
       tone: diagnosticIssues.length > 0 ? "warning" : "ok",
       summary:
         diagnosticIssues.length > 0
@@ -247,7 +247,7 @@ function analyseTurn(result: ValidatedTurnResult): LaneStatus[] {
           : ["No validator override, routing gap, or retrieval gap observed."],
     },
     {
-      label: "UX Quality",
+      label: "UX_QUALITY",
       tone: uxIssues.length > 0 ? "info" : "muted",
       summary: uxIssues.length > 0 ? `${uxIssues.length} note(s)` : "No notes",
       details:
@@ -360,32 +360,32 @@ function decisionFields(result: ValidatedTurnResult): DecisionField[] {
 
   return [
     {
-      label: "Final action",
+      label: "final_action",
       value: result.finalAction,
       tone: hardSafetyIssues(result).length > 0 ? "danger" : "ok",
     },
     {
-      label: "Proposed action",
+      label: "proposed_action",
       value: trace.proposedAction,
       tone: trace.proposedAction === trace.finalAction ? "ok" : "warning",
     },
     {
-      label: "Serving mode",
+      label: "serving_mode",
       value: trace.selectedServingMode ?? "none",
       tone: trace.selectedServingMode === null ? "warning" : "info",
     },
     {
-      label: "Retrieval",
+      label: "retrieval",
       value: `${trace.retrievedMatches.length} match(es)`,
       tone: trace.retrievedMatches.length === 0 ? "warning" : "ok",
     },
     {
-      label: "Overrides",
+      label: "overrides",
       value: `${trace.validatorOverrides.length}`,
       tone: trace.validatorOverrides.length === 0 ? "ok" : "warning",
     },
     {
-      label: "Safety flags",
+      label: "safety_flags",
       value:
         trace.safetyFlags.length === 0 ? "none" : trace.safetyFlags.join(", "),
       tone: trace.safetyFlags.length === 0 ? "ok" : "info",
@@ -425,8 +425,8 @@ async function focusPrompt(): Promise<void> {
     <header v-if="hasTurns" class="topbar">
       <div class="topbar-title">
         <span class="server-dot" :class="overallTone"></span>
-        <span>Phase 0 Lab Console</span>
-        <small>{{ sessionLabel }}</small>
+        <span>[PHASE_0_ENGINE_CONSOLE]</span>
+        <small>session={{ sessionLabel }}</small>
       </div>
       <div class="topbar-actions">
         <button
@@ -456,7 +456,7 @@ async function focusPrompt(): Promise<void> {
       <form class="prompt-card" @submit.prevent="submitMessage">
         <div class="console-mark">
           <Server :size="20" aria-hidden="true" />
-          <span>Phase 0 Lab Console</span>
+          <span>[PHASE_0_ENGINE_CONSOLE]</span>
         </div>
         <div class="input-row">
           <input
@@ -464,7 +464,7 @@ async function focusPrompt(): Promise<void> {
             v-model="message"
             type="text"
             autocomplete="off"
-            placeholder="Type a customer message"
+            placeholder="customer_message"
             aria-label="Customer message"
             :disabled="isSending"
           />
@@ -492,8 +492,8 @@ async function focusPrompt(): Promise<void> {
       <section class="transcript-panel" aria-label="Conversation transcript">
         <div class="panel-head">
           <div>
-            <h1>Conversation</h1>
-            <p>{{ turns.length }} turn(s)</p>
+            <h1>[TRANSCRIPT]</h1>
+            <p>turns={{ turns.length }}</p>
           </div>
           <span class="status-pill" :class="overallTone">
             {{ latestTurn?.result.finalAction }}
@@ -509,7 +509,7 @@ async function focusPrompt(): Promise<void> {
             type="button"
             @click="selectTurn(turn.id)"
           >
-            <span class="turn-index">Turn {{ turn.id }}</span>
+            <span class="turn-index">turn={{ turn.id }}</span>
             <span class="bubble customer">{{ turn.userMessage }}</span>
             <span class="bubble assistant">{{
               turn.result.customerMessage
@@ -532,7 +532,7 @@ async function focusPrompt(): Promise<void> {
             v-model="message"
             type="text"
             autocomplete="off"
-            placeholder="Type another customer message"
+            placeholder="customer_message"
             aria-label="Customer message"
             :disabled="isSending"
           />
@@ -558,8 +558,8 @@ async function focusPrompt(): Promise<void> {
       <aside v-if="selectedTurn" class="inspector" aria-label="Turn inspector">
         <div class="panel-head">
           <div>
-            <h2>Turn {{ selectedTurn.id }} Inspector</h2>
-            <p>{{ selectedTurn.result.requestRef }}</p>
+            <h2>[TURN_{{ selectedTurn.id }}_INSPECTOR]</h2>
+            <p>request={{ selectedTurn.result.requestRef }}</p>
           </div>
           <span class="status-pill" :class="selectedTurn.lanes[0]?.tone">
             {{ selectedTurn.result.trace.selectedServingMode ?? "none" }}
@@ -584,7 +584,7 @@ async function focusPrompt(): Promise<void> {
         </section>
 
         <section class="inspector-section">
-          <h3>Decision Fields</h3>
+          <h3>DECISION_FIELDS</h3>
           <div class="field-grid">
             <article
               v-for="field in decisionFields(selectedTurn.result)"
@@ -599,7 +599,7 @@ async function focusPrompt(): Promise<void> {
         </section>
 
         <section class="inspector-section">
-          <h3>Retrieval</h3>
+          <h3>RETRIEVAL</h3>
           <div
             v-if="selectedTurn.result.trace.retrievedMatches.length > 0"
             class="retrieval-list"
@@ -633,7 +633,7 @@ async function focusPrompt(): Promise<void> {
         </section>
 
         <section class="inspector-section">
-          <h3>Validator</h3>
+          <h3>VALIDATOR</h3>
           <div
             v-if="selectedTurn.result.validatorOverrides.length > 0"
             class="override-list"
@@ -654,10 +654,10 @@ async function focusPrompt(): Promise<void> {
         </section>
 
         <section class="inspector-section">
-          <h3>State</h3>
+          <h3>STATE</h3>
           <div class="state-grid">
             <article>
-              <span>Requested fields</span>
+              <span>requested_fields</span>
               <strong>
                 {{
                   selectedTurn.result.state.requestedFields.join(", ") || "none"
@@ -665,7 +665,7 @@ async function focusPrompt(): Promise<void> {
               </strong>
             </article>
             <article>
-              <span>Collected facts</span>
+              <span>collected_facts</span>
               <strong>
                 {{
                   Object.keys(selectedTurn.result.state.collectedFacts).length
@@ -673,7 +673,7 @@ async function focusPrompt(): Promise<void> {
               </strong>
             </article>
             <article>
-              <span>Handoff pending</span>
+              <span>handoff_pending</span>
               <strong>{{ selectedTurn.result.state.handoffPending }}</strong>
             </article>
           </div>
@@ -681,7 +681,7 @@ async function focusPrompt(): Promise<void> {
 
         <section class="inspector-section">
           <details>
-            <summary>Raw turn JSON</summary>
+            <summary>RAW_TURN_JSON</summary>
             <pre>{{ JSON.stringify(selectedTurn.result, null, 2) }}</pre>
           </details>
         </section>
