@@ -155,3 +155,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Handoff Intake, Partial Fields, And Missing-Field Narrowing`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## 52c7f93d - Completed Intake, Then Urgent Follow-Up
+
+- Artifact: `artifacts/phase0/lab-session-52c7f93d-2026-06-14.json`
+- Conversation ref: `52c7f93d-949f-4d1e-8255-ede2a796c825`
+- Goal: Test that distress after completed intake is not swallowed by stale completion copy.
+- Browser/API evidence: UI reset before start; 4 customer message POSTs were driven through the browser form; full API dump has 8 history messages and 4 traces. Network evidence: 56 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=create_ticket`, `handoffPending=true`, requested fields none, 6 collected facts.
+- What happened: Action path was request_handoff_intake/handoff_account_specific -> create_ticket/handoff_account_specific -> create_ticket/route_vulnerability -> create_ticket/handoff_account_specific. Terminal target was `distress-ack-after-intake`; final assistant copy started: "Thanks. I have the details needed to pass this to the Loanslam team.".
+- Useful failures: Classification `state_machine_regression`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `state_machine`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Completed Intake, Then Urgent Follow-Up`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
