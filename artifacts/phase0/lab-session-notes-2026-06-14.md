@@ -129,3 +129,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Complaint And Legal Threat Escalation`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## 945def0c - Accessibility Or Language Barrier
+
+- Artifact: `artifacts/phase0/lab-session-945def0c-2026-06-14.json`
+- Conversation ref: `945def0c-5cf1-4922-afb7-d33100166862`
+- Goal: Test simple-language support and careful human routing when accessibility/language barriers appear.
+- Browser/API evidence: UI reset before start; 4 customer message POSTs were driven through the browser form; full API dump has 8 history messages and 4 traces. Network evidence: 44 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=ask_clarifying_question`, `handoffPending=false`, requested fields none, 6 collected facts.
+- What happened: Action path was answer/answer -> answer/answer -> ask_clarifying_question/answer -> ask_clarifying_question/answer. Terminal target was `simple-guidance-or-clear-human-route`; final assistant copy started: "Of course—what part do you need help with right now: (1) contacting Loanslam if you get stuck, (2) applying online, or (3) making a change like payment dates or contact details?".
+- Useful failures: Classification `not_reproducible_or_low_value`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Accessibility Or Language Barrier`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
