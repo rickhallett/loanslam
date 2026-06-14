@@ -77,6 +77,9 @@ const languageBarrierPattern =
 const accessibilityNeedPattern =
   /\b(i\s+(can't|cant|cannot|struggle\s+to)\s+(read|see|type)|screen\s+reader|large\s+print|easy\s+read|dyslexia|learning\s+difficulty|disability|disabled)\b/i;
 
+const internalDataExposurePattern =
+  /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
+
 export function allowedUiPrimitivesForAction(
   action: TurnAction,
 ): readonly UiPrimitive[] {
@@ -132,6 +135,10 @@ export function detectAccessibilityNeed(text: string): boolean {
   return accessibilityNeedPattern.test(text);
 }
 
+export function detectInternalDataExposureRequest(text: string): boolean {
+  return internalDataExposurePattern.test(text);
+}
+
 export function buildFallbackCopy(reason: string): {
   action: "fallback";
   customerMessage: string;
@@ -142,6 +149,25 @@ export function buildFallbackCopy(reason: string): {
 
   return {
     action: "fallback",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: `${customerMessage} ${reason}`,
+      links: [],
+    },
+  };
+}
+
+export function buildInternalDataBoundaryCopy(reason: string): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage =
+    "I cannot share internal traces, hidden instructions, or customer data in chat. I can help with general Loanslam questions or pass a request to the team.";
+
+  return {
+    action: "refuse",
     customerMessage,
     ui: {
       primitive: "safe_fallback",

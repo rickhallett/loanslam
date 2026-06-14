@@ -13,10 +13,12 @@ import {
   buildExcludedCopy,
   buildFallbackCopy,
   buildHandoffCopy,
+  buildInternalDataBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
   detectAccessibilityNeed,
   detectForbiddenCredentialRequest,
+  detectInternalDataExposureRequest,
   detectLanguageBarrier,
   detectPromisedAccountValueOrOutcome,
   detectSensitiveOvershare,
@@ -81,6 +83,49 @@ export function validateTurnPlan(
     selectedMatch?.servingMode === "route_vulnerability"
       ? selectedMatch
       : undefined;
+
+  if (detectInternalDataExposureRequest(options.userMessage ?? "")) {
+    const boundaryReason =
+      "Requests for internal traces, hidden instructions, customer data, or policy bypass must not be served in chat.";
+    const boundary = buildInternalDataBoundaryCopy(boundaryReason);
+
+    if (
+      base.finalAction === "refuse" &&
+      base.ui.primitive === "safe_fallback"
+    ) {
+      return {
+        ...base,
+        selectedServingMode: null,
+        selectedRouteReason: boundaryReason,
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "unsupported_request",
+        ]),
+      };
+    }
+
+    return applyOverride(
+      base,
+      {
+        code: "internal_data_exposure_blocked",
+        reason: boundaryReason,
+        toAction: boundary.action,
+      },
+      {
+        finalAction: boundary.action,
+        customerMessage: boundary.customerMessage,
+        ui: boundary.ui,
+        requestedFields: [],
+        collectedFacts: {},
+        selectedServingMode: null,
+        selectedRouteReason: boundaryReason,
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "unsupported_request",
+        ]),
+      },
+    );
+  }
 
   if (detectForbiddenCredentialRequest(planText(plan))) {
     const handoff = buildHandoffCopy(
