@@ -249,6 +249,60 @@ describe("validateTurnPlan", () => {
     expect(result.safetyFlags).not.toContain("vulnerability");
   });
 
+  it("suppresses negated complaint safety flags from the current message", () => {
+    const result = validateTurnPlan(
+      plan({
+        safetyFlags: ["complaint", "vulnerability"],
+      }),
+      [answerMatch],
+      {
+        userMessage:
+          "I'm not complaining, I'm just asking how to apply online.",
+      },
+    );
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.safetyFlags).not.toContain("complaint");
+    expect(result.safetyFlags).not.toContain("vulnerability");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("suppresses negated hardship safety flags from the current message", () => {
+    const result = validateTurnPlan(
+      plan({
+        safetyFlags: ["hardship", "vulnerability"],
+      }),
+      [answerMatch],
+      {
+        userMessage:
+          "I'm not saying I cannot pay. I just want to apply online.",
+      },
+    );
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.safetyFlags).not.toContain("hardship");
+    expect(result.safetyFlags).not.toContain("vulnerability");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("keeps safety routing when a negated phrase has another genuine signal", () => {
+    const result = validateTurnPlan(
+      plan({
+        safetyFlags: ["hardship", "vulnerability"],
+      }),
+      [answerMatch],
+      {
+        userMessage:
+          "I'm not complaining, but I'm really struggling to pay this month.",
+      },
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["hardship", "vulnerability"]),
+    );
+  });
+
   it("overrides forbidden credential requests and never requests forbidden fields", () => {
     const result = validateTurnPlan(
       plan({

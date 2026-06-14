@@ -74,6 +74,33 @@ const sensitiveOversharePattern =
 const languageBarrierPattern =
   /\b(english\s+(is\s+)?(hard|difficult|not\s+good)|english\s+hard\s+for\s+me|my\s+english\s+(is\s+)?(bad|poor|not\s+good)|i\s+(do\s+not|don't|dont|can't|cant|cannot)\s+(speak|read|write|understand)\s+english|not\s+much\s+english)\b/i;
 
+const complaintNegationPattern =
+  /\b(?:i\s*(?:am|'m|m)?\s+)?not\s+(?:trying\s+to\s+)?complain(?:ing)?\b|\bnot\s+(?:a\s+|formal\s+)?complaint\b|\bno\s+(?:complaint|formal\s+complaint)\b|\bnot\s+(?:trying\s+to\s+)?(?:make|raise|file)\s+(?:a\s+|formal\s+)?complaint\b/i;
+
+const complaintNegationScrubPattern =
+  /\b(?:i\s*(?:am|'m|m)?\s+)?not\s+(?:trying\s+to\s+)?complain(?:ing)?\b|\bnot\s+(?:a\s+|formal\s+)?complaint\b|\bno\s+(?:complaint|formal\s+complaint)\b|\bnot\s+(?:trying\s+to\s+)?(?:make|raise|file)\s+(?:a\s+|formal\s+)?complaint\b/gi;
+
+const complaintRouteSignalPattern =
+  /\b(?:want|need|would\s+like)\s+to\s+(?:make|raise|file)\s+(?:a\s+|formal\s+)?complaint\b|\b(?:make|raise|file)\s+(?:a\s+|formal\s+)?complaint\b|\bformal\s+complaint\b|\btreat\s+this\s+as\s+(?:a\s+)?complaint\b|\bthis\s+is\s+(?:a\s+)?complaint\b|\bcomplain(?:t|ing)?\b|\b(?:not\s+happy|unhappy)\b|\bunacceptable\b|\bescalate\s+(?:this|an?\s+issue)\b/i;
+
+const hardshipNegationPattern =
+  /\bnot\s+(?:saying|claiming|telling\s+you|meaning)\s+(?:that\s+)?(?:i\s+(?:am\s+)?)?(?:can't|cannot|cant|unable\s+to)\s+pay\b|\bnot\s+(?:in\s+)?(?:a\s+)?(?:hardship|financial\s+difficulty|struggling\s+financially)\b|\bno\s+(?:hardship|financial\s+difficulty|difficulty\s+paying|problem\s+paying)\b/i;
+
+const hardshipNegationScrubPattern =
+  /\bnot\s+(?:saying|claiming|telling\s+you|meaning)\s+(?:that\s+)?(?:i\s+(?:am\s+)?)?(?:can't|cannot|cant|unable\s+to)\s+pay\b|\bnot\s+(?:in\s+)?(?:a\s+)?(?:hardship|financial\s+difficulty|struggling\s+financially)\b|\bno\s+(?:hardship|financial\s+difficulty|difficulty\s+paying|problem\s+paying)\b/gi;
+
+const paymentHardshipPattern =
+  /\b(can't|cannot|cant|unable\s+to|not\s+able\s+to|struggling\s+to)\s+pay\b|\b(can't|cannot|cant|unable\s+to|not\s+able\s+to|struggling\s+to)\s+(?:afford|cover|make)\b.{0,50}\b(payment|repayment|instalment|installment|direct\s+debit|rent|bills?)\b/i;
+
+const activeInsolvencyOrDebtPlanPattern =
+  /\b(i\s*(am|'m)|i\s+have|i've|already|currently)\b.{0,80}\b(setting\s+up|going\s+into|entered|entering|started|starting)\b.{0,80}\b(iva|debt\s+management|insolvency)\b/i;
+
+const hardshipRouteSignalPattern =
+  /\b(afford|arrears?|fallen\s+behind|financial\s+difficulty|hardship|lost\s+(?:my\s+)?(?:job|income|work)|made\s+redundant|redundancy|money\s+(?:is\s+)?(?:really\s+)?tight|priority\s+bills?|rent|struggling\s+financially|struggling\s+with\s+money|gambling\s+(?:problem|addiction)|gambled\s+away)\b/i;
+
+const distressRouteSignalPattern =
+  /\b(bereavement|can't\s+cope|cant\s+cope|crisis|desperate|mental\s+health|passed\s+away|seriously\s+ill|suicide|worried\s+about\s+my\s+loan)\b/i;
+
 const accessibilityNeedPattern =
   /\b(i\s+(can't|cant|cannot|struggle\s+to)\s+(read|see|type)|screen\s+reader|large\s+print|easy\s+read|dyslexia|learning\s+difficulty|disability|disabled)\b/i;
 
@@ -129,6 +156,39 @@ export function detectSensitiveOvershare(text: string): boolean {
 
 export function detectLanguageBarrier(text: string): boolean {
   return languageBarrierPattern.test(text);
+}
+
+export function detectComplaintNegation(text: string): boolean {
+  return complaintNegationPattern.test(text);
+}
+
+export function detectComplaintRouteSignal(text: string): boolean {
+  return complaintRouteSignalPattern.test(
+    text.replace(complaintNegationScrubPattern, " "),
+  );
+}
+
+export function detectHardshipNegation(text: string): boolean {
+  return hardshipNegationPattern.test(text);
+}
+
+export function detectHardshipRouteSignal(text: string): boolean {
+  const scrubbed = text.replace(hardshipNegationScrubPattern, " ");
+
+  return (
+    paymentHardshipPattern.test(scrubbed) ||
+    activeInsolvencyOrDebtPlanPattern.test(scrubbed) ||
+    hardshipRouteSignalPattern.test(scrubbed)
+  );
+}
+
+export function detectVulnerabilityRouteSignal(text: string): boolean {
+  return (
+    detectComplaintRouteSignal(text) ||
+    detectHardshipRouteSignal(text) ||
+    distressRouteSignalPattern.test(text) ||
+    detectAccessibilityNeed(text)
+  );
 }
 
 export function detectAccessibilityNeed(text: string): boolean {

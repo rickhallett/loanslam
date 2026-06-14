@@ -112,10 +112,20 @@ describe("lexical retrieval", () => {
     ).toMatchObject({
       servingMode: "route_vulnerability",
     });
+
+    expect(topMatch("I can't make this month's payment.")).toMatchObject({
+      itemId: "cant-pay-this-month",
+      servingMode: "route_vulnerability",
+    });
   });
 
   it("finds complaint escalation before weak lexical answer matches", () => {
     expect(topMatch("I want to complain")).toMatchObject({
+      itemId: "i-want-to-make-a-complaint",
+      servingMode: "route_vulnerability",
+    });
+
+    expect(topMatch("This service is unacceptable")).toMatchObject({
       itemId: "i-want-to-make-a-complaint",
       servingMode: "route_vulnerability",
     });
@@ -154,6 +164,41 @@ describe("lexical retrieval", () => {
       expect(match?.servingMode).not.toBe("handoff_account_specific");
       expect(match?.servingMode).not.toBe("excluded");
     }
+  });
+
+  it("requires strong evidence before selecting safety or advice routes", () => {
+    for (const query of [
+      "I can't find the ticket, that is not a hardship thing.",
+      "The operator pasted so into the chat.",
+      "Can I make a payment now?",
+      "Can you give me my balance reference? This is not debt advice.",
+      "Is this a French service?",
+    ]) {
+      const [match] = retrieveMatches(query, corpus);
+
+      expect(match?.servingMode).not.toBe("route_vulnerability");
+      expect(match?.servingMode).not.toBe("excluded");
+    }
+  });
+
+  it("handles complaint and hardship negation before route selection", () => {
+    for (const query of [
+      "I'm not complaining, I'm just asking if this is a French service.",
+      "This is not a complaint, I just need to know how to apply.",
+      "I'm not saying I cannot pay. I just need the ticket reference.",
+      "No hardship, I only want to make a payment now.",
+    ]) {
+      const [match] = retrieveMatches(query, corpus);
+
+      expect(match?.servingMode).not.toBe("route_vulnerability");
+    }
+
+    expect(
+      topMatch("I'm not saying I cannot pay, but I have lost my job."),
+    ).toMatchObject({
+      itemId: "lost-job-or-redundancy",
+      servingMode: "route_vulnerability",
+    });
   });
 
   it("maps natural application wording to the public application FAQ", () => {

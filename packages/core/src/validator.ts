@@ -17,11 +17,16 @@ import {
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
   detectAccessibilityNeed,
+  detectComplaintNegation,
+  detectComplaintRouteSignal,
   detectForbiddenCredentialRequest,
+  detectHardshipNegation,
+  detectHardshipRouteSignal,
   detectInternalDataExposureRequest,
   detectLanguageBarrier,
   detectPromisedAccountValueOrOutcome,
   detectSensitiveOvershare,
+  detectVulnerabilityRouteSignal,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   standardHandoffFields,
@@ -58,9 +63,13 @@ export function validateTurnPlan(
   options: ValidateTurnPlanOptions = {},
 ): ValidatedPlanFragment {
   const selectedMatch = selectPolicyMatch(plan, retrievedMatches);
+  const planSafetyFlags = suppressNegatedCurrentSafetyFlags(
+    plan.safetyFlags,
+    options.userMessage ?? "",
+  );
   const allSafetyFlags = uniqueSafetyFlags([
     ...(options.safetyFlags ?? []),
-    ...plan.safetyFlags,
+    ...planSafetyFlags,
     ...inferSafetyFlagsFromMatches(selectedMatch ? [selectedMatch] : []),
     ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
   ]);
@@ -347,6 +356,43 @@ function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
   }
 
   return flags;
+}
+
+function suppressNegatedCurrentSafetyFlags(
+  flags: readonly SafetyFlag[],
+  message: string,
+): SafetyFlag[] {
+  if (
+    !message ||
+    (!detectComplaintNegation(message) && !detectHardshipNegation(message))
+  ) {
+    return uniqueSafetyFlags(flags);
+  }
+
+  const hasComplaintSignal = detectComplaintRouteSignal(message);
+  const hasHardshipSignal = detectHardshipRouteSignal(message);
+  const hasVulnerabilitySignal = detectVulnerabilityRouteSignal(message);
+
+  return uniqueSafetyFlags(
+    flags.filter((flag) => {
+      if (flag === "complaint" && !hasComplaintSignal) {
+        return false;
+      }
+
+      if (flag === "hardship" && !hasHardshipSignal) {
+        return false;
+      }
+
+      if (
+        (flag === "vulnerability" || flag === "distress") &&
+        !hasVulnerabilitySignal
+      ) {
+        return false;
+      }
+
+      return true;
+    }),
+  );
 }
 
 function isChangeRequestMatch(match: RetrievedMatch): boolean {

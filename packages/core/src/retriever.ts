@@ -1,5 +1,11 @@
 import type { CorpusItem, RetrievedMatch } from "@loanslam/contracts";
 
+import {
+  detectComplaintRouteSignal,
+  detectHardshipNegation,
+  detectHardshipRouteSignal,
+} from "./policy";
+
 const fieldWeights = {
   question: 6,
   questionVariants: 5,
@@ -148,6 +154,34 @@ const adviceCueTerms = new Set([
 ]);
 
 const excludedAdviceTerms = new Set(["advice", "advise", "debt", "iva"]);
+const weakVulnerabilityRouteTerms = new Set([
+  "advice",
+  "cant",
+  "debt",
+  "give",
+  "help",
+  "into",
+  "make",
+  "month",
+  "now",
+  "pay",
+  "payment",
+  "repayment",
+  "service",
+  "so",
+  "thing",
+]);
+const weakExcludedRouteTerms = new Set([
+  "cant",
+  "give",
+  "now",
+  "pay",
+  "payment",
+  "service",
+  "so",
+]);
+const adviceNegationPattern =
+  /\bnot\s+(?:asking\s+for\s+|looking\s+for\s+|seeking\s+)?(?:debt|financial|regulated)?\s*advice\b|\bnot\s+(?:debt|financial|regulated)\s+advice\b/i;
 
 export interface RetrieveMatchesOptions {
   limit?: number;
@@ -181,10 +215,14 @@ export function retrieveMatches(
   const queryLooksLikeAdviceRequest = queryTerms.some((term) =>
     adviceCueTerms.has(term),
   );
+  const queryHasHardshipRouteSignal = detectHardshipRouteSignal(query);
+  const queryHasOnlyNegatedHardship =
+    detectHardshipNegation(query) && !queryHasHardshipRouteSignal;
   const queryLooksLikeActiveSafetyEvent =
     activeInsolvencyEventPattern.test(query) ||
-    activePaymentHardshipPattern.test(query) ||
-    queryTerms.some((term) => activeSafetyCueTerms.has(term));
+    queryHasHardshipRouteSignal ||
+    (!queryHasOnlyNegatedHardship &&
+      queryTerms.some((term) => activeSafetyCueTerms.has(term)));
   const queryLooksLikeApplicationStart =
     applicationStartIntentPattern.test(query);
   const queryHasAccountStateCue = accountStateCuePattern.test(query);
@@ -202,6 +240,18 @@ export function retrieveMatches(
       (total, term) => total + (termWeights.get(term) ?? 0),
       0,
     );
+
+    if (
+      !hasRequiredPolicyRouteEvidence(
+        item,
+        query,
+        matchedTerms,
+        queryLooksLikeActiveSafetyEvent,
+      )
+    ) {
+      return [];
+    }
+
     const safetyBoost =
       queryHasSafetyCue &&
       (!queryLooksLikeAdviceRequest || queryLooksLikeActiveSafetyEvent) &&
@@ -269,9 +319,6 @@ export function retrieveMatches(
 const activeInsolvencyEventPattern =
   /\b(i\s*(am|'m)|i\s+have|i've|already|currently)\b.{0,80}\b(setting\s+up|going\s+into|entered|entering|started|starting)\b.{0,80}\b(iva|debt\s+management|insolvency)\b/i;
 
-const activePaymentHardshipPattern =
-  /\b(can't|cannot|cant|unable\s+to|not\s+able\s+to|struggling\s+to)\s+pay\b/i;
-
 const applicationStartIntentPattern =
   /\b(where|how)\b.{0,80}\b(start|begin|apply|application|quote)\b|\b(start|begin)\b.{0,80}\b(application|apply|quote)\b|\bapply\s+online\b|\bget\s+a\s+quote\b/i;
 
@@ -305,6 +352,47 @@ function addTerms(
   for (const term of normalizeSearchTerms(text)) {
     termWeights.set(term, (termWeights.get(term) ?? 0) + weight);
   }
+}
+
+function hasRequiredPolicyRouteEvidence(
+  item: CorpusItem,
+  query: string,
+  matchedTerms: readonly string[],
+  queryLooksLikeActiveSafetyEvent: boolean,
+): boolean {
+  if (item.serving_mode === "route_vulnerability") {
+    if (item.intent === "complaint") {
+      return detectComplaintRouteSignal(query);
+    }
+
+    if (detectHardshipNegation(query) && !detectHardshipRouteSignal(query)) {
+      return false;
+    }
+
+    return (
+      queryLooksLikeActiveSafetyEvent ||
+      matchedTerms.some((term) => !weakVulnerabilityRouteTerms.has(term))
+    );
+  }
+
+  if (item.serving_mode === "excluded") {
+    const strongTerms = matchedTerms.filter(
+      (term) => !weakExcludedRouteTerms.has(term),
+    );
+
+    if (strongTerms.length === 0) {
+      return false;
+    }
+
+    if (
+      adviceNegationPattern.test(query) &&
+      strongTerms.every((term) => excludedAdviceTerms.has(term))
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function normalizeTerm(term: string): string {
