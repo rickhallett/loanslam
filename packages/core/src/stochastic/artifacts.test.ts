@@ -108,6 +108,21 @@ describe("STS artifacts", () => {
     ).toThrow("run.artifacts.runJson");
   });
 
+  it("writes empty JSONL files without blank rows", () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-empty-jsonl-"));
+    const paths = buildStochasticArtifactPaths({ outputDir, seed: "demo" });
+
+    writeStochasticArtifacts({
+      paths,
+      run: runArtifact(paths),
+      scenarios: [scenario("smoke/001/faq/cooperative/single-turn")],
+      traces: [],
+      summaryMarkdown: "# Summary\n",
+    });
+
+    expect(readFileSync(paths.tracesJsonl, "utf8")).toBe("");
+  });
+
   it("validates run, scenario, and trace rows before writing", () => {
     const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-invalid-"));
     const paths = buildStochasticArtifactPaths({ outputDir, seed: "demo" });

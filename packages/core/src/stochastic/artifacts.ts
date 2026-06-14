@@ -110,6 +110,10 @@ function assertRunArtifactsMatchPaths(
 }
 
 function toJsonl(rows: readonly unknown[]): string {
+  if (rows.length === 0) {
+    return "";
+  }
+
   return rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
 }
 
