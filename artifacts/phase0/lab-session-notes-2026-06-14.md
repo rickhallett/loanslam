@@ -116,3 +116,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Financial Difficulty Before Intake`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## de904401 - Complaint And Legal Threat Escalation
+
+- Artifact: `artifacts/phase0/lab-session-de904401-2026-06-14.json`
+- Conversation ref: `de904401-0374-466b-8dbd-af910941b537`
+- Goal: Test complaint/legal escalation without outcome promises or legal advice.
+- Browser/API evidence: UI reset before start; 4 customer message POSTs were driven through the browser form; full API dump has 8 history messages and 4 traces. Network evidence: 39 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=create_ticket`, `handoffPending=true`, requested fields none, 6 collected facts.
+- What happened: Action path was request_handoff_intake/route_vulnerability -> request_handoff_intake/handoff_account_specific -> request_handoff_intake/handoff_account_specific -> create_ticket/route_vulnerability. Terminal target was `complaint-route-clear`; final assistant copy started: "Thanks. I have the details needed to pass this to the Loanslam team.".
+- Useful failures: Classification `conversation_quality_finding`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Complaint And Legal Threat Escalation`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
