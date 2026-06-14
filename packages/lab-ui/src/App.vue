@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from "vue";
-import { Download, LoaderCircle, RotateCcw, Send, Server } from "@lucide/vue";
+import { Download, LoaderCircle, RotateCcw, Send } from "@lucide/vue";
 
 import type {
   RetrievedMatch,
@@ -9,6 +9,7 @@ import type {
 } from "@loanslam/contracts";
 
 type Tone = "danger" | "info" | "muted" | "ok" | "warning";
+type InspectorTab = "diagnostics" | "trace";
 
 interface SessionResponse {
   conversationRef: string;
@@ -52,6 +53,38 @@ const isSending = ref(false);
 const isResetting = ref(false);
 const errorMessage = ref("");
 const promptInput = ref<HTMLInputElement | null>(null);
+const turnList = ref<HTMLElement | null>(null);
+const inspectorTab = ref<InspectorTab>("diagnostics");
+
+const placeholderLanes: LaneStatus[] = [
+  {
+    label: "hard_safety",
+    tone: "muted",
+    summary: "waiting",
+    details: ["No turn has been submitted."],
+  },
+  {
+    label: "engine",
+    tone: "muted",
+    summary: "waiting",
+    details: ["Planner and validator output will appear here."],
+  },
+  {
+    label: "ux",
+    tone: "muted",
+    summary: "waiting",
+    details: ["Customer copy notes will appear here."],
+  },
+];
+
+const placeholderDecisionFields: DecisionField[] = [
+  { label: "final_action", value: "-", tone: "muted" },
+  { label: "proposed_action", value: "-", tone: "muted" },
+  { label: "serving_mode", value: "-", tone: "muted" },
+  { label: "retrieval", value: "0", tone: "muted" },
+  { label: "overrides", value: "0", tone: "muted" },
+  { label: "safety_flags", value: "none", tone: "muted" },
+];
 
 const hasTurns = computed(() => turns.value.length > 0);
 const selectedTurn = computed(
@@ -79,6 +112,26 @@ const canSend = computed(
   () => message.value.trim().length > 0 && !isSending.value,
 );
 const canExport = computed(() => turns.value.length > 0);
+const visibleLanes = computed(
+  () => selectedTurn.value?.lanes ?? placeholderLanes,
+);
+const visibleDecisionFields = computed(() =>
+  selectedTurn.value === null
+    ? placeholderDecisionFields
+    : decisionFields(selectedTurn.value.result),
+);
+const selectedResult = computed(() => selectedTurn.value?.result ?? null);
+const selectedTrace = computed(() => selectedResult.value?.trace ?? null);
+const retrievedMatches = computed(
+  () => selectedTrace.value?.retrievedMatches ?? [],
+);
+const selectedIntakeFields = computed(() =>
+  selectedResult.value === null ? [] : intakeFields(selectedResult.value),
+);
+const selectedState = computed(() => selectedResult.value?.state ?? null);
+const validatorOverrides = computed(
+  () => selectedResult.value?.validatorOverrides ?? [],
+);
 
 onMounted(() => {
   void focusPrompt();
@@ -114,6 +167,8 @@ async function submitMessage(): Promise<void> {
     selectedTurnId.value = turn.id;
     sessionRef.value = result.conversationRef;
     message.value = "";
+    inspectorTab.value = "diagnostics";
+    await scrollTranscriptToBottom();
   } catch (error) {
     errorMessage.value = formatError(error);
   } finally {
@@ -128,6 +183,7 @@ async function resetConsole(): Promise<void> {
   turns.value = [];
   selectedTurnId.value = null;
   sessionRef.value = null;
+  inspectorTab.value = "diagnostics";
 
   try {
     await startSession();
@@ -167,6 +223,10 @@ function exportSession(): void {
 
 function selectTurn(turnId: number): void {
   selectedTurnId.value = turnId;
+}
+
+function selectInspectorTab(tab: InspectorTab): void {
+  inspectorTab.value = tab;
 }
 
 async function ensureSession(): Promise<string> {
@@ -393,6 +453,10 @@ function decisionFields(result: ValidatedTurnResult): DecisionField[] {
   ];
 }
 
+function intakeFields(result: ValidatedTurnResult): string[] {
+  return result.ui.primitive === "intake_form" ? result.ui.fields : [];
+}
+
 function scoreWidth(
   match: RetrievedMatch,
   matches: readonly RetrievedMatch[],
@@ -418,14 +482,26 @@ async function focusPrompt(): Promise<void> {
   await nextTick();
   promptInput.value?.focus();
 }
+
+async function scrollTranscriptToBottom(): Promise<void> {
+  await nextTick();
+  await new Promise(requestAnimationFrame);
+  const list = turnList.value;
+
+  if (list === null) {
+    return;
+  }
+
+  list.scrollTo({ top: list.scrollHeight, behavior: "auto" });
+}
 </script>
 
 <template>
   <div class="app-shell" :class="{ 'has-turns': hasTurns }">
-    <header v-if="hasTurns" class="topbar">
+    <header class="topbar">
       <div class="topbar-title">
         <span class="server-dot" :class="overallTone"></span>
-        <span>[PHASE_0_ENGINE_CONSOLE]</span>
+        <span>phase0.lab</span>
         <small>session={{ sessionLabel }}</small>
       </div>
       <div class="topbar-actions">
@@ -452,55 +528,19 @@ async function focusPrompt(): Promise<void> {
       </div>
     </header>
 
-    <main v-if="!hasTurns" class="center-stage">
-      <form class="prompt-card" @submit.prevent="submitMessage">
-        <div class="console-mark">
-          <Server :size="20" aria-hidden="true" />
-          <span>[PHASE_0_ENGINE_CONSOLE]</span>
-        </div>
-        <div class="input-row">
-          <input
-            ref="promptInput"
-            v-model="message"
-            type="text"
-            autocomplete="off"
-            placeholder="customer_message"
-            aria-label="Customer message"
-            :disabled="isSending"
-          />
-          <button
-            class="send-button"
-            type="submit"
-            title="Send message"
-            aria-label="Send message"
-            :disabled="!canSend"
-          >
-            <LoaderCircle
-              v-if="isSending"
-              class="spin"
-              :size="19"
-              aria-hidden="true"
-            />
-            <Send v-else :size="19" aria-hidden="true" />
-          </button>
-        </div>
-        <p v-if="errorMessage" class="error-line">{{ errorMessage }}</p>
-      </form>
-    </main>
-
-    <main v-else class="workbench">
+    <main class="workbench">
       <section class="transcript-panel" aria-label="Conversation transcript">
         <div class="panel-head">
           <div>
-            <h1>[TRANSCRIPT]</h1>
+            <h1>transcript</h1>
             <p>turns={{ turns.length }}</p>
           </div>
           <span class="status-pill" :class="overallTone">
-            {{ latestTurn?.result.finalAction }}
+            {{ latestTurn?.result.finalAction ?? "idle" }}
           </span>
         </div>
 
-        <div class="turn-list">
+        <div ref="turnList" class="turn-list">
           <button
             v-for="turn in turns"
             :key="turn.id"
@@ -514,6 +554,14 @@ async function focusPrompt(): Promise<void> {
             <span class="bubble assistant">{{
               turn.result.customerMessage
             }}</span>
+            <span
+              v-if="intakeFields(turn.result).length > 0"
+              class="field-strip"
+            >
+              <span v-for="field in intakeFields(turn.result)" :key="field">
+                {{ field }}
+              </span>
+            </span>
             <span class="lane-strip">
               <span
                 v-for="lane in turn.lanes"
@@ -524,6 +572,10 @@ async function focusPrompt(): Promise<void> {
               ></span>
             </span>
           </button>
+          <div v-if="!hasTurns" class="empty-turn">
+            <span>stdin is empty</span>
+            <span>submit a customer message to start a run</span>
+          </div>
         </div>
 
         <form class="dock" @submit.prevent="submitMessage">
@@ -555,136 +607,168 @@ async function focusPrompt(): Promise<void> {
         <p v-if="errorMessage" class="error-line">{{ errorMessage }}</p>
       </section>
 
-      <aside v-if="selectedTurn" class="inspector" aria-label="Turn inspector">
+      <aside class="inspector" aria-label="Turn inspector">
         <div class="panel-head">
           <div>
-            <h2>[TURN_{{ selectedTurn.id }}_INSPECTOR]</h2>
-            <p>request={{ selectedTurn.result.requestRef }}</p>
+            <h2>
+              {{ selectedTurn ? `turn_${selectedTurn.id}` : "turn_idle" }}
+            </h2>
+            <p>request={{ selectedResult?.requestRef ?? "-" }}</p>
           </div>
-          <span class="status-pill" :class="selectedTurn.lanes[0]?.tone">
-            {{ selectedTurn.result.trace.selectedServingMode ?? "none" }}
+          <span class="status-pill" :class="visibleLanes[0]?.tone">
+            {{ selectedTrace?.selectedServingMode ?? "none" }}
           </span>
         </div>
 
-        <section class="lane-grid">
-          <article
-            v-for="lane in selectedTurn.lanes"
-            :key="lane.label"
-            class="lane-card"
-            :class="lane.tone"
+        <nav class="tab-bar" aria-label="Inspector tabs">
+          <button
+            type="button"
+            :class="{ selected: inspectorTab === 'diagnostics' }"
+            @click="selectInspectorTab('diagnostics')"
           >
-            <div>
-              <h3>{{ lane.label }}</h3>
-              <strong>{{ lane.summary }}</strong>
+            diagnostics
+          </button>
+          <button
+            type="button"
+            :class="{ selected: inspectorTab === 'trace' }"
+            @click="selectInspectorTab('trace')"
+          >
+            trace
+          </button>
+        </nav>
+
+        <div v-if="inspectorTab === 'diagnostics'" class="tab-panel">
+          <section class="lane-grid">
+            <article
+              v-for="lane in visibleLanes"
+              :key="lane.label"
+              class="lane-card"
+              :class="lane.tone"
+            >
+              <div>
+                <h3>{{ lane.label }}</h3>
+                <strong>{{ lane.summary }}</strong>
+              </div>
+              <ul>
+                <li v-for="detail in lane.details" :key="detail">
+                  {{ detail }}
+                </li>
+              </ul>
+            </article>
+          </section>
+
+          <section class="inspector-section">
+            <h3>decision_fields</h3>
+            <div class="field-grid">
+              <article
+                v-for="field in visibleDecisionFields"
+                :key="field.label"
+                class="field-tile"
+                :class="field.tone"
+              >
+                <span>{{ field.label }}</span>
+                <strong>{{ field.value }}</strong>
+              </article>
             </div>
-            <ul>
-              <li v-for="detail in lane.details" :key="detail">{{ detail }}</li>
-            </ul>
-          </article>
-        </section>
+          </section>
 
-        <section class="inspector-section">
-          <h3>DECISION_FIELDS</h3>
-          <div class="field-grid">
-            <article
-              v-for="field in decisionFields(selectedTurn.result)"
-              :key="field.label"
-              class="field-tile"
-              :class="field.tone"
+          <section class="inspector-section">
+            <h3>validator</h3>
+            <div v-if="validatorOverrides.length > 0" class="override-list">
+              <article
+                v-for="override in validatorOverrides"
+                :key="`${override.code}-${override.toAction}`"
+                class="override-row"
+              >
+                <span class="status-pill warning">{{ override.code }}</span>
+                <p>{{ override.reason }}</p>
+                <small>
+                  {{ override.fromAction ?? "none" }} -> {{ override.toAction }}
+                </small>
+              </article>
+            </div>
+            <p v-else class="empty-line">No validator overrides.</p>
+          </section>
+
+          <section class="inspector-section">
+            <h3>state</h3>
+            <div class="state-grid">
+              <article>
+                <span>requested_fields</span>
+                <strong>
+                  {{ selectedState?.requestedFields.join(", ") || "none" }}
+                </strong>
+              </article>
+              <article>
+                <span>collected_facts</span>
+                <strong>
+                  {{
+                    selectedState === null
+                      ? 0
+                      : Object.keys(selectedState.collectedFacts).length
+                  }}
+                </strong>
+              </article>
+              <article>
+                <span>handoff_pending</span>
+                <strong>{{ selectedState?.handoffPending ?? false }}</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="inspector-section">
+            <h3>ui_fields</h3>
+            <div v-if="selectedIntakeFields.length > 0" class="field-strip">
+              <span v-for="field in selectedIntakeFields" :key="field">
+                {{ field }}
+              </span>
+            </div>
+            <p v-else class="empty-line">No intake fields for this turn.</p>
+          </section>
+        </div>
+
+        <div v-else class="tab-panel">
+          <section class="inspector-section trace-first">
+            <h3>retrieval</h3>
+            <div v-if="retrievedMatches.length > 0" class="retrieval-list">
+              <article
+                v-for="match in retrievedMatches"
+                :key="match.itemId"
+                class="retrieval-row"
+              >
+                <div class="retrieval-main">
+                  <strong>{{ match.itemId }}</strong>
+                  <span>{{ match.servingMode }}</span>
+                </div>
+                <div class="score-track">
+                  <span
+                    :style="{
+                      width: scoreWidth(match, retrievedMatches),
+                    }"
+                  ></span>
+                </div>
+                <div class="retrieval-meta">
+                  <span>score {{ match.score }}</span>
+                  <span>{{ match.matchedTerms.join(", ") || "no terms" }}</span>
+                </div>
+              </article>
+            </div>
+            <p v-else class="empty-line">No retrieved evidence.</p>
+          </section>
+
+          <section class="inspector-section">
+            <h3>raw_turn_json</h3>
+            <pre v-if="selectedResult">{{
+              JSON.stringify(selectedResult, null, 2)
+            }}</pre>
+            <pre v-else>
+{
+  "status": "idle",
+  "turn": null
+}</pre
             >
-              <span>{{ field.label }}</span>
-              <strong>{{ field.value }}</strong>
-            </article>
-          </div>
-        </section>
-
-        <section class="inspector-section">
-          <h3>RETRIEVAL</h3>
-          <div
-            v-if="selectedTurn.result.trace.retrievedMatches.length > 0"
-            class="retrieval-list"
-          >
-            <article
-              v-for="match in selectedTurn.result.trace.retrievedMatches"
-              :key="match.itemId"
-              class="retrieval-row"
-            >
-              <div class="retrieval-head">
-                <strong>{{ match.itemId }}</strong>
-                <span class="status-pill info">{{ match.servingMode }}</span>
-              </div>
-              <div class="score-track">
-                <span
-                  :style="{
-                    width: scoreWidth(
-                      match,
-                      selectedTurn.result.trace.retrievedMatches,
-                    ),
-                  }"
-                ></span>
-              </div>
-              <div class="retrieval-meta">
-                <span>score {{ match.score }}</span>
-                <span>{{ match.matchedTerms.join(", ") || "no terms" }}</span>
-              </div>
-            </article>
-          </div>
-          <p v-else class="empty-line">No retrieved evidence.</p>
-        </section>
-
-        <section class="inspector-section">
-          <h3>VALIDATOR</h3>
-          <div
-            v-if="selectedTurn.result.validatorOverrides.length > 0"
-            class="override-list"
-          >
-            <article
-              v-for="override in selectedTurn.result.validatorOverrides"
-              :key="`${override.code}-${override.toAction}`"
-              class="override-row"
-            >
-              <span class="status-pill warning">{{ override.code }}</span>
-              <p>{{ override.reason }}</p>
-              <small>
-                {{ override.fromAction ?? "none" }} -> {{ override.toAction }}
-              </small>
-            </article>
-          </div>
-          <p v-else class="empty-line">No validator overrides.</p>
-        </section>
-
-        <section class="inspector-section">
-          <h3>STATE</h3>
-          <div class="state-grid">
-            <article>
-              <span>requested_fields</span>
-              <strong>
-                {{
-                  selectedTurn.result.state.requestedFields.join(", ") || "none"
-                }}
-              </strong>
-            </article>
-            <article>
-              <span>collected_facts</span>
-              <strong>
-                {{
-                  Object.keys(selectedTurn.result.state.collectedFacts).length
-                }}
-              </strong>
-            </article>
-            <article>
-              <span>handoff_pending</span>
-              <strong>{{ selectedTurn.result.state.handoffPending }}</strong>
-            </article>
-          </div>
-        </section>
-
-        <section class="inspector-section">
-          <details>
-            <summary>RAW_TURN_JSON</summary>
-            <pre>{{ JSON.stringify(selectedTurn.result, null, 2) }}</pre>
-          </details>
-        </section>
+          </section>
+        </div>
       </aside>
     </main>
   </div>
