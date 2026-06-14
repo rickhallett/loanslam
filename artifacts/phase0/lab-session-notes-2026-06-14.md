@@ -25,3 +25,16 @@
 - Regression candidates: Keep a fixed public FAQ journey that asserts answerable FAQ turns stay in `serving_mode=answer` and do not request handoff intake. Next-change tag: `no_change_needed`.
 - Open product/policy question: Should any application-link or next-step public FAQ ever create a ticket, or should it always answer and stop unless the customer asks about their own account?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## a1997170 - Vague Customer Clarification
+
+- Artifact: `artifacts/phase0/lab-session-a1997170-2026-06-14.json`
+- Conversation ref: `a1997170-73e8-4b3b-a89b-861945ab08f7`
+- Goal: Test whether vague inbound contact gets one useful clarification and then recovers to public application guidance.
+- Browser/API evidence: UI reset before start; 4 customer message POSTs were driven through the browser form; full API dump has 8 history messages and 4 traces. Network evidence: 5 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=answer`, `handoffPending=true`, requested fields fullName, dateOfBirth, address, phone, email, situationSummary, 0 collected facts.
+- What happened: Action path was ask_clarifying_question/answer -> ask_clarifying_question/answer -> request_handoff_intake/handoff_account_specific -> answer/answer. Terminal target was `clarify-answer-or-safe-route`; final assistant copy started: "You can apply online here: https://apply.loanslam.co.uk/step-one/step-one.html. The first two pages give you a personalised quote with no impact on your credit score—then you can continue if you’d like to go ahead.".
+- Useful failures: Classification `conversation_quality_finding`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Vague Customer Clarification`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
