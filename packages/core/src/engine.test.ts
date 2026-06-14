@@ -623,6 +623,150 @@ describe("processTurn", () => {
     );
   });
 
+  it("allows a public FAQ answer after carried vulnerability state", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "You can apply online.",
+          ui: {
+            primitive: "message",
+            message: "You can apply online.",
+            links: [],
+          },
+          reasonCode: "corrected_public_faq",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Answered after the customer corrected a false route.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["vulnerability"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage:
+        "That earlier message was pasted by mistake. Where can I apply online?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:22.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.customerMessage).toBe("You can apply online.");
+    expect(result.trace.effectiveServingMode).toBe("answer");
+    expect(result.trace.safetyFlags).toContain("vulnerability");
+    expect(result.state.safetyFlags).toContain("vulnerability");
+    expect(result.validatorOverrides).not.toContainEqual(
+      expect.objectContaining({
+        code: "safety_flag_route_to_handoff",
+      }),
+    );
+  });
+
+  it("answers a public FAQ after completed handoff instead of repeating confirmation", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "You can apply online.",
+          ui: {
+            primitive: "message",
+            message: "You can apply online.",
+            links: [],
+          },
+          reasonCode: "post_ticket_public_faq",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Answered a public FAQ after ticket creation.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: completedHandoffState(),
+      userMessage: "Before I go, where can I apply online?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:24.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.customerMessage).toBe("You can apply online.");
+    expect(result.customerMessage).not.toMatch(/details needed/i);
+    expect(result.trace.effectiveServingMode).toBe("answer");
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["account_specific_request", "change_request"]),
+    );
+  });
+
+  it("acknowledges a new complaint after ticket creation", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage: "I can pass this complaint to the Loanslam team.",
+          ui: {
+            primitive: "intake_form",
+            message: "I can pass this complaint to the Loanslam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "post_ticket_complaint",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["complaint"],
+          traceSummary: "Customer raised a complaint after ticket creation.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: completedHandoffState(),
+      userMessage: "Actually I want to make a complaint about this.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:26.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.customerMessage).toMatch(/complaint/i);
+    expect(result.customerMessage).toMatch(/Loanslam team/i);
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      reference: "conv-1",
+    });
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["complaint"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "completed_handoff_new_safety_intent",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
   it("extracts labelled handoff fields during pending intake", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

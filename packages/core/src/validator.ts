@@ -19,6 +19,7 @@ import {
   detectAccessibilityNeed,
   detectComplaintNegation,
   detectComplaintRouteSignal,
+  detectDistressRouteSignal,
   detectForbiddenCredentialRequest,
   detectHardshipNegation,
   detectHardshipRouteSignal,
@@ -353,6 +354,23 @@ function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
 
   if (detectAccessibilityNeed(message)) {
     flags.push("accessibility_need");
+  }
+
+  // Fail-closed safety floor: positively re-derive the vulnerability-class
+  // signals from the raw message so a genuine hardship/complaint/distress turn
+  // routes to a human even when the planner omits the flag and no
+  // route_vulnerability item is the selected match. The detectors scrub
+  // negations internally, so "I'm not in hardship" does not trip the floor.
+  if (detectComplaintRouteSignal(message)) {
+    flags.push("complaint");
+  }
+
+  if (detectHardshipRouteSignal(message)) {
+    flags.push("hardship");
+  }
+
+  if (detectDistressRouteSignal(message)) {
+    flags.push("distress");
   }
 
   return flags;

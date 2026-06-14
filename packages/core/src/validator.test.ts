@@ -303,6 +303,43 @@ describe("validateTurnPlan", () => {
     );
   });
 
+  it("routes a hardship message to a human even when the planner proposed an answer with no flag", () => {
+    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
+      userMessage: "I lost my job and money is really tight, how do I apply?",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toContain("hardship");
+  });
+
+  it("routes a complaint message to a human even when the planner proposed an answer with no flag", () => {
+    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
+      userMessage: "I want to make a formal complaint about how I was treated.",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toContain("complaint");
+  });
+
+  it("routes a distress message to a human even when the planner proposed an answer with no flag", () => {
+    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
+      userMessage:
+        "I had a bereavement recently and I can't cope. How do I apply?",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toContain("distress");
+  });
+
+  it("does not infer hardship from the message when the customer negates it", () => {
+    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
+      userMessage: "I'm not saying I cannot pay. I just want to apply online.",
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.safetyFlags).not.toContain("hardship");
+  });
+
   it("overrides forbidden credential requests and never requests forbidden fields", () => {
     const result = validateTurnPlan(
       plan({

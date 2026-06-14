@@ -65,10 +65,16 @@ export async function processTurn({
     plannerInput,
     retrievedMatches,
     userMessage,
-    stateSafetyFlags: state.safetyFlags,
   });
   const validated = applyHandoffStateRules(state, policyValidated, userMessage);
-  const effectiveServingMode = deriveEffectiveServingMode(validated);
+  const traceSafetyFlags = mergeSafetyFlags(
+    state.safetyFlags,
+    validated.safetyFlags,
+  );
+  const effectiveServingMode = deriveEffectiveServingMode(
+    validated,
+    traceSafetyFlags,
+  );
   const nextState = mergeState({
     state,
     userMessage,
@@ -78,7 +84,7 @@ export async function processTurn({
     customerMessage: validated.customerMessage,
     collectedFacts: validated.collectedFacts,
     requestedFields: validated.requestedFields,
-    safetyFlags: validated.safetyFlags,
+    safetyFlags: traceSafetyFlags,
     finalAction: validated.finalAction,
   });
 
@@ -99,7 +105,7 @@ export async function processTurn({
     proposedAction: plan.action,
     finalAction: validated.finalAction,
     validatorOverrides: validated.validatorOverrides,
-    safetyFlags: validated.safetyFlags,
+    safetyFlags: traceSafetyFlags,
     customerMessage: validated.customerMessage,
     createdAt,
   };
@@ -119,6 +125,7 @@ export async function processTurn({
 
 function deriveEffectiveServingMode(
   validated: ValidatedPlanFragment,
+  safetyFlags: ConversationState["safetyFlags"] = validated.safetyFlags,
 ): ServingMode | null {
   if (validated.finalAction === "answer") {
     return "answer";
@@ -135,7 +142,7 @@ function deriveEffectiveServingMode(
   ) {
     if (
       validated.selectedServingMode === "route_vulnerability" ||
-      hasVulnerabilitySafetyFlag(validated.safetyFlags)
+      hasVulnerabilitySafetyFlag(safetyFlags)
     ) {
       return "route_vulnerability";
     }
@@ -146,7 +153,7 @@ function deriveEffectiveServingMode(
 
     if (
       validated.selectedServingMode === "handoff_account_specific" ||
-      hasHandoffSafetyFlag(validated.safetyFlags)
+      hasHandoffSafetyFlag(safetyFlags)
     ) {
       return "handoff_account_specific";
     }
@@ -193,6 +200,19 @@ function applyHandoffStateRules(
       currentValidated,
       "completed_handoff_follow_up",
       "A completed handoff follow-up should preserve the completed handoff state.",
+    );
+  }
+
+  if (
+    state.lastAction === "create_ticket" &&
+    missingStandardFields.length === 0 &&
+    hasVulnerabilitySafetyFlag(currentValidated.safetyFlags)
+  ) {
+    return buildCompletedHandoffFragment(
+      state,
+      currentValidated,
+      "completed_handoff_new_safety_intent",
+      "A completed handoff received a new complaint, vulnerability, hardship, legal, or accessibility signal.",
     );
   }
 
@@ -336,6 +356,10 @@ function buildMissingHandoffFragment(
 function buildCompletedHandoffMessage(
   safetyFlags: readonly ConversationState["safetyFlags"][number][],
 ): string {
+  if (safetyFlags.includes("complaint")) {
+    return "Thanks. I have the details needed, and I will pass the complaint to the Loanslam team so a person can review it.";
+  }
+
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
     return "Thanks. I have the details needed to pass this to the Loanslam team so a person can help you carefully.";
   }
@@ -515,13 +539,11 @@ async function planAndValidateTurn({
   plannerInput,
   retrievedMatches,
   userMessage,
-  stateSafetyFlags,
 }: {
   planner: ProcessTurnInput["planner"];
   plannerInput: Parameters<TurnPlanner["planTurn"]>[0];
   retrievedMatches: ReturnType<typeof retrieveMatches>;
   userMessage: string;
-  stateSafetyFlags: ConversationState["safetyFlags"];
 }): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
   let plan: TurnPlan;
 
@@ -561,7 +583,7 @@ async function planAndValidateTurn({
         ],
         selectedServingMode: null,
         selectedRouteReason: null,
-        safetyFlags: [...stateSafetyFlags],
+        safetyFlags: [],
       },
     };
   }
@@ -569,7 +591,6 @@ async function planAndValidateTurn({
   return {
     plan,
     validated: validateTurnPlan(plan, retrievedMatches, {
-      safetyFlags: stateSafetyFlags,
       userMessage,
     }),
   };
@@ -640,4 +661,10 @@ function mergeState({
       finalAction === "escalate" ||
       finalAction === "create_ticket",
   };
+}
+
+function mergeSafetyFlags(
+  ...flagGroups: readonly ConversationState["safetyFlags"][]
+): ConversationState["safetyFlags"] {
+  return [...new Set(flagGroups.flat())];
 }

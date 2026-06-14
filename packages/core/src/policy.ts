@@ -182,11 +182,15 @@ export function detectHardshipRouteSignal(text: string): boolean {
   );
 }
 
+export function detectDistressRouteSignal(text: string): boolean {
+  return distressRouteSignalPattern.test(text);
+}
+
 export function detectVulnerabilityRouteSignal(text: string): boolean {
   return (
     detectComplaintRouteSignal(text) ||
     detectHardshipRouteSignal(text) ||
-    distressRouteSignalPattern.test(text) ||
+    detectDistressRouteSignal(text) ||
     detectAccessibilityNeed(text)
   );
 }
