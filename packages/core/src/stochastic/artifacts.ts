@@ -27,6 +27,7 @@ const artifactPathKeys = [
   "scenariosJsonl",
   "tracesJsonl",
   "summaryMarkdown",
+  "dashboardHtml",
 ] as const satisfies readonly (keyof StochasticArtifactPaths)[];
 const safeArtifactTokenPattern = /^[A-Za-z0-9._-]+$/;
 
@@ -43,6 +44,7 @@ export function buildStochasticArtifactPaths({
     tracesJsonl: join(outputDir, `stochastic-traces-${seed}.jsonl`),
     summaryMarkdown:
       summaryOutput ?? join(outputDir, `stochastic-summary-${seed}.md`),
+    dashboardHtml: join(outputDir, `stochastic-dashboard-${seed}.html`),
   };
 }
 
@@ -52,6 +54,7 @@ export interface WriteStochasticArtifactsInput {
   scenarios: readonly StochasticScenario[];
   traces: readonly StochasticTraceRow[];
   summaryMarkdown: string;
+  dashboardHtml: string;
 }
 
 export function writeStochasticArtifacts({
@@ -60,6 +63,7 @@ export function writeStochasticArtifacts({
   scenarios,
   traces,
   summaryMarkdown,
+  dashboardHtml,
 }: WriteStochasticArtifactsInput): void {
   const parsedRun = stochasticRunArtifactSchema.parse(run);
   const parsedScenarios = stochasticScenarioSchema.array().parse(scenarios);
@@ -71,6 +75,7 @@ export function writeStochasticArtifacts({
   writeText(paths.scenariosJsonl, toJsonl(parsedScenarios));
   writeText(paths.tracesJsonl, toJsonl(parsedTraces));
   writeText(paths.summaryMarkdown, newlineTerminate(summaryMarkdown));
+  writeText(paths.dashboardHtml, newlineTerminate(dashboardHtml));
 }
 
 export function fingerprintCorpus(corpus: readonly CorpusItem[]): string {

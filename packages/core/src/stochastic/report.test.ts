@@ -42,6 +42,7 @@ describe("buildStochasticRunReport", () => {
         scenariosJsonl: "artifacts/phase0/stochastic-scenarios-demo.jsonl",
         tracesJsonl: "artifacts/phase0/stochastic-traces-demo.jsonl",
         summaryMarkdown: "artifacts/phase0/stochastic-summary-demo.md",
+        dashboardHtml: "artifacts/phase0/stochastic-dashboard-demo.html",
       },
     });
 
@@ -241,6 +242,7 @@ function baseReportInput() {
       scenariosJsonl: "artifacts/phase0/stochastic-scenarios-demo.jsonl",
       tracesJsonl: "artifacts/phase0/stochastic-traces-demo.jsonl",
       summaryMarkdown: "artifacts/phase0/stochastic-summary-demo.md",
+      dashboardHtml: "artifacts/phase0/stochastic-dashboard-demo.html",
     },
     generatedAt: new Date("2026-06-14T12:00:00.000Z"),
   };

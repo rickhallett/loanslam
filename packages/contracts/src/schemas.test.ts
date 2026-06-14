@@ -447,6 +447,8 @@ describe("TurnPlanner contract schemas", () => {
         tracesJsonl: "artifacts/phase0/stochastic-traces-2026-06-14-demo.jsonl",
         summaryMarkdown:
           "artifacts/phase0/stochastic-summary-2026-06-14-demo.md",
+        dashboardHtml:
+          "artifacts/phase0/stochastic-dashboard-2026-06-14-demo.html",
       },
       verdict: "promote_to_v2_planning",
       verdictReasons: ["No hard failures observed."],
@@ -504,6 +506,8 @@ describe("TurnPlanner contract schemas", () => {
         tracesJsonl: "artifacts/phase0/stochastic-traces-2026-06-14-demo.jsonl",
         summaryMarkdown:
           "artifacts/phase0/stochastic-summary-2026-06-14-demo.md",
+        dashboardHtml:
+          "artifacts/phase0/stochastic-dashboard-2026-06-14-demo.html",
       },
       verdict: "useful_with_findings",
       verdictReasons: ["Useful behavioral findings observed."],

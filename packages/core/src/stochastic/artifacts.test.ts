@@ -22,6 +22,7 @@ describe("STS artifacts", () => {
       scenariosJsonl: "artifacts/phase0/stochastic-scenarios-demo.jsonl",
       tracesJsonl: "artifacts/phase0/stochastic-traces-demo.jsonl",
       summaryMarkdown: "artifacts/phase0/stochastic-summary-demo.md",
+      dashboardHtml: "artifacts/phase0/stochastic-dashboard-demo.html",
     });
 
     const paths = buildStochasticArtifactPaths({
@@ -35,6 +36,7 @@ describe("STS artifacts", () => {
       scenariosJsonl: "tmp/sts/stochastic-scenarios-demo.jsonl",
       tracesJsonl: "tmp/sts/stochastic-traces-demo.jsonl",
       summaryMarkdown: "tmp/summary.md",
+      dashboardHtml: "tmp/sts/stochastic-dashboard-demo.html",
     });
   });
 
@@ -66,6 +68,7 @@ describe("STS artifacts", () => {
         trace("smoke/001/faq/cooperative/single-turn", 1),
       ],
       summaryMarkdown: "# Summary",
+      dashboardHtml: "<!doctype html><title>Summary</title>",
     });
 
     expect(readFileSync(paths.runJson, "utf8")).toMatch(/\n$/);
@@ -84,6 +87,9 @@ describe("STS artifacts", () => {
     expect(traceJsonl.trim().split("\n")).toHaveLength(2);
 
     expect(readFileSync(paths.summaryMarkdown, "utf8")).toBe("# Summary\n");
+    expect(readFileSync(paths.dashboardHtml, "utf8")).toContain(
+      "<!doctype html>",
+    );
   });
 
   it("rejects run artifacts that do not match the paths being written", () => {
@@ -104,6 +110,7 @@ describe("STS artifacts", () => {
         scenarios: [scenario("smoke/001/faq/cooperative/single-turn")],
         traces: [trace("smoke/001/faq/cooperative/single-turn", 0)],
         summaryMarkdown: "# Summary\n",
+        dashboardHtml: "<!doctype html>",
       }),
     ).toThrow("run.artifacts.runJson");
   });
@@ -118,6 +125,7 @@ describe("STS artifacts", () => {
       scenarios: [scenario("smoke/001/faq/cooperative/single-turn")],
       traces: [],
       summaryMarkdown: "# Summary\n",
+      dashboardHtml: "<!doctype html>",
     });
 
     expect(readFileSync(paths.tracesJsonl, "utf8")).toBe("");
@@ -139,6 +147,7 @@ describe("STS artifacts", () => {
           },
         ],
         summaryMarkdown: "Summary",
+        dashboardHtml: "<!doctype html>",
       }),
     ).toThrow();
   });

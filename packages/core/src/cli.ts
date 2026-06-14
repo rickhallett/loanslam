@@ -562,6 +562,7 @@ function stochasticRunText(
     `Run: ${run.artifacts.runJson}`,
     `Scenarios: ${run.artifacts.scenariosJsonl}`,
     `Traces: ${run.artifacts.tracesJsonl}`,
+    `Dashboard: ${run.artifacts.dashboardHtml}`,
     "",
     "Replay full run:",
     run.replay.fullRunCommand,

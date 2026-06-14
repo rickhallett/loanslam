@@ -32,6 +32,7 @@ import {
   buildStochasticRunReport,
   renderStochasticSummaryMarkdown,
 } from "./report";
+import { renderStochasticDashboardHtml } from "./htmlReport";
 
 export interface RunStochasticTestSimulatorInput {
   seed?: string;
@@ -50,6 +51,7 @@ export interface RunStochasticTestSimulatorResult {
   scenarios: StochasticScenario[];
   traces: StochasticTraceRow[];
   summaryMarkdown: string;
+  dashboardHtml: string;
   paths: StochasticArtifactPaths;
   scenarioResults: StochasticScenarioResult[];
 }
@@ -145,6 +147,7 @@ export async function runStochasticTestSimulator(
     generatedAt: runStartedAt,
   });
   const summaryMarkdown = renderStochasticSummaryMarkdown(run);
+  const dashboardHtml = renderStochasticDashboardHtml(run);
 
   writeStochasticArtifacts({
     paths,
@@ -152,6 +155,7 @@ export async function runStochasticTestSimulator(
     scenarios,
     traces,
     summaryMarkdown,
+    dashboardHtml,
   });
 
   return {
@@ -159,6 +163,7 @@ export async function runStochasticTestSimulator(
     scenarios,
     traces,
     summaryMarkdown,
+    dashboardHtml,
     paths,
     scenarioResults,
   };

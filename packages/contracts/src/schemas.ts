@@ -622,6 +622,7 @@ const stochasticRunArtifactBaseSchema = z.object({
     scenariosJsonl: nonEmptyStringSchema,
     tracesJsonl: nonEmptyStringSchema,
     summaryMarkdown: nonEmptyStringSchema,
+    dashboardHtml: nonEmptyStringSchema,
   }),
   verdictReasons: z.array(nonEmptyStringSchema).min(1),
   hardFailures: z.array(stochasticHardFailureSchema).default([]),

@@ -19,7 +19,7 @@ const plannerMetadata: PlannerMetadata = {
 };
 
 describe("runStochasticTestSimulator", () => {
-  it("runs a deterministic smoke profile and writes the four STS artifacts", async () => {
+  it("runs a deterministic smoke profile and writes the STS artifacts", async () => {
     const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-runner-"));
     const result = await runStochasticTestSimulator({
       seed: "demo",
@@ -54,6 +54,9 @@ describe("runStochasticTestSimulator", () => {
     expect(traceLines).toHaveLength(result.traces.length);
     expect(readFileSync(result.paths.summaryMarkdown, "utf8")).toContain(
       "Stochastic Test Simulator Summary",
+    );
+    expect(readFileSync(result.paths.dashboardHtml, "utf8")).toContain(
+      "Loanslam Phase 0 Stochastic Test Simulator",
     );
   });
 
