@@ -173,6 +173,22 @@ describe("TurnPlanner prompt", () => {
     expect(prompt.system).toContain("whether to enter an IVA");
   });
 
+  it("keeps the MVP chat in English only", () => {
+    const prompt = buildTurnPlannerPrompt(plannerInput);
+
+    expect(prompt.system).toContain("MVP language scope is English only");
+    expect(prompt.system).toContain("Always reply in English");
+    expect(prompt.system).toContain(
+      "Do not switch into French, Spanish, or any other language",
+    );
+    expect(prompt.system).toContain("Preserve language_barrier when relevant");
+    expect(prompt.system).toContain("needs an interpreter");
+    expect(prompt.system).toContain("cannot continue in English");
+    expect(prompt.system).toContain(
+      "Do not treat non-English text alone as complaint, distress, hardship, legal_threat, or account-specific evidence",
+    );
+  });
+
   it("directs vague low-risk requests to concise clarification", () => {
     const prompt = buildTurnPlannerPrompt(plannerInput);
 
