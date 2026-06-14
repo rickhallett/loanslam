@@ -223,8 +223,7 @@ function sawVulnerability(trace: TurnTrace): boolean {
   // vulnerabilityHandled.
   return (
     (trace.effectiveServingMode ?? trace.selectedServingMode) ===
-      "route_vulnerability" ||
-    trace.safetyFlags.some(isVulnerabilityFlag)
+      "route_vulnerability" || trace.safetyFlags.some(isVulnerabilityFlag)
   );
 }
 

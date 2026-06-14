@@ -217,8 +217,7 @@ export function retrieveMatches(
         ? 50
         : 0;
     const eligibilityOutcomeBoost =
-      queryLooksLikeEligibilityOutcome &&
-      item.intent === "eligibility-outcome"
+      queryLooksLikeEligibilityOutcome && item.intent === "eligibility-outcome"
         ? 50
         : 0;
     const applicationStartBoost =
