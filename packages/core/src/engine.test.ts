@@ -209,6 +209,130 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toContain("GBP 425");
   });
 
+  it("requests only handoff fields still missing from collected facts", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can collect a few details and pass this to the Loanslam team.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can collect a few details and pass this to the Loanslam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {
+            fullName: "Bob Junior",
+            phone: "07845729939",
+          },
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Collect remaining handoff fields.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        email: "bob@example.com",
+      },
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["account_specific_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "Update my payment details",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      fields: ["dateOfBirth", "address", "situationSummary"],
+    });
+    expect(result.state.requestedFields).toEqual([
+      "dateOfBirth",
+      "address",
+      "situationSummary",
+    ]);
+    expect(result.state.collectedFacts).toMatchObject({
+      email: "bob@example.com",
+      fullName: "Bob Junior",
+      phone: "07845729939",
+    });
+  });
+
+  it("confirms handoff when all standard intake fields are already present", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "Please complete the short details below so we can route you.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "Please complete the short details below so we can route you.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {
+            situationSummary: "Needs a loan for a cake as soon as possible.",
+          },
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Planner repeated the full handoff form.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        fullName_candidate: "Bob Junior",
+        dateOfBirth_candidate: "7 Dec 1900",
+        address_candidate: "Windsor Castle",
+        phone: "07845729939",
+        email: "bob@example.com",
+      },
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["account_specific_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "I have told you my details",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.customerMessage).not.toMatch(/below|complete/i);
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      reference: "conv-1",
+    });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.lastAction).toBe("create_ticket");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_complete",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
   it("records obvious inbound sensitive overshare in state and trace flags", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

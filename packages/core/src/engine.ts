@@ -3,9 +3,11 @@ import { randomUUID } from "node:crypto";
 import type {
   ConversationState,
   CorpusItem,
+  IntakeField,
   PlannerMetadata,
   TurnPlanner,
   TurnPlan,
+  ValidatorOverride,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
 
@@ -14,6 +16,7 @@ import {
   allowedUiPrimitives,
   buildFallbackCopy,
   policyVersion,
+  standardHandoffFields,
 } from "./policy";
 import { retrieveMatches } from "./retriever";
 import { type ValidatedPlanFragment, validateTurnPlan } from "./validator";
@@ -54,13 +57,14 @@ export async function processTurn({
     policyVersion,
   };
 
-  const { plan, validated } = await planAndValidateTurn({
+  const { plan, validated: policyValidated } = await planAndValidateTurn({
     planner,
     plannerInput,
     retrievedMatches,
     userMessage,
     stateSafetyFlags: state.safetyFlags,
   });
+  const validated = applyHandoffIntakeProgress(state, policyValidated);
   const nextState = mergeState({
     state,
     userMessage,
@@ -106,6 +110,96 @@ export async function processTurn({
     validatorOverrides: validated.validatorOverrides,
     trace,
   };
+}
+
+function applyHandoffIntakeProgress(
+  state: ConversationState,
+  validated: ValidatedPlanFragment,
+): ValidatedPlanFragment {
+  if (
+    validated.finalAction !== "request_handoff_intake" ||
+    validated.ui.primitive !== "intake_form"
+  ) {
+    return validated;
+  }
+
+  const facts = {
+    ...state.collectedFacts,
+    ...validated.collectedFacts,
+  };
+  const requestedFields = uniqueIntakeFields([
+    ...validated.ui.fields,
+    ...validated.requestedFields,
+  ]);
+  const missingFields = requestedFields.filter(
+    (field) => !hasCollectedHandoffField(facts, field),
+  );
+
+  if (missingFields.length === 0) {
+    const customerMessage =
+      "Thanks. I have the details needed to pass this to the Loanslam team.";
+    const override: ValidatorOverride = {
+      code: "handoff_intake_complete",
+      reason:
+        "All requested handoff intake fields are present in conversation state.",
+      fromAction: validated.finalAction,
+      toAction: "create_ticket",
+    };
+
+    return {
+      ...validated,
+      finalAction: "create_ticket",
+      customerMessage,
+      ui: {
+        primitive: "handoff_confirmation",
+        message: customerMessage,
+        reference: state.conversationRef,
+      },
+      requestedFields: [],
+      validatorOverrides: [...validated.validatorOverrides, override],
+    };
+  }
+
+  if (sameIntakeFields(validated.ui.fields, missingFields)) {
+    return {
+      ...validated,
+      requestedFields: missingFields,
+    };
+  }
+
+  return {
+    ...validated,
+    ui: {
+      ...validated.ui,
+      fields: missingFields,
+    },
+    requestedFields: missingFields,
+  };
+}
+
+function hasCollectedHandoffField(
+  facts: Record<string, string>,
+  field: IntakeField,
+): boolean {
+  const exactValue = facts[field]?.trim();
+  const candidateValue = facts[`${field}_candidate`]?.trim();
+
+  return Boolean(exactValue || candidateValue);
+}
+
+function uniqueIntakeFields(fields: readonly IntakeField[]): IntakeField[] {
+  return standardHandoffFields.filter((field) => fields.includes(field));
+}
+
+function sameIntakeFields(
+  left: readonly IntakeField[],
+  right: readonly IntakeField[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((field) => right.includes(field)) &&
+    right.every((field) => left.includes(field))
+  );
 }
 
 async function planAndValidateTurn({
@@ -229,9 +323,7 @@ function mergeState({
       ...state.collectedFacts,
       ...collectedFacts,
     },
-    requestedFields: [
-      ...new Set([...state.requestedFields, ...requestedFields]),
-    ],
+    requestedFields: [...new Set(requestedFields)],
     safetyFlags: [...new Set([...state.safetyFlags, ...safetyFlags])],
     lastAction: finalAction,
     handoffPending:
