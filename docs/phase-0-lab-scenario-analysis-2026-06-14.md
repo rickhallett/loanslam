@@ -163,8 +163,15 @@ Evidence scope:
 
 ## Solution Trial Log
 
-- Solution 1: pending.
-- Solution 2: pending.
+- Solution 1: tried first and passed the narrow feedback loop.
+  - Added retrieval regressions for lab-observed filler terms.
+  - Confirmed the tests failed before the implementation change:
+    confused-applicant text top-ranked `handoff_account_specific`, and
+    "I'm looking at applying" top-ranked `route_vulnerability`.
+  - Added the observed filler terms to `stopTerms` and normalized `applying` to
+    `apply`.
+  - Verification: `npx vitest run packages/core/src/retriever.test.ts` passed.
+- Solution 2: covered with Solution 1 for the retrieval failure class.
 - Solution 3: pending.
 - Solution 4: pending.
 - Solution 5: pending.

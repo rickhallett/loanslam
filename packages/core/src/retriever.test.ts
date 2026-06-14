@@ -119,6 +119,44 @@ describe("lexical retrieval", () => {
     }
   });
 
+  it("does not promote lab-observed filler words into policy routes", () => {
+    for (const query of [
+      "I think I want a loan but I don't really know how this works.",
+      "I don't understand that, can you say it simpler?",
+      "What else can I ask about?",
+      "What fields are still missing?",
+    ]) {
+      const [match] = retrieveMatches(query, corpus);
+
+      expect(match?.servingMode).not.toBe("route_vulnerability");
+      expect(match?.servingMode).not.toBe("handoff_account_specific");
+      expect(match?.servingMode).not.toBe("excluded");
+    }
+  });
+
+  it("maps natural application wording to the public application FAQ", () => {
+    expect(topMatch("I'm looking at applying.")).toMatchObject({
+      itemId: "how-do-i-apply",
+      servingMode: "answer",
+    });
+
+    expect(
+      topMatch(
+        "Why do you need to pass me to the Loanslam team? I'm just asking generally how applying works.",
+      ),
+    ).toMatchObject({
+      itemId: "how-do-i-apply",
+      servingMode: "answer",
+    });
+  });
+
+  it("keeps strong account-specific payment-date routing after filler removal", () => {
+    expect(topMatch("What is my next payment date?")).toMatchObject({
+      itemId: "whats-my-next-payment-date",
+      servingMode: "handoff_account_specific",
+    });
+  });
+
   it("uses deterministic item id ordering for tied scores", () => {
     const tiedItems: CorpusItem[] = [
       {
