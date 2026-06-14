@@ -207,3 +207,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `state_machine`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Hostile, Noisy, Multi-Intent Recovery`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## 6c345a46 - Long Stakeholder Demo Journey
+
+- Artifact: `artifacts/phase0/lab-session-6c345a46-2026-06-14.json`
+- Conversation ref: `6c345a46-b039-413f-a667-d7ea283e0a45`
+- Goal: Test one realistic extended transcript covering public answers, account boundary, intake, next steps, and a side FAQ.
+- Browser/API evidence: UI reset before start; 12 customer message POSTs were driven through the browser form; full API dump has 24 history messages and 12 traces. Network evidence: 89 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=request_handoff_intake`, `handoffPending=true`, requested fields fullName, phone, 4 collected facts.
+- What happened: Action path was request_handoff_intake/route_vulnerability -> request_handoff_intake/answer -> request_handoff_intake/excluded -> request_handoff_intake/excluded -> request_handoff_intake/handoff_account_specific -> request_handoff_intake/handoff_account_specific -> request_handoff_intake/route_vulnerability -> request_handoff_intake/excluded -> request_handoff_intake/answer -> request_handoff_intake/answer -> request_handoff_intake/handoff_account_specific -> request_handoff_intake/handoff_account_specific. Terminal target was `coherent-demo-arc`; final assistant copy started: "To pass this to the Loanslam team, I still need your full name and your phone number. Let's start with your full name.".
+- Useful failures: Classification `conversation_quality_finding`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `prompt_guidance`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Long Stakeholder Demo Journey`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
