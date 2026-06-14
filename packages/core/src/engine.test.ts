@@ -149,6 +149,7 @@ describe("processTurn", () => {
         journeyId: "journey-1",
         turnIndex: 3,
         selectedServingMode: "answer",
+        effectiveServingMode: "answer",
         proposedAction: "answer",
         finalAction: "answer",
         policyVersion,
@@ -216,6 +217,7 @@ describe("processTurn", () => {
     expect(result.state.safetyFlags).toContain("account_specific_request");
     expect(result.trace).toMatchObject({
       selectedServingMode: "handoff_account_specific",
+      effectiveServingMode: "handoff_account_specific",
       selectedRouteReason: "A current balance is account-specific.",
       proposedAction: "answer",
       finalAction: "request_handoff_intake",
@@ -433,6 +435,64 @@ describe("processTurn", () => {
     });
     expect(result.state.requestedFields).toEqual([]);
     expect(result.state.lastAction).toBe("create_ticket");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_complete",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
+  it("reports effective handoff when state completes intake after an answer-selected turn", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "You can apply online.",
+          ui: {
+            primitive: "message",
+            message: "You can apply online.",
+            links: [],
+          },
+          reasonCode: "answered_side_question_during_intake",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Planner answered a public FAQ during intake.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        fullName: "Alex Test",
+        dateOfBirth: "1 January 1990",
+        address: "1 Test Street, London",
+        phone: "07123 456789",
+        situationSummary: "Needs help with a payment date change.",
+      },
+      requestedFields: ["email"],
+      safetyFlags: ["account_specific_request", "change_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "Email: alex.test@example.com. Also, how do I apply online?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:05.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.trace.selectedServingMode).toBe("answer");
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
         code: "handoff_intake_complete",
@@ -875,6 +935,7 @@ describe("processTurn", () => {
     expect(result.finalAction).toBe("refuse");
     expect(result.customerMessage).not.toMatch(/Which trace/i);
     expect(result.trace.selectedServingMode).toBeNull();
+    expect(result.trace.effectiveServingMode).toBeNull();
     expect(result.trace.selectedRouteReason).toMatch(/internal traces/i);
     expect(result.trace.safetyFlags).toContain("unsupported_request");
     expect(result.validatorOverrides).toContainEqual(

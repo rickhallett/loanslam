@@ -178,6 +178,7 @@ function turnFromResult(
     proposedAction: trace.proposedAction,
     finalAction: trace.finalAction,
     selectedServingMode: trace.selectedServingMode,
+    effectiveServingMode: trace.effectiveServingMode,
     selectedRouteReason: trace.selectedRouteReason ?? null,
     safetyFlags: trace.safetyFlags,
     validatorOverrideCodes: trace.validatorOverrides.map(
@@ -217,11 +218,12 @@ function hasHandledVulnerability(traces: readonly TurnTrace[]): boolean {
 }
 
 function sawVulnerability(trace: TurnTrace): boolean {
-  // Selected-match semantics only: the acted-on match or a real safety flag.
-  // A vulnerability item merely present in the candidate set is not a
-  // vulnerability turn, so it must not inflate vulnerabilityHandled.
+  // Outcome semantics only: the effective route or a real safety flag. A
+  // vulnerability item merely present in the candidate set must not inflate
+  // vulnerabilityHandled.
   return (
-    trace.selectedServingMode === "route_vulnerability" ||
+    (trace.effectiveServingMode ?? trace.selectedServingMode) ===
+      "route_vulnerability" ||
     trace.safetyFlags.some(isVulnerabilityFlag)
   );
 }

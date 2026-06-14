@@ -315,6 +315,7 @@ async function runInteractiveChat(
             {
               finalAction: result.finalAction,
               selectedServingMode: result.trace.selectedServingMode,
+              effectiveServingMode: result.trace.effectiveServingMode,
               safetyFlags: result.trace.safetyFlags,
               validatorOverrides: result.validatorOverrides,
               retrievedItemIds: result.trace.retrievedMatches.map(

@@ -5,6 +5,7 @@ import type {
   CorpusItem,
   IntakeField,
   PlannerMetadata,
+  ServingMode,
   TurnPlanner,
   TurnPlan,
   ValidatorOverride,
@@ -15,6 +16,7 @@ import {
   allowedActions,
   allowedUiPrimitives,
   buildFallbackCopy,
+  hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   policyVersion,
   standardHandoffFields,
@@ -66,6 +68,7 @@ export async function processTurn({
     stateSafetyFlags: state.safetyFlags,
   });
   const validated = applyHandoffStateRules(state, policyValidated, userMessage);
+  const effectiveServingMode = deriveEffectiveServingMode(validated);
   const nextState = mergeState({
     state,
     userMessage,
@@ -91,6 +94,7 @@ export async function processTurn({
     policyVersion,
     retrievedMatches,
     selectedServingMode: validated.selectedServingMode,
+    effectiveServingMode,
     selectedRouteReason: validated.selectedRouteReason,
     proposedAction: plan.action,
     finalAction: validated.finalAction,
@@ -111,6 +115,46 @@ export async function processTurn({
     validatorOverrides: validated.validatorOverrides,
     trace,
   };
+}
+
+function deriveEffectiveServingMode(
+  validated: ValidatedPlanFragment,
+): ServingMode | null {
+  if (validated.finalAction === "answer") {
+    return "answer";
+  }
+
+  if (validated.finalAction === "refuse") {
+    return validated.selectedServingMode === "excluded" ? "excluded" : null;
+  }
+
+  if (
+    validated.finalAction === "request_handoff_intake" ||
+    validated.finalAction === "create_ticket" ||
+    validated.finalAction === "escalate"
+  ) {
+    if (
+      validated.selectedServingMode === "route_vulnerability" ||
+      hasVulnerabilitySafetyFlag(validated.safetyFlags)
+    ) {
+      return "route_vulnerability";
+    }
+
+    if (validated.selectedServingMode === "excluded") {
+      return "excluded";
+    }
+
+    if (
+      validated.selectedServingMode === "handoff_account_specific" ||
+      hasHandoffSafetyFlag(validated.safetyFlags)
+    ) {
+      return "handoff_account_specific";
+    }
+
+    return "handoff_account_specific";
+  }
+
+  return null;
 }
 
 function applyHandoffStateRules(

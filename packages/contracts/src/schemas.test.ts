@@ -154,6 +154,7 @@ describe("TurnPlanner contract schemas", () => {
       policyVersion: "phase0-contracts",
       retrievedMatches: [],
       selectedServingMode: "handoff_account_specific",
+      effectiveServingMode: "handoff_account_specific",
       selectedRouteReason:
         "The anonymous chat cannot access account-specific status.",
       proposedAction: "answer",
@@ -182,6 +183,7 @@ describe("TurnPlanner contract schemas", () => {
     expect(trace.selectedRouteReason).toBe(
       "The anonymous chat cannot access account-specific status.",
     );
+    expect(trace.effectiveServingMode).toBe("handoff_account_specific");
   });
 
   it("requires persona profiles to describe both traits and style", () => {
@@ -263,6 +265,7 @@ describe("TurnPlanner contract schemas", () => {
           proposedAction: "answer",
           finalAction: "answer",
           selectedServingMode: "answer",
+          effectiveServingMode: "answer",
           selectedRouteReason: null,
           safetyFlags: [],
           validatorOverrideCodes: [],

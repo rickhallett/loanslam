@@ -188,6 +188,7 @@ function toStochasticTraceRow({
     proposedAction: result.trace.proposedAction,
     finalAction: result.trace.finalAction,
     selectedServingMode: result.trace.selectedServingMode,
+    effectiveServingMode: result.trace.effectiveServingMode,
     safetyFlags: result.trace.safetyFlags,
     validatorOverrides: result.trace.validatorOverrides,
     validatorOverrideCodes: result.trace.validatorOverrides.map(
