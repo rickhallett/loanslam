@@ -150,6 +150,24 @@ describe("lexical retrieval", () => {
     });
   });
 
+  it("treats application-start wording as a public FAQ before account-status routing", () => {
+    for (const query of [
+      "Where do I start an application?",
+      "How do I start an application?",
+      "I want to start an application",
+    ]) {
+      expect(topMatch(query)).toMatchObject({
+        itemId: "how-do-i-apply",
+        servingMode: "answer",
+      });
+    }
+
+    expect(topMatch("Can I get an application status update?")).toMatchObject({
+      itemId: "whats-the-status-of-my-application",
+      servingMode: "handoff_account_specific",
+    });
+  });
+
   it("keeps strong account-specific payment-date routing after filler removal", () => {
     expect(topMatch("What is my next payment date?")).toMatchObject({
       itemId: "whats-my-next-payment-date",

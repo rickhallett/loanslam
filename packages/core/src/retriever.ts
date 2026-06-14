@@ -180,6 +180,9 @@ export function retrieveMatches(
     activeInsolvencyEventPattern.test(query) ||
     activePaymentHardshipPattern.test(query) ||
     queryTerms.some((term) => activeSafetyCueTerms.has(term));
+  const queryLooksLikeApplicationStart =
+    applicationStartIntentPattern.test(query);
+  const queryHasAccountStateCue = accountStateCuePattern.test(query);
 
   if (queryTerms.length === 0) {
     return [];
@@ -206,9 +209,26 @@ export function retrieveMatches(
       matchedTerms.some((term) => excludedAdviceTerms.has(term))
         ? 20
         : 0;
-    const score = lexicalScore + safetyBoost + excludedAdviceBoost;
+    const applicationStartBoost =
+      queryLooksLikeApplicationStart &&
+      !queryHasAccountStateCue &&
+      item.id === "how-do-i-apply"
+        ? 12
+        : 0;
+    const accountStatusPenalty =
+      queryLooksLikeApplicationStart &&
+      !queryHasAccountStateCue &&
+      item.intent === "application-status"
+        ? 10
+        : 0;
+    const score =
+      lexicalScore +
+      safetyBoost +
+      excludedAdviceBoost +
+      applicationStartBoost -
+      accountStatusPenalty;
 
-    if (score === 0) {
+    if (score <= 0) {
       return [];
     }
 
@@ -239,6 +259,12 @@ const activeInsolvencyEventPattern =
 
 const activePaymentHardshipPattern =
   /\b(can't|cannot|cant|unable\s+to|not\s+able\s+to|struggling\s+to)\s+pay\b/i;
+
+const applicationStartIntentPattern =
+  /\b(where|how)\b.{0,80}\b(start|begin|apply|application|quote)\b|\b(start|begin)\b.{0,80}\b(application|apply|quote)\b|\bapply\s+online\b|\bget\s+a\s+quote\b/i;
+
+const accountStateCuePattern =
+  /\b(status|update|approved|approval|balance|settlement|payment\s+date|repayment\s+date|decision|processed|processing|completed|signed|agreement|open\s+banking|heard\s+back|news|funds|existing\s+(loan|account)|my\s+account)\b/i;
 
 function buildItemTermWeights(item: CorpusItem): Map<string, number> {
   const termWeights = new Map<string, number>();
