@@ -136,9 +136,14 @@ const activeSafetyCueTerms = new Set([
 const adviceCueTerms = new Set([
   "advice",
   "advise",
+  "better",
+  "choose",
+  "compare",
+  "comparison",
   "decide",
   "prioritise",
   "prioritize",
+  "right",
   "should",
 ]);
 
@@ -183,6 +188,8 @@ export function retrieveMatches(
   const queryLooksLikeApplicationStart =
     applicationStartIntentPattern.test(query);
   const queryHasAccountStateCue = accountStateCuePattern.test(query);
+  const queryLooksLikeEligibilityOutcome =
+    eligibilityOutcomePattern.test(query);
 
   if (queryTerms.length === 0) {
     return [];
@@ -207,7 +214,12 @@ export function retrieveMatches(
       !queryLooksLikeActiveSafetyEvent &&
       item.serving_mode === "excluded" &&
       matchedTerms.some((term) => excludedAdviceTerms.has(term))
-        ? 20
+        ? 50
+        : 0;
+    const eligibilityOutcomeBoost =
+      queryLooksLikeEligibilityOutcome &&
+      item.intent === "eligibility-outcome"
+        ? 50
         : 0;
     const applicationStartBoost =
       queryLooksLikeApplicationStart &&
@@ -225,6 +237,7 @@ export function retrieveMatches(
       lexicalScore +
       safetyBoost +
       excludedAdviceBoost +
+      eligibilityOutcomeBoost +
       applicationStartBoost -
       accountStatusPenalty;
 
@@ -265,6 +278,9 @@ const applicationStartIntentPattern =
 
 const accountStateCuePattern =
   /\b(status|update|approved|approval|balance|settlement|payment\s+date|repayment\s+date|decision|processed|processing|completed|signed|agreement|open\s+banking|heard\s+back|news|funds|existing\s+(loan|account)|my\s+account)\b/i;
+
+const eligibilityOutcomePattern =
+  /\b(what\s+should\s+i\s+say|definitely\s+get\s+approved|will\s+(i|my\s+application|you)\s+(be\s+)?(accepted|approved|qualify)|am\s+i\s+likely\s+to\s+be\s+approved|chances\s+of\s+getting\s+the\s+loan|do\s+you\s+think\s+i'?ll\s+qualify)\b/i;
 
 function buildItemTermWeights(item: CorpusItem): Map<string, number> {
   const termWeights = new Map<string, number>();

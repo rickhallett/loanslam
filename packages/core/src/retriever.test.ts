@@ -71,6 +71,28 @@ describe("lexical retrieval", () => {
       itemId: "can-you-give-me-debt-advice",
       servingMode: "excluded",
     });
+
+    expect(topMatch("Is a debt plan better than an IVA?")).toMatchObject({
+      itemId: "can-you-give-me-debt-advice",
+      servingMode: "excluded",
+    });
+  });
+
+  it("routes eligibility coaching to the excluded eligibility outcome item", () => {
+    for (const query of [
+      "What should I say to definitely get approved?",
+      "Will my application be accepted?",
+      "Am I likely to be approved?",
+    ]) {
+      expect(topMatch(query)).toMatchObject({
+        itemId: "will-my-application-be-accepted",
+        servingMode: "excluded",
+      });
+    }
+
+    expect(topMatch("Has my loan been approved?")).toMatchObject({
+      servingMode: "handoff_account_specific",
+    });
   });
 
   it("still routes stated IVA or debt-management events to vulnerability handling", () => {
