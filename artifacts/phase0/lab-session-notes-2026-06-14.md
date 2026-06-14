@@ -103,3 +103,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `prompt_guidance`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Excluded Debt Advice With Signposting`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## 63ab49bb - Financial Difficulty Before Intake
+
+- Artifact: `artifacts/phase0/lab-session-63ab49bb-2026-06-14.json`
+- Conversation ref: `63ab49bb-9bf0-49ff-ad0d-8907387cd991`
+- Goal: Test hardship/vulnerability priority before normal intake.
+- Browser/API evidence: UI reset before start; 3 customer message POSTs were driven through the browser form; full API dump has 6 history messages and 3 traces. Network evidence: 34 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=create_ticket`, `handoffPending=true`, requested fields none, 6 collected facts.
+- What happened: Action path was request_handoff_intake/route_vulnerability -> request_handoff_intake/handoff_account_specific -> create_ticket/route_vulnerability. Terminal target was `hardship-routing-clear`; final assistant copy started: "Thanks. I have the details needed to pass this to the Loanslam team.".
+- Useful failures: Classification `conversation_quality_finding`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Financial Difficulty Before Intake`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
