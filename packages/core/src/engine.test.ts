@@ -676,6 +676,45 @@ describe("processTurn", () => {
     );
   });
 
+  it("does not force handoff from generic pasted chat wording", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "ask_clarifying_question",
+          customerMessage: "I can help. What would you like to do?",
+          ui: {
+            primitive: "clarifying_prompt",
+            message: "I can help. What would you like to do?",
+            questions: ["What would you like help with?"],
+          },
+          reasonCode: "generic_meta_paste",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "Asked for the customer's actual question.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "The operator pasted so into the chat.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:23.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("ask_clarifying_question");
+    expect(result.trace.effectiveServingMode).not.toBe(
+      "handoff_account_specific",
+    );
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.safetyFlags).not.toContain("account_specific_request");
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
   it("answers a public FAQ after completed handoff instead of repeating confirmation", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

@@ -180,6 +180,16 @@ const weakExcludedRouteTerms = new Set([
   "service",
   "so",
 ]);
+const weakHandoffRouteTerms = new Set([
+  "cant",
+  "chat",
+  "find",
+  "give",
+  "make",
+  "now",
+  "pay",
+  "payment",
+]);
 const adviceNegationPattern =
   /\bnot\s+(?:asking\s+for\s+|looking\s+for\s+|seeking\s+)?(?:debt|financial|regulated)?\s*advice\b|\bnot\s+(?:debt|financial|regulated)\s+advice\b/i;
 
@@ -226,6 +236,8 @@ export function retrieveMatches(
   const queryLooksLikeApplicationStart =
     applicationStartIntentPattern.test(query);
   const queryHasAccountStateCue = accountStateCuePattern.test(query);
+  const queryHasAccountSpecificRouteSignal =
+    queryHasAccountStateCue || accountSpecificRouteSignalPattern.test(query);
   const queryLooksLikeEligibilityOutcome =
     eligibilityOutcomePattern.test(query);
 
@@ -247,6 +259,7 @@ export function retrieveMatches(
         query,
         matchedTerms,
         queryLooksLikeActiveSafetyEvent,
+        queryHasAccountSpecificRouteSignal,
       )
     ) {
       return [];
@@ -325,6 +338,9 @@ const applicationStartIntentPattern =
 const accountStateCuePattern =
   /\b(status|update|approved|approval|balance|settlement|payment\s+date|repayment\s+date|decision|processed|processing|completed|signed|agreement|open\s+banking|heard\s+back|news|funds|existing\s+(loan|account)|my\s+account)\b/i;
 
+const accountSpecificRouteSignalPattern =
+  /\b(make|take)\s+(?:a\s+)?(?:card\s+)?payment\b|\bpayment\s+link\b|\bpay\s+(?:my|off|what\s+i\s+owe|arrears?|instal(?:l)?ment|loan)\b|\bdirect\s+debit\b|\b(account|loan)\s+number\b|\b(loan|account)\s+reference\b|\b(change|update|move|switch|cancel|withdraw|amend)\b.{0,80}\b(address|phone|email|contact\s+details?|application|account|loan|bank\s+details?|payment|repayment|date)\b/i;
+
 const eligibilityOutcomePattern =
   /\b(what\s+should\s+i\s+say|definitely\s+get\s+approved|will\s+(i|my\s+application|you)\s+(be\s+)?(accepted|approved|qualify)|am\s+i\s+likely\s+to\s+be\s+approved|chances\s+of\s+getting\s+the\s+loan|do\s+you\s+think\s+i'?ll\s+qualify)\b/i;
 
@@ -359,6 +375,7 @@ function hasRequiredPolicyRouteEvidence(
   query: string,
   matchedTerms: readonly string[],
   queryLooksLikeActiveSafetyEvent: boolean,
+  queryHasAccountSpecificRouteSignal: boolean,
 ): boolean {
   if (item.serving_mode === "route_vulnerability") {
     if (item.intent === "complaint") {
@@ -372,6 +389,13 @@ function hasRequiredPolicyRouteEvidence(
     return (
       queryLooksLikeActiveSafetyEvent ||
       matchedTerms.some((term) => !weakVulnerabilityRouteTerms.has(term))
+    );
+  }
+
+  if (item.serving_mode === "handoff_account_specific") {
+    return (
+      queryHasAccountSpecificRouteSignal ||
+      matchedTerms.some((term) => !weakHandoffRouteTerms.has(term))
     );
   }
 

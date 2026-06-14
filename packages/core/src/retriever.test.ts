@@ -181,6 +181,28 @@ describe("lexical retrieval", () => {
     }
   });
 
+  it("requires account-specific evidence before selecting handoff routes", () => {
+    for (const query of [
+      "I can't find the ticket, that is not a hardship thing.",
+      "The operator pasted so into the chat.",
+      "Can you give it to me?",
+    ]) {
+      const [match] = retrieveMatches(query, corpus);
+
+      expect(match?.servingMode).not.toBe("handoff_account_specific");
+    }
+
+    expect(topMatch("Can I make a payment now?")).toMatchObject({
+      itemId: "make-a-payment-on-my-account",
+      servingMode: "handoff_account_specific",
+    });
+
+    expect(topMatch("Can you give me my balance reference?")).toMatchObject({
+      itemId: "what-is-my-balance",
+      servingMode: "handoff_account_specific",
+    });
+  });
+
   it("handles complaint and hardship negation before route selection", () => {
     for (const query of [
       "I'm not complaining, I'm just asking if this is a French service.",
