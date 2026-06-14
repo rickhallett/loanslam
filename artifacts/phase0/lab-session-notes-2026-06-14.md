@@ -168,3 +168,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `state_machine`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Completed Intake, Then Urgent Follow-Up`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## b1b0148b - Pending Handoff, Public FAQ Side Quest
+
+- Artifact: `artifacts/phase0/lab-session-b1b0148b-2026-06-14.json`
+- Conversation ref: `b1b0148b-65f9-4b36-8e0a-5c7a95f14823`
+- Goal: Test that pending handoff does not block public FAQ answers and can resume intake.
+- Browser/API evidence: UI reset before start; 5 customer message POSTs were driven through the browser form; full API dump has 10 history messages and 5 traces. Network evidence: 62 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=create_ticket`, `handoffPending=true`, requested fields none, 6 collected facts.
+- What happened: Action path was request_handoff_intake/handoff_account_specific -> answer/answer -> answer/answer -> request_handoff_intake/handoff_account_specific -> create_ticket/handoff_account_specific. Terminal target was `faq-answered-and-intake-resumed`; final assistant copy started: "Thanks. I have the details needed to pass this to the Loanslam team.".
+- Useful failures: Classification `state_machine_regression`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `state_machine`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Pending Handoff, Public FAQ Side Quest`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
