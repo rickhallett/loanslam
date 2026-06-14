@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { generateStochasticScenarios } from "./stochastic/generator";
 import type {
   PlannerMetadata,
   TurnPlan,
@@ -58,6 +59,22 @@ describe("Phase 0 CLI", () => {
 
   it("fails clearly when real planner credentials are missing", async () => {
     const result = await runCli(["turn", "--message", "How do I apply?"], {});
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("OPENAI_API_KEY");
+  });
+
+  it("documents STS without requiring planner credentials", async () => {
+    const result = await runCli(["stochastic", "--help"], {});
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("stochastic");
+    expect(result.stdout).toContain("--profile");
+    expect(result.stdout).toContain("--scenario");
+  });
+
+  it("fails clearly when STS evidence mode lacks real planner credentials", async () => {
+    const result = await runCli(["stochastic", "--profile", "smoke"], {});
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("OPENAI_API_KEY");
@@ -161,6 +178,103 @@ describe("Phase 0 CLI", () => {
       }),
     );
     expect(report.metrics.transcriptCount).toBe(transcriptLines.length);
+  });
+
+  it("runs STS with default review profile and compact JSON stdout", async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-cli-json-"));
+    const result = await runCli(
+      ["stochastic", "--seed", "cli-json", "--output-dir", outputDir, "--json"],
+      {},
+      plannerFactory,
+    );
+    const parsed = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).not.toContain("\n");
+    expect(parsed).toMatchObject({
+      seed: "cli-json",
+      profile: "review",
+      artifacts: {
+        runJson: join(outputDir, "stochastic-run-cli-json.json"),
+      },
+      replay: {
+        fullRunCommand:
+          "just core-stochastic -- --seed cli-json --profile review",
+      },
+    });
+  });
+
+  it("runs STS smoke profile and writes compact operator output", async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-cli-smoke-"));
+    const result = await runCli(
+      [
+        "stochastic",
+        "--seed",
+        "cli-smoke",
+        "--profile",
+        "smoke",
+        "--output-dir",
+        outputDir,
+      ],
+      {},
+      plannerFactory,
+    );
+    const runPath = join(outputDir, "stochastic-run-cli-smoke.json");
+    const scenariosPath = join(
+      outputDir,
+      "stochastic-scenarios-cli-smoke.jsonl",
+    );
+    const run = JSON.parse(readFileSync(runPath, "utf8"));
+    const scenarioLines = readFileSync(scenariosPath, "utf8")
+      .trim()
+      .split("\n");
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("STS smoke run complete:");
+    expect(result.stdout).toContain("Seed: cli-smoke");
+    expect(result.stdout).toContain(`Run: ${runPath}`);
+    expect(result.stdout).toContain(
+      "just core-stochastic -- --seed cli-smoke --profile smoke",
+    );
+    expect(run).toMatchObject({ seed: "cli-smoke", profile: "smoke" });
+    expect(scenarioLines).toHaveLength(12);
+  });
+
+  it("runs one STS scenario by path", async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-cli-one-"));
+    const scenarioPath = generateStochasticScenarios({
+      seed: "cli-scenario",
+      profile: "smoke",
+    })[2]?.scenarioPath;
+
+    expect(scenarioPath).toBeDefined();
+
+    const result = await runCli(
+      [
+        "stochastic",
+        "--seed",
+        "cli-scenario",
+        "--profile",
+        "smoke",
+        "--scenario",
+        scenarioPath ?? "",
+        "--output-dir",
+        outputDir,
+        "--json",
+      ],
+      {},
+      plannerFactory,
+    );
+    const parsed = JSON.parse(result.stdout);
+    const scenarioLines = readFileSync(parsed.artifacts.scenariosJsonl, "utf8")
+      .trim()
+      .split("\n");
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(scenarioLines[0] ?? "{}")).toMatchObject({
+      scenarioPath,
+    });
+    expect(scenarioLines).toHaveLength(1);
   });
 
   it("runs an interactive chat loop with injected IO and preserves state across turns", async () => {

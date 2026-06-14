@@ -3,7 +3,12 @@ import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import { type ConversationState, type TurnPlanner } from "@loanslam/contracts";
+import {
+  stochasticProfileSchema,
+  type ConversationState,
+  type StochasticProfile,
+  type TurnPlanner,
+} from "@loanslam/contracts";
 
 import { loadCorpusFromFile } from "./corpus";
 import { processTurn } from "./engine";
@@ -23,6 +28,7 @@ import {
   writeTranscriptJsonl,
 } from "./simulation/personaRunner";
 import { buildPersonaReport } from "./simulation/personaReport";
+import { runStochasticTestSimulator } from "./stochastic/runner";
 
 export interface CliResult {
   exitCode: number;
@@ -75,6 +81,10 @@ export async function runCli(
 
     if (command === "persona-simulate") {
       return await runPersonaSimulation(rest, plannerFactory);
+    }
+
+    if (command === "stochastic") {
+      return await runStochasticSimulation(rest, plannerFactory);
     }
 
     if (command === "chat") {
@@ -221,6 +231,47 @@ async function runPersonaSimulation(
   );
 }
 
+async function runStochasticSimulation(
+  args: string[],
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  const options = parseStochasticArgs(args);
+
+  if (options.help) {
+    return ok(stochasticHelpText());
+  }
+
+  const result = await runStochasticTestSimulator({
+    ...(options.seed !== undefined ? { seed: options.seed } : {}),
+    profile: options.profile,
+    ...(options.scenarioPath !== undefined
+      ? { scenarioPath: options.scenarioPath }
+      : {}),
+    ...(options.outputDir !== undefined
+      ? { outputDir: options.outputDir }
+      : {}),
+    ...(options.summaryOutput !== undefined
+      ? { summaryOutput: options.summaryOutput }
+      : {}),
+    corpus: loadCorpusFromFile().items,
+    planner: plannerFactory(),
+  });
+
+  if (options.json) {
+    return ok(
+      JSON.stringify({
+        seed: result.run.seed,
+        profile: result.run.profile,
+        verdict: result.run.verdict,
+        artifacts: result.run.artifacts,
+        replay: result.run.replay,
+      }),
+    );
+  }
+
+  return ok(stochasticRunText(result.run));
+}
+
 async function runInteractiveChat(
   args: string[],
   plannerFactory: PlannerFactory,
@@ -309,6 +360,101 @@ async function runServer(
   return ok(`Loanslam Phase 0 lab API listening on http://127.0.0.1:${port}`);
 }
 
+interface StochasticCliArgs {
+  seed?: string;
+  profile: StochasticProfile;
+  scenarioPath?: string;
+  outputDir?: string;
+  summaryOutput?: string;
+  json: boolean;
+  help: boolean;
+}
+
+function parseStochasticArgs(args: string[]): StochasticCliArgs {
+  const normalizedArgs = stripOptionSeparator(args);
+  const parsed: StochasticCliArgs = {
+    profile: "review",
+    json: false,
+    help: false,
+  };
+
+  for (let index = 0; index < normalizedArgs.length; index += 1) {
+    const arg = normalizedArgs[index];
+
+    switch (arg) {
+      case "--help":
+      case "-h":
+        parsed.help = true;
+        break;
+      case "--json":
+        parsed.json = true;
+        break;
+      case "--seed":
+        parsed.seed = readRequiredOptionValue(normalizedArgs, index, "--seed");
+        index += 1;
+        break;
+      case "--profile": {
+        const profile = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--profile",
+        );
+        const profileResult = stochasticProfileSchema.safeParse(profile);
+
+        if (!profileResult.success) {
+          throw new Error("--profile must be one of smoke, review, or soak.");
+        }
+
+        parsed.profile = profileResult.data;
+        index += 1;
+        break;
+      }
+      case "--scenario":
+        parsed.scenarioPath = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--scenario",
+        );
+        index += 1;
+        break;
+      case "--output-dir":
+        parsed.outputDir = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--output-dir",
+        );
+        index += 1;
+        break;
+      case "--summary-output":
+        parsed.summaryOutput = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--summary-output",
+        );
+        index += 1;
+        break;
+      default:
+        throw new Error(`Unknown stochastic option: ${arg}`);
+    }
+  }
+
+  return parsed;
+}
+
+function readRequiredOptionValue(
+  args: readonly string[],
+  index: number,
+  name: string,
+): string {
+  const value = args[index + 1]?.trim();
+
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${name} requires a value.`);
+  }
+
+  return value;
+}
+
 function emptyConversationState(conversationRef: string): ConversationState {
   return {
     conversationRef,
@@ -376,11 +522,49 @@ function helpText(): string {
     "  simulate [--trace-output <path>]  Run the representative journey suite",
     "  compare [--output <path>]         Write a model comparison report",
     "  persona-simulate                  Run the persona scenario suite",
+    "  stochastic                        Run the StochasticTestSimulator",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function stochasticHelpText(): string {
+  return [
+    "Loanslam Phase 0 stochastic simulator",
+    "",
+    "Usage:",
+    "  stochastic [--seed <value>] [--profile smoke|review|soak]",
+    "             [--scenario <scenarioPath>] [--output-dir <path>]",
+    "             [--summary-output <path>] [--json]",
+    "",
+    "Options:",
+    "  --seed <value>           Replayable filename-safe run seed",
+    "  --profile <profile>      Scenario volume: smoke, review, or soak",
+    "  --scenario <path>        Replay one generated scenario path",
+    "  --output-dir <path>      Directory for run JSON and JSONL artifacts",
+    "  --summary-output <path>  Override the Markdown summary path",
+    "  --json                   Print compact JSON stdout",
+    "",
+    "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
+  ].join("\n");
+}
+
+function stochasticRunText(
+  run: Awaited<ReturnType<typeof runStochasticTestSimulator>>["run"],
+): string {
+  return [
+    `STS ${run.profile} run complete: ${run.verdict}`,
+    `Seed: ${run.seed}`,
+    `Summary: ${run.artifacts.summaryMarkdown}`,
+    `Run: ${run.artifacts.runJson}`,
+    `Scenarios: ${run.artifacts.scenariosJsonl}`,
+    `Traces: ${run.artifacts.tracesJsonl}`,
+    "",
+    "Replay full run:",
+    run.replay.fullRunCommand,
   ].join("\n");
 }
 

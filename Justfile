@@ -35,6 +35,10 @@ core-compare *args:
 core-persona-simulate *args:
     @npm --silent run core:persona-simulate -- {{args}}
 
+# Run the Phase 0 StochasticTestSimulator.
+core-stochastic *args:
+    @npm --silent run core:stochastic -- {{args}}
+
 # Drive the Phase 0 engine turn by turn from the terminal.
 core-chat *args:
     @npm --silent run core:chat -- {{args}}
