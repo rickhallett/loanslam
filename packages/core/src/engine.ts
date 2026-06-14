@@ -65,7 +65,7 @@ export async function processTurn({
     userMessage,
     stateSafetyFlags: state.safetyFlags,
   });
-  const validated = applyHandoffIntakeProgress(state, policyValidated);
+  const validated = applyHandoffStateRules(state, policyValidated, userMessage);
   const nextState = mergeState({
     state,
     userMessage,
@@ -113,76 +113,179 @@ export async function processTurn({
   };
 }
 
-function applyHandoffIntakeProgress(
+function applyHandoffStateRules(
   state: ConversationState,
   validated: ValidatedPlanFragment,
+  userMessage: string,
 ): ValidatedPlanFragment {
-  if (
-    validated.finalAction !== "request_handoff_intake" ||
-    validated.ui.primitive !== "intake_form"
-  ) {
-    return validated;
-  }
-
+  const extractedFacts = shouldApplyExtractedHandoffFacts(state, validated)
+    ? extractHandoffFacts(userMessage)
+    : {};
+  const currentValidated =
+    Object.keys(extractedFacts).length === 0
+      ? validated
+      : {
+          ...validated,
+          collectedFacts: {
+            ...extractedFacts,
+            ...validated.collectedFacts,
+          },
+        };
   const facts = {
     ...state.collectedFacts,
-    ...validated.collectedFacts,
+    ...currentValidated.collectedFacts,
   };
-  const requestedFields = uniqueIntakeFields([
-    ...validated.ui.fields,
-    ...validated.requestedFields,
-  ]);
-  const missingFields = requestedFields.filter(
+  const missingStandardFields = standardHandoffFields.filter(
     (field) => !hasCollectedHandoffField(facts, field),
   );
 
-  if (missingFields.length === 0) {
-    const customerMessage = buildCompletedHandoffMessage(validated.safetyFlags);
-    const override: ValidatorOverride = {
-      code: "handoff_intake_complete",
-      reason:
-        "All requested handoff intake fields are present in conversation state.",
-      fromAction: validated.finalAction,
-      toAction: "create_ticket",
-    };
-
-    return {
-      ...validated,
-      finalAction: "create_ticket",
-      customerMessage,
-      ui: {
-        primitive: "handoff_confirmation",
-        message: customerMessage,
-        reference: state.conversationRef,
-      },
-      requestedFields: [],
-      validatorOverrides: [...validated.validatorOverrides, override],
-    };
+  if (
+    state.lastAction === "create_ticket" &&
+    missingStandardFields.length === 0 &&
+    isCompletedHandoffFollowUp(userMessage)
+  ) {
+    return buildCompletedHandoffFragment(
+      state,
+      currentValidated,
+      "completed_handoff_follow_up",
+      "A completed handoff follow-up should preserve the completed handoff state.",
+    );
   }
 
-  const customerMessage = buildHandoffIntakeMessage(missingFields);
+  if (
+    shouldCompleteHandoffNow(
+      state,
+      currentValidated,
+      extractedFacts,
+      userMessage,
+    ) &&
+    missingStandardFields.length === 0
+  ) {
+    return buildCompletedHandoffFragment(
+      state,
+      currentValidated,
+      "handoff_intake_complete",
+      "All requested handoff intake fields are present in conversation state.",
+    );
+  }
 
-  if (sameIntakeFields(validated.ui.fields, missingFields)) {
+  if (state.handoffPending && hasAnyStandardHandoffFact(extractedFacts)) {
+    return buildMissingHandoffFragment(
+      currentValidated,
+      missingStandardFields,
+      "handoff_intake_progress_preserved",
+      "A pending handoff turn collected intake facts but still needs more standard fields.",
+    );
+  }
+
+  if (currentValidated.finalAction === "create_ticket") {
+    if (missingStandardFields.length === 0) {
+      return currentValidated;
+    }
+
+    return buildMissingHandoffFragment(
+      currentValidated,
+      missingStandardFields,
+      "handoff_intake_incomplete",
+      "A ticket cannot be created until every standard handoff field is present.",
+    );
+  }
+
+  if (
+    currentValidated.finalAction !== "request_handoff_intake" ||
+    currentValidated.ui.primitive !== "intake_form"
+  ) {
+    return currentValidated;
+  }
+
+  if (missingStandardFields.length === 0) {
+    return buildCompletedHandoffFragment(
+      state,
+      currentValidated,
+      "handoff_intake_complete",
+      "All requested handoff intake fields are present in conversation state.",
+    );
+  }
+
+  const customerMessage = buildHandoffIntakeMessage(missingStandardFields);
+
+  if (sameIntakeFields(currentValidated.ui.fields, missingStandardFields)) {
     return {
-      ...validated,
+      ...currentValidated,
       customerMessage,
       ui: {
-        ...validated.ui,
+        ...currentValidated.ui,
         message: customerMessage,
       },
-      requestedFields: missingFields,
+      requestedFields: missingStandardFields,
     };
   }
 
   return {
-    ...validated,
+    ...currentValidated,
     customerMessage,
     ui: {
-      ...validated.ui,
+      ...currentValidated.ui,
       message: customerMessage,
-      fields: missingFields,
+      fields: missingStandardFields,
     },
-    requestedFields: missingFields,
+    requestedFields: missingStandardFields,
+  };
+}
+
+function buildCompletedHandoffFragment(
+  state: ConversationState,
+  validated: ValidatedPlanFragment,
+  code: string,
+  reason: string,
+): ValidatedPlanFragment {
+  const customerMessage = buildCompletedHandoffMessage(validated.safetyFlags);
+  const override: ValidatorOverride = {
+    code,
+    reason,
+    fromAction: validated.finalAction,
+    toAction: "create_ticket",
+  };
+
+  return {
+    ...validated,
+    finalAction: "create_ticket",
+    customerMessage,
+    ui: {
+      primitive: "handoff_confirmation",
+      message: customerMessage,
+      reference: state.conversationRef,
+    },
+    requestedFields: [],
+    validatorOverrides: [...validated.validatorOverrides, override],
+  };
+}
+
+function buildMissingHandoffFragment(
+  validated: ValidatedPlanFragment,
+  missingFields: readonly IntakeField[],
+  code: string,
+  reason: string,
+): ValidatedPlanFragment {
+  const customerMessage = buildHandoffIntakeMessage(missingFields);
+  const override: ValidatorOverride = {
+    code,
+    reason,
+    fromAction: validated.finalAction,
+    toAction: "request_handoff_intake",
+  };
+
+  return {
+    ...validated,
+    finalAction: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...missingFields],
+    },
+    requestedFields: [...missingFields],
+    validatorOverrides: [...validated.validatorOverrides, override],
   };
 }
 
@@ -223,6 +326,102 @@ function buildHandoffIntakeMessage(
   return `To pass this to the Loanslam team, ${needText} ${formatList(fields)}. Let's start with ${firstField}.`;
 }
 
+function shouldApplyExtractedHandoffFacts(
+  state: ConversationState,
+  validated: ValidatedPlanFragment,
+): boolean {
+  return (
+    state.handoffPending ||
+    validated.finalAction === "request_handoff_intake" ||
+    validated.finalAction === "create_ticket" ||
+    validated.finalAction === "escalate"
+  );
+}
+
+function shouldCompleteHandoffNow(
+  state: ConversationState,
+  validated: ValidatedPlanFragment,
+  extractedFacts: Record<string, string>,
+  userMessage: string,
+): boolean {
+  if (!state.handoffPending) {
+    return false;
+  }
+
+  return (
+    validated.finalAction === "create_ticket" ||
+    validated.finalAction === "request_handoff_intake" ||
+    validated.finalAction === "escalate" ||
+    validated.finalAction === "fallback" ||
+    hasAnyStandardHandoffFact(extractedFacts) ||
+    isCompletedHandoffFollowUp(userMessage)
+  );
+}
+
+function extractHandoffFacts(message: string): Record<string, string> {
+  const facts: Record<string, string> = {};
+
+  captureFact(message, facts, "fullName", [
+    /\bfull name\s*:\s*([^.\n]+)/i,
+    /\bmy name is\s+([^,.\n]+)/i,
+  ]);
+  captureFact(message, facts, "dateOfBirth", [
+    /\bdate of birth\s*:\s*([^.\n]+)/i,
+    /\bmy dob is\s+([^,.\n]+)/i,
+  ]);
+  captureFact(message, facts, "address", [
+    /\baddress\s*:\s*([\s\S]*?)(?=\.\s*(?:phone|email|situation summary)\s*:|$)/i,
+    /\baddress is\s+([\s\S]*?)(?=\s+if that is enough|\.|$)/i,
+  ]);
+  captureFact(message, facts, "phone", [
+    /\bphone\s*:\s*([^.\n]+)/i,
+    /\bmy phone is\s+([^,.\n]+)/i,
+  ]);
+  captureFact(message, facts, "email", [
+    /\bemail\s*:\s*([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i,
+    /\bmy email is\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i,
+  ]);
+  captureFact(message, facts, "situationSummary", [
+    /\bsituation summary\s*:\s*([\s\S]+)$/i,
+    /\band i want to\s+([\s\S]*?)(?=\.|$)/i,
+  ]);
+
+  return facts;
+}
+
+function captureFact(
+  message: string,
+  facts: Record<string, string>,
+  field: IntakeField,
+  patterns: readonly RegExp[],
+): void {
+  if (facts[field]) {
+    return;
+  }
+
+  for (const pattern of patterns) {
+    const value = cleanFactValue(message.match(pattern)?.[1]);
+
+    if (value) {
+      facts[field] = value;
+      return;
+    }
+  }
+}
+
+function cleanFactValue(value: string | undefined): string {
+  return (
+    value
+      ?.replace(/\s+/g, " ")
+      .replace(/[.,;:\s]+$/g, "")
+      .trim() ?? ""
+  );
+}
+
+function hasAnyStandardHandoffFact(facts: Record<string, string>): boolean {
+  return standardHandoffFields.some((field) => Boolean(facts[field]?.trim()));
+}
+
 function formatList(items: readonly string[]): string {
   if (items.length === 0) {
     return "";
@@ -249,10 +448,6 @@ function hasCollectedHandoffField(
   return Boolean(exactValue || candidateValue);
 }
 
-function uniqueIntakeFields(fields: readonly IntakeField[]): IntakeField[] {
-  return standardHandoffFields.filter((field) => fields.includes(field));
-}
-
 function sameIntakeFields(
   left: readonly IntakeField[],
   right: readonly IntakeField[],
@@ -263,6 +458,13 @@ function sameIntakeFields(
     right.every((field) => left.includes(field))
   );
 }
+
+function isCompletedHandoffFollowUp(message: string): boolean {
+  return completedHandoffFollowUpPattern.test(message);
+}
+
+const completedHandoffFollowUpPattern =
+  /\b(what\s+(happens|happen|now|next)|what'?s\s+next|what\s+is\s+next|so\s+what\s+happens|what\s+(details|fields)|which\s+(details|fields)|still\s+missing|anything\s+missing|do\s+you\s+need|stored\s+details|hidden\s+state)\b/i;
 
 async function planAndValidateTurn({
   planner,

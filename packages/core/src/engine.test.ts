@@ -441,6 +441,241 @@ describe("processTurn", () => {
     );
   });
 
+  it("does not create a ticket until every standard handoff field is collected", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "create_ticket",
+          customerMessage:
+            "Thanks, Alex. I will pass your email update request to the team.",
+          ui: {
+            primitive: "handoff_confirmation",
+            message:
+              "Thanks, Alex. I will pass your email update request to the team.",
+            reference: "conv-1",
+          },
+          reasonCode: "premature_handoff_complete",
+          collectedFacts: {
+            dateOfBirth: "1 January 1990",
+            email: "alex.test@example.com",
+          },
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: ["account_specific_request", "change_request"],
+          traceSummary: "Planner tried to complete intake early.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        fullName: "Alex Test",
+        phone: "07123 456789",
+      },
+      requestedFields: ["dateOfBirth"],
+      safetyFlags: ["account_specific_request", "change_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "DOB is 1 January 1990, email alex.test@example.com.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:15.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toBe(
+      "To pass this to the Loanslam team, I still need your address and a short summary of what you need help with. Let's start with your address.",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      fields: ["address", "situationSummary"],
+    });
+    expect(result.state.lastAction).toBe("request_handoff_intake");
+    expect(result.state.requestedFields).toEqual([
+      "address",
+      "situationSummary",
+    ]);
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName: "Alex Test",
+      dateOfBirth: "1 January 1990",
+      phone: "07123 456789",
+      email: "alex.test@example.com",
+    });
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_incomplete",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
+  it("uses completed-handoff copy for post-ticket follow-up questions", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage:
+            "When you make your final payment, your loan is settled and the account is closed.",
+          ui: {
+            primitive: "message",
+            message:
+              "When you make your final payment, your loan is settled and the account is closed.",
+            links: [],
+          },
+          reasonCode: "wrong_next_step_faq",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Planner answered an unrelated FAQ after handoff.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: completedHandoffState(),
+      userMessage: "What happens next?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:20.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.customerMessage).toBe(
+      "Thanks. I have the details needed to pass this to the Loanslam team.",
+    );
+    expect(result.customerMessage).not.toContain("final payment");
+    expect(result.state.lastAction).toBe("create_ticket");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "completed_handoff_follow_up",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
+  it("extracts labelled handoff fields during pending intake", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage: "Please provide the details for the team.",
+          ui: {
+            primitive: "intake_form",
+            message: "Please provide the details for the team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "missed_labelled_intake",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Planner missed labelled handoff facts.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+      },
+      userMessage:
+        "Full name: Alex Test. Date of birth: 1 January 1990. Address: 1 Test Street, London, SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com. Situation summary: needs simple instructions and application check support.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:25.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName: "Alex Test",
+      dateOfBirth: "1 January 1990",
+      address: "1 Test Street, London, SW1A 1AA",
+      phone: "07123 456789",
+      email: "alex.test@example.com",
+      situationSummary:
+        "needs simple instructions and application check support",
+    });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_complete",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
+  it("creates the ticket when full intake arrives with mismatched planner UI", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "create_ticket",
+          customerMessage:
+            "Thanks, Alex. The Loanslam team can review the request.",
+          ui: {
+            primitive: "message",
+            message: "Thanks, Alex. The Loanslam team can review the request.",
+            links: [],
+          },
+          reasonCode: "ticket_with_wrong_ui",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: ["account_specific_request", "change_request"],
+          traceSummary: "Planner had the right action but wrong UI.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request", "change_request"],
+        handoffPending: true,
+      },
+      userMessage:
+        "Full name: Alex Test. Date of birth: 1 January 1990. Address: 1 Test Street, London, SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com. Situation summary: wants to cancel or withdraw application.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:27.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      reference: "conv-1",
+    });
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName: "Alex Test",
+      dateOfBirth: "1 January 1990",
+      address: "1 Test Street, London, SW1A 1AA",
+      phone: "07123 456789",
+      email: "alex.test@example.com",
+      situationSummary: "wants to cancel or withdraw application",
+    });
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_complete",
+        toAction: "create_ticket",
+      }),
+    );
+  });
+
   it("acknowledges urgent vulnerability updates after intake is complete", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
