@@ -1,0 +1,2605 @@
+{
+  "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+  "state": {
+    "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+    "history": [
+      {
+        "id": "e39c15cd-3c0c-4e3a-9836-d77876dc1968",
+        "role": "customer",
+        "content": "this is useless, i need help with my loan thing and no one answers",
+        "createdAt": "2026-06-14T18:32:37.046Z"
+      },
+      {
+        "id": "f5b2b3f6-52d5-403b-9212-e81f6f4f7f91",
+        "role": "assistant",
+        "content": "I’m sorry you’re not getting a response. I can help—what do you need with your loan specifically (e.g., making an extra/part payment, making a manual/card payment, missed payment, or something else)?",
+        "createdAt": "2026-06-14T18:32:37.046Z"
+      },
+      {
+        "id": "e32c8a4f-763c-4a24-80cd-2aa5db37b8fc",
+        "role": "customer",
+        "content": "can i apply online or not, and also i need to change my email",
+        "createdAt": "2026-06-14T18:32:39.566Z"
+      },
+      {
+        "id": "cd6b3113-59cb-464c-897d-afd0bdaf3b80",
+        "role": "assistant",
+        "content": "I cannot answer that safely from the information available here. I can pass this to the Loanslam team so they can help.",
+        "createdAt": "2026-06-14T18:32:39.566Z"
+      },
+      {
+        "id": "58f6fb56-0fec-4695-ac4a-e1d4ac175866",
+        "role": "customer",
+        "content": "this is a complaint too. what info do you even need?",
+        "createdAt": "2026-06-14T18:32:43.608Z"
+      },
+      {
+        "id": "20dd4649-31d3-4040-bc9f-f0fee1d21559",
+        "role": "assistant",
+        "content": "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+        "createdAt": "2026-06-14T18:32:43.608Z"
+      },
+      {
+        "id": "e888510f-516a-4bbb-871c-9fe5969b2374",
+        "role": "customer",
+        "content": "DOB is 32 FooMonth 1800.",
+        "createdAt": "2026-06-14T18:32:46.632Z"
+      },
+      {
+        "id": "19547008-c39d-4101-8423-2c464e3f53e2",
+        "role": "assistant",
+        "content": "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+        "createdAt": "2026-06-14T18:32:46.632Z"
+      },
+      {
+        "id": "ab7084ac-0138-4316-a4a8-d5bdf640ec69",
+        "role": "customer",
+        "content": "Fine, correct DOB is 1 January 1990. Name Alex Test. Phone 07123 456789.",
+        "createdAt": "2026-06-14T18:32:51.431Z"
+      },
+      {
+        "id": "113d1701-3aba-4628-81ad-e1746fbc811a",
+        "role": "assistant",
+        "content": "To pass this to the Loanslam team, I still need your address, your email address, and a short summary of what you need help with. Let's start with your address.",
+        "createdAt": "2026-06-14T18:32:51.431Z"
+      },
+      {
+        "id": "c31cb89a-e6d2-4d5a-b10b-ae60257f0de9",
+        "role": "customer",
+        "content": "Address 1 Test Street London SW1A 1AA. Email alex.test@example.com. Summary: complaint and account help needed.",
+        "createdAt": "2026-06-14T18:32:54.971Z"
+      },
+      {
+        "id": "4f6fead0-c0c4-4faf-9198-b1b909627c7b",
+        "role": "assistant",
+        "content": "Thanks. I have the details needed to pass this to the Loanslam team.",
+        "createdAt": "2026-06-14T18:32:54.971Z"
+      }
+    ],
+    "collectedFacts": {
+      "fullName": "Alex Test",
+      "dateOfBirth": "1 January 1990",
+      "phone": "07123 456789",
+      "address": "Address 1 Test Street London SW1A 1AA",
+      "email": "alex.test@example.com",
+      "situationSummary": "Complaint and account help needed (and requesting to change email/contact details)."
+    },
+    "requestedFields": [],
+    "safetyFlags": [
+      "change_request",
+      "complaint",
+      "vulnerability",
+      "sensitive_overshare"
+    ],
+    "handoffPending": true,
+    "lastAction": "create_ticket"
+  },
+  "traces": [
+    {
+      "traceId": "087448f0-ca0b-41a6-b238-4d8f5eabc477",
+      "turnIndex": 0,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "f958ce30-1048-4c97-8869-efb944999ba6",
+      "inboundMessageId": "e39c15cd-3c0c-4e3a-9836-d77876dc1968",
+      "outboundMessageId": "f5b2b3f6-52d5-403b-9212-e81f6f4f7f91",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [
+        {
+          "itemId": "can-i-make-overpayments",
+          "score": 5,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "one"
+          ],
+          "item": {
+            "id": "can-i-make-overpayments",
+            "section": "existing_customer_support",
+            "intent": "overpayments-policy",
+            "question": "Can I make overpayments or part payments?",
+            "question_variants": [
+              "Can I pay extra towards my loan?",
+              "Can I make a one-off payment?",
+              "Is there a fee for paying more?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can make part payments or overpayments towards your loan at any time, with no fees. The team can set this up and give you the right amount or a secure payment link; just get in touch on 01202 138850, by email, or by text.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "overpayment",
+              "part-payment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-pay-by-card-or-manually",
+          "score": 5,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "one"
+          ],
+          "item": {
+            "id": "can-i-pay-by-card-or-manually",
+            "section": "existing_customer_support",
+            "intent": "manual-payment-availability",
+            "question": "Can I make a manual or card payment?",
+            "question_variants": [
+              "Can I pay by debit card?",
+              "Can I make a one-off payment outside my Direct Debit?",
+              "Is there a way to pay manually?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Alongside your Direct Debit you can make a manual or card payment when you need to - for example to make an overpayment or to bring an account up to date. The team can provide a secure payment link; just get in touch.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "manual-payment",
+              "card-payment",
+              "payment-link"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-long-does-a-decision-take",
+          "score": 5,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "answer"
+          ],
+          "item": {
+            "id": "how-long-does-a-decision-take",
+            "section": "application_questions",
+            "intent": "decision-timing-general",
+            "question": "How long does a decision take?",
+            "question_variants": [
+              "When will I hear back?",
+              "How quickly do you decide?",
+              "How long after applying do I get an answer?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Most applications get a decision quickly. After you apply you'll receive either a lending decision or a request for any extra information, by SMS or email, usually within 24 business hours. It's worth checking your junk or spam folder too, as our emails can occasionally filter there.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "decision",
+              "timing",
+              "underwriting"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "illness-or-life-crisis",
+          "score": 5,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "thing"
+          ],
+          "item": {
+            "id": "illness-or-life-crisis",
+            "section": "existing_customer_support",
+            "intent": "illness-crisis",
+            "question": "I'm seriously ill and worried about my loan.",
+            "question_variants": [
+              "I've been diagnosed with a serious illness",
+              "I'm in hospital and can't deal with this",
+              "There's been a serious crisis in my life",
+              "I'm a carer now and things have changed"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "Serious illness or a major life crisis is a vulnerability signal requiring careful human handling. Route to a human.",
+            "tags": [
+              "illness",
+              "crisis",
+              "vulnerability",
+              "sensitive"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "struggling-financially-general",
+          "score": 5,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "thing"
+          ],
+          "item": {
+            "id": "struggling-financially-general",
+            "section": "existing_customer_support",
+            "intent": "financial-hardship-general",
+            "question": "I'm struggling financially.",
+            "question_variants": [
+              "Money is really tight right now",
+              "I'm in financial difficulty",
+              "I'm finding things hard financially",
+              "I'm having money problems",
+              "I'm overwhelmed by my finances",
+              "Everything's too expensive and I can't manage",
+              "I'm in a difficult financial situation",
+              "I'm finding it hard to make ends meet"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "General financial hardship is a vulnerability signal. Route via vulnerability intake; gather a little context if helpful, then hand off to a human.",
+            "tags": [
+              "financial-difficulty",
+              "hardship",
+              "vulnerability",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-top-up-my-loan",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "one"
+          ],
+          "item": {
+            "id": "can-i-top-up-my-loan",
+            "section": "existing_customer_support",
+            "intent": "top-up-policy",
+            "question": "Can I top up my loan?",
+            "question_variants": [
+              "Can I borrow more on my current loan?",
+              "Can I increase my existing loan?",
+              "Can I take out a second loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Each customer can only have one loan at a time. If you'd like to borrow more than your original amount, you'd need to settle your existing loan in full first. If you're asking because you're finding payments difficult, please tell us - we'd rather help than have you borrow more.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "top-up",
+              "further-borrowing",
+              "policy"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-happens-if-i-miss-a-payment-general",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "thing"
+          ],
+          "item": {
+            "id": "what-happens-if-i-miss-a-payment-general",
+            "section": "existing_customer_support",
+            "intent": "missed-payment-policy",
+            "question": "What happens if I miss a payment?",
+            "question_variants": [
+              "What if my Direct Debit doesn't go through?",
+              "Do you charge late fees?",
+              "What are the consequences of a missed payment?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "If a payment is missed we'll try to work with you to get things back on track. The most important thing is to tell us early if you're finding payments difficult - we don't add late fees or extra interest when an account is in financial difficulty. You can also get free, impartial advice from StepChange or MoneyHelper.",
+            "links": [
+              {
+                "label": "StepChange",
+                "href": "https://www.stepchange.org"
+              },
+              {
+                "label": "MoneyHelper",
+                "href": "https://www.moneyhelper.org.uk/debt-advice-locator"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "missed-payment",
+              "policy",
+              "no-late-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "will-my-credit-score-be-affected",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "one"
+          ],
+          "item": {
+            "id": "will-my-credit-score-be-affected",
+            "section": "application_questions",
+            "intent": "credit-impact",
+            "question": "Will my credit score be affected by applying with you?",
+            "question_variants": [
+              "Does applying hurt my credit?",
+              "Will you do a hard search?",
+              "Does getting a quote affect my credit score?",
+              "Will this show on my credit file?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When you apply we first run a soft credit check, which is quick, non-impactful, and only visible to you. If your application is successful and the loan is paid out, we report a hard credit check to the credit reference agencies, which can affect your score - though it's one of the less influential factors. Repaying on time is good for your credit rating.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "credit-score",
+              "soft-search",
+              "hard-search"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        }
+      ],
+      "selectedServingMode": "answer",
+      "selectedRouteReason": null,
+      "proposedAction": "ask_clarifying_question",
+      "finalAction": "ask_clarifying_question",
+      "validatorOverrides": [],
+      "safetyFlags": [],
+      "customerMessage": "I’m sorry you’re not getting a response. I can help—what do you need with your loan specifically (e.g., making an extra/part payment, making a manual/card payment, missed payment, or something else)?",
+      "createdAt": "2026-06-14T18:32:37.046Z"
+    },
+    {
+      "traceId": "4a8eb5aa-456a-4c70-9b34-2654b040ec97",
+      "turnIndex": 2,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "c56a364f-2588-4663-9a5b-9bf24bf0ffd2",
+      "inboundMessageId": "e32c8a4f-763c-4a24-80cd-2aa5db37b8fc",
+      "outboundMessageId": "cd6b3113-59cb-464c-897d-afd0bdaf3b80",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [
+        {
+          "itemId": "how-do-i-apply",
+          "score": 22,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply",
+            "online"
+          ],
+          "item": {
+            "id": "how-do-i-apply",
+            "section": "application_questions",
+            "intent": "how-to-apply",
+            "question": "How do I apply for a loan?",
+            "question_variants": [
+              "Where do I start an application?",
+              "Can I apply online?",
+              "How do I get a quote?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "You can apply online in a few minutes through our application form. The first two pages give you a personalised quote with no impact on your credit score, and you can complete the rest if you'd like to go ahead.",
+            "links": [
+              {
+                "label": "application form",
+                "href": "https://apply.loanslam.co.uk/step-one/step-one.html"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "apply",
+              "application",
+              "quote"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "change-my-repayment-date",
+          "score": 18,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "change-my-repayment-date",
+            "section": "existing_customer_support",
+            "intent": "repayment-date-change",
+            "question": "Can I change my payment date?",
+            "question_variants": [
+              "I want to move my repayment date",
+              "Can you collect on a different day?",
+              "Change the date my Direct Debit comes out",
+              "My payday changed, can I move my payment?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Changing a repayment date is a change to the customer's account that the chat can't make. Collect the proposed date and standard handoff details and route to the team.",
+            "tags": [
+              "repayment-date",
+              "change",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "update-my-contact-details",
+          "score": 16,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "apply",
+            "change",
+            "email"
+          ],
+          "item": {
+            "id": "update-my-contact-details",
+            "section": "existing_customer_support",
+            "intent": "update-contact-details",
+            "question": "Can you update my contact details?",
+            "question_variants": [
+              "I've moved house, update my address",
+              "Change my phone number on the account",
+              "Update my email address",
+              "My number has changed"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Updating contact details on the account is an account change. Collect the new details as standard handoff PII and route to the team to apply.",
+            "tags": [
+              "contact-details",
+              "update",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-apply-jointly",
+          "score": 11,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply"
+          ],
+          "item": {
+            "id": "can-i-apply-jointly",
+            "section": "application_questions",
+            "intent": "joint-application",
+            "question": "Can I apply for a joint loan?",
+            "question_variants": [
+              "Can my partner and I apply together?",
+              "Do you offer joint applications?",
+              "Can two people be on the loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Loanslam loans are taken out in a single applicant's name - we don't offer joint applications. The application is assessed on that person's income and affordability.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "joint",
+              "application",
+              "policy"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-apply-with-bad-credit",
+          "score": 11,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply"
+          ],
+          "item": {
+            "id": "can-i-apply-with-bad-credit",
+            "section": "application_questions",
+            "intent": "bad-credit",
+            "question": "Can I apply if I have bad credit?",
+            "question_variants": [
+              "Do you accept poor credit?",
+              "I've got a low credit score, can I still apply?",
+              "Do you only lend to people with good credit?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "We look at more than just your credit score - we use a soft credit check and Open Banking data to understand your wider financial situation, so a less-than-perfect credit history doesn't automatically rule you out. The first two pages of the application give you a personalised quote with no impact on your credit score.",
+            "links": [
+              {
+                "label": "application form",
+                "href": "https://apply.loanslam.co.uk/step-one/step-one.html"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "bad-credit",
+              "eligibility",
+              "soft-search"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-do-i-contact-the-team",
+          "score": 10,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "how-do-i-contact-the-team",
+            "section": "existing_customer_support",
+            "intent": "contact-channels",
+            "question": "How do I contact you?",
+            "question_variants": [
+              "What's your phone number?",
+              "How do I get in touch?",
+              "What's your email address?",
+              "Can I speak to someone?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "You can reach our Customer Care team by phone on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "01202 138850",
+                "href": "tel:01202138850"
+              },
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "contact",
+              "phone",
+              "email"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "update-my-bank-details",
+          "score": 8,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "update-my-bank-details",
+            "section": "existing_customer_support",
+            "intent": "update-bank-details",
+            "question": "Can I update my bank details?",
+            "question_variants": [
+              "I've changed banks, can you update my account?",
+              "Change the account my payments come from",
+              "New bank account for my Direct Debit",
+              "Update my sort code and account number",
+              "I need to change my payment account",
+              "My card has changed",
+              "Switch my repayments to a different account",
+              "Update my payment details"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Updating bank details is an account change requiring account access. Route to the team. The bot must not collect or action bank/payment credentials in chat.",
+            "tags": [
+              "bank-details",
+              "update",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-the-eligibility-criteria",
+          "score": 8,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply",
+            "online",
+            "also"
+          ],
+          "item": {
+            "id": "what-is-the-eligibility-criteria",
+            "section": "application_questions",
+            "intent": "eligibility-criteria",
+            "question": "What is the eligibility criteria?",
+            "question_variants": [
+              "Who can apply?",
+              "What do I need to qualify?",
+              "Am I old enough to apply?",
+              "Do I need to live in the UK?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "To apply you'll need to be aged between 21 and 72 at the time of applying, live and work in the UK, earn over £1,300 a month after tax, and be able to log in online to the bank account(s) where your income and spending sit. You'll also need to pass a creditworthiness and affordability assessment based on your credit file and Open Banking data.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "eligibility",
+              "criteria",
+              "age",
+              "income"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "lost-job-or-redundancy",
+          "score": 7,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "lost-job-or-redundancy",
+            "section": "existing_customer_support",
+            "intent": "change-of-circumstances",
+            "question": "I've lost my job - I'm worried about my payments.",
+            "question_variants": [
+              "I've been made redundant",
+              "My hours have been cut",
+              "I've lost my income",
+              "My circumstances have changed and I can't keep up"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "A change in circumstances such as job loss signals possible financial difficulty. Route via vulnerability intake so a human can discuss support.",
+            "tags": [
+              "redundancy",
+              "job-loss",
+              "change-of-circumstances",
+              "vulnerability"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-documents-do-i-need",
+          "score": 7,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply"
+          ],
+          "item": {
+            "id": "what-documents-do-i-need",
+            "section": "application_questions",
+            "intent": "documents-needed",
+            "question": "What documents do I need to apply?",
+            "question_variants": [
+              "Do I need to send payslips?",
+              "Do you need proof of income?",
+              "What paperwork is required?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "You generally won't need to send documents - we use a soft credit check and Open Banking to verify your income and spending securely. If we do need anything further after you apply, we'll contact you directly.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "documents",
+              "proof",
+              "open-banking"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-does-settlement-work",
+          "score": 6,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "how-does-settlement-work",
+            "section": "existing_customer_support",
+            "intent": "settlement-process",
+            "question": "How does an early settlement figure work?",
+            "question_variants": [
+              "Why does my settlement amount change?",
+              "How is a settlement figure calculated?",
+              "How long is a settlement figure valid?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Settlement figures are calculated daily because interest is applied daily, so the amount changes over time. When you're ready, contact the team for a figure valid for that day and a way to pay - there are no early settlement fees.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "settlement",
+              "daily-interest",
+              "process"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-the-cooling-off-period",
+          "score": 6,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "what-is-the-cooling-off-period",
+            "section": "existing_customer_support",
+            "intent": "cooling-off-policy",
+            "question": "What is the cooling-off period?",
+            "question_variants": [
+              "Can I cancel within 14 days?",
+              "Do I have a right to withdraw?",
+              "What if I change my mind after taking the loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "If you change your mind shortly after taking out the loan, you have a 14-day right to withdraw. If the loan hasn't been paid out yet, the application is simply closed; if funds have been released you'll repay the amount borrowed, and the team will confirm the balance and timeframe. Contact us to start this.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "cooling-off",
+              "withdrawal",
+              "14-day"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "do-i-have-to-be-working",
+          "score": 5,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply"
+          ],
+          "item": {
+            "id": "do-i-have-to-be-working",
+            "section": "application_questions",
+            "intent": "income-eligibility",
+            "question": "Do I have to be working?",
+            "question_variants": [
+              "Can I apply if I'm on benefits?",
+              "Do you accept self-employed?",
+              "Does a pension count as income?",
+              "What income do you accept?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When we work out your monthly income we can include earnings from employment, self-employment, pensions, and rental income. If your only income is benefits we wouldn't be able to lend to you, and you'll need to be earning at least £1,300 a month.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "income",
+              "eligibility",
+              "employment"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-my-balance",
+          "score": 3,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "what-is-my-balance",
+            "section": "existing_customer_support",
+            "intent": "account-balance",
+            "question": "What's my current balance?",
+            "question_variants": [
+              "How much do I owe?",
+              "What's left on my loan?",
+              "What's my outstanding balance?",
+              "How much is remaining?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "A current balance is specific to the customer's account and changes over time; the anonymous chat can't access account data. Collect standard handoff details and route to the team.",
+            "tags": [
+              "balance",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-long-does-a-decision-take",
+          "score": 2,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply",
+            "email"
+          ],
+          "item": {
+            "id": "how-long-does-a-decision-take",
+            "section": "application_questions",
+            "intent": "decision-timing-general",
+            "question": "How long does a decision take?",
+            "question_variants": [
+              "When will I hear back?",
+              "How quickly do you decide?",
+              "How long after applying do I get an answer?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Most applications get a decision quickly. After you apply you'll receive either a lending decision or a request for any extra information, by SMS or email, usually within 24 business hours. It's worth checking your junk or spam folder too, as our emails can occasionally filter there.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "decision",
+              "timing",
+              "underwriting"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-make-overpayments",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "can-i-make-overpayments",
+            "section": "existing_customer_support",
+            "intent": "overpayments-policy",
+            "question": "Can I make overpayments or part payments?",
+            "question_variants": [
+              "Can I pay extra towards my loan?",
+              "Can I make a one-off payment?",
+              "Is there a fee for paying more?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can make part payments or overpayments towards your loan at any time, with no fees. The team can set this up and give you the right amount or a secure payment link; just get in touch on 01202 138850, by email, or by text.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "overpayment",
+              "part-payment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-settle-my-loan-early",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "can-i-settle-my-loan-early",
+            "section": "existing_customer_support",
+            "intent": "early-settlement-policy",
+            "question": "Can I settle my loan early?",
+            "question_variants": [
+              "Can I pay off my loan early?",
+              "Are there early repayment fees?",
+              "How do I close my loan early?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can settle your loan early at any time, with no early settlement fees. You'll need an up-to-date settlement figure first, which the team can provide; just contact us and include your full name and the word 'SETTLEMENT'. You can reach us on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "settlement",
+              "early-repayment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-do-repayments-work-general",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "also"
+          ],
+          "item": {
+            "id": "how-do-repayments-work-general",
+            "section": "application_questions",
+            "intent": "repayment-method-general",
+            "question": "How do I make my monthly repayments?",
+            "question_variants": [
+              "How are repayments collected?",
+              "Do you take payment by Direct Debit?",
+              "How will I pay back the loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Monthly repayments are collected by Direct Debit using the account details you give during your application, and we also securely hold debit card details as a backup payment method.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "repayments",
+              "direct-debit",
+              "payment-method"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-is-my-repayment-collected",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "change"
+          ],
+          "item": {
+            "id": "how-is-my-repayment-collected",
+            "section": "existing_customer_support",
+            "intent": "collection-method",
+            "question": "How is my repayment collected each month?",
+            "question_variants": [
+              "Do you take it by Direct Debit?",
+              "What day is my payment taken?",
+              "Do you keep my card details?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Your monthly repayment is collected by Direct Debit from the account you provided, and we hold debit card details as a backup. If you need to change how or when a payment is collected, the team can help - just get in touch.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "direct-debit",
+              "collection",
+              "payment-method"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-happens-if-i-miss-a-payment-general",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "also"
+          ],
+          "item": {
+            "id": "what-happens-if-i-miss-a-payment-general",
+            "section": "existing_customer_support",
+            "intent": "missed-payment-policy",
+            "question": "What happens if I miss a payment?",
+            "question_variants": [
+              "What if my Direct Debit doesn't go through?",
+              "Do you charge late fees?",
+              "What are the consequences of a missed payment?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "If a payment is missed we'll try to work with you to get things back on track. The most important thing is to tell us early if you're finding payments difficult - we don't add late fees or extra interest when an account is in financial difficulty. You can also get free, impartial advice from StepChange or MoneyHelper.",
+            "links": [
+              {
+                "label": "StepChange",
+                "href": "https://www.stepchange.org"
+              },
+              {
+                "label": "MoneyHelper",
+                "href": "https://www.moneyhelper.org.uk/debt-advice-locator"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "missed-payment",
+              "policy",
+              "no-late-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "will-my-credit-score-be-affected",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "apply"
+          ],
+          "item": {
+            "id": "will-my-credit-score-be-affected",
+            "section": "application_questions",
+            "intent": "credit-impact",
+            "question": "Will my credit score be affected by applying with you?",
+            "question_variants": [
+              "Does applying hurt my credit?",
+              "Will you do a hard search?",
+              "Does getting a quote affect my credit score?",
+              "Will this show on my credit file?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When you apply we first run a soft credit check, which is quick, non-impactful, and only visible to you. If your application is successful and the loan is paid out, we report a hard credit check to the credit reference agencies, which can affect your score - though it's one of the less influential factors. Repaying on time is good for your credit rating.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "credit-score",
+              "soft-search",
+              "hard-search"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        }
+      ],
+      "selectedServingMode": "answer",
+      "selectedRouteReason": null,
+      "proposedAction": "answer",
+      "finalAction": "fallback",
+      "validatorOverrides": [
+        {
+          "code": "non_answer_citation_blocked",
+          "reason": "Answers may cite only serving_mode answer corpus items.",
+          "fromAction": "answer",
+          "toAction": "fallback"
+        }
+      ],
+      "safetyFlags": [
+        "change_request"
+      ],
+      "customerMessage": "I cannot answer that safely from the information available here. I can pass this to the Loanslam team so they can help.",
+      "createdAt": "2026-06-14T18:32:39.566Z"
+    },
+    {
+      "traceId": "fed03624-5224-42fd-85ae-2e5fdf2df293",
+      "turnIndex": 4,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "c3bebe45-7fd5-42dc-bb38-0d1abfc46c35",
+      "inboundMessageId": "58f6fb56-0fec-4695-ac4a-e1d4ac175866",
+      "outboundMessageId": "20dd4649-31d3-4040-bc9f-f0fee1d21559",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [
+        {
+          "itemId": "i-want-to-make-a-complaint",
+          "score": 38,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "complaint"
+          ],
+          "item": {
+            "id": "i-want-to-make-a-complaint",
+            "section": "existing_customer_support",
+            "intent": "complaint",
+            "question": "I want to make a complaint.",
+            "question_variants": [
+              "I'm not happy with how I've been treated",
+              "I want to raise a formal complaint",
+              "This service is unacceptable",
+              "I want to escalate an issue"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+            "tags": [
+              "complaint",
+              "escalation",
+              "vulnerability"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "struggling-financially-general",
+          "score": 5,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "too"
+          ],
+          "item": {
+            "id": "struggling-financially-general",
+            "section": "existing_customer_support",
+            "intent": "financial-hardship-general",
+            "question": "I'm struggling financially.",
+            "question_variants": [
+              "Money is really tight right now",
+              "I'm in financial difficulty",
+              "I'm finding things hard financially",
+              "I'm having money problems",
+              "I'm overwhelmed by my finances",
+              "Everything's too expensive and I can't manage",
+              "I'm in a difficult financial situation",
+              "I'm finding it hard to make ends meet"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "General financial hardship is a vulnerability signal. Route via vulnerability intake; gather a little context if helpful, then hand off to a human.",
+            "tags": [
+              "financial-difficulty",
+              "hardship",
+              "vulnerability",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-long-does-a-decision-take",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "too"
+          ],
+          "item": {
+            "id": "how-long-does-a-decision-take",
+            "section": "application_questions",
+            "intent": "decision-timing-general",
+            "question": "How long does a decision take?",
+            "question_variants": [
+              "When will I hear back?",
+              "How quickly do you decide?",
+              "How long after applying do I get an answer?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Most applications get a decision quickly. After you apply you'll receive either a lending decision or a request for any extra information, by SMS or email, usually within 24 business hours. It's worth checking your junk or spam folder too, as our emails can occasionally filter there.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "decision",
+              "timing",
+              "underwriting"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        }
+      ],
+      "selectedServingMode": "route_vulnerability",
+      "selectedRouteReason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+      "proposedAction": "request_handoff_intake",
+      "finalAction": "request_handoff_intake",
+      "validatorOverrides": [],
+      "safetyFlags": [
+        "change_request",
+        "complaint",
+        "vulnerability"
+      ],
+      "customerMessage": "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+      "createdAt": "2026-06-14T18:32:43.608Z"
+    },
+    {
+      "traceId": "fa8bd5b4-5917-4c72-8dc4-46483671cb00",
+      "turnIndex": 6,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "fbd97c5b-45b4-46b0-9870-82e67e6382e7",
+      "inboundMessageId": "e888510f-516a-4bbb-871c-9fe5969b2374",
+      "outboundMessageId": "19547008-c39d-4101-8423-2c464e3f53e2",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [],
+      "selectedServingMode": null,
+      "selectedRouteReason": null,
+      "proposedAction": "request_handoff_intake",
+      "finalAction": "request_handoff_intake",
+      "validatorOverrides": [
+        {
+          "code": "safety_flag_route_to_handoff",
+          "reason": "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
+          "fromAction": "request_handoff_intake",
+          "toAction": "request_handoff_intake"
+        }
+      ],
+      "safetyFlags": [
+        "change_request",
+        "complaint",
+        "vulnerability",
+        "sensitive_overshare"
+      ],
+      "customerMessage": "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+      "createdAt": "2026-06-14T18:32:46.632Z"
+    },
+    {
+      "traceId": "b34518d4-d756-4867-aeaf-71a41d8cd0f1",
+      "turnIndex": 8,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "3d1d749d-e8f4-4a1d-a086-4c77ec9106d0",
+      "inboundMessageId": "ab7084ac-0138-4316-a4a8-d5bdf640ec69",
+      "outboundMessageId": "113d1701-3aba-4628-81ad-e1746fbc811a",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [
+        {
+          "itemId": "how-do-i-contact-the-team",
+          "score": 10,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "phone"
+          ],
+          "item": {
+            "id": "how-do-i-contact-the-team",
+            "section": "existing_customer_support",
+            "intent": "contact-channels",
+            "question": "How do I contact you?",
+            "question_variants": [
+              "What's your phone number?",
+              "How do I get in touch?",
+              "What's your email address?",
+              "Can I speak to someone?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "You can reach our Customer Care team by phone on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "01202 138850",
+                "href": "tel:01202138850"
+              },
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "contact",
+              "phone",
+              "email"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "update-my-contact-details",
+          "score": 5,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "phone"
+          ],
+          "item": {
+            "id": "update-my-contact-details",
+            "section": "existing_customer_support",
+            "intent": "update-contact-details",
+            "question": "Can you update my contact details?",
+            "question_variants": [
+              "I've moved house, update my address",
+              "Change my phone number on the account",
+              "Update my email address",
+              "My number has changed"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Updating contact details on the account is an account change. Collect the new details as standard handoff PII and route to the team to apply.",
+            "tags": [
+              "contact-details",
+              "update",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-apply-jointly",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "name"
+          ],
+          "item": {
+            "id": "can-i-apply-jointly",
+            "section": "application_questions",
+            "intent": "joint-application",
+            "question": "Can I apply for a joint loan?",
+            "question_variants": [
+              "Can my partner and I apply together?",
+              "Do you offer joint applications?",
+              "Can two people be on the loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Loanslam loans are taken out in a single applicant's name - we don't offer joint applications. The application is assessed on that person's income and affordability.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "joint",
+              "application",
+              "policy"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-settle-my-loan-early",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "name"
+          ],
+          "item": {
+            "id": "can-i-settle-my-loan-early",
+            "section": "existing_customer_support",
+            "intent": "early-settlement-policy",
+            "question": "Can I settle my loan early?",
+            "question_variants": [
+              "Can I pay off my loan early?",
+              "Are there early repayment fees?",
+              "How do I close my loan early?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can settle your loan early at any time, with no early settlement fees. You'll need an up-to-date settlement figure first, which the team can provide; just contact us and include your full name and the word 'SETTLEMENT'. You can reach us on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "settlement",
+              "early-repayment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "do-i-have-to-be-working",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1"
+          ],
+          "item": {
+            "id": "do-i-have-to-be-working",
+            "section": "application_questions",
+            "intent": "income-eligibility",
+            "question": "Do I have to be working?",
+            "question_variants": [
+              "Can I apply if I'm on benefits?",
+              "Do you accept self-employed?",
+              "Does a pension count as income?",
+              "What income do you accept?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When we work out your monthly income we can include earnings from employment, self-employment, pensions, and rental income. If your only income is benefits we wouldn't be able to lend to you, and you'll need to be earning at least £1,300 a month.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "income",
+              "eligibility",
+              "employment"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-much-can-i-borrow",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1"
+          ],
+          "item": {
+            "id": "how-much-can-i-borrow",
+            "section": "application_questions",
+            "intent": "borrowing-limits",
+            "question": "How much can I borrow?",
+            "question_variants": [
+              "What's the most I can get?",
+              "What's the minimum loan?",
+              "How big a loan can I take out?",
+              "What are your loan amounts?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "We base what you can borrow on your monthly income after tax, and you can borrow up to twice your monthly earnings, subject to affordability. The minimum loan is £1,000 and the maximum is £5,000.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "borrowing",
+              "limits",
+              "affordability"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-the-eligibility-criteria",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1"
+          ],
+          "item": {
+            "id": "what-is-the-eligibility-criteria",
+            "section": "application_questions",
+            "intent": "eligibility-criteria",
+            "question": "What is the eligibility criteria?",
+            "question_variants": [
+              "Who can apply?",
+              "What do I need to qualify?",
+              "Am I old enough to apply?",
+              "Do I need to live in the UK?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "To apply you'll need to be aged between 21 and 72 at the time of applying, live and work in the UK, earn over £1,300 a month after tax, and be able to log in online to the bank account(s) where your income and spending sit. You'll also need to pass a creditworthiness and affordability assessment based on your credit file and Open Banking data.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "eligibility",
+              "criteria",
+              "age",
+              "income"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        }
+      ],
+      "selectedServingMode": "answer",
+      "selectedRouteReason": null,
+      "proposedAction": "request_handoff_intake",
+      "finalAction": "request_handoff_intake",
+      "validatorOverrides": [
+        {
+          "code": "safety_flag_route_to_handoff",
+          "reason": "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
+          "fromAction": "request_handoff_intake",
+          "toAction": "request_handoff_intake"
+        }
+      ],
+      "safetyFlags": [
+        "change_request",
+        "complaint",
+        "vulnerability",
+        "sensitive_overshare"
+      ],
+      "customerMessage": "To pass this to the Loanslam team, I still need your address, your email address, and a short summary of what you need help with. Let's start with your address.",
+      "createdAt": "2026-06-14T18:32:51.431Z"
+    },
+    {
+      "traceId": "f1253b74-9f18-48ef-a6c1-cf2f1d95b0b9",
+      "turnIndex": 10,
+      "conversationRef": "d993bb27-ca4d-48c9-9cc2-67190272deef",
+      "requestRef": "c63fc6f6-f075-47c9-8bfc-ce5daeae4d05",
+      "inboundMessageId": "c31cb89a-e6d2-4d5a-b10b-ae60257f0de9",
+      "outboundMessageId": "4f6fead0-c0c4-4faf-9198-b1b909627c7b",
+      "planner": {
+        "provider": "openai",
+        "model": "gpt-5.4-nano",
+        "promptVersion": "phase0-turnplanner-v1"
+      },
+      "policyVersion": "phase0-turnplanner-policy-v1",
+      "retrievedMatches": [
+        {
+          "itemId": "i-want-to-make-a-complaint",
+          "score": 38,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "complaint"
+          ],
+          "item": {
+            "id": "i-want-to-make-a-complaint",
+            "section": "existing_customer_support",
+            "intent": "complaint",
+            "question": "I want to make a complaint.",
+            "question_variants": [
+              "I'm not happy with how I've been treated",
+              "I want to raise a formal complaint",
+              "This service is unacceptable",
+              "I want to escalate an issue"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+            "tags": [
+              "complaint",
+              "escalation",
+              "vulnerability"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "update-my-contact-details",
+          "score": 22,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "address",
+            "email",
+            "account"
+          ],
+          "item": {
+            "id": "update-my-contact-details",
+            "section": "existing_customer_support",
+            "intent": "update-contact-details",
+            "question": "Can you update my contact details?",
+            "question_variants": [
+              "I've moved house, update my address",
+              "Change my phone number on the account",
+              "Update my email address",
+              "My number has changed"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Updating contact details on the account is an account change. Collect the new details as standard handoff PII and route to the team to apply.",
+            "tags": [
+              "contact-details",
+              "update",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "make-a-payment-on-my-account",
+          "score": 18,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "make-a-payment-on-my-account",
+            "section": "existing_customer_support",
+            "intent": "take-payment-specific",
+            "question": "I want to make a payment on my account now.",
+            "question_variants": [
+              "Can I pay my arrears now?",
+              "Take a payment from me today",
+              "I'd like to pay off what I missed",
+              "Send me a payment link for my account",
+              "I want to clear my balance now",
+              "Let me pay my instalment manually",
+              "How do I pay what I owe right now?",
+              "I want to make a card payment on my loan"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Taking a payment against a specific account needs account access and a secure payment link. Route to the team. The bot must not take card or bank details in chat.",
+            "tags": [
+              "payment",
+              "arrears",
+              "payment-link",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "whats-my-account-number",
+          "score": 18,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "whats-my-account-number",
+            "section": "existing_customer_support",
+            "intent": "account-number",
+            "question": "What's my account number?",
+            "question_variants": [
+              "What's my loan reference?",
+              "Can you tell me my account number?",
+              "What's my agreement number?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "An account or reference number is account-specific data the chat can't retrieve. Route to the team.",
+            "tags": [
+              "account-number",
+              "reference",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-do-i-contact-the-team",
+          "score": 15,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "address",
+            "email"
+          ],
+          "item": {
+            "id": "how-do-i-contact-the-team",
+            "section": "existing_customer_support",
+            "intent": "contact-channels",
+            "question": "How do I contact you?",
+            "question_variants": [
+              "What's your phone number?",
+              "How do I get in touch?",
+              "What's your email address?",
+              "Can I speak to someone?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "You can reach our Customer Care team by phone on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "01202 138850",
+                "href": "tel:01202138850"
+              },
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "contact",
+              "phone",
+              "email"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "update-my-bank-details",
+          "score": 12,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "update-my-bank-details",
+            "section": "existing_customer_support",
+            "intent": "update-bank-details",
+            "question": "Can I update my bank details?",
+            "question_variants": [
+              "I've changed banks, can you update my account?",
+              "Change the account my payments come from",
+              "New bank account for my Direct Debit",
+              "Update my sort code and account number",
+              "I need to change my payment account",
+              "My card has changed",
+              "Switch my repayments to a different account",
+              "Update my payment details"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Updating bank details is an account change requiring account access. Route to the team. The bot must not collect or action bank/payment credentials in chat.",
+            "tags": [
+              "bank-details",
+              "update",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "why-was-my-payment-not-taken",
+          "score": 12,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "why-was-my-payment-not-taken",
+            "section": "existing_customer_support",
+            "intent": "failed-collection-specific",
+            "question": "Why hasn't my payment been taken?",
+            "question_variants": [
+              "My Direct Debit didn't come out this month",
+              "Why did my payment fail?",
+              "No payment was collected, why?",
+              "My instalment wasn't taken",
+              "Payment hasn't left my account",
+              "Why was my collection unsuccessful?",
+              "You didn't take my payment",
+              "My DD didn't go through"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Why a specific payment failed needs the customer's account and collection history. Route to the team. If the customer indicates they can't afford it, treat as a vulnerability signal instead.",
+            "tags": [
+              "failed-payment",
+              "collection",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "im-in-arrears",
+          "score": 11,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "im-in-arrears",
+            "section": "existing_customer_support",
+            "intent": "arrears",
+            "question": "My account is in arrears - can you help?",
+            "question_variants": [
+              "I've fallen behind on payments",
+              "I owe arrears",
+              "I've missed several payments",
+              "My account is behind"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "Arrears indicate possible financial difficulty and need careful, human handling. Route via vulnerability intake rather than self-serve copy.",
+            "tags": [
+              "arrears",
+              "vulnerability",
+              "financial-difficulty"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "where-are-my-funds",
+          "score": 9,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "where-are-my-funds",
+            "section": "existing_customer_support",
+            "intent": "payout-chase-specific",
+            "question": "I was approved but haven't received my money - where is it?",
+            "question_variants": [
+              "My loan was approved but the funds aren't in my account",
+              "Where's my payout?",
+              "I've been waiting hours for my money",
+              "My funds haven't arrived",
+              "When will MY money come through?",
+              "Approved loan but no money yet",
+              "Still no funds after approval",
+              "My payout is late"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "A specific payout chase needs the customer's application and payment record. The general payout timeframe can be answered separately; a personal 'where is my money' needs a human - route to the team.",
+            "tags": [
+              "payout",
+              "funds",
+              "chasing",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "cancel-or-withdraw-my-loan",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "cancel-or-withdraw-my-loan",
+            "section": "existing_customer_support",
+            "intent": "cancel-withdraw-action",
+            "question": "I want to cancel my loan.",
+            "question_variants": [
+              "Please withdraw my application",
+              "I no longer want to proceed",
+              "Cancel my agreement",
+              "I want to back out of the loan"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Actioning a cancellation or withdrawal needs the customer's account and funded status. The general cooling-off process can be explained, but actioning it routes to the team.",
+            "tags": [
+              "cancellation",
+              "withdrawal",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "change-my-repayment-date",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "change-my-repayment-date",
+            "section": "existing_customer_support",
+            "intent": "repayment-date-change",
+            "question": "Can I change my payment date?",
+            "question_variants": [
+              "I want to move my repayment date",
+              "Can you collect on a different day?",
+              "Change the date my Direct Debit comes out",
+              "My payday changed, can I move my payment?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Changing a repayment date is a change to the customer's account that the chat can't make. Collect the proposed date and standard handoff details and route to the team.",
+            "tags": [
+              "repayment-date",
+              "change",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "copy-of-my-agreement",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "copy-of-my-agreement",
+            "section": "existing_customer_support",
+            "intent": "agreement-copy",
+            "question": "Can I get a copy of my loan agreement?",
+            "question_variants": [
+              "Send me my credit agreement",
+              "I need a copy of my contract",
+              "Where can I find my loan agreement?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "A copy of the customer's credit agreement is account-specific. Route to the team.",
+            "tags": [
+              "agreement",
+              "contract",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-many-instalments-left",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "how-many-instalments-left",
+            "section": "existing_customer_support",
+            "intent": "instalments-remaining",
+            "question": "How many payments do I have left?",
+            "question_variants": [
+              "How many instalments are remaining?",
+              "How many months until my loan is paid off?",
+              "How much longer do I pay for?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Remaining instalments are account-specific. Route to the team.",
+            "tags": [
+              "instalments",
+              "remaining",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "my-settlement-figure",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "my-settlement-figure",
+            "section": "existing_customer_support",
+            "intent": "settlement-figure-specific",
+            "question": "What's my settlement figure?",
+            "question_variants": [
+              "How much do I owe to close my loan today?",
+              "Please give me a settlement figure",
+              "What would I pay to settle right now?",
+              "How much to pay off my loan in full?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "The actual settlement figure is a live, daily-interest account value the bot must never invent or estimate. The general settlement process can be explained; the figure itself routes to the team.",
+            "tags": [
+              "settlement-figure",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "reinstate-my-direct-debit",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "reinstate-my-direct-debit",
+            "section": "existing_customer_support",
+            "intent": "reinstate-direct-debit",
+            "question": "Can you reinstate my Direct Debit?",
+            "question_variants": [
+              "My Direct Debit was cancelled, can you set it back up?",
+              "Restart my Direct Debit",
+              "Put my DD back in place",
+              "My Direct Debit has stopped, please fix it",
+              "Set my Direct Debit up again",
+              "I cancelled my DD by mistake",
+              "Reinstate my standing payment",
+              "Can you re-add my Direct Debit?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "Reinstating a Direct Debit is an account action requiring bank details and account access. Route to the team. The bot must not collect sort code or account number in chat.",
+            "tags": [
+              "direct-debit",
+              "reinstate",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-my-balance",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "what-is-my-balance",
+            "section": "existing_customer_support",
+            "intent": "account-balance",
+            "question": "What's my current balance?",
+            "question_variants": [
+              "How much do I owe?",
+              "What's left on my loan?",
+              "What's my outstanding balance?",
+              "How much is remaining?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "A current balance is specific to the customer's account and changes over time; the anonymous chat can't access account data. Collect standard handoff details and route to the team.",
+            "tags": [
+              "balance",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "whats-my-next-payment-date",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "whats-my-next-payment-date",
+            "section": "existing_customer_support",
+            "intent": "next-payment-date",
+            "question": "When is my next payment due?",
+            "question_variants": [
+              "What date does my payment come out?",
+              "When's my next Direct Debit?",
+              "What's my next due date?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "The next payment date is specific to the customer's account. Route to the team.",
+            "tags": [
+              "payment-date",
+              "due-date",
+              "account-specific",
+              "handoff"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "whats-the-status-of-my-application",
+          "score": 7,
+          "servingMode": "handoff_account_specific",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "whats-the-status-of-my-application",
+            "section": "existing_customer_support",
+            "intent": "application-status",
+            "question": "What's happening with my application?",
+            "question_variants": [
+              "Can I get an update on my application?",
+              "Has my loan been approved?",
+              "I completed Open Banking, what happens next?",
+              "I signed my agreement, what now?",
+              "Why haven't I heard back about my application?",
+              "Is my application still being processed?",
+              "When will I get a decision on my loan?",
+              "Any news on my loan request?"
+            ],
+            "serving_mode": "handoff_account_specific",
+            "links": [],
+            "route_reason": "The status of a specific application requires looking at the customer's account. The general decision timeframe can be answered separately, but a personal status update needs a human - collect standard handoff details and route to the team.",
+            "tags": [
+              "application-status",
+              "chasing",
+              "account-specific",
+              "handoff",
+              "high-volume"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "bereavement",
+          "score": 5,
+          "servingMode": "route_vulnerability",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "bereavement",
+            "section": "existing_customer_support",
+            "intent": "bereavement",
+            "question": "A family member who held a loan has passed away.",
+            "question_variants": [
+              "I've lost my partner who had a loan with you",
+              "There's been a death in the family",
+              "My relative passed away and had an account",
+              "I'm dealing with a bereavement"
+            ],
+            "serving_mode": "route_vulnerability",
+            "links": [],
+            "route_reason": "Bereavement is a high-sensitivity vulnerability case. Route to a human with care; do not automate or ask intrusive questions.",
+            "tags": [
+              "bereavement",
+              "vulnerability",
+              "sensitive"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "when-will-i-receive-funds-general",
+          "score": 5,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "when-will-i-receive-funds-general",
+            "section": "application_questions",
+            "intent": "payout-timing-general",
+            "question": "How long does it take to receive the money once approved?",
+            "question_variants": [
+              "How quickly do you pay out?",
+              "When do funds arrive after approval?",
+              "How long until the loan is in my account?",
+              "What are your payout times?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "We pay out loans throughout the day, so once an application is approved the funds usually arrive within a few hours. It can vary depending on your bank, but it should never be more than 24 business hours after approval.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "payout",
+              "timing",
+              "funds"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-pay-by-card-or-manually",
+          "score": 2,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "example",
+            "account"
+          ],
+          "item": {
+            "id": "can-i-pay-by-card-or-manually",
+            "section": "existing_customer_support",
+            "intent": "manual-payment-availability",
+            "question": "Can I make a manual or card payment?",
+            "question_variants": [
+              "Can I pay by debit card?",
+              "Can I make a one-off payment outside my Direct Debit?",
+              "Is there a way to pay manually?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Alongside your Direct Debit you can make a manual or card payment when you need to - for example to make an overpayment or to bring an account up to date. The team can provide a secure payment link; just get in touch.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "manual-payment",
+              "card-payment",
+              "payment-link"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-is-the-eligibility-criteria",
+          "score": 2,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1",
+            "account"
+          ],
+          "item": {
+            "id": "what-is-the-eligibility-criteria",
+            "section": "application_questions",
+            "intent": "eligibility-criteria",
+            "question": "What is the eligibility criteria?",
+            "question_variants": [
+              "Who can apply?",
+              "What do I need to qualify?",
+              "Am I old enough to apply?",
+              "Do I need to live in the UK?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "To apply you'll need to be aged between 21 and 72 at the time of applying, live and work in the UK, earn over £1,300 a month after tax, and be able to log in online to the bank account(s) where your income and spending sit. You'll also need to pass a creditworthiness and affordability assessment based on your credit file and Open Banking data.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "eligibility",
+              "criteria",
+              "age",
+              "income"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-make-overpayments",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "can-i-make-overpayments",
+            "section": "existing_customer_support",
+            "intent": "overpayments-policy",
+            "question": "Can I make overpayments or part payments?",
+            "question_variants": [
+              "Can I pay extra towards my loan?",
+              "Can I make a one-off payment?",
+              "Is there a fee for paying more?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can make part payments or overpayments towards your loan at any time, with no fees. The team can set this up and give you the right amount or a secure payment link; just get in touch on 01202 138850, by email, or by text.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "overpayment",
+              "part-payment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "can-i-settle-my-loan-early",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "can-i-settle-my-loan-early",
+            "section": "existing_customer_support",
+            "intent": "early-settlement-policy",
+            "question": "Can I settle my loan early?",
+            "question_variants": [
+              "Can I pay off my loan early?",
+              "Are there early repayment fees?",
+              "How do I close my loan early?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Yes - you can settle your loan early at any time, with no early settlement fees. You'll need an up-to-date settlement figure first, which the team can provide; just contact us and include your full name and the word 'SETTLEMENT'. You can reach us on 01202 138850, by email at customercare@loanslam.co.uk, or by text on 07984 352847.",
+            "links": [
+              {
+                "label": "customercare@loanslam.co.uk",
+                "href": "mailto:customercare@loanslam.co.uk"
+              },
+              {
+                "label": "07984 352847",
+                "href": "tel:07984352847"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "settlement",
+              "early-repayment",
+              "no-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "do-i-have-to-be-working",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1"
+          ],
+          "item": {
+            "id": "do-i-have-to-be-working",
+            "section": "application_questions",
+            "intent": "income-eligibility",
+            "question": "Do I have to be working?",
+            "question_variants": [
+              "Can I apply if I'm on benefits?",
+              "Do you accept self-employed?",
+              "Does a pension count as income?",
+              "What income do you accept?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When we work out your monthly income we can include earnings from employment, self-employment, pensions, and rental income. If your only income is benefits we wouldn't be able to lend to you, and you'll need to be earning at least £1,300 a month.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "income",
+              "eligibility",
+              "employment"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-do-repayments-work-general",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "how-do-repayments-work-general",
+            "section": "application_questions",
+            "intent": "repayment-method-general",
+            "question": "How do I make my monthly repayments?",
+            "question_variants": [
+              "How are repayments collected?",
+              "Do you take payment by Direct Debit?",
+              "How will I pay back the loan?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Monthly repayments are collected by Direct Debit using the account details you give during your application, and we also securely hold debit card details as a backup payment method.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "repayments",
+              "direct-debit",
+              "payment-method"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-is-my-repayment-collected",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "how-is-my-repayment-collected",
+            "section": "existing_customer_support",
+            "intent": "collection-method",
+            "question": "How is my repayment collected each month?",
+            "question_variants": [
+              "Do you take it by Direct Debit?",
+              "What day is my payment taken?",
+              "Do you keep my card details?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Your monthly repayment is collected by Direct Debit from the account you provided, and we hold debit card details as a backup. If you need to change how or when a payment is collected, the team can help - just get in touch.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "direct-debit",
+              "collection",
+              "payment-method"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-long-does-a-decision-take",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "email"
+          ],
+          "item": {
+            "id": "how-long-does-a-decision-take",
+            "section": "application_questions",
+            "intent": "decision-timing-general",
+            "question": "How long does a decision take?",
+            "question_variants": [
+              "When will I hear back?",
+              "How quickly do you decide?",
+              "How long after applying do I get an answer?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "Most applications get a decision quickly. After you apply you'll receive either a lending decision or a request for any extra information, by SMS or email, usually within 24 business hours. It's worth checking your junk or spam folder too, as our emails can occasionally filter there.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "decision",
+              "timing",
+              "underwriting"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "how-much-can-i-borrow",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "1"
+          ],
+          "item": {
+            "id": "how-much-can-i-borrow",
+            "section": "application_questions",
+            "intent": "borrowing-limits",
+            "question": "How much can I borrow?",
+            "question_variants": [
+              "What's the most I can get?",
+              "What's the minimum loan?",
+              "How big a loan can I take out?",
+              "What are your loan amounts?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "We base what you can borrow on your monthly income after tax, and you can borrow up to twice your monthly earnings, subject to affordability. The minimum loan is £1,000 and the maximum is £5,000.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "borrowing",
+              "limits",
+              "affordability"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-happens-if-i-miss-a-payment-general",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "what-happens-if-i-miss-a-payment-general",
+            "section": "existing_customer_support",
+            "intent": "missed-payment-policy",
+            "question": "What happens if I miss a payment?",
+            "question_variants": [
+              "What if my Direct Debit doesn't go through?",
+              "Do you charge late fees?",
+              "What are the consequences of a missed payment?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "If a payment is missed we'll try to work with you to get things back on track. The most important thing is to tell us early if you're finding payments difficult - we don't add late fees or extra interest when an account is in financial difficulty. You can also get free, impartial advice from StepChange or MoneyHelper.",
+            "links": [
+              {
+                "label": "StepChange",
+                "href": "https://www.stepchange.org"
+              },
+              {
+                "label": "MoneyHelper",
+                "href": "https://www.moneyhelper.org.uk/debt-advice-locator"
+              }
+            ],
+            "route_reason": null,
+            "tags": [
+              "missed-payment",
+              "policy",
+              "no-late-fees"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        },
+        {
+          "itemId": "what-happens-when-i-finish-repaying",
+          "score": 1,
+          "servingMode": "answer",
+          "matchedTerms": [
+            "account"
+          ],
+          "item": {
+            "id": "what-happens-when-i-finish-repaying",
+            "section": "existing_customer_support",
+            "intent": "loan-completion",
+            "question": "What happens when I finish repaying my loan?",
+            "question_variants": [
+              "How do I know my loan is paid off?",
+              "Do I get confirmation when it's complete?",
+              "What happens after my last payment?"
+            ],
+            "serving_mode": "answer",
+            "answer_text": "When you make your final payment your loan is settled and the account is closed - you don't need to do anything else. If you'd like written confirmation once it's complete, just ask the team.",
+            "links": [],
+            "route_reason": null,
+            "tags": [
+              "completion",
+              "closure",
+              "final-payment"
+            ],
+            "source_type": "synthetic",
+            "status": "draft_synthetic"
+          }
+        }
+      ],
+      "selectedServingMode": "route_vulnerability",
+      "selectedRouteReason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+      "proposedAction": "create_ticket",
+      "finalAction": "create_ticket",
+      "validatorOverrides": [
+        {
+          "code": "vulnerability_route_match",
+          "reason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+          "fromAction": "create_ticket",
+          "toAction": "request_handoff_intake"
+        },
+        {
+          "code": "handoff_intake_complete",
+          "reason": "All requested handoff intake fields are present in conversation state.",
+          "fromAction": "request_handoff_intake",
+          "toAction": "create_ticket"
+        }
+      ],
+      "safetyFlags": [
+        "change_request",
+        "complaint",
+        "vulnerability",
+        "sensitive_overshare"
+      ],
+      "customerMessage": "Thanks. I have the details needed to pass this to the Loanslam team.",
+      "createdAt": "2026-06-14T18:32:54.971Z"
+    }
+  ]
+}
