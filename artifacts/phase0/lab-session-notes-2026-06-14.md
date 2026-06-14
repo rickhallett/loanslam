@@ -142,3 +142,16 @@
 - Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
 - Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Accessibility Or Language Barrier`, or should the brief/prompt make the expected behavior narrower?
 - UI notes: 1 error-like and 1 warning/issue-like console entries listed.
+
+## 1a839090 - Handoff Intake, Partial Fields, And Missing-Field Narrowing
+
+- Artifact: `artifacts/phase0/lab-session-1a839090-2026-06-14.json`
+- Conversation ref: `1a839090-f1e1-4adc-bc31-f87054b48415`
+- Goal: Test partial handoff intake and whether the bot asks only for still-missing fields.
+- Browser/API evidence: UI reset before start; 6 customer message POSTs were driven through the browser form; full API dump has 12 history messages and 6 traces. Network evidence: 51 POST entries listed; no listed 4xx/5xx message failures. Console evidence: 1 error-like and 1 warning/issue-like console entries listed.
+- Final state: `lastAction=create_ticket`, `handoffPending=true`, requested fields none, 6 collected facts.
+- What happened: Action path was request_handoff_intake/handoff_account_specific -> request_handoff_intake/route_vulnerability -> request_handoff_intake/answer -> request_handoff_intake/answer -> request_handoff_intake/answer -> create_ticket/handoff_account_specific. Terminal target was `handoff-complete-or-repeated-fields`; final assistant copy started: "Thanks. I have the details needed to pass this to the Loanslam team.".
+- Useful failures: Classification `conversation_quality_finding`; review trace-level routing where the action path diverges from the product claim.
+- Regression candidates: Promote this to a fixed journey or STS template if the classification is not `not_reproducible_or_low_value`. Next-change tag: `no_change_needed`.
+- Open product/policy question: Does this transcript show an acceptable Phase 0 boundary for `Handoff Intake, Partial Fields, And Missing-Field Narrowing`, or should the brief/prompt make the expected behavior narrower?
+- UI notes: 1 error-like and 1 warning/issue-like console entries listed.
