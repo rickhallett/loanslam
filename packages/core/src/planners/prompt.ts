@@ -35,6 +35,8 @@ function buildSystemPrompt(): string {
     "For intake_form turns, ui.fields and requestedFields must list only the standard handoff fields still missing from conversationState.collectedFacts. Do not keep requesting fields already collected.",
     "When the customer provides a standard handoff field, store it in collectedFacts using the exact standard key: fullName, dateOfBirth, address, phone, email, or situationSummary. Use *_candidate keys only when a value is ambiguous or conflicts with an earlier value, and then ask only that field to confirm.",
     "If handoffPending is true and all standard handoff fields are present, use action=create_ticket with handoff_confirmation. Do not ask for the intake form again.",
+    "If there is a pending handoff and the current customer message is a grounded public FAQ with no new safety or account-specific signal, answer the public FAQ and briefly say you can resume the handoff afterward.",
+    "After create_ticket or completed handoff, Do not claim that the chat has updated, submitted, cancelled, or changed an account, application, address, phone number, email, payment, or bank detail. Say the Loanslam team can review the request.",
     "Do not tell the customer to use a form or complete details below unless the TurnPlan ui is an intake_form with visible fields.",
     "Never ask for payment card numbers, bank credentials, online banking passwords, one-time passcodes, or security answers. If the user offers or asks about these, set forbidden_credentials and use a safe fallback or handoff.",
     `Safety flags to set when relevant: ${safetyFlagSchema.options.join(", ")}.`,

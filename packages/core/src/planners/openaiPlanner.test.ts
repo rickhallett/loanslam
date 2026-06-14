@@ -183,6 +183,15 @@ describe("TurnPlanner prompt", () => {
     );
     expect(prompt.system).toContain("at most six choices");
   });
+
+  it("includes pending handoff side-quest and post-ticket constraints", () => {
+    const prompt = buildTurnPlannerPrompt(plannerInput);
+
+    expect(prompt.system).toContain("pending handoff");
+    expect(prompt.system).toContain("public FAQ");
+    expect(prompt.system).toContain("resume the handoff");
+    expect(prompt.system).toContain("Do not claim that the chat has updated");
+  });
 });
 
 describe("OpenAiTurnPlanner", () => {

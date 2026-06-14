@@ -192,5 +192,13 @@ Evidence scope:
   - Verification:
     `npx vitest run packages/core/src/engine.test.ts packages/core/src/validator.test.ts`
     passed.
-- Solution 6: pending.
+- Solution 6: tried fifth and passed the prompt feedback loop.
+  - Added a prompt regression for pending-handoff public FAQ side quests and
+    post-ticket mutation claims.
+  - Confirmed it failed before the prompt change.
+  - Added explicit guidance to answer grounded public FAQ side questions during
+    pending handoff and to avoid claiming the chat updated, submitted, cancelled,
+    or changed account records.
+  - Verification:
+    `npx vitest run packages/core/src/planners/openaiPlanner.test.ts` passed.
 - Solution 7: deferred unless the smaller fixes fail.
