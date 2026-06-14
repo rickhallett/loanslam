@@ -15,6 +15,7 @@ import {
   allowedActions,
   allowedUiPrimitives,
   buildFallbackCopy,
+  hasVulnerabilitySafetyFlag,
   policyVersion,
   standardHandoffFields,
 } from "./policy";
@@ -136,8 +137,9 @@ function applyHandoffIntakeProgress(
   );
 
   if (missingFields.length === 0) {
-    const customerMessage =
-      "Thanks. I have the details needed to pass this to the Loanslam team.";
+    const customerMessage = buildCompletedHandoffMessage(
+      validated.safetyFlags,
+    );
     const override: ValidatorOverride = {
       code: "handoff_intake_complete",
       reason:
@@ -160,21 +162,83 @@ function applyHandoffIntakeProgress(
     };
   }
 
+  const customerMessage = buildHandoffIntakeMessage(missingFields);
+
   if (sameIntakeFields(validated.ui.fields, missingFields)) {
     return {
       ...validated,
+      customerMessage,
+      ui: {
+        ...validated.ui,
+        message: customerMessage,
+      },
       requestedFields: missingFields,
     };
   }
 
   return {
     ...validated,
+    customerMessage,
     ui: {
       ...validated.ui,
+      message: customerMessage,
       fields: missingFields,
     },
     requestedFields: missingFields,
   };
+}
+
+function buildCompletedHandoffMessage(
+  safetyFlags: readonly ConversationState["safetyFlags"][number][],
+): string {
+  if (hasVulnerabilitySafetyFlag(safetyFlags)) {
+    return "Thanks. I have the details needed to pass this to the Loanslam team so a person can help you carefully.";
+  }
+
+  return "Thanks. I have the details needed to pass this to the Loanslam team.";
+}
+
+const handoffFieldLabels = {
+  fullName: "your full name",
+  dateOfBirth: "your date of birth",
+  address: "your address",
+  phone: "your phone number",
+  email: "your email address",
+  situationSummary: "a short summary of what you need help with",
+} as const satisfies Record<IntakeField, string>;
+
+function buildHandoffIntakeMessage(
+  missingFields: readonly IntakeField[],
+): string {
+  const fields = missingFields.map((field) => handoffFieldLabels[field]);
+  const firstField = fields[0];
+
+  if (firstField === undefined) {
+    return "I have the details needed to pass this to the Loanslam team.";
+  }
+
+  const needText =
+    missingFields.length === standardHandoffFields.length
+      ? "I need"
+      : "I still need";
+
+  return `To pass this to the Loanslam team, ${needText} ${formatList(fields)}. Let's start with ${firstField}.`;
+}
+
+function formatList(items: readonly string[]): string {
+  if (items.length === 0) {
+    return "";
+  }
+
+  if (items.length === 1) {
+    return items[0] ?? "";
+  }
+
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+
+  return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
 }
 
 function hasCollectedHandoffField(

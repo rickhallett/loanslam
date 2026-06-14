@@ -66,7 +66,7 @@ export function validateTurnPlan(
     finalAction: plan.action,
     ui: plan.ui,
     customerMessage: plan.customerMessage,
-    requestedFields: [...plan.requestedFields],
+    requestedFields: normalizeRequestedFields(plan),
     collectedFacts: { ...plan.collectedFacts },
     validatorOverrides: [],
     selectedServingMode:
@@ -356,6 +356,17 @@ function answerGroundingFailure(
   }
 
   return null;
+}
+
+function normalizeRequestedFields(plan: TurnPlan): IntakeField[] {
+  if (
+    plan.action === "request_handoff_intake" ||
+    (plan.action === "escalate" && plan.ui.primitive === "intake_form")
+  ) {
+    return [...plan.requestedFields];
+  }
+
+  return [];
 }
 
 function applyServingModeOverride(

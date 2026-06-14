@@ -59,6 +59,27 @@ function idFactory() {
   };
 }
 
+function completedHandoffState(
+  overrides: Partial<ConversationState> = {},
+): ConversationState {
+  return {
+    ...state(),
+    collectedFacts: {
+      fullName: "Alex Test",
+      dateOfBirth: "1 January 1990",
+      address: "1 Test Street, London",
+      phone: "07123 456789",
+      email: "alex.test@example.com",
+      situationSummary: "Needs help with an account change.",
+    },
+    requestedFields: [],
+    safetyFlags: ["account_specific_request", "change_request"],
+    handoffPending: true,
+    lastAction: "create_ticket",
+    ...overrides,
+  };
+}
+
 describe("processTurn", () => {
   it("retrieves matches, calls the planner with policy boundaries, and records trace IDs", async () => {
     const plannerInputs: Parameters<TurnPlanner["planTurn"]>[0][] = [];
@@ -256,8 +277,13 @@ describe("processTurn", () => {
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
+      message:
+        "To pass this to the Loanslam team, I still need your date of birth, your address, and a short summary of what you need help with. Let's start with your date of birth.",
       fields: ["dateOfBirth", "address", "situationSummary"],
     });
+    expect(result.customerMessage).toBe(
+      "To pass this to the Loanslam team, I still need your date of birth, your address, and a short summary of what you need help with. Let's start with your date of birth.",
+    );
     expect(result.state.requestedFields).toEqual([
       "dateOfBirth",
       "address",
@@ -268,6 +294,88 @@ describe("processTurn", () => {
       fullName: "Bob Junior",
       phone: "07845729939",
     });
+  });
+
+  it("communicates every requested handoff field in the customer message", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can collect a few contact details and pass this to the Loanslam team.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can collect a few contact details and pass this to the Loanslam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Collect handoff fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "What is my balance?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:30.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toBe(
+      "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      message:
+        "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+      fields: standardHandoffFields,
+    });
+  });
+
+  it("does not preserve planner-requested intake fields on answer turns", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "You can apply online.",
+          ui: {
+            primitive: "message",
+            message: "You can apply online.",
+            links: [],
+          },
+          reasonCode: "grounded_answer_with_stale_fields",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Answered a public FAQ but echoed old intake fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Where can I apply online?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:45.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.state.requestedFields).toEqual([]);
   });
 
   it("confirms handoff when all standard intake fields are already present", async () => {
@@ -329,6 +437,92 @@ describe("processTurn", () => {
       expect.objectContaining({
         code: "handoff_intake_complete",
         toAction: "create_ticket",
+      }),
+    );
+  });
+
+  it("acknowledges urgent vulnerability updates after intake is complete", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I am sorry you are dealing with this. I can pass this to the Loanslam team.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I am sorry you are dealing with this. I can pass this to the Loanslam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "urgent_hardship_follow_up",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["distress", "hardship"],
+          traceSummary: "Customer disclosed urgent repayment distress.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: completedHandoffState(),
+      userMessage:
+        "Actually I'm really struggling to pay this month and I'm scared this is getting out of control.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:30.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.customerMessage).toMatch(/carefully|urgent|person/i);
+    expect(result.customerMessage).not.toBe(
+      "Thanks. I have the details needed to pass this to the Loanslam team.",
+    );
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["distress", "hardship"]),
+    );
+  });
+
+  it("blocks completed-intake copy that claims an account mutation", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "create_ticket",
+          customerMessage:
+            "All the required details are already on file. I am going to submit the request to update the address on your application now.",
+          ui: {
+            primitive: "handoff_confirmation",
+            message:
+              "All the required details are already on file. I am going to submit the request to update the address on your application now.",
+            reference: "conv-1",
+          },
+          reasonCode: "unsafe_mutation_claim",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: ["account_specific_request", "change_request"],
+          traceSummary: "Planner claimed the account update would be submitted.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: completedHandoffState(),
+      userMessage: "What fields are still missing?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:45.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.customerMessage).not.toMatch(
+      /submit the request|update the address on your application now/i,
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_specific_promise_blocked",
       }),
     );
   });

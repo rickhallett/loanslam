@@ -172,8 +172,25 @@ Evidence scope:
     `apply`.
   - Verification: `npx vitest run packages/core/src/retriever.test.ts` passed.
 - Solution 2: covered with Solution 1 for the retrieval failure class.
-- Solution 3: pending.
-- Solution 4: pending.
-- Solution 5: pending.
+- Solution 3: tried second and passed the engine feedback loop.
+  - Added a completed-intake urgent-hardship regression.
+  - Confirmed it failed with the stale generic confirmation copy.
+  - Added completed-handoff copy that acknowledges vulnerability-family flags.
+  - Verification: `npx vitest run packages/core/src/engine.test.ts` passed after
+    the fix.
+- Solution 4: tried third and passed the engine feedback loop.
+  - Added a completed-intake mutation-claim regression.
+  - Confirmed it failed with unsafe copy about submitting an address update now.
+  - Broadened account-mutation promise detection so the validator blocks the
+    unsafe copy before it reaches state/history.
+  - Verification: `npx vitest run packages/core/src/engine.test.ts` passed after
+    the fix.
+- Solution 5: tried fourth and passed the validator/engine feedback loop.
+  - Added an answer-turn regression where the planner echoed stale handoff fields.
+  - Confirmed those fields leaked into state before the fix.
+  - Normalized requested fields so only intake-style actions can carry them.
+  - Verification:
+    `npx vitest run packages/core/src/engine.test.ts packages/core/src/validator.test.ts`
+    passed.
 - Solution 6: pending.
 - Solution 7: deferred unless the smaller fixes fail.
