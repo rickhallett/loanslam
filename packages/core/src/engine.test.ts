@@ -502,7 +502,8 @@ describe("processTurn", () => {
           requestedFields: [],
           grounding: null,
           safetyFlags: ["account_specific_request", "change_request"],
-          traceSummary: "Planner claimed the account update would be submitted.",
+          traceSummary:
+            "Planner claimed the account update would be submitted.",
         };
       },
     };

@@ -137,9 +137,7 @@ function applyHandoffIntakeProgress(
   );
 
   if (missingFields.length === 0) {
-    const customerMessage = buildCompletedHandoffMessage(
-      validated.safetyFlags,
-    );
+    const customerMessage = buildCompletedHandoffMessage(validated.safetyFlags);
     const override: ValidatorOverride = {
       code: "handoff_intake_complete",
       reason:
