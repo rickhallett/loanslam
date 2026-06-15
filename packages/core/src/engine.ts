@@ -520,10 +520,8 @@ function buildMissingHandoffFragment(
   code: string,
   reason: string,
 ): ValidatedPlanFragment {
-  const customerMessage = buildHandoffIntroMessage({
-    servingMode: validated.selectedServingMode,
-    safetyFlags: validated.safetyFlags,
-  });
+  const customerMessage =
+    "Thanks — I have some of your details, but I still need a few more before I can pass this to the Loanslam team. Please add the remaining details below.";
   const override: ValidatorOverride = {
     code,
     reason,
@@ -751,8 +749,9 @@ function extractHandoffFacts(message: string): Record<string, string> {
     /\bmy (?:date of birth|dob) is\s+([^,.\n]+)/i,
   ]);
   captureFact(message, facts, "postcode", [
-    /\bpostcode\s*:\s*([A-Z0-9 ]+)/i,
-    /\bmy postcode is\s+([A-Z0-9 ]+)/i,
+    /\bpostcode\s*:?\s*([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i,
+    /\bmy postcode is\s+([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i,
+    /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i,
   ]);
   captureFact(message, facts, "phone", [
     /\bphone\s*:\s*([^.\n]+)/i,

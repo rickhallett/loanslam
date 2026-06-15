@@ -720,7 +720,7 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      "Thanks — I have some of your details, but I still need a few more before I can pass this to the Loanslam team. Please add the remaining details below.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
@@ -904,6 +904,52 @@ describe("processTurn", () => {
         toAction: "create_ticket",
       }),
     );
+  });
+
+  it("extracts a postcode embedded in a free-text address line", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage: "Please share your details so we can route you.",
+          ui: {
+            primitive: "intake_form",
+            message: "Please share your details so we can route you.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Collect handoff fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+      },
+      userMessage:
+        "Full name: Alex Test. Date of birth: 1 January 1990. Address: 22 Test Street, London, E1 4QT. Phone: 07123 456789. Email: alex.test@example.com.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:08:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("create_ticket");
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName: "Alex Test",
+      dateOfBirth: "1 January 1990",
+      postcode: "E1 4QT",
+      phone: "07123 456789",
+      email: "alex.test@example.com",
+    });
   });
 
   it("blocks completed-intake copy that claims an account mutation", async () => {
