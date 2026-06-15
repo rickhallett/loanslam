@@ -64,7 +64,14 @@
       "opacity:0;pointer-events:none;" +
       "transition:opacity .18s ease;" +
       "}" +
-      "#mal-frost.is-visible{opacity:1;pointer-events:auto;}";
+      "#mal-frost.is-visible{opacity:1;pointer-events:auto;}" +
+      // On phones the floating panel becomes full-screen, and the launcher is
+      // hidden while open (the widget's own close button handles dismissal) so it
+      // can't overlap the composer.
+      "@media (max-width:600px){" +
+      "#mal-panel{inset:0;width:100%;height:100%;max-width:none;max-height:none;border-radius:0;}" +
+      "body.mal-open #mal-launcher{display:none!important;}" +
+      "}";
     document.head.appendChild(s);
   }
 
@@ -99,6 +106,7 @@
   function openPanel() {
     isOpen = true;
     panel.style.display = "flex";
+    document.body.classList.add("mal-open");
     if (frost) frost.classList.add("is-visible");
     // Highlights belong to the closed state: clear any reveal while the widget
     // is open so the eye stays on the conversation, not the phone numbers.
@@ -114,6 +122,7 @@
   function closePanel() {
     isOpen = false;
     panel.style.display = "none";
+    document.body.classList.remove("mal-open");
     if (frost) frost.classList.remove("is-visible");
     launcher.setAttribute("aria-label", "Open LoanSlam chat");
     launcher.setAttribute("aria-expanded", "false");
