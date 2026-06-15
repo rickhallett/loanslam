@@ -42,7 +42,7 @@ export interface ProcessTurnInput {
   signalExtractorTimeoutMs?: number;
 }
 
-const defaultSignalExtractorTimeoutMs = 1_500;
+const defaultSignalExtractorTimeoutMs = 10_000;
 
 export async function processTurn({
   state,
