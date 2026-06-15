@@ -44,7 +44,7 @@
 | Start the lab UI | `just lab-ui` |
 
 ## Commit Attribution
-AI commits MUST include:
+AI commits MUST NOT include:
 ```text
 Co-Authored-By: (the agent's name and attribution byline)
 ```

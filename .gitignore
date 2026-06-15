@@ -12,3 +12,5 @@ reports/
 exports/
 artifacts/
 *.jsonl
+.env
+.claude/

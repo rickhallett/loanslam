@@ -1,10 +1,13 @@
 # Architecture & Technical Decisions
 
-Technology stack and architectural conventions for the chat-widget MVP. The stack and conventions are largely mandated by the senior developer to standardise practice across the company's projects; follow them unless a decision below pins something specific.
+Technology stack and architectural conventions for the chat-widget MVP. Follow the
+decisions below unless a later owner decision explicitly supersedes them.
 
 ## Stack
 
-A TypeScript npm-workspace monorepo: a Vue 3 iframe widget, an Express 5 API, shared Zod contracts, SQL Server persistence via Prisma, and optional cloud AI/RAG adapters behind runtime switches.
+A TypeScript npm-workspace monorepo: a Vue 3 iframe widget, an Express 5 API,
+shared Zod contracts, persistence behind explicit storage ports, and optional
+cloud AI/RAG adapters behind runtime switches.
 
 Current implementation starts with the Phase 0 TurnPlanner engine proof in
 `docs/llm-turn-planner-architecture.md`. The stack below remains the eventual
@@ -16,28 +19,50 @@ comparison harness have proved the core behaviour.
 - **Contracts:** Zod schemas define request/response contracts; export chat response states and the `ServiceResponse` envelope; shared by backend and widget to keep wire behaviour aligned.
 - **API:** Node 24, Express 5, TypeScript. Middleware: Helmet, CORS, cookie parsing, JSON body parsing, pino HTTP logging. OpenAPI generated from route-local Zod registration. Endpoints: health, session create, message turn, identity intake, reset.
 - **Domain:** `ChatService` eventually owns the fail-closed turn pipeline: conversation context -> retrieval -> constrained LLM turn planner -> policy/grounding validator -> audited response or handoff. Phase 0 proves this as a local `processTurn` engine and trace harness before the production API/widget/deployment layers.
-- **Persistence:** SQL Server via Prisma 7 (MSSQL adapter): sessions, transcript entries, client-message idempotency, audit events, UAT/evidence rows. Dockerized SQL Server for local dev and scratch verification.
+- **Persistence:** database choice sits behind storage ports. Phase 0 should need
+  no external database; use in-memory state, local JSONL traces, or SQLite only if
+  a lightweight relational store helps the engine proof. Product persistence should
+  default to Postgres unless an owned decision changes it. Do not couple the
+  TurnPlanner core to Prisma, SQL Server, Postgres, SQLite, or any SQL dialect.
 - **AI/RAG:** real API mode uses a managed knowledge-base retrieval path for grounded answers; classifier and vulnerability checks can switch to managed model services when enabled. All behind runtime switches.
-- **Infra:** backend builds into a Node 24 Alpine container; OpenTofu describes dev deployment. Shape: container registry -> managed container service -> managed SQL Server -> private static asset buckets behind CDN. Secrets and AI/RAG access injected via environment/config, never hardcoded.
+- **Infra:** backend builds into a Node 24 Alpine container; OpenTofu describes
+  dev deployment after Phase 0. Productisation shape: container registry ->
+  managed container service -> managed Postgres or equivalent relational store ->
+  private static asset buckets behind CDN. Secrets and AI/RAG access injected via
+  environment/config, never hardcoded.
 - **Testing:** Vitest (backend, contracts, widget); Vue type-check + Vite production build for the frontend; ESLint + Prettier as style gates.
 
-SQL Server is a deliberate standardisation requirement, not a default. Keep it; do not substitute Postgres.
+SQL Server is not the default and should not be used without a fresh, explicit
+reason. It adds cost and adapter friction without helping the Phase 0 engine proof.
+Postgres is the preferred production relational store. SQLite is acceptable for
+local Phase 0 fixtures or scratch state when it keeps the core simpler.
 
-## Conventions 
+## Conventions
 
-A feature-module, layered Express API with Zod-owned contracts and a uniform `ServiceResponse` envelope. Pragmatic, not framework-heavy: route files wire HTTP and OpenAPI, controllers translate HTTP into service calls, services own business flow and error boundaries, repositories own Prisma access.
+A feature-module, layered Express API with Zod-owned contracts and a uniform
+`ServiceResponse` envelope. Pragmatic, not framework-heavy: route files wire HTTP
+and OpenAPI, controllers translate HTTP into service calls, services own business
+flow and error boundaries, and repositories/adapters own persistence access.
 
 - **Feature folders by domain,** each owning its routes, controllers, services, repositories, models, helpers, and tests.
 - **Route-local contracts:** routes register Express handlers and nearby OpenAPI `registerPath` docs in the same file.
-- **Zod is the boundary source of truth:** schemas validate requests, infer TS types, and feed OpenAPI. Entity schemas mirror Prisma models; input schemas are derived by `omit`/`extend`.
+- **Zod is the boundary source of truth:** schemas validate requests, infer TS
+  types, and feed OpenAPI. Persistence schemas/models stay behind adapters; input
+  schemas are derived by `omit`/`extend`.
 - **Uniform envelope:** everything returns `{ success, message, responseObject, statusCode }` via `ServiceResponse`, including business outcomes.
 - **Thin controllers, service-owned errors:** controllers call services and return the envelope; services catch exceptions, log detail, and return safe failures.
-- **Repositories are explicit Prisma accessors:** async methods, declared return types, includes/omits close to the query.
+- **Repositories are explicit persistence adapters:** async methods, declared
+  return types, and database-specific details stay behind the adapter. The
+  conversation engine depends on storage interfaces, not ORM models or SQL tables.
 - **Manual composition over a DI framework:** classes plus module-level singleton exports, with constructor defaults where test seams are needed.
 
 ### Where we pin specifics
 
-1. **`server.ts` is composition wiring only.** Runtime singletons (logger, prisma, model/RAG clients) live under `config`, not exported from `server.ts`. The reference repo still exports them from `server.ts`; that is its cleanup debt, and as a greenfield project we start clean. Spirit, not sprawl.
+1. **`server.ts` is composition wiring only.** Runtime singletons (logger,
+   storage clients, model/RAG clients) live under `config`, not exported from
+   `server.ts`. The reference repo still exports them from `server.ts`; that is
+   its cleanup debt, and as a greenfield project we start clean. Spirit, not
+   sprawl.
 2. **Feature modules matched to this app's size.** This is essentially one domain — the conversation — not many. Use one `chat` (or `conversation`) feature module, plus `audit`, and apply the layer conventions inside it. Do not manufacture a separate feature module per endpoint.
 
 ## Decision: iframe session / cookie strategy
@@ -58,3 +83,22 @@ Phase 0 proves the same safety boundary through one `TurnPlanner` call that prop
 ## Decision: grounding-adapter contract
 
 Every customer-facing answer must be grounded in retrieved knowledge, or the turn routes to handoff. The retrieval adapter must therefore return a **grounding signal** (match scores and/or citations), not just text, so the router can decide answerable-vs-handoff. If retrieval returns bare text, the grounding gate has nothing to act on.
+
+## Decision: core engine is data-layer agnostic
+
+The TurnPlanner core should be abstracted from persistence as far as practical. It
+must be runnable against in-memory state for unit tests, local trace files for
+simulation, SQLite for lightweight local relational checks if useful, and Postgres
+for the eventual production store.
+
+The core engine should depend on small ports such as:
+
+- `ConversationStore`
+- `TraceStore`
+- `KnowledgeSource` / retriever
+- `ModelRunRecorder`, if model comparison needs durable run metadata
+
+Database implementations are replaceable details. They must not define the
+TurnPlanner contract, the journey simulation format, or the policy/grounding
+validator behaviour. This keeps Phase 0 focused on the non-deterministic core and
+lets the product choose the least painful persistence option later.
