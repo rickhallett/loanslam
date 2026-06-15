@@ -696,7 +696,7 @@ function buildHandoffIntroMessage({
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "It sounds like you may be going through something difficult, and the best thing is to get you to a person who can help properly. Please share a few contact details below so the Loanslam team can reach you directly.";
+    return "I'd rather get you to a person who can help with this properly. Please share a few contact details below and the Loanslam team will be in touch.";
   }
 
   if (
