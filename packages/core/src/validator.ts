@@ -221,6 +221,30 @@ export function validateTurnPlan(
     );
   }
 
+  // Out-of-domain guard: when the planner fell back AND the signal independently
+  // judged the message out-of-domain, do not let a spurious top retrieval match
+  // (e.g. a route_vulnerability item matched against a poem) override the
+  // fallback. The genuine backstop below still fires when there is a real safety
+  // flag from the message, signal, or plan.
+  if (isOutOfDomainFallback(plan, options.signalBundle)) {
+    const genuineSafetyFlags = uniqueSafetyFlags([
+      ...(options.safetyFlags ?? []),
+      ...inferSafetyFlagsFromSignal(options.signalBundle),
+      ...planSafetyFlags,
+      ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
+    ]);
+
+    if (genuineSafetyFlags.length === 0) {
+      return {
+        ...base,
+        finalAction: "fallback",
+        selectedServingMode: null,
+        selectedRouteReason: null,
+        safetyFlags: genuineSafetyFlags,
+      };
+    }
+  }
+
   if (vulnerabilityMatch || hasVulnerabilitySafetyFlag(allSafetyFlags)) {
     if (isCompliantRoutePlan(base, "route_vulnerability")) {
       return acceptPolicyRoute(base, vulnerabilityMatch, ["vulnerability"]);
@@ -310,6 +334,19 @@ function selectPolicyMatch(
   );
 
   return citedMatch ?? topMatch;
+}
+
+function isOutOfDomainFallback(
+  plan: TurnPlan,
+  signalBundle: SignalBundle | undefined,
+): boolean {
+  return (
+    plan.action === "fallback" &&
+    plan.ui.primitive === "safe_fallback" &&
+    signalBundle != null &&
+    signalBundle.recommendedServingMode == null &&
+    signalBundle.primaryIntent === "other"
+  );
 }
 
 function inferSafetyFlagsFromMatches(

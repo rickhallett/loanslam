@@ -1,4 +1,8 @@
-import type { RetrievedMatch, TurnPlan } from "@loanslam/contracts";
+import type {
+  RetrievedMatch,
+  SignalBundle,
+  TurnPlan,
+} from "@loanslam/contracts";
 import { describe, expect, it } from "vitest";
 
 import { standardHandoffFields } from "./policy";
@@ -671,5 +675,74 @@ describe("validateTurnPlan", () => {
         code: "ui_action_mismatch",
       }),
     );
+  });
+
+  it("keeps an out-of-domain fallback when the signal agrees, despite a spurious vulnerability match", () => {
+    const outOfDomainSignal: SignalBundle = {
+      primaryIntent: "other",
+      secondaryIntents: [],
+      recommendedServingMode: null,
+      safetySignals: [],
+      retrievalQueries: [],
+      routeHints: [],
+      uncertainty: 0.2,
+      negatedOrCorrected: false,
+      parserNotes: [],
+    };
+    const fallbackPlan = plan({
+      action: "fallback",
+      customerMessage: "This chat can only help with Loanslam loan questions.",
+      ui: {
+        primitive: "safe_fallback",
+        message: "This chat can only help with Loanslam loan questions.",
+        links: [],
+      },
+      grounding: null,
+      safetyFlags: [],
+    });
+
+    const result = validateTurnPlan(fallbackPlan, [vulnerabilityMatch], {
+      userMessage: "Can you write me a poem about a sunset?",
+      signalBundle: outOfDomainSignal,
+    });
+
+    expect(result.finalAction).toBe("fallback");
+    expect(result.ui.primitive).toBe("safe_fallback");
+    expect(result.selectedServingMode).toBeNull();
+    expect(result.safetyFlags).toEqual([]);
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
+  it("still escalates a genuine vulnerability even if the planner fell back", () => {
+    const vulnerabilitySignal: SignalBundle = {
+      primaryIntent: "vulnerability",
+      secondaryIntents: [],
+      recommendedServingMode: "route_vulnerability",
+      safetySignals: ["hardship"],
+      retrievalQueries: [],
+      routeHints: [],
+      uncertainty: 0.2,
+      negatedOrCorrected: false,
+      parserNotes: [],
+    };
+    const fallbackPlan = plan({
+      action: "fallback",
+      customerMessage: "Let me pass this on.",
+      ui: {
+        primitive: "safe_fallback",
+        message: "Let me pass this on.",
+        links: [],
+      },
+      grounding: null,
+      safetyFlags: [],
+    });
+
+    const result = validateTurnPlan(fallbackPlan, [vulnerabilityMatch], {
+      userMessage: "I cannot afford my repayment and I am scared.",
+      signalBundle: vulnerabilitySignal,
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.safetyFlags).toContain("vulnerability");
   });
 });
