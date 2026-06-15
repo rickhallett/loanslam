@@ -349,9 +349,7 @@ describe("Phase 0 CLI", () => {
     expect(parsed).toMatchObject({
       scenarioCount: 1,
       turnCount: 1,
-      findingSourceCounts: {
-        state_leak: 1,
-      },
+      findingSourceCounts: {},
     });
     expect(audit.rows[0]).toMatchObject({
       scenarioId: "topic-switch-account-to-answer",
@@ -359,20 +357,18 @@ describe("Phase 0 CLI", () => {
       finalAction: "answer",
       selectedServingMode: "answer",
       effectiveServingMode: "answer",
-      handoffPending: true,
+      safetyFlags: [],
+      stateSafetyFlags: ["account_specific_request"],
+      handoffPending: false,
+      stateHandoffPending: true,
       topRetrievedItem: {
         itemId: "how-do-i-apply",
         servingMode: "answer",
         score: 34,
       },
-      findings: [
-        {
-          code: "state_leak.carryover_on_answer",
-        },
-      ],
+      findings: [],
     });
-    expect(markdown).toContain("Rows Needing Review");
-    expect(markdown).toContain("state_leak.carryover_on_answer");
+    expect(markdown).toContain("No route-audit findings were detected.");
   });
 });
 
@@ -517,7 +513,7 @@ function writeRouteAuditFixture(): string {
             proposedAction: "answer",
             finalAction: "answer",
             validatorOverrides: [],
-            safetyFlags: ["account_specific_request"],
+            safetyFlags: [],
             customerMessage: "You can apply online.",
             createdAt: "2026-06-14T21:00:00.000Z",
           },

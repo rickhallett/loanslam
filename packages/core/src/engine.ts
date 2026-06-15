@@ -23,6 +23,7 @@ import {
   buildFallbackCopy,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
+  handoffSafetyFlags,
   policyVersion,
   standardHandoffFields,
 } from "./policy";
@@ -924,20 +925,49 @@ function mergeState({
     requestedFields: [...new Set(requestedFields)],
     safetyFlags: [...new Set([...state.safetyFlags, ...safetyFlags])],
     lastAction: finalAction,
-    handoffPending:
-      state.handoffPending ||
-      finalAction === "request_handoff_intake" ||
-      finalAction === "escalate" ||
-      finalAction === "create_ticket",
+    handoffPending: nextHandoffPending(state, finalAction),
   };
+}
+
+function nextHandoffPending(
+  state: ConversationState,
+  finalAction: ConversationState["lastAction"],
+): boolean {
+  if (
+    finalAction === "request_handoff_intake" ||
+    finalAction === "escalate" ||
+    finalAction === "create_ticket"
+  ) {
+    return true;
+  }
+
+  if (
+    finalAction === "answer" ||
+    finalAction === "refuse" ||
+    finalAction === "fallback" ||
+    finalAction === "ask_clarifying_question"
+  ) {
+    return state.lastAction === "create_ticket" && state.handoffPending;
+  }
+
+  return state.handoffPending;
 }
 
 function mergeTraceSafetyFlags(
   state: ConversationState,
   validated: ValidatedPlanFragment,
 ): ConversationState["safetyFlags"] {
+  if (validated.finalAction === "answer") {
+    if (validated.selectedServingMode === "answer") {
+      return validated.safetyFlags.filter(
+        (flag) => !isHandoffRouteSafetyFlag(flag),
+      );
+    }
+
+    return validated.safetyFlags;
+  }
+
   if (
-    validated.finalAction === "answer" ||
     validated.finalAction === "refuse" ||
     validated.finalAction === "fallback" ||
     validated.finalAction === "ask_clarifying_question"
@@ -946,6 +976,15 @@ function mergeTraceSafetyFlags(
   }
 
   return mergeSafetyFlags(state.safetyFlags, validated.safetyFlags);
+}
+
+function isHandoffRouteSafetyFlag(
+  flag: ConversationState["safetyFlags"][number],
+): boolean {
+  const routeFlags: readonly ConversationState["safetyFlags"][number][] =
+    handoffSafetyFlags;
+
+  return routeFlags.includes(flag);
 }
 
 function mergeSafetyFlags(

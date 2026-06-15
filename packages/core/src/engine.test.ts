@@ -1021,11 +1021,61 @@ describe("processTurn", () => {
     expect(result.trace.effectiveServingMode).toBe("answer");
     expect(result.trace.safetyFlags).not.toContain("vulnerability");
     expect(result.state.safetyFlags).toContain("vulnerability");
+    expect(result.state.handoffPending).toBe(false);
     expect(result.validatorOverrides).not.toContainEqual(
       expect.objectContaining({
         code: "safety_flag_route_to_handoff",
       }),
     );
+  });
+
+  it("clears abandoned account handoff state after a public FAQ answer", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "You can apply online.",
+          ui: {
+            primitive: "message",
+            message: "You can apply online.",
+            links: [],
+          },
+          reasonCode: "topic_switch_public_faq",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["how-do-i-apply"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: ["account_specific_request"],
+          traceSummary:
+            "Customer switched from account support to a public FAQ but stale state leaked into planner flags.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "Ignore that. Can I apply online instead?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:22.500Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.trace.effectiveServingMode).toBe("answer");
+    expect(result.trace.safetyFlags).toEqual([]);
+    expect(result.state.handoffPending).toBe(false);
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.safetyFlags).toContain("account_specific_request");
   });
 
   it("does not force handoff from generic pasted chat wording", async () => {
@@ -1156,6 +1206,7 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toMatch(/details needed/i);
     expect(result.trace.effectiveServingMode).toBe("answer");
     expect(result.trace.safetyFlags).toEqual([]);
+    expect(result.state.handoffPending).toBe(true);
     expect(result.state.safetyFlags).toEqual(
       expect.arrayContaining(["account_specific_request", "change_request"]),
     );

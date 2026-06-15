@@ -60,8 +60,10 @@ export interface RouteAuditRow {
   effectiveServingMode: ServingMode | null;
   routeForScoring: ServingMode | null;
   safetyFlags: string[];
+  stateSafetyFlags: string[];
   validatorOverrideCodes: string[];
   handoffPending: boolean | null;
+  stateHandoffPending: boolean | null;
   requestedFields: string[];
   topRetrievedItem: RouteAuditRetrievedItem | null;
   findings: RouteAuditFinding[];
@@ -190,6 +192,15 @@ export function buildRouteAuditArtifacts(
       turnRow.summary.effectiveServingMode ??
       trace?.effectiveServingMode ??
       null;
+    const finalAction =
+      turnRow.summary.finalAction ?? trace?.finalAction ?? null;
+    const requestedFields = turnRow.summary.requestedFields;
+    const routeForScoring = effectiveServingMode ?? selectedServingMode;
+    const safetyFlags = normalizeCurrentSafetyFlags({
+      finalAction,
+      routeForScoring,
+      safetyFlags: trace?.safetyFlags ?? turnRow.summary.safetyFlags,
+    });
     const row: RouteAuditRow = {
       scenarioId: turnRow.scenarioId,
       scenarioCategory: scenario?.category ?? null,
@@ -199,21 +210,20 @@ export function buildRouteAuditArtifacts(
       traceId: trace?.traceId ?? null,
       postedMessage: turnRow.postedMessage,
       expectedEnvelope: scenario?.expected ?? null,
-      finalAction: turnRow.summary.finalAction ?? trace?.finalAction ?? null,
+      finalAction,
       proposedAction: trace?.proposedAction ?? null,
       selectedServingMode,
       effectiveServingMode,
-      routeForScoring: effectiveServingMode ?? selectedServingMode,
-      safetyFlags:
-        turnRow.summary.safetyFlags.length > 0
-          ? turnRow.summary.safetyFlags
-          : (trace?.safetyFlags ?? []),
+      routeForScoring,
+      safetyFlags,
+      stateSafetyFlags: turnRow.summary.safetyFlags,
       validatorOverrideCodes:
         turnRow.summary.validatorOverrideCodes.length > 0
           ? turnRow.summary.validatorOverrideCodes
           : (trace?.validatorOverrides.map((override) => override.code) ?? []),
-      handoffPending: turnRow.summary.handoffPending,
-      requestedFields: turnRow.summary.requestedFields,
+      handoffPending: deriveCurrentHandoffPending(finalAction, requestedFields),
+      stateHandoffPending: turnRow.summary.handoffPending,
+      requestedFields,
       topRetrievedItem: summarizeRetrievedItem(
         trace?.retrievedMatches[0] ?? null,
       ),
@@ -454,11 +464,20 @@ function classifyAuditRow(row: RouteAuditRow): RouteAuditFinding[] {
   const hasStateCarryoverSignal =
     row.handoffPending === true ||
     row.safetyFlags.some((flag) => stateCarryoverFlags.has(flag));
+  const hasUnsplitStateCarryover =
+    row.stateHandoffPending === true &&
+    row.handoffPending === true &&
+    row.stateSafetyFlags.some((flag) => stateCarryoverFlags.has(flag)) &&
+    row.stateSafetyFlags.every((flag) => row.safetyFlags.includes(flag));
   const hasHumanSupportSignal = row.safetyFlags.some((flag) =>
     humanSupportSignals.has(flag),
   );
 
-  if (row.routeForScoring === "answer" && hasStateCarryoverSignal) {
+  if (
+    row.routeForScoring === "answer" &&
+    hasStateCarryoverSignal &&
+    hasUnsplitStateCarryover
+  ) {
     findings.push({
       source: "state_leak",
       code: "state_leak.carryover_on_answer",
@@ -635,7 +654,37 @@ function formatRoute(row: RouteAuditRow): string {
     `selected=${row.selectedServingMode ?? "null"}`,
     `effective=${row.effectiveServingMode ?? "null"}`,
     `score=${row.routeForScoring ?? "null"}`,
+    `handoffPending=${String(row.handoffPending)}`,
+    `stateHandoffPending=${String(row.stateHandoffPending)}`,
   ].join("; ");
+}
+
+function deriveCurrentHandoffPending(
+  finalAction: string | null,
+  requestedFields: readonly string[],
+): boolean {
+  return (
+    finalAction === "request_handoff_intake" ||
+    finalAction === "create_ticket" ||
+    finalAction === "escalate" ||
+    requestedFields.length > 0
+  );
+}
+
+function normalizeCurrentSafetyFlags({
+  finalAction,
+  routeForScoring,
+  safetyFlags,
+}: {
+  finalAction: string | null;
+  routeForScoring: ServingMode | null;
+  safetyFlags: readonly string[];
+}): string[] {
+  if (finalAction !== "answer" || routeForScoring !== "answer") {
+    return [...safetyFlags];
+  }
+
+  return safetyFlags.filter((flag) => !stateCarryoverFlags.has(flag));
 }
 
 function formatTopRetrievedItem(item: RouteAuditRetrievedItem | null): string {
