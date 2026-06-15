@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -337,6 +337,43 @@ describe("Phase 0 CLI", () => {
     expect(result.stdout).toContain("serve");
     expect(result.stdout).toContain("POST /sessions");
   });
+
+  it("writes a route audit from a completed lab API run without planner credentials", async () => {
+    const batteryDir = writeRouteAuditFixture();
+    const result = await runCli(["route-audit", batteryDir], {});
+    const parsed = JSON.parse(result.stdout);
+    const audit = JSON.parse(readFileSync(parsed.jsonOutputPath, "utf8"));
+    const markdown = readFileSync(parsed.markdownOutputPath, "utf8");
+
+    expect(result.exitCode).toBe(0);
+    expect(parsed).toMatchObject({
+      scenarioCount: 1,
+      turnCount: 1,
+      findingSourceCounts: {
+        state_leak: 1,
+      },
+    });
+    expect(audit.rows[0]).toMatchObject({
+      scenarioId: "topic-switch-account-to-answer",
+      postedMessage: "I mean can I apply online?",
+      finalAction: "answer",
+      selectedServingMode: "answer",
+      effectiveServingMode: "answer",
+      handoffPending: true,
+      topRetrievedItem: {
+        itemId: "how-do-i-apply",
+        servingMode: "answer",
+        score: 34,
+      },
+      findings: [
+        {
+          code: "state_leak.carryover_on_answer",
+        },
+      ],
+    });
+    expect(markdown).toContain("Rows Needing Review");
+    expect(markdown).toContain("state_leak.carryover_on_answer");
+  });
 });
 
 function scriptedIo(
@@ -362,4 +399,135 @@ function scriptedIo(
       closed = true;
     },
   };
+}
+
+function writeRouteAuditFixture(): string {
+  const runDir = mkdtempSync(join(tmpdir(), "loanslam-route-audit-cli-"));
+  const batteryDir = join(runDir, "battery-1");
+  const logsDir = join(batteryDir, "logs");
+  const dumpsDir = join(batteryDir, "dumps");
+  const dumpPath = join(
+    dumpsDir,
+    "lab-session-01-topic-switch-account-to-answer.json",
+  );
+
+  mkdirSync(logsDir, { recursive: true });
+  mkdirSync(dumpsDir, { recursive: true });
+  writeFileSync(
+    join(logsDir, "summary.json"),
+    `${JSON.stringify(
+      {
+        runRoot: runDir,
+        dumpsDir,
+        aggregateTurnLogPath: join(logsDir, "turn-log.jsonl"),
+        scenarioCount: 1,
+        customerTurnCount: 1,
+        scenarios: [
+          {
+            ordinal: 1,
+            scenarioId: "topic-switch-account-to-answer",
+            title: "topic-switch-account-to-answer",
+            category: "conversation_control",
+            expected:
+              "Respect latest active request unless earlier risk requires handoff.",
+            conversationRef: "conversation-1",
+            artifactPath: dumpPath,
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  writeFileSync(
+    join(logsDir, "turn-log.jsonl"),
+    [
+      JSON.stringify({
+        battery: "battery-1",
+        conversationRef: "conversation-1",
+        event: "session_created",
+        ordinal: 1,
+        scenarioId: "topic-switch-account-to-answer",
+      }),
+      JSON.stringify({
+        battery: "battery-1",
+        conversationRef: "conversation-1",
+        event: "turn_complete",
+        ordinal: 1,
+        postedMessage: "I mean can I apply online?",
+        scenarioId: "topic-switch-account-to-answer",
+        summary: {
+          handoffPending: true,
+          lastAction: "answer",
+          requestedFields: [],
+          safetyFlags: ["account_specific_request"],
+          selectedServingMode: "answer",
+          effectiveServingMode: "answer",
+          validatorOverrideCodes: [],
+        },
+        turnIndex: 1,
+      }),
+    ].join("\n") + "\n",
+    "utf8",
+  );
+  writeFileSync(
+    dumpPath,
+    `${JSON.stringify(
+      {
+        conversationRef: "conversation-1",
+        state: {
+          conversationRef: "conversation-1",
+          history: [],
+          collectedFacts: {},
+          requestedFields: [],
+          safetyFlags: ["account_specific_request"],
+          handoffPending: true,
+          lastAction: "answer",
+        },
+        traces: [
+          {
+            traceId: "trace-1",
+            turnIndex: 0,
+            conversationRef: "conversation-1",
+            requestRef: "request-1",
+            inboundMessageId: "inbound-1",
+            outboundMessageId: "outbound-1",
+            planner: metadata,
+            policyVersion: "phase0-turnplanner-policy-v1",
+            retrievedMatches: [
+              {
+                itemId: "how-do-i-apply",
+                score: 34,
+                servingMode: "answer",
+                matchedTerms: ["apply", "online"],
+                item: {
+                  id: "how-do-i-apply",
+                  question: "How do I apply for a loan?",
+                  serving_mode: "answer",
+                  answer_text: "You can apply online.",
+                  links: [],
+                  tags: ["apply"],
+                },
+              },
+            ],
+            selectedServingMode: "answer",
+            effectiveServingMode: "answer",
+            selectedRouteReason: null,
+            proposedAction: "answer",
+            finalAction: "answer",
+            validatorOverrides: [],
+            safetyFlags: ["account_specific_request"],
+            customerMessage: "You can apply online.",
+            createdAt: "2026-06-14T21:00:00.000Z",
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  return batteryDir;
 }

@@ -31,6 +31,7 @@ import {
 } from "./simulation/personaRunner";
 import { buildPersonaReport } from "./simulation/personaReport";
 import { runStochasticTestSimulator } from "./stochastic/runner";
+import { buildRouteAuditArtifacts } from "./routeAudit";
 
 export interface CliResult {
   exitCode: number;
@@ -89,6 +90,10 @@ export async function runCli(
 
     if (command === "stochastic") {
       return await runStochasticSimulation(rest, env, plannerFactory);
+    }
+
+    if (command === "route-audit") {
+      return runRouteAudit(rest);
     }
 
     if (command === "chat") {
@@ -308,6 +313,43 @@ async function runStochasticSimulation(
   return ok(stochasticRunText(result.run));
 }
 
+function runRouteAudit(args: string[]): CliResult {
+  const options = parseRouteAuditArgs(args);
+
+  if (options.help) {
+    return ok(routeAuditHelpText());
+  }
+
+  if (!options.runFolder) {
+    return fail(routeAuditHelpText());
+  }
+
+  const result = buildRouteAuditArtifacts({
+    runFolder: options.runFolder,
+    ...(options.jsonOutputPath
+      ? { jsonOutputPath: options.jsonOutputPath }
+      : {}),
+    ...(options.markdownOutputPath
+      ? { markdownOutputPath: options.markdownOutputPath }
+      : {}),
+  });
+
+  return ok(
+    JSON.stringify(
+      {
+        jsonOutputPath: result.jsonOutputPath,
+        markdownOutputPath: result.markdownOutputPath,
+        scenarioCount: result.audit.scenarioCount,
+        turnCount: result.audit.turnCount,
+        routeForScoringCounts: result.audit.routeForScoringCounts,
+        findingSourceCounts: result.audit.findingSourceCounts,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 async function runInteractiveChat(
   args: string[],
   env: CliEnv,
@@ -412,6 +454,13 @@ interface StochasticCliArgs {
   help: boolean;
 }
 
+interface RouteAuditCliArgs {
+  runFolder?: string;
+  jsonOutputPath?: string;
+  markdownOutputPath?: string;
+  help: boolean;
+}
+
 function parseStochasticArgs(args: string[]): StochasticCliArgs {
   const normalizedArgs = stripOptionSeparator(args);
   const parsed: StochasticCliArgs = {
@@ -477,6 +526,57 @@ function parseStochasticArgs(args: string[]): StochasticCliArgs {
         break;
       default:
         throw new Error(`Unknown stochastic option: ${arg}`);
+    }
+  }
+
+  return parsed;
+}
+
+function parseRouteAuditArgs(args: string[]): RouteAuditCliArgs {
+  const normalizedArgs = stripOptionSeparator(args);
+  const parsed: RouteAuditCliArgs = {
+    help: false,
+  };
+
+  for (let index = 0; index < normalizedArgs.length; index += 1) {
+    const arg = normalizedArgs[index];
+
+    if (arg === undefined) {
+      continue;
+    }
+
+    switch (arg) {
+      case "--help":
+      case "-h":
+        parsed.help = true;
+        break;
+      case "--json-output":
+        parsed.jsonOutputPath = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--json-output",
+        );
+        index += 1;
+        break;
+      case "--markdown-output":
+        parsed.markdownOutputPath = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--markdown-output",
+        );
+        index += 1;
+        break;
+      default:
+        if (arg.startsWith("--")) {
+          throw new Error(`Unknown route-audit option: ${arg}`);
+        }
+
+        if (parsed.runFolder) {
+          throw new Error("route-audit accepts only one run folder.");
+        }
+
+        parsed.runFolder = arg;
+        break;
     }
   }
 
@@ -565,11 +665,25 @@ function helpText(): string {
     "  compare [--output <path>]         Write a model comparison report",
     "  persona-simulate                  Run the persona scenario suite",
     "  stochastic                        Run the StochasticTestSimulator",
+    "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function routeAuditHelpText(): string {
+  return [
+    "Loanslam Phase 0 route audit",
+    "",
+    "Usage:",
+    "  route-audit <run-folder> [--json-output <path>]",
+    "             [--markdown-output <path>]",
+    "",
+    "The run folder may be the lab API run root, a battery folder, or its logs folder.",
+    "Reads summary.json, turn-log.jsonl, and scenario dumps, then writes route-audit.json and route-audit.md.",
   ].join("\n");
 }
 

@@ -40,6 +40,10 @@ core-persona-simulate *persona_flags:
 core-stochastic *stochastic_flags:
     @npm --silent run core:stochastic -- {{stochastic_flags}}
 
+# Generate a route audit from a completed lab API run folder.
+route-audit *audit_flags:
+    @npm --silent run core:route-audit -- {{audit_flags}}
+
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{chat_flags}}
