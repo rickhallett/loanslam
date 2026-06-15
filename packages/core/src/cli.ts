@@ -435,10 +435,15 @@ async function runHellWeekCommand(
   const fromDir = readOption(normalized, "--from");
   const judgePath = readOption(normalized, "--judge-verdicts");
   const signalsMode = readOption(normalized, "--signals") ?? "on";
+  const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
 
   if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency <= 0)) {
     return fail("--concurrency must be a positive integer.");
+  }
+
+  if (theme !== "minimal" && theme !== "jasmine") {
+    return fail("--theme must be minimal or jasmine.");
   }
 
   const judgeVerdicts = judgePath ? loadJudgeVerdicts(judgePath) : undefined;
@@ -446,6 +451,7 @@ async function runHellWeekCommand(
   if (fromDir) {
     const artifacts = renderFromRun({
       runDir: fromDir,
+      theme,
       ...(judgeVerdicts ? { judgeVerdicts } : {}),
     });
     return ok(hellWeekSummary(artifacts, asJson));
@@ -459,6 +465,7 @@ async function runHellWeekCommand(
     planner,
     ...(signalExtractor ? { signalExtractor } : {}),
     outBaseDir,
+    theme,
     ...(concurrency ? { concurrency } : {}),
     ...(judgeVerdicts ? { judgeVerdicts } : {}),
     onProgress: (message) => process.stderr.write(`${message}\n`),
@@ -823,6 +830,7 @@ function hellWeekHelpText(): string {
     "  --out <dir>             base output dir (default artifacts/phase0)",
     "  --concurrency <n>       scenarios driven in parallel (default 4)",
     "  --signals <mode>        on (default), off, or auto (env-driven)",
+    "  --theme <name>          minimal (default) or jasmine (SpecRunner homage)",
     "  --from <runDir>         re-render from a captured run; no live calls",
     "  --judge-verdicts <p>    merge LLM judge verdicts (JSON array or JSONL)",
     "  --json                  print compact JSON summary",

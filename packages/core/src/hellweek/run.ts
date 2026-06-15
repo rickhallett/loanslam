@@ -12,6 +12,7 @@ import { policyVersion } from "../policy";
 import { buildHellWeekReport } from "./aggregate";
 import { gradeScenario } from "./grade";
 import { renderHellWeekReportHtml } from "./htmlReport";
+import { renderHellWeekJasmineHtml } from "./jasmineReport";
 import { runHellWeek } from "./runner";
 import { assertUniqueScenarioIds, selectScenarios } from "./scenarios";
 import type {
@@ -24,6 +25,14 @@ import type {
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
+export type HellWeekTheme = "minimal" | "jasmine";
+
+function renderReportHtml(report: HellWeekReport, theme: HellWeekTheme): string {
+  return theme === "jasmine"
+    ? renderHellWeekJasmineHtml(report)
+    : renderHellWeekReportHtml(report);
+}
+
 export interface ExecuteHellWeekInput {
   profile: string;
   corpus: readonly CorpusItem[];
@@ -33,6 +42,7 @@ export interface ExecuteHellWeekInput {
   runId?: string;
   concurrency?: number;
   judgeVerdicts?: Map<string, JudgeVerdict>;
+  theme?: HellWeekTheme;
   now?: () => Date;
   onProgress?: (message: string) => void;
 }
@@ -114,12 +124,14 @@ function writeRunArtifacts({
   report,
   scenarios,
   evidence,
+  theme,
 }: {
   runDir: string;
   runId: string;
   report: HellWeekReport;
   scenarios: readonly HellWeekScenario[];
   evidence: readonly HellWeekScenarioEvidence[];
+  theme: HellWeekTheme;
 }): HellWeekRunArtifacts {
   mkdirSync(runDir, { recursive: true });
   const scenariosDir = join(runDir, "scenarios");
@@ -131,7 +143,7 @@ function writeRunArtifacts({
   const judgeQueuePath = join(runDir, "judge-queue.jsonl");
 
   writeFileSync(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  writeFileSync(reportHtmlPath, renderHellWeekReportHtml(report), "utf8");
+  writeFileSync(reportHtmlPath, renderReportHtml(report, theme), "utf8");
   writeFileSync(
     evidenceJsonPath,
     `${JSON.stringify(evidence, null, 2)}\n`,
@@ -214,7 +226,14 @@ export async function executeHellWeek(
     grades,
   });
 
-  return writeRunArtifacts({ runDir, runId, report, scenarios, evidence });
+  return writeRunArtifacts({
+    runDir,
+    runId,
+    report,
+    scenarios,
+    evidence,
+    theme: input.theme ?? "minimal",
+  });
 }
 
 /**
@@ -224,10 +243,12 @@ export async function executeHellWeek(
 export function renderFromRun({
   runDir,
   judgeVerdicts,
+  theme = "minimal",
   now = () => new Date(),
 }: {
   runDir: string;
   judgeVerdicts?: Map<string, JudgeVerdict>;
+  theme?: HellWeekTheme;
   now?: () => Date;
 }): HellWeekRunArtifacts {
   const evidence = JSON.parse(
@@ -259,6 +280,7 @@ export function renderFromRun({
     report,
     scenarios,
     evidence,
+    theme,
   });
 }
 
