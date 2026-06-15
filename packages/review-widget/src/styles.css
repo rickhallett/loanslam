@@ -1,0 +1,453 @@
+/* MAL review widget — the original chrome Sam saw, on the loanslam engine.
+   Palette: dark-teal header (#12343b), teal accents (#1a8787), pale assistant
+   bubbles (#f2f7f4), Poppins. The widget fills the host loader's iframe panel,
+   which provides the rounded corners and shadow. */
+
+:root {
+  color: #172026;
+  background: transparent;
+  font-family:
+    Poppins,
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.widget-shell {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.chat-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+  font-size: 14px;
+  animation: panel-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  background: #12343b;
+  color: #ffffff;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #b7d7ca;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chat-header h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.chat-status {
+  margin: 4px 0 0;
+  color: #d8e8e1;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 8%);
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.chat-header-actions button:hover,
+.chat-header-actions button:focus-visible {
+  background: rgb(255 255 255 / 16%);
+  outline: 2px solid rgb(255 255 255 / 40%);
+  outline-offset: 2px;
+}
+
+/* ── Messages ───────────────────────────────────────────── */
+.message-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 20px 18px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(88%, 420px);
+  padding: 11px 13px;
+  border-radius: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 2px rgb(18 31 38 / 5%);
+  animation: message-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.message-assistant {
+  align-self: flex-start;
+  border: 1px solid #d7e5df;
+  background: #f2f7f4;
+  color: #172026;
+}
+
+.message-user {
+  align-self: flex-end;
+  background: #1a8787;
+  color: #ffffff;
+  transform-origin: bottom right;
+}
+
+.message-text {
+  white-space: pre-wrap;
+}
+
+.thinking-bubble {
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 13px;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #41535a;
+  opacity: 0.55;
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ── Engine-driven primitives (inside the assistant message) ─── */
+.primitive {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 12px;
+  border: 1px solid #1a8787;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #156b6b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.chip:hover {
+  background: #1a8787;
+  color: #ffffff;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e6f0ec;
+  color: #156b6b;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.link:hover {
+  background: #d8e8e1;
+}
+
+.handoff {
+  padding: 10px 13px;
+  border-radius: 8px;
+  background: #fff4e8;
+  border: 1px solid #f3ddae;
+  color: #92580a;
+  font-size: 12px;
+}
+
+/* ── Engine intake form (rendered inside the message) ───────── */
+.identity-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 12px;
+  border: 1px solid #cbd9d5;
+  border-radius: 8px;
+  background: #ffffff;
+  animation: message-in 0.25s cubic-bezier(0.2, 0.8, 0.3, 1) 0.1s both;
+}
+
+.identity-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #41535a;
+  font-size: 12px;
+}
+
+.identity-field span {
+  font-weight: 600;
+}
+
+.identity-field input,
+.identity-field textarea {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #b8c7ce;
+  border-radius: 8px;
+  background: #ffffff;
+  resize: vertical;
+}
+
+.identity-field input {
+  height: 36px;
+}
+
+.identity-field input:focus-visible,
+.identity-field textarea:focus-visible {
+  outline: none;
+  border-color: #1f6f78;
+  box-shadow: 0 0 0 3px rgb(31 111 120 / 18%);
+}
+
+.identity-form button {
+  justify-self: end;
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #12343b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    filter 0.12s;
+}
+
+.identity-form button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: scale(1.04);
+}
+
+/* ── Notices & errors ───────────────────────────────────── */
+.error {
+  margin: 0 18px 10px;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+.terminal-note {
+  margin: 0 18px 10px;
+  color: #69797a;
+  font-size: 13px;
+}
+
+.uat-notice {
+  margin: 0;
+  color: #69797a;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.uat-notice-composer {
+  padding: 0 18px 10px;
+}
+
+/* ── Composer ───────────────────────────────────────────── */
+.composer {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #dce4e7;
+  background: #ffffff;
+}
+
+.composer input {
+  height: 44px;
+  min-width: 0;
+  padding: 0 13px;
+  border: 1px solid #b8c7ce;
+  border-radius: 8px;
+  background: #ffffff;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.composer input:focus-visible {
+  outline: none;
+  border-color: #1f6f78;
+  box-shadow: 0 0 0 3px rgb(31 111 120 / 18%);
+}
+
+.composer-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #1a8787;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    filter 0.12s;
+}
+
+.composer-send:hover:not(:disabled),
+.composer-send:focus-visible:not(:disabled) {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+  outline: 3px solid rgb(26 135 135 / 22%);
+  outline-offset: 2px;
+}
+
+.composer-send:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+button:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ── Motion ─────────────────────────────────────────────── */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes thinking-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-panel,
+  .message,
+  .identity-form {
+    animation: none;
+  }
+
+  .thinking-dots span {
+    animation: none;
+  }
+
+  .composer input,
+  .composer-send,
+  .identity-form button {
+    transition: none;
+  }
+}

@@ -3,6 +3,7 @@ import type {
   RetrievedMatch,
   SafetyFlag,
   ServingMode,
+  SignalBundle,
   TurnAction,
   TurnPlan,
   UiPlan,
@@ -30,13 +31,16 @@ import {
   detectVulnerabilityRouteSignal,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
+  handoffSafetyFlags,
   standardHandoffFields,
   uiMatchesAction,
+  vulnerabilitySafetyFlags,
 } from "./policy";
 
 export interface ValidateTurnPlanOptions {
   safetyFlags?: readonly SafetyFlag[];
   userMessage?: string;
+  signalBundle?: SignalBundle;
 }
 
 export interface ValidatedPlanFragment {
@@ -64,15 +68,21 @@ export function validateTurnPlan(
   options: ValidateTurnPlanOptions = {},
 ): ValidatedPlanFragment {
   const selectedMatch = selectPolicyMatch(plan, retrievedMatches);
-  const planSafetyFlags = suppressNegatedCurrentSafetyFlags(
-    plan.safetyFlags,
-    options.userMessage ?? "",
+  const planSafetyFlags = alignPlanSafetyFlagsWithSignal(
+    suppressNegatedCurrentSafetyFlags(
+      plan.safetyFlags,
+      options.userMessage ?? "",
+    ),
+    options.signalBundle,
   );
   const allSafetyFlags = uniqueSafetyFlags([
     ...(options.safetyFlags ?? []),
+    ...inferSafetyFlagsFromSignal(options.signalBundle),
     ...planSafetyFlags,
     ...inferSafetyFlagsFromMatches(selectedMatch ? [selectedMatch] : []),
-    ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
+    ...inferSafetyFlagsFromMessage(options.userMessage ?? "", {
+      includeRouteSignals: options.signalBundle === undefined,
+    }),
   ]);
 
   const base: ValidatedPlanFragment = {
@@ -337,7 +347,10 @@ function inferSafetyFlagsFromMatches(
   return uniqueSafetyFlags(flags);
 }
 
-function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
+function inferSafetyFlagsFromMessage(
+  message: string,
+  options: { includeRouteSignals?: boolean } = {},
+): SafetyFlag[] {
   const flags: SafetyFlag[] = [];
 
   if (detectSensitiveOvershare(message)) {
@@ -356,24 +369,97 @@ function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
     flags.push("accessibility_need");
   }
 
-  // Fail-closed safety floor: positively re-derive the vulnerability-class
-  // signals from the raw message so a genuine hardship/complaint/distress turn
-  // routes to a human even when the planner omits the flag and no
-  // route_vulnerability item is the selected match. The detectors scrub
-  // negations internally, so "I'm not in hardship" does not trip the floor.
-  if (detectComplaintRouteSignal(message)) {
-    flags.push("complaint");
-  }
+  if (options.includeRouteSignals ?? true) {
+    // Fail-closed safety floor for the no-signal path. When structured signal
+    // extraction is available, route meaning should come from the signal bundle
+    // rather than another layer of phrase matching.
+    if (detectComplaintRouteSignal(message)) {
+      flags.push("complaint");
+    }
 
-  if (detectHardshipRouteSignal(message)) {
-    flags.push("hardship");
-  }
+    if (detectHardshipRouteSignal(message)) {
+      flags.push("hardship");
+    }
 
-  if (detectDistressRouteSignal(message)) {
-    flags.push("distress");
+    if (detectDistressRouteSignal(message)) {
+      flags.push("distress");
+    }
   }
 
   return flags;
+}
+
+function inferSafetyFlagsFromSignal(
+  signalBundle: SignalBundle | undefined,
+): SafetyFlag[] {
+  if (!signalBundle) {
+    return [];
+  }
+
+  const flags = [...signalBundle.safetySignals];
+
+  if (
+    signalBundle.recommendedServingMode === "route_vulnerability" &&
+    !hasVulnerabilitySafetyFlag(flags)
+  ) {
+    flags.push("vulnerability");
+  }
+
+  if (
+    signalBundle.recommendedServingMode === "handoff_account_specific" &&
+    !hasHandoffSafetyFlag(flags)
+  ) {
+    flags.push("account_specific_request");
+  }
+
+  return uniqueSafetyFlags(flags);
+}
+
+function alignPlanSafetyFlagsWithSignal(
+  flags: readonly SafetyFlag[],
+  signalBundle: SignalBundle | undefined,
+): SafetyFlag[] {
+  const normalizedFlags = uniqueSafetyFlags(flags);
+  const signalMode = signalBundle?.recommendedServingMode;
+
+  if (!signalMode) {
+    return normalizedFlags;
+  }
+
+  const signalFlags = new Set(inferSafetyFlagsFromSignal(signalBundle));
+
+  return normalizedFlags.filter((flag) => {
+    if (signalFlags.has(flag)) {
+      return true;
+    }
+
+    if (includesSafetyFlag(currentTurnInvariantSafetyFlags, flag)) {
+      return true;
+    }
+
+    if (signalMode === "handoff_account_specific") {
+      return includesSafetyFlag(handoffSafetyFlags, flag);
+    }
+
+    if (signalMode === "route_vulnerability") {
+      return includesSafetyFlag(vulnerabilitySafetyFlags, flag);
+    }
+
+    return false;
+  });
+}
+
+const currentTurnInvariantSafetyFlags = [
+  "forbidden_credentials",
+  "sensitive_overshare",
+  "language_barrier",
+] as const satisfies readonly SafetyFlag[];
+
+function includesSafetyFlag(
+  flags: readonly SafetyFlag[],
+  flag: SafetyFlag,
+): boolean {
+  return flags.includes(flag);
 }
 
 function suppressNegatedCurrentSafetyFlags(

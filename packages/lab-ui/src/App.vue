@@ -94,6 +94,14 @@ const selectedTurn = computed(
     null,
 );
 const latestTurn = computed(() => turns.value.at(-1) ?? null);
+const isChatComplete = computed(() => {
+  const result = latestTurn.value?.result;
+
+  return (
+    result?.finalAction === "create_ticket" ||
+    result?.ui.primitive === "handoff_confirmation"
+  );
+});
 const sessionLabel = computed(() => sessionRef.value ?? "new session");
 const overallTone = computed<Tone>(() => {
   const lanes = latestTurn.value?.lanes ?? [];
@@ -109,7 +117,10 @@ const overallTone = computed<Tone>(() => {
   return latestTurn.value ? "ok" : "muted";
 });
 const canSend = computed(
-  () => message.value.trim().length > 0 && !isSending.value,
+  () =>
+    message.value.trim().length > 0 &&
+    !isSending.value &&
+    !isChatComplete.value,
 );
 const canExport = computed(() => turns.value.length > 0);
 const visibleLanes = computed(
@@ -472,7 +483,7 @@ function topRetrievalScore(matches: readonly RetrievedMatch[]): number {
 
 function formatError(error: unknown): string {
   if (error instanceof TypeError) {
-    return "Could not reach the lab API. Start it with `just core-serve -- --port 8787`.";
+    return "Could not reach the lab API. Start the full lab with `just lab`, or start the API with `just core-serve -- --port 8787`.";
   }
 
   return error instanceof Error ? error.message : String(error);
@@ -480,6 +491,9 @@ function formatError(error: unknown): string {
 
 async function focusPrompt(): Promise<void> {
   await nextTick();
+  if (isChatComplete.value) {
+    return;
+  }
   promptInput.value?.focus();
 }
 
@@ -586,7 +600,7 @@ async function scrollTranscriptToBottom(): Promise<void> {
             autocomplete="off"
             placeholder="customer_message"
             aria-label="Customer message"
-            :disabled="isSending"
+            :disabled="isSending || isChatComplete"
           />
           <button
             class="send-button"
@@ -604,6 +618,7 @@ async function scrollTranscriptToBottom(): Promise<void> {
             <Send v-else :size="19" aria-hidden="true" />
           </button>
         </form>
+        <p v-if="isChatComplete" class="terminal-line">handoff_complete</p>
         <p v-if="errorMessage" class="error-line">{{ errorMessage }}</p>
       </section>
 

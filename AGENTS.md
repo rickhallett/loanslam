@@ -32,9 +32,14 @@
 | Task | Command |
 |---|---|
 | List recipes | `just --list` |
-| Start local SQL Server | `just local-db` |
-| Print database URL | `just mssql-url` |
-| Stop SQL Server | `just mssql-stop` |
+| Run tests | `just test` |
+| Type-check workspaces | `just typecheck` |
+| Build workspaces | `just build` |
+| Check formatting | `just format-check` |
+| Probe one engine turn | `just core-turn -- --message "How do I apply?"` |
+| Start the full lab | `just lab` |
+| Start the lab API | `just core-serve -- --port 8787` |
+| Start the lab UI | `just lab-ui` |
 
 ## Commit Attribution
 AI commits MUST include:

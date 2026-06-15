@@ -1,9 +1,10 @@
 set dotenv-load
 
+# Show the available Phase 0 operator commands.
 default:
     @just --list
 
-# Run the TypeScript/Vitest test suite.
+# Run all Vitest suites.
 test:
     npm test
 
@@ -19,93 +20,148 @@ build:
 format-check:
     npm run format:check
 
-# Run one local TurnPlanner turn through the Phase 0 CLI.
-core-turn *args:
-    @npm --silent run core:turn -- {{args}}
+# Probe one planner-backed turn, e.g. -- --message "How do I apply?"
+core-turn *turn_flags:
+    @npm --silent run core:turn -- {{turn_flags}}
 
-# Run the Phase 0 journey simulation.
-core-simulate *args:
-    @npm --silent run core:simulate -- {{args}}
+# Run journey fixtures, e.g. -- --trace-output artifacts/phase0/traces.jsonl
+core-simulate *simulation_flags:
+    @npm --silent run core:simulate -- {{simulation_flags}}
 
-# Compare configured Phase 0 planner models.
-core-compare *args:
-    @npm --silent run core:compare -- {{args}}
+# Write a model comparison report, e.g. -- --output artifacts/phase0/comparison.json
+core-compare *comparison_flags:
+    @npm --silent run core:compare -- {{comparison_flags}}
 
-# Run the Phase 0 persona scenario simulation.
-core-persona-simulate *args:
-    @npm --silent run core:persona-simulate -- {{args}}
+# Run persona scenarios, e.g. -- --transcripts-output <jsonl> --report-output <json>
+core-persona-simulate *persona_flags:
+    @npm --silent run core:persona-simulate -- {{persona_flags}}
 
-# Run the Phase 0 StochasticTestSimulator.
-core-stochastic *args:
-    @npm --silent run core:stochastic -- {{args}}
+# Run stochastic scenarios, e.g. -- --profile smoke|review|soak --seed <value>
+core-stochastic *stochastic_flags:
+    @npm --silent run core:stochastic -- {{stochastic_flags}}
 
-# Drive the Phase 0 engine turn by turn from the terminal.
-core-chat *args:
-    @npm --silent run core:chat -- {{args}}
+# Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
+core-chat *chat_flags:
+    @npm --silent run core:chat -- {{chat_flags}}
 
-# Start the dev-only Phase 0 lab API over the core engine.
-core-serve *args:
-    @npm --silent run core:serve -- {{args}}
+# Start the dev-only lab API; default port is 8787, override with -- --port <port>.
+core-serve *server_flags:
+    @npm --silent run core:serve -- {{server_flags}}
 
-# Start the local Phase 0 Vue lab console.
-lab-ui *args:
-    @npm --silent run lab-ui:dev -- {{args}}
+# Start the lab API on 8787 and Vue console on 5173 together.
+lab:
+    @set -e; \
+      server_pid=""; \
+      ui_pid=""; \
+      kill_tree() { \
+        pid="$1"; \
+        for child_pid in $(pgrep -P "$pid" 2>/dev/null || true); do \
+          kill_tree "$child_pid"; \
+        done; \
+        kill "$pid" 2>/dev/null || true; \
+      }; \
+      cleanup() { \
+        if [ -n "$ui_pid" ]; then \
+          kill_tree "$ui_pid"; \
+        fi; \
+        if [ -n "$server_pid" ]; then \
+          kill_tree "$server_pid"; \
+        fi; \
+        wait 2>/dev/null || true; \
+      }; \
+      trap cleanup EXIT INT TERM; \
+      npm --silent run core:serve -- --port 8787 & \
+      server_pid=$!; \
+      sleep 1; \
+      if ! kill -0 "$server_pid" 2>/dev/null; then \
+        wait "$server_pid"; \
+        exit 1; \
+      fi; \
+      LAB_API_TARGET="http://127.0.0.1:8787" npm --silent run lab-ui:dev -- --port 5173 & \
+      ui_pid=$!; \
+      wait "$ui_pid"
+
+# Start engine (8788), customer widget (5174) and host page (5180) together.
+demo:
+    @set -e; \
+      server_pid=""; \
+      widget_pid=""; \
+      host_pid=""; \
+      kill_tree() { \
+        pid="$1"; \
+        for child_pid in $(pgrep -P "$pid" 2>/dev/null || true); do \
+          kill_tree "$child_pid"; \
+        done; \
+        kill "$pid" 2>/dev/null || true; \
+      }; \
+      cleanup() { \
+        for pid in "$host_pid" "$widget_pid" "$server_pid"; do \
+          if [ -n "$pid" ]; then \
+            kill_tree "$pid"; \
+          fi; \
+        done; \
+        wait 2>/dev/null || true; \
+      }; \
+      trap cleanup EXIT INT TERM; \
+      npm --silent run core:serve -- --port 8788 & \
+      server_pid=$!; \
+      sleep 1; \
+      if ! kill -0 "$server_pid" 2>/dev/null; then \
+        wait "$server_pid"; \
+        exit 1; \
+      fi; \
+      LAB_API_TARGET="http://127.0.0.1:8788" npm --silent run demo-widget:dev & \
+      widget_pid=$!; \
+      npm --silent run demo-host:dev & \
+      host_pid=$!; \
+      echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, engine 8788)"; \
+      wait "$host_pid"
+
+# Start engine (8788), MAL review widget (5175) and MAL contact page (5181).
+# This is the original mock Sam saw, driven by the loanslam engine.
+review:
+    @set -e; \
+      server_pid=""; \
+      widget_pid=""; \
+      host_pid=""; \
+      kill_tree() { \
+        pid="$1"; \
+        for child_pid in $(pgrep -P "$pid" 2>/dev/null || true); do \
+          kill_tree "$child_pid"; \
+        done; \
+        kill "$pid" 2>/dev/null || true; \
+      }; \
+      cleanup() { \
+        for pid in "$host_pid" "$widget_pid" "$server_pid"; do \
+          if [ -n "$pid" ]; then \
+            kill_tree "$pid"; \
+          fi; \
+        done; \
+        wait 2>/dev/null || true; \
+      }; \
+      trap cleanup EXIT INT TERM; \
+      npm --silent run core:serve -- --port 8788 & \
+      server_pid=$!; \
+      sleep 1; \
+      if ! kill -0 "$server_pid" 2>/dev/null; then \
+        wait "$server_pid"; \
+        exit 1; \
+      fi; \
+      LAB_API_TARGET="http://127.0.0.1:8788" npm --silent run review-widget:dev & \
+      widget_pid=$!; \
+      npm --silent run review-host:dev & \
+      host_pid=$!; \
+      echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, engine 8788)"; \
+      wait "$host_pid"
+
+# Start the local Vue lab console; pass Vite flags after -- when needed.
+lab-ui *vite_args:
+    @set -- {{vite_args}}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm --silent run lab-ui:dev -- "$@"
 
 # Build the local Phase 0 Vue lab console.
 lab-ui-build:
     @npm --silent run lab-ui:build
-
-# Start the local SQL Server container.
-mssql-up:
-    @if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \
-      echo "Using existing healthy loanslam-mssql container."; \
-    else \
-      docker compose -f docker-compose.mssql.yml up -d mssql; \
-    fi
-
-# Wait until the local SQL Server container healthcheck is green.
-mssql-wait:
-    @for attempt in $(seq 1 60); do \
-      if docker inspect loanslam-mssql 2>/dev/null | grep -q '"Status": "healthy"'; then \
-        docker compose -f docker-compose.mssql.yml ps mssql; \
-        exit 0; \
-      fi; \
-      printf 'Waiting for SQL Server healthcheck (%s/60)\n' "$attempt"; \
-      sleep 2; \
-    done; \
-    docker compose -f docker-compose.mssql.yml logs --tail=80 mssql; \
-    exit 1
-
-# Stop the local SQL Server container while preserving its named data volume.
-mssql-stop:
-    docker compose -f docker-compose.mssql.yml stop mssql
-
-# Remove the local SQL Server container and volume.
-mssql-down:
-    docker compose -f docker-compose.mssql.yml down -v
-
-# Print the local SQL Server URL for Prisma or app env.
-mssql-url db="loanslam" host="localhost":
-    @password="${MSSQL_SA_PASSWORD:-LocalDev!Passw0rd}"; \
-      port="${MSSQL_PORT:-1434}"; \
-      printf 'sqlserver://%s:%s;database=%s;user=sa;password=%s;trustServerCertificate=true\n' "{{host}}" "$port" "{{db}}" "$password"
-
-# Create the local Loanslam database if it does not already exist.
-mssql-create-db db="loanslam":
-    @set -e; \
-      password="${MSSQL_SA_PASSWORD:-LocalDev!Passw0rd}"; \
-      just mssql-up; \
-      just mssql-wait; \
-      docker exec loanslam-mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$password" -Q "IF DB_ID(N'{{db}}') IS NULL CREATE DATABASE [{{db}}];"; \
-      echo "Database '{{db}}' is ready."
-
-# Start SQL Server, wait for readiness, create the default DB, and print DATABASE_URL.
-local-db:
-    @just mssql-create-db loanslam
-    @printf 'DATABASE_URL='
-    @just mssql-url loanslam
-
-# Open an interactive sqlcmd shell inside the local SQL Server container.
-mssql-shell db="loanslam":
-    @password="${MSSQL_SA_PASSWORD:-LocalDev!Passw0rd}"; \
-      docker exec -it loanslam-mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$password" -d "{{db}}"

@@ -1,4 +1,4 @@
-import type { CorpusItem } from "@loanslam/contracts";
+import type { CorpusItem, SignalBundle } from "@loanslam/contracts";
 import { describe, expect, it } from "vitest";
 
 import { loadCorpusFromFile } from "./corpus";
@@ -11,6 +11,24 @@ function topMatch(query: string) {
 
   expect(match).toBeDefined();
   return match;
+}
+
+function signalBundle(
+  recommendedServingMode: SignalBundle["recommendedServingMode"],
+  overrides: Partial<SignalBundle> = {},
+): SignalBundle {
+  return {
+    primaryIntent: recommendedServingMode === "answer" ? "answer" : "other",
+    secondaryIntents: [],
+    recommendedServingMode,
+    safetySignals: [],
+    retrievalQueries: [],
+    routeHints: [],
+    uncertainty: 0.1,
+    negatedOrCorrected: false,
+    parserNotes: [],
+    ...overrides,
+  };
 }
 
 describe("lexical retrieval", () => {
@@ -179,6 +197,43 @@ describe("lexical retrieval", () => {
       expect(match?.servingMode).not.toBe("route_vulnerability");
       expect(match?.servingMode).not.toBe("excluded");
     }
+  });
+
+  it("uses structured signal evidence to suppress unrelated route matches", () => {
+    const [answerMatch] = retrieveMatches(
+      "No, I am not struggling to pay. What is Loanslam?",
+      [
+        {
+          id: "what-is-loanslam",
+          question: "What is Loanslam?",
+          question_variants: ["Who is Loanslam?", "What is this company?"],
+          serving_mode: "answer",
+          answer_text:
+            "Loanslam is a regulated lender offering online loan applications.",
+          links: [],
+        },
+        {
+          id: "struggling-financially-general",
+          question: "I'm struggling financially.",
+          question_variants: ["I am struggling to pay"],
+          serving_mode: "route_vulnerability",
+          route_reason:
+            "General financial hardship is a vulnerability signal and needs human support.",
+          tags: ["financial-difficulty", "hardship", "vulnerability"],
+        },
+      ],
+      {
+        signalBundle: signalBundle("answer", {
+          negatedOrCorrected: true,
+          retrievalQueries: ["company regulated lender"],
+        }),
+      },
+    );
+
+    expect(answerMatch).toMatchObject({
+      itemId: "what-is-loanslam",
+      servingMode: "answer",
+    });
   });
 
   it("requires account-specific evidence before selecting handoff routes", () => {

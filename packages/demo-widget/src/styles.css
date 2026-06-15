@@ -1,0 +1,357 @@
+:root {
+  --ls-ink: #0f172a;
+  --ls-indigo: #4f46e5;
+  --ls-indigo-dark: #4338ca;
+  --ls-coral: #f43f5e;
+  --ls-surface: #ffffff;
+  --ls-canvas: #f5f6fb;
+  --ls-line: #e6e8f2;
+  --ls-muted: #6b7280;
+  --ls-radius: 16px;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+.ls-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ls-canvas);
+  color: var(--ls-ink);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.ls-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--ls-indigo), var(--ls-indigo-dark));
+  color: #fff;
+}
+
+.ls-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ls-brand__mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.ls-brand__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.ls-brand__name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.ls-brand__tag {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.ls-widget__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.ls-iconbtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ls-iconbtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ── Messages ───────────────────────────────────────────── */
+.ls-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ls-msg {
+  display: flex;
+}
+
+.ls-msg--customer {
+  justify-content: flex-end;
+}
+
+.ls-msg--assistant {
+  justify-content: flex-start;
+}
+
+/* Bubble + the turn's primitive stack together as one message, so a tall
+   intake form scrolls inside the conversation instead of pinning a fixed band. */
+.ls-msg__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.ls-msg--customer .ls-msg__content {
+  align-items: flex-end;
+}
+
+.ls-msg--assistant .ls-msg__content {
+  align-items: flex-start;
+}
+
+.ls-bubble {
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ls-msg--customer .ls-bubble {
+  background: var(--ls-indigo);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.ls-msg--assistant .ls-bubble {
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-line);
+  border-bottom-left-radius: 4px;
+}
+
+.ls-bubble--thinking {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ls-bubble--thinking span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ls-muted);
+  animation: ls-blink 1.2s infinite ease-in-out both;
+}
+
+.ls-bubble--thinking span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.ls-bubble--thinking span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes ls-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+/* ── Engine-driven primitives ───────────────────────────── */
+.ls-primitive {
+  width: 100%;
+}
+
+.ls-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ls-chip {
+  padding: 8px 12px;
+  border: 1px solid var(--ls-indigo);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ls-indigo-dark);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.ls-chip:hover {
+  background: var(--ls-indigo);
+  color: #fff;
+}
+
+.ls-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ls-link {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #eef0fb;
+  color: var(--ls-indigo-dark);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.ls-link:hover {
+  background: #e3e6fa;
+}
+
+.ls-handoff {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff4f6;
+  border: 1px solid #fbcad4;
+  color: #9f1239;
+  font-size: 13px;
+}
+
+.ls-intake {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-line);
+  border-radius: 12px;
+}
+
+.ls-intake__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ls-intake__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ls-muted);
+}
+
+.ls-intake__input {
+  padding: 8px 10px;
+  border: 1px solid var(--ls-line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.ls-intake__input:focus {
+  outline: 2px solid var(--ls-indigo);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.ls-intake__submit {
+  align-self: flex-start;
+}
+
+.ls-error {
+  margin: 0 16px 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.ls-terminal {
+  margin: 0 16px 8px;
+  color: var(--ls-muted);
+  font-size: 13px;
+}
+
+/* ── Composer ───────────────────────────────────────────── */
+.ls-composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ls-line);
+  background: var(--ls-surface);
+}
+
+.ls-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--ls-line);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ls-input:focus {
+  outline: 2px solid var(--ls-indigo);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.ls-send {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--ls-indigo);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ls-send:hover:not(:disabled) {
+  background: var(--ls-indigo-dark);
+}
+
+.ls-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

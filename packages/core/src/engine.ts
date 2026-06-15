@@ -62,13 +62,17 @@ export async function processTurn({
   const traceId = idFactory();
   const createdAt = now.toISOString();
 
-  const shadowSignalPromise = captureShadowSignals({
+  const shadowSignal = await captureShadowSignals({
     signalExtractor,
     state,
     userMessage,
     timeoutMs: signalExtractorTimeoutMs,
   });
-  const retrievedMatches = retrieveMatches(userMessage, corpus);
+  const signalBundle =
+    shadowSignal.status === "fulfilled" ? shadowSignal.bundle : undefined;
+  const retrievedMatches = retrieveMatches(userMessage, corpus, {
+    ...(signalBundle ? { signalBundle } : {}),
+  });
   const plannerInput = {
     conversationState: state,
     userMessage,
@@ -83,17 +87,14 @@ export async function processTurn({
     plannerInput,
     retrievedMatches,
     userMessage,
+    signalBundle,
   });
   const validated = applyHandoffStateRules(state, policyValidated, userMessage);
-  const traceSafetyFlags = mergeSafetyFlags(
-    state.safetyFlags,
-    validated.safetyFlags,
-  );
+  const traceSafetyFlags = mergeTraceSafetyFlags(state, validated);
   const effectiveServingMode = deriveEffectiveServingMode(
     validated,
     traceSafetyFlags,
   );
-  const shadowSignal = await shadowSignalPromise;
   const shadowSignalComparison = compareSignalToOutcome({
     signalBundle:
       shadowSignal.status === "fulfilled" ? shadowSignal.bundle : undefined,
@@ -517,7 +518,16 @@ function buildCompletedHandoffFragment(
   code: string,
   reason: string,
 ): ValidatedPlanFragment {
-  const customerMessage = buildCompletedHandoffMessage(validated.safetyFlags);
+  const facts = {
+    ...state.collectedFacts,
+    ...validated.collectedFacts,
+  };
+  const reference = buildSupportReference(state.conversationRef);
+  const customerMessage = buildCompletedHandoffMessage({
+    facts,
+    reference,
+    safetyFlags: validated.safetyFlags,
+  });
   const override: ValidatorOverride = {
     code,
     reason,
@@ -532,7 +542,7 @@ function buildCompletedHandoffFragment(
     ui: {
       primitive: "handoff_confirmation",
       message: customerMessage,
-      reference: state.conversationRef,
+      reference,
     },
     requestedFields: [],
     validatorOverrides: [...validated.validatorOverrides, override],
@@ -567,18 +577,53 @@ function buildMissingHandoffFragment(
   };
 }
 
-function buildCompletedHandoffMessage(
-  safetyFlags: readonly ConversationState["safetyFlags"][number][],
-): string {
+function buildCompletedHandoffMessage({
+  facts,
+  reference,
+  safetyFlags,
+}: {
+  facts: Record<string, string>;
+  reference: string;
+  safetyFlags: readonly ConversationState["safetyFlags"][number][];
+}): string {
+  const contactText = buildContactText(facts);
+  const referenceText = `Your customer services support reference is ${reference}.`;
+
   if (safetyFlags.includes("complaint")) {
-    return "Thanks. I have the details needed, and I will pass the complaint to the Loanslam team so a person can review it.";
+    return `I've passed your complaint to the Loanslam team. ${contactText}\n\n${referenceText}`;
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "Thanks. I have the details needed to pass this to the Loanslam team so a person can help you carefully.";
+    return `I've passed this to the Loanslam team so a person can help you carefully. ${contactText}\n\n${referenceText}`;
   }
 
-  return "Thanks. I have the details needed to pass this to the Loanslam team.";
+  return `I've passed this to the Loanslam team. ${contactText}\n\n${referenceText}`;
+}
+
+function buildContactText(facts: Record<string, string>): string {
+  const email = facts.email?.trim();
+  const phone = facts.phone?.trim();
+
+  if (email && phone) {
+    return `They will contact you on ${email} or ${phone} within the next 48 hours.`;
+  }
+
+  if (email) {
+    return `They will contact you on ${email} within the next 48 hours.`;
+  }
+
+  if (phone) {
+    return `They will contact you on ${phone} within the next 48 hours.`;
+  }
+
+  return "They will contact you using the details you provided within the next 48 hours.";
+}
+
+function buildSupportReference(conversationRef: string): string {
+  const normalized = conversationRef.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  const suffix = normalized.slice(0, 16);
+
+  return suffix ? `LS-${suffix}` : "LS-SUPPORT";
 }
 
 const handoffFieldLabels = {
@@ -760,11 +805,13 @@ async function planAndValidateTurn({
   plannerInput,
   retrievedMatches,
   userMessage,
+  signalBundle,
 }: {
   planner: ProcessTurnInput["planner"];
   plannerInput: Parameters<TurnPlanner["planTurn"]>[0];
   retrievedMatches: ReturnType<typeof retrieveMatches>;
   userMessage: string;
+  signalBundle: SignalBundle | undefined;
 }): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
   let plan: TurnPlan;
 
@@ -813,6 +860,7 @@ async function planAndValidateTurn({
     plan,
     validated: validateTurnPlan(plan, retrievedMatches, {
       userMessage,
+      ...(signalBundle ? { signalBundle } : {}),
     }),
   };
 }
@@ -882,6 +930,22 @@ function mergeState({
       finalAction === "escalate" ||
       finalAction === "create_ticket",
   };
+}
+
+function mergeTraceSafetyFlags(
+  state: ConversationState,
+  validated: ValidatedPlanFragment,
+): ConversationState["safetyFlags"] {
+  if (
+    validated.finalAction === "answer" ||
+    validated.finalAction === "refuse" ||
+    validated.finalAction === "fallback" ||
+    validated.finalAction === "ask_clarifying_question"
+  ) {
+    return validated.safetyFlags;
+  }
+
+  return mergeSafetyFlags(state.safetyFlags, validated.safetyFlags);
 }
 
 function mergeSafetyFlags(

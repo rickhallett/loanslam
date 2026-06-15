@@ -105,12 +105,39 @@ const answerSignalBundle: SignalBundle = {
   parserNotes: [],
 };
 
+const accountSpecificSignalBundle: SignalBundle = {
+  primaryIntent: "account_specific",
+  secondaryIntents: [],
+  recommendedServingMode: "handoff_account_specific",
+  safetySignals: ["account_specific_request"],
+  retrievalQueries: ["account support ticket reference"],
+  routeHints: ["handoff"],
+  uncertainty: 0.1,
+  negatedOrCorrected: true,
+  parserNotes: ["The customer explicitly corrected a hardship reading."],
+};
+
 const signalMetadata = {
   provider: "inline",
   model: "signal-test-model",
   promptVersion: "signal-test-prompt",
   schemaVersion: "phase0-signals-schema-v1",
 };
+
+function signalExtractorFor(bundle: SignalBundle): SignalExtractor {
+  return {
+    metadata: signalMetadata,
+    async extractSignals() {
+      return bundle;
+    },
+  };
+}
+
+function sequentialIdFactory(prefix = "id") {
+  let count = 0;
+
+  return () => `${prefix}-${++count}`;
+}
 
 function completedHandoffState(
   overrides: Partial<ConversationState> = {},
@@ -272,6 +299,145 @@ describe("processTurn", () => {
         reasonCodes: ["serving_mode_match", "safety_flags_match"],
       },
     });
+  });
+
+  it("uses structured signal evidence to suppress a negated hardship route during handoff correction", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage: "I can pass this ticket lookup to the team.",
+          ui: {
+            primitive: "intake_form",
+            message: "I can pass this ticket lookup to the team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "ticket_lookup_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Continue the account-specific ticket lookup.",
+        };
+      },
+    };
+    const routeCorpus: CorpusItem[] = [
+      ...corpus,
+      {
+        id: "cant-pay-this-month",
+        question: "I can't make this month's payment.",
+        question_variants: ["I cannot pay this month"],
+        serving_mode: "route_vulnerability",
+        route_reason:
+          "Repayment difficulty is a vulnerability signal and needs human support.",
+        tags: ["financial-difficulty", "vulnerability", "cant-pay"],
+      },
+    ];
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "I do not mean I cannot pay.",
+      planner,
+      signalExtractor: signalExtractorFor(accountSpecificSignalBundle),
+      corpus: routeCorpus,
+      now: new Date("2026-06-13T12:07:28.000Z"),
+      idFactory: sequentialIdFactory("ticket-correction"),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
+    expect(result.trace.safetyFlags).not.toContain("vulnerability");
+    expect(result.trace.safetyFlags).not.toContain("hardship");
+    expect(result.validatorOverrides).not.toContainEqual(
+      expect.objectContaining({ code: "vulnerability_route_match" }),
+    );
+  });
+
+  it("uses structured signal evidence to recover from a false hardship correction to a public FAQ", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage:
+            "Loanslam is a regulated lender offering online loan applications.",
+          ui: {
+            primitive: "message",
+            message:
+              "Loanslam is a regulated lender offering online loan applications.",
+            links: [],
+          },
+          reasonCode: "public_company_answer",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["what-is-loanslam"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Answered the public company question.",
+        };
+      },
+    };
+    const routeCorpus: CorpusItem[] = [
+      {
+        id: "what-is-loanslam",
+        question: "What is Loanslam?",
+        question_variants: ["Who is Loanslam?", "What is this company?"],
+        serving_mode: "answer",
+        answer_text:
+          "Loanslam is a regulated lender offering online loan applications.",
+        links: [],
+      },
+      {
+        id: "struggling-financially-general",
+        question: "I'm struggling financially.",
+        question_variants: ["I am struggling to pay"],
+        serving_mode: "route_vulnerability",
+        route_reason:
+          "General financial hardship is a vulnerability signal and needs human support.",
+        tags: ["financial-difficulty", "hardship", "vulnerability"],
+      },
+      {
+        id: "gambling-related-difficulty",
+        question: "I've got a gambling problem and I'm struggling with money.",
+        question_variants: ["I am struggling to pay"],
+        serving_mode: "route_vulnerability",
+        route_reason:
+          "Gambling-related harm is a vulnerability indicator requiring human support.",
+        tags: ["gambling", "vulnerability", "hardship"],
+      },
+    ];
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "No, I am not struggling to pay. What is Loanslam?",
+      planner,
+      signalExtractor: signalExtractorFor({
+        ...answerSignalBundle,
+        retrievalQueries: ["company regulated lender"],
+        negatedOrCorrected: true,
+      }),
+      corpus: routeCorpus,
+      now: new Date("2026-06-13T12:07:29.000Z"),
+      idFactory: sequentialIdFactory("false-correction"),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.customerMessage).toMatch(/regulated lender/i);
+    expect(result.trace.effectiveServingMode).toBe("answer");
+    expect(result.trace.retrievedMatches[0]).toMatchObject({
+      itemId: "what-is-loanslam",
+      servingMode: "answer",
+    });
+    expect(result.trace.safetyFlags).not.toContain("vulnerability");
+    expect(result.trace.safetyFlags).not.toContain("hardship");
   });
 
   it("records shadow signal failures without changing final behavior", async () => {
@@ -602,8 +768,17 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toMatch(/below|complete/i);
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "conv-1",
+      reference: "LS-CONV1",
     });
+    expect(result.customerMessage).toContain(
+      "I've passed this to the Loanslam team.",
+    );
+    expect(result.customerMessage).toContain(
+      "They will contact you on bob@example.com or 07845729939 within the next 48 hours.",
+    );
+    expect(result.customerMessage).toContain(
+      "Your customer services support reference is LS-CONV1.",
+    );
     expect(result.state.requestedFields).toEqual([]);
     expect(result.state.lastAction).toBe("create_ticket");
     expect(result.validatorOverrides).toContainEqual(
@@ -683,7 +858,7 @@ describe("processTurn", () => {
             primitive: "handoff_confirmation",
             message:
               "Thanks, Alex. I will pass your email update request to the team.",
-            reference: "conv-1",
+            reference: "LS-CONV1",
           },
           reasonCode: "premature_handoff_complete",
           collectedFacts: {
@@ -781,8 +956,14 @@ describe("processTurn", () => {
     });
 
     expect(result.finalAction).toBe("create_ticket");
-    expect(result.customerMessage).toBe(
-      "Thanks. I have the details needed to pass this to the Loanslam team.",
+    expect(result.customerMessage).toContain(
+      "I've passed this to the Loanslam team.",
+    );
+    expect(result.customerMessage).toContain(
+      "They will contact you on alex.test@example.com or 07123 456789 within the next 48 hours.",
+    );
+    expect(result.customerMessage).toContain(
+      "Your customer services support reference is LS-CONV1.",
     );
     expect(result.customerMessage).not.toContain("final payment");
     expect(result.state.lastAction).toBe("create_ticket");
@@ -838,7 +1019,7 @@ describe("processTurn", () => {
     expect(result.finalAction).toBe("answer");
     expect(result.customerMessage).toBe("You can apply online.");
     expect(result.trace.effectiveServingMode).toBe("answer");
-    expect(result.trace.safetyFlags).toContain("vulnerability");
+    expect(result.trace.safetyFlags).not.toContain("vulnerability");
     expect(result.state.safetyFlags).toContain("vulnerability");
     expect(result.validatorOverrides).not.toContainEqual(
       expect.objectContaining({
@@ -974,7 +1155,8 @@ describe("processTurn", () => {
     expect(result.customerMessage).toBe("You can apply online.");
     expect(result.customerMessage).not.toMatch(/details needed/i);
     expect(result.trace.effectiveServingMode).toBe("answer");
-    expect(result.trace.safetyFlags).toEqual(
+    expect(result.trace.safetyFlags).toEqual([]);
+    expect(result.state.safetyFlags).toEqual(
       expect.arrayContaining(["account_specific_request", "change_request"]),
     );
   });
@@ -1014,8 +1196,11 @@ describe("processTurn", () => {
     expect(result.customerMessage).toMatch(/Loanslam team/i);
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "conv-1",
+      reference: "LS-CONV1",
     });
+    expect(result.customerMessage).toContain(
+      "Your customer services support reference is LS-CONV1.",
+    );
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining(["complaint"]),
     );
@@ -1122,8 +1307,11 @@ describe("processTurn", () => {
     expect(result.finalAction).toBe("create_ticket");
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "conv-1",
+      reference: "LS-CONV1",
     });
+    expect(result.customerMessage).toContain(
+      "They will contact you on alex.test@example.com or 07123 456789 within the next 48 hours.",
+    );
     expect(result.state.collectedFacts).toMatchObject({
       fullName: "Alex Test",
       dateOfBirth: "1 January 1990",
@@ -1178,6 +1366,9 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toBe(
       "Thanks. I have the details needed to pass this to the Loanslam team.",
     );
+    expect(result.customerMessage).toContain(
+      "Your customer services support reference is LS-CONV1.",
+    );
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining(["distress", "hardship"]),
     );
@@ -1194,7 +1385,7 @@ describe("processTurn", () => {
             primitive: "handoff_confirmation",
             message:
               "All the required details are already on file. I am going to submit the request to update the address on your application now.",
-            reference: "conv-1",
+            reference: "LS-CONV1",
           },
           reasonCode: "unsafe_mutation_claim",
           collectedFacts: {},

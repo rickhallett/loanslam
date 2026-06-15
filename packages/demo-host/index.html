@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us | LoanSlam</title>
+    <link rel="icon" href="/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="demo-badge">Demo prototype — not a real lender</div>
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <header class="site-header">
+      <div class="container header-row">
+        <a class="brand" href="/" aria-label="LoanSlam home">
+          <img src="/logo.svg" alt="" width="36" height="36" />
+          <span class="brand-name">LoanSlam</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <ul>
+            <li><a href="#">Loans</a></li>
+            <li><a href="#">How it works</a></li>
+            <li><a href="#">Help</a></li>
+            <li>
+              <a href="#" class="nav-current" aria-current="page">Contact</a>
+            </li>
+          </ul>
+          <a href="#" class="btn-apply">Apply now</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ── Hero ───────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="container">
+        <p class="hero-eyebrow">We're here to help</p>
+        <h1>Clear answers,<br />friendly loans.</h1>
+        <p class="hero-sub">
+          Questions about applying, repayments, or managing your loan? Reach the
+          right team below — or ask our assistant in the corner for a quick
+          hand.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Contact ────────────────────────────────────────────── -->
+    <main class="site-main" id="main-content">
+      <div class="container">
+        <h2 class="section-title">Get in touch</h2>
+
+        <div id="ls-contact-section" class="contact-grid">
+          <article class="contact-card contact-card--new" data-type="new-loan">
+            <span class="card-tag">Suggested</span>
+            <h3>Looking for a new loan?</h3>
+            <p>Our team can talk you through your options.</p>
+            <dl>
+              <dt>Call</dt>
+              <dd><a href="tel:08000000001">0800 000 0001</a></dd>
+              <dt>Email</dt>
+              <dd>
+                <a href="mailto:hello@loanslam.example"
+                  >hello@loanslam.example</a
+                >
+              </dd>
+            </dl>
+          </article>
+
+          <article
+            class="contact-card contact-card--support"
+            data-type="vulnerability"
+          >
+            <span class="card-tag">Suggested</span>
+            <h3>Struggling with repayments?</h3>
+            <p>If money is tight, we'll work with you. No judgement.</p>
+            <dl>
+              <dt>Call</dt>
+              <dd><a href="tel:08000000002">0800 000 0002</a></dd>
+              <dt>Email</dt>
+              <dd>
+                <a href="mailto:support@loanslam.example"
+                  >support@loanslam.example</a
+                >
+              </dd>
+            </dl>
+          </article>
+
+          <article class="contact-card contact-card--manage" data-type="manage">
+            <span class="card-tag">Suggested</span>
+            <h3>Manage an existing loan</h3>
+            <p>Update your details or settle your balance.</p>
+            <dl>
+              <dt>Call</dt>
+              <dd><a href="tel:08000000003">0800 000 0003</a></dd>
+              <dt>Email</dt>
+              <dd>
+                <a href="mailto:accounts@loanslam.example"
+                  >accounts@loanslam.example</a
+                >
+              </dd>
+            </dl>
+          </article>
+        </div>
+
+        <p class="chat-hint">
+          Prefer to chat? Tap the assistant in the bottom-right corner.
+        </p>
+      </div>
+    </main>
+
+    <!-- ── Footer ─────────────────────────────────────────────── -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <a class="brand brand--footer" href="/" aria-label="LoanSlam home">
+            <img src="/logo.svg" alt="" width="32" height="32" />
+            <span class="brand-name">LoanSlam</span>
+          </a>
+          <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Complaints</a>
+          </div>
+        </div>
+        <p class="footer-legal">
+          LoanSlam is a fictional company used only to demonstrate an embedded
+          support assistant. It is not a real lender, offers no real products,
+          and the contact details on this page are placeholders.
+        </p>
+      </div>
+    </footer>
+
+    <!-- ── Widget injection (mirrors a real CMS plugin embed) ──── -->
+    <script>
+      (function () {
+        var mode =
+          new URLSearchParams(location.search).get("widget") || "local";
+        window.loanslamChatConfig = {
+          widgetUrl:
+            mode === "remote"
+              ? "https://REPLACE_WITH_DEPLOYED_WIDGET"
+              : "http://127.0.0.1:5174",
+        };
+      })();
+    </script>
+    <script src="/loader.js"></script>
+  </body>
+</html>

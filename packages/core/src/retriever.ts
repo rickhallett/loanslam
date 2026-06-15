@@ -1,4 +1,10 @@
-import type { CorpusItem, RetrievedMatch } from "@loanslam/contracts";
+import type {
+  CorpusItem,
+  RetrievedMatch,
+  SafetyFlag,
+  ServingMode,
+  SignalBundle,
+} from "@loanslam/contracts";
 
 import {
   detectComplaintRouteSignal,
@@ -195,6 +201,7 @@ const adviceNegationPattern =
 
 export interface RetrieveMatchesOptions {
   limit?: number;
+  signalBundle?: SignalBundle;
 }
 
 export function normalizeSearchTerms(text: string): string[] {
@@ -220,7 +227,14 @@ export function retrieveMatches(
   items: readonly CorpusItem[],
   options: RetrieveMatchesOptions = {},
 ): RetrievedMatch[] {
-  const queryTerms = normalizeSearchTerms(query);
+  const queryTerms = normalizeSearchTerms(
+    [
+      query,
+      ...(options.signalBundle?.retrievalQueries ?? []),
+      ...(options.signalBundle?.routeHints ?? []),
+    ].join(" "),
+  );
+  const signalServingMode = signalServingModeEvidence(options.signalBundle);
   const queryHasSafetyCue = queryTerms.some((term) => safetyCueTerms.has(term));
   const queryLooksLikeAdviceRequest = queryTerms.some((term) =>
     adviceCueTerms.has(term),
@@ -260,6 +274,8 @@ export function retrieveMatches(
         matchedTerms,
         queryLooksLikeActiveSafetyEvent,
         queryHasAccountSpecificRouteSignal,
+        signalServingMode,
+        options.signalBundle,
       )
     ) {
       return [];
@@ -295,13 +311,18 @@ export function retrieveMatches(
       item.intent === "application-status"
         ? 10
         : 0;
+    const signalBoost =
+      signalServingMode === item.serving_mode && matchedTerms.length > 0
+        ? 50
+        : 0;
     const score =
       lexicalScore +
       safetyBoost +
       excludedAdviceBoost +
       eligibilityOutcomeBoost +
       applicationStartBoost -
-      accountStatusPenalty;
+      accountStatusPenalty +
+      signalBoost;
 
     if (score <= 0) {
       return [];
@@ -376,7 +397,16 @@ function hasRequiredPolicyRouteEvidence(
   matchedTerms: readonly string[],
   queryLooksLikeActiveSafetyEvent: boolean,
   queryHasAccountSpecificRouteSignal: boolean,
+  signalServingMode: ServingMode | null,
+  signalBundle: SignalBundle | undefined,
 ): boolean {
+  if (
+    signalServingMode &&
+    !signalAllowsServingMode(item.serving_mode, signalServingMode, signalBundle)
+  ) {
+    return false;
+  }
+
   if (item.serving_mode === "route_vulnerability") {
     if (item.intent === "complaint") {
       return detectComplaintRouteSignal(query);
@@ -417,6 +447,73 @@ function hasRequiredPolicyRouteEvidence(
   }
 
   return true;
+}
+
+function signalServingModeEvidence(
+  signalBundle: SignalBundle | undefined,
+): ServingMode | null {
+  return signalBundle?.recommendedServingMode ?? null;
+}
+
+function signalAllowsServingMode(
+  itemServingMode: ServingMode,
+  signalServingMode: ServingMode,
+  signalBundle: SignalBundle | undefined,
+): boolean {
+  if (itemServingMode === "answer") {
+    return true;
+  }
+
+  if (signalServingMode === "answer") {
+    return false;
+  }
+
+  if (itemServingMode !== signalServingMode) {
+    return false;
+  }
+
+  if (itemServingMode === "route_vulnerability") {
+    return (
+      signalServingMode === "route_vulnerability" &&
+      hasActiveVulnerabilitySignal(signalBundle)
+    );
+  }
+
+  return true;
+}
+
+const vulnerabilitySignalFlags = [
+  "vulnerability",
+  "distress",
+  "hardship",
+  "complaint",
+  "legal_threat",
+  "accessibility_need",
+] as const satisfies readonly SafetyFlag[];
+
+function hasAnySignalFlag(
+  signalBundle: SignalBundle | undefined,
+  flags: readonly SafetyFlag[],
+): boolean {
+  return Boolean(
+    signalBundle?.safetySignals.some((flag) => flags.includes(flag)),
+  );
+}
+
+function hasActiveVulnerabilitySignal(
+  signalBundle: SignalBundle | undefined,
+): boolean {
+  if (!signalBundle || signalBundle.negatedOrCorrected) {
+    return false;
+  }
+
+  return (
+    hasAnySignalFlag(signalBundle, vulnerabilitySignalFlags) ||
+    signalBundle.primaryIntent === "vulnerability" ||
+    signalBundle.primaryIntent === "complaint" ||
+    signalBundle.primaryIntent === "legal" ||
+    signalBundle.primaryIntent === "language_barrier"
+  );
 }
 
 function normalizeTerm(term: string): string {

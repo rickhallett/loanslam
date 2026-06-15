@@ -17,8 +17,16 @@
     "core:stochastic": "tsx packages/core/src/cli.ts stochastic",
     "core:chat": "tsx packages/core/src/cli.ts chat",
     "core:serve": "tsx packages/core/src/cli.ts serve",
-    "lab-ui:dev": "npm --workspace @loanslam/lab-ui run dev",
-    "lab-ui:build": "npm --workspace @loanslam/lab-ui run build"
+    "lab-ui:dev": "sh -c 'npm --prefix packages/lab-ui run dev -- \"$@\"' --",
+    "lab-ui:build": "npm --workspace @loanslam/lab-ui run build",
+    "demo-widget:dev": "npm --workspace @loanslam/demo-widget run dev",
+    "demo-widget:build": "npm --workspace @loanslam/demo-widget run build",
+    "demo-host:dev": "npm --workspace @loanslam/demo-host run dev",
+    "demo-host:build": "npm --workspace @loanslam/demo-host run build",
+    "review-widget:dev": "npm --workspace @loanslam/review-widget run dev",
+    "review-widget:build": "npm --workspace @loanslam/review-widget run build",
+    "review-host:dev": "npm --workspace @loanslam/review-host run dev",
+    "review-host:build": "npm --workspace @loanslam/review-host run build"
   },
   "dependencies": {
     "openai": "^6.9.1",
