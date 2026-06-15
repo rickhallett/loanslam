@@ -237,6 +237,32 @@ POST /sessions/:conversationRef/reset
 It exists so reviewers can get a feel for the engine over HTTP without pulling in
 SQL Server, auth, cookies, CSRF, ticket webhooks, widget state, or deployment.
 
+Use `mcp-lab-api` when you want an agent to operate that same lab API through MCP:
+
+```bash
+just mcp-lab-api
+```
+
+Configure the MCP client to launch the server over stdio from this repository:
+
+```json
+{
+  "mcpServers": {
+    "loanslam-lab-api": {
+      "command": "npm",
+      "args": ["--silent", "run", "mcp:lab-api"],
+      "cwd": "/Users/mrkai/code/loanslam/.claude/worktrees/mcp-turbo"
+    }
+  }
+}
+```
+
+The server is local evidence tooling. It wraps `POST /sessions`,
+`POST /sessions/:conversationRef/messages`, `GET /sessions/:conversationRef`,
+and `POST /sessions/:conversationRef/reset`; it does not expose shell access,
+environment variables, browser automation, production ticketing, or customer
+record mutation.
+
 Use `lab` when you want the local API and Vue engineer console together:
 
 ```bash
