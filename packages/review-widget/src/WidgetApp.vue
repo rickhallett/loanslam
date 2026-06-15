@@ -22,6 +22,8 @@ import {
   onHostMessage,
   requestClose,
   sendContext,
+  sendIntakeTelemetry,
+  sendTurnTelemetry,
 } from "./hostBridge";
 
 // This is the original review widget Sam saw (MAL-branded chrome), but the
@@ -45,8 +47,10 @@ const sessionRef = ref<string | null>(null);
 const isSending = ref(false);
 const isChatComplete = ref(false);
 const errorMessage = ref("");
+const composerEl = ref<InstanceType<typeof Composer> | null>(null);
 
 let nextId = 0;
+let telemetryTurn = 0;
 
 function pushMessage(
   role: ChatMessage["role"],
@@ -69,6 +73,7 @@ function handleResult(result: ValidatedTurnResult): void {
   pushMessage("assistant", result.customerMessage, result.ui);
   isChatComplete.value = isTerminalResult(result);
   sendContext(contextForTurn(result));
+  sendTurnTelemetry(result, (telemetryTurn += 1));
 }
 
 async function submit(text: string): Promise<void> {
@@ -114,6 +119,7 @@ async function onIntakeSubmit(
     pushMessage("customer", "Shared my contact details.");
     pushMessage("assistant", result.customerMessage, result.ui);
     isChatComplete.value = true;
+    sendIntakeTelemetry(result, (telemetryTurn += 1));
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -175,6 +181,10 @@ let stopHostListener: (() => void) | null = null;
 stopHostListener = onHostMessage((message) => {
   if (message.type === "example" && typeof message.prompt === "string") {
     void submit(message.prompt);
+  } else if (message.type === "open") {
+    // Host revealed the panel — put the cursor in the composer so the reviewer
+    // can type immediately after every page load.
+    composerEl.value?.focusInput();
   }
 });
 
@@ -234,7 +244,12 @@ onUnmounted(() => {
         Prototype — conversations are recorded. Please use test details only.
       </p>
 
-      <Composer :sending="isSending" :locked="isChatComplete" @send="submit" />
+      <Composer
+        ref="composerEl"
+        :sending="isSending"
+        :locked="isChatComplete"
+        @send="submit"
+      />
     </section>
   </main>
 </template>

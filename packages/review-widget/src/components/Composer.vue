@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
 
 // `sending` = a turn is in flight; `locked` = terminal handoff state. To keep the
 // keyboard cursor in the input across a turn: (1) never disable the input while
@@ -21,14 +21,26 @@ function submit(): void {
   text.value = "";
 }
 
+function focusInput(): void {
+  void nextTick(() => inputEl.value?.focus());
+}
+
 watch(
   () => props.sending,
   (now, prev) => {
     if (prev && !now && !props.locked) {
-      void nextTick(() => inputEl.value?.focus());
+      focusInput();
     }
   },
 );
+
+// Focus on mount covers a directly-loaded widget; the host re-triggers focus
+// via the "open" message once the (initially hidden) panel is shown.
+onMounted(() => {
+  focusInput();
+});
+
+defineExpose({ focusInput });
 </script>
 
 <template>
