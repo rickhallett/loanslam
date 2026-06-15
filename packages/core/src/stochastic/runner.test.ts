@@ -5,6 +5,8 @@ import { join } from "node:path";
 import type {
   CorpusItem,
   PlannerMetadata,
+  SignalBundle,
+  SignalExtractor,
   TurnPlanner,
 } from "@loanslam/contracts";
 import { describe, expect, it } from "vitest";
@@ -86,6 +88,57 @@ describe("runStochasticTestSimulator", () => {
       result.traces.every((trace) => trace.scenarioPath === scenarioPath),
     ).toBe(true);
     expect(result.run.scenarioCount).toBe(1);
+  });
+
+  it("propagates shadow signal evidence into STS trace artifacts", async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), "loanslam-sts-signals-"));
+    const signalBundle: SignalBundle = {
+      primaryIntent: "answer",
+      secondaryIntents: [],
+      recommendedServingMode: "answer",
+      safetySignals: [],
+      retrievalQueries: ["apply online"],
+      routeHints: [],
+      uncertainty: 0.2,
+      negatedOrCorrected: false,
+      parserNotes: [],
+    };
+    const signalExtractor: SignalExtractor = {
+      async extractSignals() {
+        return signalBundle;
+      },
+    };
+
+    const result = await runStochasticTestSimulator({
+      seed: "signals",
+      profile: "smoke",
+      scenarioPath: generateStochasticScenarios({
+        seed: "signals",
+        profile: "smoke",
+      })[0]?.scenarioPath,
+      outputDir,
+      corpus,
+      planner: testPlanner(),
+      signalExtractor,
+      now: new Date("2026-06-14T12:00:00.000Z"),
+      idFactory: sequenceIds(),
+    });
+
+    const traceLine = readFileSync(result.paths.tracesJsonl, "utf8")
+      .trim()
+      .split("\n")[0];
+    const trace = JSON.parse(traceLine ?? "{}");
+
+    expect(result.traces[0]).toMatchObject({
+      shadowSignalStatus: "fulfilled",
+      shadowSignalBundle: signalBundle,
+      shadowSignalComparison: expect.objectContaining({ parseStatus: "ok" }),
+    });
+    expect(trace).toMatchObject({
+      shadowSignalStatus: "fulfilled",
+      shadowSignalBundle: signalBundle,
+      shadowSignalComparison: expect.objectContaining({ parseStatus: "ok" }),
+    });
   });
 
   it("raises a clear missing scenario error with seed, profile, and path", async () => {

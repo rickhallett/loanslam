@@ -53,11 +53,13 @@ type PlannerFactory = () => TurnPlanner & {
   metadata: OpenAiTurnPlanner["metadata"];
 };
 
+type CliEnv = Record<string, string | undefined>;
+
 const defaultTraceDir = "artifacts/phase0";
 
 export async function runCli(
   args = process.argv.slice(2),
-  env = process.env,
+  env: CliEnv = process.env,
   plannerFactory: PlannerFactory = () =>
     new OpenAiTurnPlanner({ config: loadOpenAiPlannerConfig(env) }),
   options: CliOptions = {},
@@ -70,31 +72,31 @@ export async function runCli(
     }
 
     if (command === "turn") {
-      return await runTurn(rest, plannerFactory);
+      return await runTurn(rest, env, plannerFactory);
     }
 
     if (command === "simulate") {
-      return await runSimulation(rest, plannerFactory);
+      return await runSimulation(rest, env, plannerFactory);
     }
 
     if (command === "compare") {
-      return await runComparison(rest, plannerFactory);
+      return await runComparison(rest, env, plannerFactory);
     }
 
     if (command === "persona-simulate") {
-      return await runPersonaSimulation(rest, plannerFactory);
+      return await runPersonaSimulation(rest, env, plannerFactory);
     }
 
     if (command === "stochastic") {
-      return await runStochasticSimulation(rest, plannerFactory);
+      return await runStochasticSimulation(rest, env, plannerFactory);
     }
 
     if (command === "chat") {
-      return await runInteractiveChat(rest, plannerFactory, options);
+      return await runInteractiveChat(rest, env, plannerFactory, options);
     }
 
     if (command === "serve") {
-      return await runServer(rest, plannerFactory);
+      return await runServer(rest, env, plannerFactory);
     }
 
     return fail(`Unknown command: ${command}\n\n${helpText()}`);
@@ -119,8 +121,15 @@ function createSignalExtractor(
   return new OpenAiSignalExtractor({ config });
 }
 
+function signalExtractorInput(
+  signalExtractor: OpenAiSignalExtractor | undefined,
+): { signalExtractor?: OpenAiSignalExtractor } {
+  return signalExtractor ? { signalExtractor } : {};
+}
+
 async function runTurn(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   const normalizedArgs = stripOptionSeparator(args);
@@ -133,12 +142,12 @@ async function runTurn(
   }
 
   const planner = plannerFactory();
-  const signalExtractor = createSignalExtractor();
+  const signalExtractor = createSignalExtractor(env);
   const result = await processTurn({
     state: emptyConversationState("cli-turn"),
     userMessage: message,
     planner,
-    signalExtractor,
+    ...(signalExtractor ? { signalExtractor } : {}),
     corpus: loadCorpusFromFile().items,
   });
 
@@ -147,18 +156,19 @@ async function runTurn(
 
 async function runSimulation(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   const outputPath =
     readOption(args, "--trace-output") ??
     join(defaultTraceDir, `traces-${Date.now()}.jsonl`);
   const planner = plannerFactory();
-  const signalExtractor = createSignalExtractor();
+  const signalExtractor = createSignalExtractor(env);
   const reports = await runJourneySuite({
     journeys: journeyFixtures,
     corpus: loadCorpusFromFile().items,
     planner,
-    signalExtractor,
+    ...(signalExtractor ? { signalExtractor } : {}),
     traceOutputPath: outputPath,
   });
   const passed = reports.filter((report) => report.passed).length;
@@ -180,17 +190,18 @@ async function runSimulation(
 
 async function runComparison(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   const outputPath =
     readOption(args, "--output") ??
     join(defaultTraceDir, `comparison-${Date.now()}.json`);
   const planner = plannerFactory();
-  const signalExtractor = createSignalExtractor();
+  const signalExtractor = createSignalExtractor(env);
   const reports = await runJourneySuite({
     journeys: journeyFixtures,
     corpus: loadCorpusFromFile().items,
-    signalExtractor,
+    ...(signalExtractor ? { signalExtractor } : {}),
     planner,
     traceOutputPath: outputPath.replace(/\.json$/, ".jsonl"),
   });
@@ -208,6 +219,7 @@ async function runComparison(
 
 async function runPersonaSimulation(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   const transcriptOutputPath =
@@ -217,11 +229,11 @@ async function runPersonaSimulation(
     readOption(args, "--report-output") ??
     join(defaultTraceDir, `persona-report-${Date.now()}.json`);
   const planner = plannerFactory();
-  const signalExtractor = createSignalExtractor();
+  const signalExtractor = createSignalExtractor(env);
   const transcripts = await runPersonaSuite({
     scenarios: defaultPersonaScenarios,
     corpus: loadCorpusFromFile().items,
-    signalExtractor,
+    ...(signalExtractor ? { signalExtractor } : {}),
     planner,
   });
   const report = buildPersonaReport({
@@ -255,6 +267,7 @@ async function runPersonaSimulation(
 
 async function runStochasticSimulation(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   const options = parseStochasticArgs(args);
@@ -277,7 +290,7 @@ async function runStochasticSimulation(
       : {}),
     corpus: loadCorpusFromFile().items,
     planner: plannerFactory(),
-    signalExtractor: createSignalExtractor(),
+    ...signalExtractorInput(createSignalExtractor(env)),
   });
 
   if (options.json) {
@@ -297,6 +310,7 @@ async function runStochasticSimulation(
 
 async function runInteractiveChat(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
   options: CliOptions,
 ): Promise<CliResult> {
@@ -304,7 +318,7 @@ async function runInteractiveChat(
   const io = options.io ?? createTerminalIo();
   const outputLines: string[] = [];
   let state = emptyConversationState("cli-chat");
-  const signalExtractor = createSignalExtractor();
+  const signalExtractor = createSignalExtractor(env);
 
   try {
     writeLine(io, outputLines, "Loanslam Phase 0 chat. Type /exit to leave.");
@@ -326,7 +340,7 @@ async function runInteractiveChat(
         state,
         userMessage: trimmed,
         planner: plannerFactory(),
-        signalExtractor,
+        ...(signalExtractor ? { signalExtractor } : {}),
         corpus: loadCorpusFromFile().items,
       });
       state = result.state;
@@ -362,6 +376,7 @@ async function runInteractiveChat(
 
 async function runServer(
   args: string[],
+  env: CliEnv,
   plannerFactory: PlannerFactory,
 ): Promise<CliResult> {
   if (args.includes("--help") || args.includes("-h")) {
@@ -377,7 +392,7 @@ async function runServer(
   const server = createLabServer({
     corpus: loadCorpusFromFile().items,
     plannerFactory,
-    signalExtractor: createSignalExtractor(),
+    ...signalExtractorInput(createSignalExtractor(env)),
   });
 
   await new Promise<void>((resolve) => {

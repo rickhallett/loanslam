@@ -3,15 +3,18 @@ import type {
   SignalExtractor,
   SignalInput,
 } from "@loanslam/contracts";
-import { signalBundleSchema } from "@loanslam/contracts";
+import {
+  safetyFlagSchema,
+  servingModeSchema,
+  signalBundleSchema,
+  signalIntentSchema,
+} from "@loanslam/contracts";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
 import type { OpenAiSignalExtractorConfig } from "./config";
-import {
-  buildSignalExtractorPrompt,
-  parseSignalBundle,
-} from "./prompt";
+import { buildSignalExtractorPrompt, parseSignalBundle } from "./prompt";
 
 export interface OpenAiSignalExtractorRequest {
   model: string;
@@ -30,7 +33,10 @@ export interface OpenAiSignalExtractorRequest {
 
 export interface OpenAiSignalExtractorClient {
   responses: {
-    parse(request: OpenAiSignalExtractorRequest): Promise<{
+    parse(
+      request: OpenAiSignalExtractorRequest,
+      options?: { signal?: AbortSignal },
+    ): Promise<{
       output_parsed: unknown;
     }>;
   };
@@ -51,7 +57,9 @@ export class OpenAiSignalExtractor implements SignalExtractor {
     this.config = options.config;
     this.client =
       options.client ??
-      (new OpenAI({ apiKey: options.config.apiKey }) as OpenAiSignalExtractorClient);
+      (new OpenAI({
+        apiKey: options.config.apiKey,
+      }) as OpenAiSignalExtractorClient);
     this.metadata = {
       provider: this.config.provider,
       model: this.config.model,
@@ -62,21 +70,41 @@ export class OpenAiSignalExtractor implements SignalExtractor {
 
   async extractSignals(input: SignalInput): Promise<SignalBundle> {
     const prompt = buildSignalExtractorPrompt(input);
-    const response = await this.client.responses.parse({
-      model: this.config.model,
-      instructions: prompt.system,
-      input: prompt.user,
-      text: {
-        format: zodTextFormat(signalBundleSchema, "signal_bundle"),
+    const response = await this.client.responses.parse(
+      {
+        model: this.config.model,
+        instructions: prompt.system,
+        input: prompt.user,
+        text: {
+          format: zodTextFormat(
+            openAiSignalBundleOutputSchema,
+            "signal_bundle",
+          ),
+        },
+        metadata: {
+          provider: this.config.provider,
+          promptVersion: this.config.promptVersion,
+          signalSchemaVersion: "phase0-signals-schema-v1",
+        },
+        store: false,
       },
-      metadata: {
-        provider: this.config.provider,
-        promptVersion: this.config.promptVersion,
-        signalSchemaVersion: "phase0-signals-schema-v1",
-      },
-      store: false,
-    });
+      input.abortSignal ? { signal: input.abortSignal } : undefined,
+    );
 
     return signalBundleSchema.parse(parseSignalBundle(response.output_parsed));
   }
 }
+
+const openAiStringSchema = z.string();
+
+const openAiSignalBundleOutputSchema = z.object({
+  primaryIntent: signalIntentSchema,
+  secondaryIntents: z.array(signalIntentSchema),
+  recommendedServingMode: servingModeSchema.nullable(),
+  safetySignals: z.array(safetyFlagSchema),
+  retrievalQueries: z.array(openAiStringSchema),
+  routeHints: z.array(openAiStringSchema),
+  uncertainty: z.number(),
+  negatedOrCorrected: z.boolean(),
+  parserNotes: z.array(openAiStringSchema),
+});

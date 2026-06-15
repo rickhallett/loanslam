@@ -90,7 +90,7 @@ export async function runJourney({
       state,
       userMessage,
       planner: turnPlanner,
-      signalExtractor,
+      ...(signalExtractor ? { signalExtractor } : {}),
       corpus,
       now: resolveNow(now),
       idFactory,

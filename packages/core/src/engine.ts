@@ -4,13 +4,15 @@ import type {
   ConversationState,
   CorpusItem,
   IntakeField,
-  SignalBundle,
-  SignalExtractionComparison,
   PlannerMetadata,
+  SignalBundle,
+  SignalExtractionStatus,
+  SignalExtractor,
+  SignalExtractorMetadata,
+  SignalExtractionComparison,
   ServingMode,
   TurnPlanner,
   TurnPlan,
-  SignalExtractor,
   ValidatorOverride,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
@@ -37,7 +39,10 @@ export interface ProcessTurnInput {
   idFactory?: () => string;
   journeyId?: string;
   turnIndex?: number;
+  signalExtractorTimeoutMs?: number;
 }
+
+const defaultSignalExtractorTimeoutMs = 1_500;
 
 export async function processTurn({
   state,
@@ -49,6 +54,7 @@ export async function processTurn({
   idFactory = randomUUID,
   journeyId,
   turnIndex,
+  signalExtractorTimeoutMs = defaultSignalExtractorTimeoutMs,
 }: ProcessTurnInput): Promise<ValidatedTurnResult> {
   const requestRef = idFactory();
   const inboundMessageId = idFactory();
@@ -56,22 +62,13 @@ export async function processTurn({
   const traceId = idFactory();
   const createdAt = now.toISOString();
 
-  const retrievalPromise = Promise.resolve().then(() => retrieveMatches(userMessage, corpus));
-  const signalPromise = signalExtractor
-    ? signalExtractor.extractSignals({ conversationState: state, userMessage })
-    : Promise.resolve(undefined);
-
-  const [retrievedMatchesResult, shadowSignalResult] = await Promise.all([
-    settlement(retrievalPromise),
-    settlement(signalPromise),
-  ]);
-
-  const shadowSignals =
-    shadowSignalResult.status === "fulfilled"
-      ? shadowSignalResult.value
-      : undefined;
-  const retrievedMatches =
-    retrievedMatchesResult.status === "fulfilled" ? retrievedMatchesResult.value : [];
+  const shadowSignalPromise = captureShadowSignals({
+    signalExtractor,
+    state,
+    userMessage,
+    timeoutMs: signalExtractorTimeoutMs,
+  });
+  const retrievedMatches = retrieveMatches(userMessage, corpus);
   const plannerInput = {
     conversationState: state,
     userMessage,
@@ -96,6 +93,14 @@ export async function processTurn({
     validated,
     traceSafetyFlags,
   );
+  const shadowSignal = await shadowSignalPromise;
+  const shadowSignalComparison = compareSignalToOutcome({
+    signalBundle:
+      shadowSignal.status === "fulfilled" ? shadowSignal.bundle : undefined,
+    finalServingMode: effectiveServingMode,
+    finalSafetyFlags: traceSafetyFlags,
+    signalStatus: shadowSignal.status,
+  });
   const nextState = mergeState({
     state,
     userMessage,
@@ -120,13 +125,9 @@ export async function processTurn({
     planner: planner.metadata ?? defaultPlannerMetadata,
     policyVersion,
     retrievedMatches,
-    shadowSignalBundle: shadowSignals,
-    shadowSignalComparison: compareSignalToOutcome({
-      signalBundle: shadowSignals,
-      finalServingMode: validated.selectedServingMode,
-      finalSafetyFlags: validated.safetyFlags,
-      signalStatus: shadowSignalResult.status,
-    }),
+    shadowSignalStatus: shadowSignal.status,
+    ...shadowSignalTraceFields(shadowSignal),
+    shadowSignalComparison,
     selectedServingMode: validated.selectedServingMode,
     effectiveServingMode,
     selectedRouteReason: validated.selectedRouteReason,
@@ -138,22 +139,130 @@ export async function processTurn({
     createdAt,
   };
 
-function settlement<T>(
-  promise: Promise<T>,
-): Promise<PromiseSettledResult<T>> {
-  return promise
-    .then((value) => ({ status: "fulfilled", value }))
+  return {
+    conversationRef: state.conversationRef,
+    requestRef,
+    state: nextState,
+    plan,
+    finalAction: validated.finalAction,
+    ui: validated.ui,
+    customerMessage: validated.customerMessage,
+    validatorOverrides: validated.validatorOverrides,
+    trace,
+  };
+}
+
+type ShadowSignalOutcome =
+  | {
+      status: "disabled";
+      latencyMs: number;
+    }
+  | {
+      status: "fulfilled";
+      bundle: SignalBundle;
+      metadata?: SignalExtractorMetadata;
+      latencyMs: number;
+    }
+  | {
+      status: "failed" | "timed_out";
+      metadata?: SignalExtractorMetadata;
+      latencyMs: number;
+      errorMessage: string;
+    };
+
+async function captureShadowSignals({
+  signalExtractor,
+  state,
+  userMessage,
+  timeoutMs,
+}: {
+  signalExtractor: SignalExtractor | undefined;
+  state: ConversationState;
+  userMessage: string;
+  timeoutMs: number;
+}): Promise<ShadowSignalOutcome> {
+  if (!signalExtractor) {
+    return { status: "disabled", latencyMs: 0 };
+  }
+
+  const startedAt = Date.now();
+  const abortController = new AbortController();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const extractionPromise: Promise<ShadowSignalOutcome> = signalExtractor
+    .extractSignals({
+      conversationState: state,
+      userMessage,
+      abortSignal: abortController.signal,
+    })
+    .then((bundle) => ({
+      status: "fulfilled" as const,
+      bundle,
+      ...signalMetadataField(signalExtractor.metadata),
+      latencyMs: Date.now() - startedAt,
+    }))
     .catch((error) => ({
-      status: "rejected",
-      reason: error instanceof Error ? error.message : String(error),
+      status: abortController.signal.aborted ? "timed_out" : "failed",
+      ...signalMetadataField(signalExtractor.metadata),
+      latencyMs: Date.now() - startedAt,
+      errorMessage: error instanceof Error ? error.message : String(error),
     }));
+
+  const timeoutPromise = new Promise<ShadowSignalOutcome>((resolve) => {
+    timeoutId = setTimeout(
+      () => {
+        abortController.abort();
+        resolve({
+          status: "timed_out",
+          ...signalMetadataField(signalExtractor.metadata),
+          latencyMs: Date.now() - startedAt,
+          errorMessage: `Signal extraction exceeded ${timeoutMs}ms.`,
+        });
+      },
+      Math.max(0, timeoutMs),
+    );
+  });
+
+  return Promise.race([extractionPromise, timeoutPromise]).finally(() => {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  });
+}
+
+function signalMetadataField(metadata: SignalExtractorMetadata | undefined): {
+  metadata?: SignalExtractorMetadata;
+} {
+  return metadata ? { metadata } : {};
+}
+
+function shadowSignalTraceFields(outcome: ShadowSignalOutcome): {
+  shadowSignalMetadata?: SignalExtractorMetadata;
+  shadowSignalLatencyMs?: number;
+  shadowSignalError?: string;
+  shadowSignalBundle?: SignalBundle;
+} {
+  if (outcome.status === "disabled") {
+    return { shadowSignalLatencyMs: outcome.latencyMs };
+  }
+
+  return {
+    ...(outcome.metadata ? { shadowSignalMetadata: outcome.metadata } : {}),
+    shadowSignalLatencyMs: outcome.latencyMs,
+    ...(outcome.status === "fulfilled"
+      ? { shadowSignalBundle: outcome.bundle }
+      : {}),
+    ...(outcome.status === "failed" || outcome.status === "timed_out"
+      ? { shadowSignalError: outcome.errorMessage }
+      : {}),
+  };
 }
 
 function compareSignalToOutcome(params: {
-  signalBundle?: SignalBundle;
-  finalServingMode: ReturnType<ValidatedPlanFragment["selectedServingMode"]>;
+  signalBundle: SignalBundle | undefined;
+  finalServingMode: ServingMode | null;
   finalSafetyFlags: ConversationState["safetyFlags"];
-  signalStatus: PromiseSettledResult<SignalBundle>["status"];
+  signalStatus: SignalExtractionStatus;
 }): SignalExtractionComparison {
   if (params.signalStatus !== "fulfilled") {
     return {
@@ -162,8 +271,13 @@ function compareSignalToOutcome(params: {
       finalServingMode: params.finalServingMode,
       signalSafetyFlags: [],
       finalSafetyFlags: [...params.finalSafetyFlags],
-      reasonCodes: ["signal_extraction_unavailable"],
-      parseStatus: params.signalStatus === "rejected" ? "failed" : "disabled",
+      reasonCodes: [`signal_extraction_${params.signalStatus}`],
+      parseStatus:
+        params.signalStatus === "timed_out"
+          ? "timed_out"
+          : params.signalStatus === "failed"
+            ? "failed"
+            : "disabled",
     };
   }
 
@@ -175,11 +289,11 @@ function compareSignalToOutcome(params: {
       signalSafetyFlags: [],
       finalSafetyFlags: [...params.finalSafetyFlags],
       reasonCodes: ["signal_bundle_missing"],
-      parseStatus: "disabled",
+      parseStatus: "failed",
     };
   }
 
-  const matches =
+  const servingModeMatches =
     params.signalBundle.recommendedServingMode === params.finalServingMode;
   const finalSafetySet = new Set(params.finalSafetyFlags);
   const signalSafetySet = new Set(params.signalBundle.safetySignals);
@@ -188,28 +302,16 @@ function compareSignalToOutcome(params: {
     [...finalSafetySet].every((flag) => signalSafetySet.has(flag));
 
   return {
-    status: matches && safetyMatch ? "match" : "mismatch",
+    status: servingModeMatches && safetyMatch ? "match" : "mismatch",
     recommendedServingMode: params.signalBundle.recommendedServingMode,
     finalServingMode: params.finalServingMode,
     signalSafetyFlags: [...signalSafetySet],
     finalSafetyFlags: [...finalSafetySet],
     reasonCodes: [
-      matches ? "serving_mode_match" : "serving_mode_mismatch",
+      servingModeMatches ? "serving_mode_match" : "serving_mode_mismatch",
       safetyMatch ? "safety_flags_match" : "safety_flags_mismatch",
     ],
     parseStatus: "ok",
-  };
-}
-  return {
-    conversationRef: state.conversationRef,
-    requestRef,
-    state: nextState,
-    plan,
-    finalAction: validated.finalAction,
-    ui: validated.ui,
-    customerMessage: validated.customerMessage,
-    validatorOverrides: validated.validatorOverrides,
-    trace,
   };
 }
 

@@ -1,6 +1,9 @@
 import type {
   ConversationState,
   CorpusItem,
+  SignalBundle,
+  SignalExtractor,
+  TurnPlan,
   TurnPlanner,
 } from "@loanslam/contracts";
 import { describe, expect, it } from "vitest";
@@ -58,6 +61,56 @@ function idFactory() {
     return id;
   };
 }
+
+function answerPlan(overrides: Partial<TurnPlan> = {}): TurnPlan {
+  return {
+    action: "answer",
+    customerMessage: "You can apply online.",
+    ui: {
+      primitive: "message",
+      message: "You can apply online.",
+      links: [],
+    },
+    reasonCode: "grounded_answer",
+    collectedFacts: {},
+    requestedFields: [],
+    grounding: {
+      citedItemIds: ["how-do-i-apply"],
+      servingMode: "answer",
+      confidence: "supported",
+    },
+    safetyFlags: [],
+    traceSummary: "Answered from retrieved FAQ.",
+    ...overrides,
+  };
+}
+
+function answerPlanner(planOverrides: Partial<TurnPlan> = {}): TurnPlanner {
+  return {
+    async planTurn() {
+      return answerPlan(planOverrides);
+    },
+  };
+}
+
+const answerSignalBundle: SignalBundle = {
+  primaryIntent: "answer",
+  secondaryIntents: [],
+  recommendedServingMode: "answer",
+  safetySignals: [],
+  retrievalQueries: ["apply online"],
+  routeHints: [],
+  uncertainty: 0.1,
+  negatedOrCorrected: false,
+  parserNotes: [],
+};
+
+const signalMetadata = {
+  provider: "inline",
+  model: "signal-test-model",
+  promptVersion: "signal-test-prompt",
+  schemaVersion: "phase0-signals-schema-v1",
+};
 
 function completedHandoffState(
   overrides: Partial<ConversationState> = {},
@@ -171,6 +224,124 @@ describe("processTurn", () => {
     expect(result.state.collectedFacts).toEqual({ topic: "application" });
     expect(result.state.lastAction).toBe("answer");
     expect(result.state.handoffPending).toBe(false);
+  });
+
+  it("records successful shadow signal extraction without feeding the planner", async () => {
+    const plannerInputs: Parameters<TurnPlanner["planTurn"]>[0][] = [];
+    const signalInputs: Parameters<SignalExtractor["extractSignals"]>[0][] = [];
+    const planner: TurnPlanner = {
+      async planTurn(input) {
+        plannerInputs.push(input);
+        return answerPlan();
+      },
+    };
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals(input) {
+        signalInputs.push(input);
+        return answerSignalBundle;
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Where can I apply online?",
+      planner,
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:00:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(plannerInputs[0]).not.toHaveProperty("signalBundle");
+    expect(signalInputs[0]).toMatchObject({
+      userMessage: "Where can I apply online?",
+    });
+    expect(signalInputs[0]?.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(result.trace).toMatchObject({
+      finalAction: "answer",
+      effectiveServingMode: "answer",
+      shadowSignalStatus: "fulfilled",
+      shadowSignalMetadata: signalMetadata,
+      shadowSignalBundle: answerSignalBundle,
+      shadowSignalComparison: {
+        status: "match",
+        recommendedServingMode: "answer",
+        finalServingMode: "answer",
+        parseStatus: "ok",
+        reasonCodes: ["serving_mode_match", "safety_flags_match"],
+      },
+    });
+  });
+
+  it("records shadow signal failures without changing final behavior", async () => {
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals() {
+        throw new Error("signal parser failed");
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Where can I apply online?",
+      planner: answerPlanner(),
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:00:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.trace).toMatchObject({
+      shadowSignalStatus: "failed",
+      shadowSignalMetadata: signalMetadata,
+      shadowSignalError: "signal parser failed",
+      shadowSignalComparison: {
+        status: "inconclusive",
+        finalServingMode: "answer",
+        parseStatus: "failed",
+        reasonCodes: ["signal_extraction_failed"],
+      },
+    });
+  });
+
+  it("records shadow signal timeouts without waiting for the extractor", async () => {
+    let aborted = false;
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals(input) {
+        input.abortSignal?.addEventListener("abort", () => {
+          aborted = true;
+        });
+
+        return new Promise<SignalBundle>(() => {});
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Where can I apply online?",
+      planner: answerPlanner(),
+      signalExtractor,
+      signalExtractorTimeoutMs: 0,
+      corpus,
+      now: new Date("2026-06-13T12:00:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(aborted).toBe(true);
+    expect(result.finalAction).toBe("answer");
+    expect(result.trace).toMatchObject({
+      shadowSignalStatus: "timed_out",
+      shadowSignalMetadata: signalMetadata,
+      shadowSignalComparison: {
+        status: "inconclusive",
+        finalServingMode: "answer",
+        parseStatus: "timed_out",
+        reasonCodes: ["signal_extraction_timed_out"],
+      },
+    });
   });
 
   it("updates state and trace from validator overrides for account-specific routing", async () => {

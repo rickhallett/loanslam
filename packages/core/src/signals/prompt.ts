@@ -1,15 +1,21 @@
-import { type ConversationState, type SignalBundle, type SignalInput } from "@loanslam/contracts";
 import {
+  type ConversationState,
+  type SignalBundle,
+  type SignalInput,
   servingModeSchema,
   safetyFlagSchema,
 } from "@loanslam/contracts";
+
+import { policyVersion } from "../policy";
 
 export interface SignalExtractorPrompt {
   system: string;
   user: string;
 }
 
-export function buildSignalExtractorPrompt(input: SignalInput): SignalExtractorPrompt {
+export function buildSignalExtractorPrompt(
+  input: SignalInput,
+): SignalExtractorPrompt {
   return {
     system: buildSystemPrompt(),
     user: buildUserPrompt(input),
@@ -21,10 +27,10 @@ function buildSystemPrompt(): string {
     "You are the Loanslam Phase 0 SignalExtractor.",
     "Output one strict JSON object matching the provided schema. Do not include markdown.",
     "Focus on interpretation only, not grounding or response choice.",
-    `If this is a public FAQ question with no account-risk or vulnerability signal, recommend servingMode=answer.`,
-    "If this is about account balances, payment dates, bank details, application status, reference numbers, or personal account data, recommend servingMode=handoff_account_specific.",
-    "If this contains vulnerability, distress, complaint, legal threat, hardship, or accessibility signals, recommend servingMode=route_vulnerability.",
-    "If this requests regulated/debt advice or similar excluded advice, recommend servingMode=excluded.",
+    "If this is a public FAQ question with no account-risk or vulnerability signal, set recommendedServingMode=answer.",
+    "If this is about account balances, payment dates, bank details, application status, reference numbers, or personal account data, set recommendedServingMode=handoff_account_specific.",
+    "If this contains vulnerability, distress, complaint, legal threat, hardship, or accessibility signals, set recommendedServingMode=route_vulnerability.",
+    "If this requests regulated/debt advice or similar excluded advice, set recommendedServingMode=excluded.",
     "Return safetySignals as the specific safety flags from the customer message only (if any).",
     "Set negatedOrCorrected true only when the customer appears to explicitly reject an earlier safety/account concern.",
     "Keep uncertainty between 0 and 1, where 0 means very confident and 1 means very uncertain.",
@@ -35,9 +41,12 @@ function buildSystemPrompt(): string {
 
 function buildUserPrompt(input: SignalInput): string {
   return [
-    `Policy version: ${"phase0-turnplanner-policy-v1"}`,
+    `Policy version: ${policyVersion}`,
     "Conversation state",
     stableStringify(summarizeState(input.conversationState)),
+    "",
+    "Conversation history",
+    formatHistory(input.conversationState),
     "",
     "Customer message",
     input.userMessage,
@@ -50,7 +59,12 @@ function summarizeState(
   state: ConversationState,
 ): Pick<
   ConversationState,
-  "conversationRef" | "safetyFlags" | "handoffPending" | "lastAction" | "collectedFacts" | "requestedFields"
+  | "conversationRef"
+  | "safetyFlags"
+  | "handoffPending"
+  | "lastAction"
+  | "collectedFacts"
+  | "requestedFields"
 > {
   return {
     conversationRef: state.conversationRef,
@@ -60,6 +74,20 @@ function summarizeState(
     collectedFacts: state.collectedFacts,
     requestedFields: state.requestedFields,
   };
+}
+
+function formatHistory(state: ConversationState): string {
+  if (state.history.length === 0) {
+    return "No prior messages.";
+  }
+
+  return state.history
+    .slice(-8)
+    .map(
+      (message) =>
+        `- ${message.createdAt} ${message.role} ${message.id}: ${message.content}`,
+    )
+    .join("\n");
 }
 
 function stableStringify(value: unknown): string {

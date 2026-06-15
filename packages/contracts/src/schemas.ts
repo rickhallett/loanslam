@@ -201,29 +201,41 @@ export const turnPlannerInputSchema = z.object({
 });
 export type TurnPlannerInput = z.infer<typeof turnPlannerInputSchema>;
 
+export const signalIntentSchema = z.enum([
+  "answer",
+  "account_specific",
+  "vulnerability",
+  "complaint",
+  "legal",
+  "excluded_advice",
+  "language_barrier",
+  "other",
+]);
+export type SignalIntent = z.infer<typeof signalIntentSchema>;
+
+export const signalExtractorMetadataSchema = z.object({
+  provider: nonEmptyStringSchema,
+  model: nonEmptyStringSchema,
+  promptVersion: nonEmptyStringSchema,
+  schemaVersion: nonEmptyStringSchema,
+});
+export type SignalExtractorMetadata = z.infer<
+  typeof signalExtractorMetadataSchema
+>;
+
+export const signalExtractionStatusSchema = z.enum([
+  "disabled",
+  "fulfilled",
+  "failed",
+  "timed_out",
+]);
+export type SignalExtractionStatus = z.infer<
+  typeof signalExtractionStatusSchema
+>;
+
 export const signalBundleSchema = z.object({
-  primaryIntent: z.enum([
-    "answer",
-    "account_specific",
-    "vulnerability",
-    "complaint",
-    "legal",
-    "excluded_advice",
-    "language_barrier",
-    "other",
-  ]),
-  secondaryIntents: z.array(
-    z.enum([
-      "answer",
-      "account_specific",
-      "vulnerability",
-      "complaint",
-      "legal",
-      "excluded_advice",
-      "language_barrier",
-      "other",
-    ]),
-  ).default([]),
+  primaryIntent: signalIntentSchema,
+  secondaryIntents: z.array(signalIntentSchema).default([]),
   recommendedServingMode: servingModeSchema.nullable(),
   safetySignals: z.array(safetyFlagSchema).default([]),
   retrievalQueries: z.array(nonEmptyStringSchema).default([]),
@@ -241,7 +253,7 @@ export const signalExtractionComparisonSchema = z.object({
   signalSafetyFlags: z.array(safetyFlagSchema).default([]),
   finalSafetyFlags: z.array(safetyFlagSchema).default([]),
   reasonCodes: z.array(nonEmptyStringSchema).default([]),
-  parseStatus: z.enum(["ok", "failed", "disabled"]).default("ok"),
+  parseStatus: z.enum(["ok", "failed", "disabled", "timed_out"]).default("ok"),
 });
 export type SignalExtractionComparison = z.infer<
   typeof signalExtractionComparisonSchema
@@ -292,6 +304,10 @@ export const turnTraceSchema = z.object({
   selectedRouteReason: z.string().trim().nullable().optional(),
   proposedAction: turnActionSchema,
   finalAction: turnActionSchema,
+  shadowSignalStatus: signalExtractionStatusSchema.optional(),
+  shadowSignalMetadata: signalExtractorMetadataSchema.optional(),
+  shadowSignalLatencyMs: z.number().nonnegative().optional(),
+  shadowSignalError: z.string().trim().optional(),
   shadowSignalBundle: signalBundleSchema.optional(),
   shadowSignalComparison: signalExtractionComparisonSchema.optional(),
   validatorOverrides: z.array(validatorOverrideSchema).default([]),
@@ -551,6 +567,9 @@ export const stochasticTraceRowSchema = z.object({
   validatorOverrides: z.array(validatorOverrideSchema).default([]),
   validatorOverrideCodes: z.array(nonEmptyStringSchema).default([]),
   retrievedItemIds: z.array(nonEmptyStringSchema).default([]),
+  shadowSignalStatus: signalExtractionStatusSchema.optional(),
+  shadowSignalBundle: signalBundleSchema.optional(),
+  shadowSignalComparison: signalExtractionComparisonSchema.optional(),
   traceId: nonEmptyStringSchema,
   requestRef: nonEmptyStringSchema,
 });
@@ -791,8 +810,10 @@ export type TurnPlanner = {
 export type SignalInput = {
   conversationState: ConversationState;
   userMessage: string;
+  abortSignal?: AbortSignal;
 };
 
 export type SignalExtractor = {
+  metadata?: SignalExtractorMetadata;
   extractSignals(input: SignalInput): Promise<SignalBundle>;
 };

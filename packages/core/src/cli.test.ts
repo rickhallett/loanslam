@@ -96,6 +96,25 @@ describe("Phase 0 CLI", () => {
     });
   });
 
+  it("does not enable shadow signal extraction from planner credentials alone", async () => {
+    const result = await runCli(
+      ["turn", "--message", "How do I apply?"],
+      { OPENAI_API_KEY: "planner-key-only" },
+      plannerFactory,
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      trace: {
+        shadowSignalStatus: "disabled",
+        shadowSignalComparison: {
+          status: "inconclusive",
+          parseStatus: "disabled",
+        },
+      },
+    });
+  });
+
   it("preserves split message words from the documented Just command path", async () => {
     let userMessage = "";
     const result = await runCli(

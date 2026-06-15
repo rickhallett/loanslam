@@ -83,7 +83,7 @@ async function handleRequest({
   sessions: Map<string, LabSession>;
   corpus: readonly CorpusItem[];
   plannerFactory: () => PlannerWithMetadata;
-  signalExtractor?: SignalExtractor;
+  signalExtractor: SignalExtractor | undefined;
   idFactory: () => string;
   now: Date | (() => Date) | undefined;
 }): Promise<void> {
@@ -137,7 +137,7 @@ async function handleRequest({
       state: session.state,
       userMessage: body.message,
       planner: plannerFactory(),
-      signalExtractor,
+      ...(signalExtractor ? { signalExtractor } : {}),
       corpus,
       idFactory,
       now: resolveNow(now),

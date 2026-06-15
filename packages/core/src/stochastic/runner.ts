@@ -4,6 +4,7 @@ import type {
   ConversationState,
   CorpusItem,
   PlannerMetadata,
+  SignalExtractor,
   StochasticProfile,
   StochasticRunArtifact,
   StochasticScenario,
@@ -42,6 +43,7 @@ export interface RunStochasticTestSimulatorInput {
   summaryOutput?: string;
   corpus: readonly CorpusItem[];
   planner: TurnPlanner & { metadata?: PlannerMetadata };
+  signalExtractor?: SignalExtractor;
   now?: Date | (() => Date);
   idFactory?: () => string;
 }
@@ -101,6 +103,9 @@ export async function runStochasticTestSimulator(
           state,
           userMessage,
           planner: input.planner,
+          ...(input.signalExtractor
+            ? { signalExtractor: input.signalExtractor }
+            : {}),
           corpus: input.corpus,
           now: resolveNow(input.now),
           idFactory,
@@ -197,6 +202,15 @@ function toStochasticTraceRow({
     retrievedItemIds: result.trace.retrievedMatches.map(
       (match) => match.itemId,
     ),
+    ...(result.trace.shadowSignalStatus
+      ? { shadowSignalStatus: result.trace.shadowSignalStatus }
+      : {}),
+    ...(result.trace.shadowSignalBundle
+      ? { shadowSignalBundle: result.trace.shadowSignalBundle }
+      : {}),
+    ...(result.trace.shadowSignalComparison
+      ? { shadowSignalComparison: result.trace.shadowSignalComparison }
+      : {}),
     traceId: result.trace.traceId,
     requestRef: result.trace.requestRef,
   };

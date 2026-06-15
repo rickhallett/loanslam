@@ -86,11 +86,11 @@ export async function runPersonaScenario({
   const traces: TurnTrace[] = [];
 
   for (const [turnIndex, userMessage] of scenario.customerTurns.entries()) {
-  const result = await processTurn({
+    const result = await processTurn({
       state,
       userMessage,
       planner: turnPlanner,
-      signalExtractor,
+      ...(signalExtractor ? { signalExtractor } : {}),
       corpus,
       now: resolveNow(now),
       idFactory,
