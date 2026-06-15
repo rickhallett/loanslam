@@ -1,4 +1,23 @@
 items:
+  - id: lab-api-mcp-session-simulator
+    title: Build a Lab API MCP session simulator
+    status: todo
+    labels:
+      - needs-triage
+    priority: medium
+    description: >
+      Expose the browser-free Phase 0 lab API session simulator as a local MCP
+      server with one-turn stepping, evidence summaries, validated dumps, and
+      allowlisted localhost API access.
+    acceptance:
+      - MCP tools can start a session, send one message, fetch current state, reset,
+        dump, summarize, and plan a scenario.
+      - Message sending always fetches the full session after the POST before
+        reporting evidence.
+      - Dumps are written under artifacts/phase0 and validated for conversation
+        reference, history, and traces.
+      - Base URLs are restricted to known local lab API surfaces.
+      - Typecheck and focused tests pass.
   - id: tidy-js-import-specifiers
     title: Tidy up .js import specifiers
     status: todo
