@@ -1167,6 +1167,96 @@ describe("processTurn", () => {
     );
   });
 
+  it("handles pending hardship handoff interruptions without repeating intake copy", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "pending_hardship_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["hardship", "vulnerability"],
+          traceSummary: "Preserved the pending hardship handoff.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["hardship", "vulnerability"],
+      handoffPending: true,
+      lastAction: "request_handoff_intake",
+    };
+
+    const whyResult = await processTurn({
+      state: initialState,
+      userMessage: "why?",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:00:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(whyResult.finalAction).toBe("request_handoff_intake");
+    expect(whyResult.customerMessage).toMatch(/because/i);
+    expect(whyResult.customerMessage).toMatch(/losing your job|hardship/i);
+    expect(whyResult.customerMessage).not.toContain("Let's start");
+    expect(whyResult.state.handoffPending).toBe(true);
+
+    const refusalResult = await processTurn({
+      state: initialState,
+      userMessage: "i dont want to give my details",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:00:01.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(refusalResult.finalAction).toBe("fallback");
+    expect(refusalResult.customerMessage).toMatch(/do not have to share/i);
+    expect(refusalResult.customerMessage).not.toContain("Let's start");
+    expect(refusalResult.state.handoffPending).toBe(false);
+    expect(refusalResult.state.requestedFields).toEqual([]);
+
+    const hostileResult = await processTurn({
+      state: initialState,
+      userMessage: "fuck off",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:00:02.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(hostileResult.finalAction).toBe("fallback");
+    expect(hostileResult.customerMessage).toMatch(/will not keep asking/i);
+    expect(hostileResult.customerMessage).not.toContain("Let's start");
+    expect(hostileResult.state.handoffPending).toBe(false);
+
+    const complaintResult = await processTurn({
+      state: initialState,
+      userMessage: "i want to complain",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:00:03.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(complaintResult.finalAction).toBe("request_handoff_intake");
+    expect(complaintResult.customerMessage).toMatch(/complaint/i);
+    expect(complaintResult.customerMessage).not.toContain("Let's start");
+    expect(complaintResult.trace.safetyFlags).toContain("complaint");
+    expect(complaintResult.state.handoffPending).toBe(true);
+  });
+
   it("answers a public FAQ after completed handoff instead of repeating confirmation", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
