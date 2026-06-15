@@ -12,3 +12,6 @@ reports/
 exports/
 artifacts/
 *.jsonl
+
+# Local presentation scratch material.
+docs/presentation/

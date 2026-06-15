@@ -1,0 +1,12 @@
+items:
+  - id: tidy-js-import-specifiers
+    title: Tidy up .js import specifiers
+    status: todo
+    priority: medium
+    description: >
+      Remove TypeScript source imports that use .js specifiers and keep this
+      repository a no-js-zone for local source imports.
+    acceptance:
+      - TypeScript source imports use extensionless local specifiers.
+      - No new .js local import specifiers are introduced in TypeScript source.
+      - Typecheck and format checks pass after the cleanup.
