@@ -20,6 +20,8 @@
 - The validator is a hard-rule policy/schema backstop, not a UX-quality critic; put warmth, brevity, and clarification quality into journey reports and model comparison.
 - Phase 0 uses one TurnPlanner call with `safetyFlags`; do not add a separate model-backed vulnerability detector unless trace evidence later shows it is needed.
 - Journey simulations assert behavioral envelopes, not exact wording; use pass/fail for safety and policy boundaries, and report UX quality as metrics/notes unless safety-relevant.
+- **Live lab API simulation evidence is worth roughly 100x static/unit/static fixture evidence for user-visible routing behavior.**
+- **Static routing tests and hard-coded restraints are false-positive/false-negative magnets; they usually make tuning harder unless they guard a tiny non-negotiable safety invariant.**
 - Model comparison ranks Phase 0 planner configurations and failure modes; do not treat it as production model approval or add fixed score gates.
 - Do not build a fake planner baseline. Phase 0 evidence must come from real model-backed planner behavior over a broad journey suite, not a few curated happy paths.
 
