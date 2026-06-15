@@ -9,7 +9,8 @@ import IntakeForm from "./IntakeForm.vue";
 defineProps<{ ui: UiPlan | null }>();
 const emit = defineEmits<{
   choose: [label: string];
-  intakeSubmit: [values: Partial<Record<IntakeField, string>>];
+  intakeSubmit: [values: Record<IntakeField, string>];
+  intakeCancel: [];
 }>();
 </script>
 
@@ -32,6 +33,7 @@ const emit = defineEmits<{
       :key="ui.fields.join(',')"
       :fields="ui.fields"
       @submit="emit('intakeSubmit', $event)"
+      @cancel="emit('intakeCancel')"
     />
 
     <div

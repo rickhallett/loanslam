@@ -11,10 +11,9 @@ const emit = defineEmits<{
 const LABELS: Record<IntakeField, string> = {
   fullName: "Full name",
   dateOfBirth: "Date of birth",
-  address: "Address",
-  phone: "Phone number",
+  postcode: "Postcode",
   email: "Email",
-  situationSummary: "Brief summary",
+  phone: "Phone number",
 };
 
 const INPUT_TYPES: Partial<Record<IntakeField, string>> = {
@@ -37,16 +36,7 @@ function submit(): void {
   <form class="identity-form" @submit.prevent="submit">
     <label v-for="field in fields" :key="field" class="identity-field">
       <span>{{ LABELS[field] }}</span>
-      <textarea
-        v-if="field === 'situationSummary'"
-        v-model="values[field]"
-        rows="2"
-      ></textarea>
-      <input
-        v-else
-        v-model="values[field]"
-        :type="INPUT_TYPES[field] ?? 'text'"
-      />
+      <input v-model="values[field]" :type="INPUT_TYPES[field] ?? 'text'" />
     </label>
     <button type="submit">Share with the team</button>
   </form>

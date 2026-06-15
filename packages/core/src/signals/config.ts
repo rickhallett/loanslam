@@ -1,5 +1,5 @@
 export const defaultOpenAiSignalExtractorModel = "gpt-5.4-nano";
-export const defaultOpenAiSignalExtractorPromptVersion = "phase0-signals-v1";
+export const defaultOpenAiSignalExtractorPromptVersion = "phase0-signals-v2";
 
 export interface OpenAiSignalExtractorConfig {
   provider: "openai";

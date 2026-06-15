@@ -120,10 +120,9 @@ function completedHandoffState(
     collectedFacts: {
       fullName: "Alex Test",
       dateOfBirth: "1 January 1990",
-      address: "1 Test Street, London",
-      phone: "07123 456789",
+      postcode: "SW1A 1AA",
       email: "alex.test@example.com",
-      situationSummary: "Needs help with an account change.",
+      phone: "07123 456789",
     },
     requestedFields: [],
     safetyFlags: ["account_specific_request", "change_request"],
@@ -451,17 +450,13 @@ describe("processTurn", () => {
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "To pass this to the Loanslam team, I still need your date of birth, your address, and a short summary of what you need help with. Let's start with your date of birth.",
-      fields: ["dateOfBirth", "address", "situationSummary"],
+        "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      fields: ["dateOfBirth", "postcode"],
     });
     expect(result.customerMessage).toBe(
-      "To pass this to the Loanslam team, I still need your date of birth, your address, and a short summary of what you need help with. Let's start with your date of birth.",
+      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
     );
-    expect(result.state.requestedFields).toEqual([
-      "dateOfBirth",
-      "address",
-      "situationSummary",
-    ]);
+    expect(result.state.requestedFields).toEqual(["dateOfBirth", "postcode"]);
     expect(result.state.collectedFacts).toMatchObject({
       email: "bob@example.com",
       fullName: "Bob Junior",
@@ -469,7 +464,7 @@ describe("processTurn", () => {
     });
   });
 
-  it("communicates every requested handoff field in the customer message", async () => {
+  it("renders the situational intro and the standard intake fields", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
         return {
@@ -503,12 +498,12 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+        "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
       fields: standardHandoffFields,
     });
   });
@@ -565,9 +560,7 @@ describe("processTurn", () => {
             fields: [...standardHandoffFields],
           },
           reasonCode: "handoff",
-          collectedFacts: {
-            situationSummary: "Needs a loan for a cake as soon as possible.",
-          },
+          collectedFacts: {},
           requestedFields: [...standardHandoffFields],
           grounding: null,
           safetyFlags: ["account_specific_request"],
@@ -580,7 +573,7 @@ describe("processTurn", () => {
       collectedFacts: {
         fullName_candidate: "Bob Junior",
         dateOfBirth_candidate: "7 Dec 1900",
-        address_candidate: "Windsor Castle",
+        postcode_candidate: "SW1A 1AA",
         phone: "07845729939",
         email: "bob@example.com",
       },
@@ -652,9 +645,8 @@ describe("processTurn", () => {
       collectedFacts: {
         fullName: "Alex Test",
         dateOfBirth: "1 January 1990",
-        address: "1 Test Street, London",
+        postcode: "SW1A 1AA",
         phone: "07123 456789",
-        situationSummary: "Needs help with a payment date change.",
       },
       requestedFields: ["email"],
       safetyFlags: ["account_specific_request", "change_request"],
@@ -728,17 +720,14 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "To pass this to the Loanslam team, I still need your address and a short summary of what you need help with. Let's start with your address.",
+      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
-      fields: ["address", "situationSummary"],
+      fields: ["postcode"],
     });
     expect(result.state.lastAction).toBe("request_handoff_intake");
-    expect(result.state.requestedFields).toEqual([
-      "address",
-      "situationSummary",
-    ]);
+    expect(result.state.requestedFields).toEqual(["postcode"]);
     expect(result.state.collectedFacts).toMatchObject({
       fullName: "Alex Test",
       dateOfBirth: "1 January 1990",
@@ -833,7 +822,7 @@ describe("processTurn", () => {
         handoffPending: true,
       },
       userMessage:
-        "Full name: Alex Test. Date of birth: 1 January 1990. Address: 1 Test Street, London, SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com. Situation summary: needs simple instructions and application check support.",
+        "Full name: Alex Test. Date of birth: 1 January 1990. Postcode: SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com.",
       planner,
       corpus,
       now: new Date("2026-06-13T12:07:25.000Z"),
@@ -844,11 +833,9 @@ describe("processTurn", () => {
     expect(result.state.collectedFacts).toMatchObject({
       fullName: "Alex Test",
       dateOfBirth: "1 January 1990",
-      address: "1 Test Street, London, SW1A 1AA",
+      postcode: "SW1A 1AA",
       phone: "07123 456789",
       email: "alex.test@example.com",
-      situationSummary:
-        "needs simple instructions and application check support",
     });
     expect(result.state.requestedFields).toEqual([]);
     expect(result.validatorOverrides).toContainEqual(
@@ -889,7 +876,7 @@ describe("processTurn", () => {
         handoffPending: true,
       },
       userMessage:
-        "Full name: Alex Test. Date of birth: 1 January 1990. Address: 1 Test Street, London, SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com. Situation summary: wants to cancel or withdraw application.",
+        "Full name: Alex Test. Date of birth: 1 January 1990. Postcode: SW1A 1AA. Phone: 07123 456789. Email: alex.test@example.com.",
       planner,
       corpus,
       now: new Date("2026-06-13T12:07:27.000Z"),
@@ -907,10 +894,9 @@ describe("processTurn", () => {
     expect(result.state.collectedFacts).toMatchObject({
       fullName: "Alex Test",
       dateOfBirth: "1 January 1990",
-      address: "1 Test Street, London, SW1A 1AA",
+      postcode: "SW1A 1AA",
       phone: "07123 456789",
       email: "alex.test@example.com",
-      situationSummary: "wants to cancel or withdraw application",
     });
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({

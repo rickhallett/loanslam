@@ -14,7 +14,12 @@ import type {
   TurnTrace,
 } from "@loanslam/contracts";
 
-import { processTurn } from "../engine";
+import {
+  cancelHandoff,
+  completeStructuredHandoff,
+  processTurn,
+} from "../engine";
+import { standardHandoffFields } from "../policy";
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
@@ -194,10 +199,105 @@ async function handleRequest({
     return;
   }
 
+  const intakeMatch = pathname.match(/^\/sessions\/([^/]+)\/intake$/);
+
+  if (method === "POST" && intakeMatch) {
+    const conversationRef = decodeURIComponent(intakeMatch[1] ?? "");
+    const session = sessions.get(conversationRef);
+
+    if (!session) {
+      writeSessionNotFound(response, conversationRef);
+      return;
+    }
+
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    const validation = validateIntakeBody(body);
+
+    if (!validation.ok) {
+      writeJson(response, 400, {
+        error: "invalid_intake",
+        message: validation.message,
+      });
+      return;
+    }
+
+    const result = completeStructuredHandoff({
+      state: session.state,
+      fields: validation.fields,
+      idFactory,
+      now: resolveNow(now),
+    });
+    session.state = result.state;
+    writeJson(response, 200, {
+      conversationRef,
+      state: result.state,
+      finalAction: result.finalAction,
+      ui: result.ui,
+      customerMessage: result.customerMessage,
+      reference: result.reference,
+    });
+    return;
+  }
+
+  const cancelMatch = pathname.match(/^\/sessions\/([^/]+)\/cancel-handoff$/);
+
+  if (method === "POST" && cancelMatch) {
+    const conversationRef = decodeURIComponent(cancelMatch[1] ?? "");
+    const session = sessions.get(conversationRef);
+
+    if (!session) {
+      writeSessionNotFound(response, conversationRef);
+      return;
+    }
+
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    session.state = cancelHandoff(session.state);
+    writeJson(response, 200, {
+      conversationRef,
+      state: session.state,
+    });
+    return;
+  }
+
   writeJson(response, 404, {
     error: "not_found",
     message: `${method} ${pathname} is not a lab API route.`,
   });
+}
+
+function validateIntakeBody(
+  body: JsonBody,
+):
+  | { ok: true; fields: Record<string, string> }
+  | { ok: false; message: string } {
+  const fields: Record<string, string> = {};
+  const raw = body as Record<string, unknown>;
+
+  for (const field of standardHandoffFields) {
+    const value = raw[field];
+
+    if (typeof value !== "string" || value.trim() === "") {
+      return { ok: false, message: `Missing or empty field: ${field}.` };
+    }
+
+    fields[field] = value.trim();
+  }
+
+  if (!fields.email?.includes("@")) {
+    return { ok: false, message: "A valid email address is required." };
+  }
+
+  return { ok: true, fields };
 }
 
 async function readJsonBody(

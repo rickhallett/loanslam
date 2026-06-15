@@ -275,21 +275,13 @@ describe("runPersonaScenario", () => {
         requestedFields: [
           "fullName",
           "dateOfBirth",
-          "address",
-          "phone",
+          "postcode",
           "email",
-          "situationSummary",
+          "phone",
         ],
         ui: expect.objectContaining({
           primitive: "intake_form",
-          fields: [
-            "fullName",
-            "dateOfBirth",
-            "address",
-            "phone",
-            "email",
-            "situationSummary",
-          ],
+          fields: ["fullName", "dateOfBirth", "postcode", "email", "phone"],
         }),
       }),
     );

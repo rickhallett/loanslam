@@ -19,7 +19,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   choose: [label: string];
-  intakeSubmit: [values: Partial<Record<IntakeField, string>>];
+  intakeSubmit: [values: Record<IntakeField, string>];
+  intakeCancel: [];
 }>();
 
 const scroller = ref<HTMLElement | null>(null);
@@ -54,6 +55,7 @@ watch(
           :ui="message.ui ?? null"
           @choose="emit('choose', $event)"
           @intake-submit="emit('intakeSubmit', $event)"
+          @intake-cancel="emit('intakeCancel')"
         />
       </div>
     </div>

@@ -130,10 +130,9 @@ describe("TurnPlanner contract schemas", () => {
     expect(intakeFieldSchema.options).toEqual([
       "fullName",
       "dateOfBirth",
-      "address",
-      "phone",
+      "postcode",
       "email",
-      "situationSummary",
+      "phone",
     ]);
   });
 

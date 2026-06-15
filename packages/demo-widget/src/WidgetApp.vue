@@ -10,9 +10,11 @@ import type {
 import Composer from "./components/Composer.vue";
 import MessageList from "./components/MessageList.vue";
 import {
+  cancelHandoff,
   createSession,
   resetSession,
   sendMessage as engineSend,
+  submitIntake,
 } from "./engineClient";
 import {
   announceReady,
@@ -90,25 +92,52 @@ function choose(label: string): void {
   void submit(label);
 }
 
-function onIntakeSubmit(values: Partial<Record<IntakeField, string>>): void {
-  const phrasing: Record<IntakeField, string> = {
-    fullName: "My full name is",
-    dateOfBirth: "My date of birth is",
-    address: "My address is",
-    phone: "My phone number is",
-    email: "My email is",
-    situationSummary: "Here is a summary of my situation:",
-  };
+async function onIntakeSubmit(
+  values: Record<IntakeField, string>,
+): Promise<void> {
+  if (isSending.value || isChatComplete.value) {
+    return;
+  }
 
-  const parts = (Object.keys(values) as IntakeField[])
-    .map((field) => {
-      const value = values[field]?.trim();
-      return value ? `${phrasing[field]} ${value}` : null;
-    })
-    .filter((part): part is string => part !== null);
+  errorMessage.value = "";
+  isSending.value = true;
 
-  if (parts.length > 0) {
-    void submit(parts.join(". "));
+  try {
+    const reference = await ensureSession();
+    const result = await submitIntake(reference, values);
+    pushMessage("customer", "Shared my contact details.");
+    pushMessage("assistant", result.customerMessage, result.ui);
+    isChatComplete.value = true;
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong sharing your details. Please try again.";
+  } finally {
+    isSending.value = false;
+  }
+}
+
+async function onIntakeCancel(): Promise<void> {
+  if (isSending.value || isChatComplete.value) {
+    return;
+  }
+
+  errorMessage.value = "";
+
+  try {
+    const reference = await ensureSession();
+    await cancelHandoff(reference);
+    pushMessage(
+      "assistant",
+      "No problem — ask me anything else about your Loanslam loan.",
+      null,
+    );
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong cancelling the handoff. Please try again.";
   }
 }
 
@@ -190,6 +219,7 @@ onUnmounted(() => {
       :thinking="isSending"
       @choose="choose"
       @intake-submit="onIntakeSubmit"
+      @intake-cancel="onIntakeCancel"
     />
 
     <p v-if="errorMessage" class="ls-error" role="alert">{{ errorMessage }}</p>
@@ -197,6 +227,6 @@ onUnmounted(() => {
       This handoff is complete. Refresh or start over to begin a new chat.
     </p>
 
-    <Composer :disabled="isSending || isChatComplete" @send="submit" />
+    <Composer :sending="isSending" :locked="isChatComplete" @send="submit" />
   </div>
 </template>

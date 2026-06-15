@@ -22,10 +22,9 @@ export type TurnAction = z.infer<typeof turnActionSchema>;
 export const intakeFieldSchema = z.enum([
   "fullName",
   "dateOfBirth",
-  "address",
-  "phone",
+  "postcode",
   "email",
-  "situationSummary",
+  "phone",
 ]);
 export type IntakeField = z.infer<typeof intakeFieldSchema>;
 

@@ -100,10 +100,9 @@ function onIntakeSubmit(values: Partial<Record<IntakeField, string>>): void {
   const phrasing: Record<IntakeField, string> = {
     fullName: "My full name is",
     dateOfBirth: "My date of birth is",
-    address: "My address is",
-    phone: "My phone number is",
+    postcode: "My postcode is",
     email: "My email is",
-    situationSummary: "Here is a summary of my situation:",
+    phone: "My phone number is",
   };
 
   const parts = (Object.keys(values) as IntakeField[])

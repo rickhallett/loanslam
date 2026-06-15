@@ -291,8 +291,39 @@ body,
   border-color: transparent;
 }
 
+.ls-intake__error {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+.ls-intake__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ls-intake__submit {
   align-self: flex-start;
+}
+
+.ls-intake__cancel {
+  padding: 10px 16px;
+  border: 1px solid var(--ls-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ls-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.ls-intake__cancel:hover {
+  background: var(--ls-canvas);
+  color: var(--ls-ink);
 }
 
 .ls-error {

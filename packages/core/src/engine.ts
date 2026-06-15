@@ -13,6 +13,7 @@ import type {
   ServingMode,
   TurnPlanner,
   TurnPlan,
+  UiPlan,
   ValidatorOverride,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
@@ -447,7 +448,10 @@ function applyHandoffStateRules(
     );
   }
 
-  const customerMessage = buildHandoffIntakeMessage(missingStandardFields);
+  const customerMessage = buildHandoffIntroMessage({
+    servingMode: currentValidated.selectedServingMode,
+    safetyFlags: currentValidated.safetyFlags,
+  });
 
   if (sameIntakeFields(currentValidated.ui.fields, missingStandardFields)) {
     return {
@@ -516,7 +520,10 @@ function buildMissingHandoffFragment(
   code: string,
   reason: string,
 ): ValidatedPlanFragment {
-  const customerMessage = buildHandoffIntakeMessage(missingFields);
+  const customerMessage = buildHandoffIntroMessage({
+    servingMode: validated.selectedServingMode,
+    safetyFlags: validated.safetyFlags,
+  });
   const override: ValidatorOverride = {
     code,
     reason,
@@ -587,31 +594,119 @@ function buildSupportReference(conversationRef: string): string {
   return suffix ? `LS-${suffix}` : "LS-SUPPORT";
 }
 
-const handoffFieldLabels = {
-  fullName: "your full name",
-  dateOfBirth: "your date of birth",
-  address: "your address",
-  phone: "your phone number",
-  email: "your email address",
-  situationSummary: "a short summary of what you need help with",
-} as const satisfies Record<IntakeField, string>;
-
-function buildHandoffIntakeMessage(
-  missingFields: readonly IntakeField[],
-): string {
-  const fields = missingFields.map((field) => handoffFieldLabels[field]);
-  const firstField = fields[0];
-
-  if (firstField === undefined) {
-    return "I have the details needed to pass this to the Loanslam team.";
+/**
+ * Deterministically completes a handoff from a structured intake form
+ * submission. Bypasses the planner, signal extractor, and free-text fact
+ * extractor: the form already provides exact, validated field values, so this
+ * just merges them, builds the ticket confirmation, and ends the handoff.
+ */
+export function completeStructuredHandoff({
+  state,
+  fields,
+  now = new Date(),
+  idFactory = randomUUID,
+}: {
+  state: ConversationState;
+  fields: Record<string, string>;
+  now?: Date;
+  idFactory?: () => string;
+}): {
+  state: ConversationState;
+  finalAction: "create_ticket";
+  ui: UiPlan;
+  customerMessage: string;
+  reference: string;
+} {
+  const collectedFacts = { ...state.collectedFacts };
+  for (const field of standardHandoffFields) {
+    const value = fields[field]?.trim();
+    if (value) {
+      collectedFacts[field] = value;
+    }
   }
 
-  const needText =
-    missingFields.length === standardHandoffFields.length
-      ? "I need"
-      : "I still need";
+  const reference = buildSupportReference(state.conversationRef);
+  const customerMessage = buildCompletedHandoffMessage({
+    facts: collectedFacts,
+    reference,
+    safetyFlags: state.safetyFlags,
+  });
+  const ui: UiPlan = {
+    primitive: "handoff_confirmation",
+    message: customerMessage,
+    reference,
+  };
+  const createdAt = now.toISOString();
 
-  return `To pass this to the Loanslam team, ${needText} ${formatList(fields)}. Let's start with ${firstField}.`;
+  return {
+    state: {
+      ...state,
+      history: [
+        ...state.history,
+        {
+          id: idFactory(),
+          role: "customer",
+          content: "Submitted contact details.",
+          createdAt,
+        },
+        {
+          id: idFactory(),
+          role: "assistant",
+          content: customerMessage,
+          createdAt,
+        },
+      ],
+      collectedFacts,
+      requestedFields: [],
+      lastAction: "create_ticket",
+      handoffPending: false,
+    },
+    finalAction: "create_ticket",
+    ui,
+    customerMessage,
+    reference,
+  };
+}
+
+/**
+ * Clears a pending handoff so the customer returns to the normal chat loop.
+ * Resets the accumulated safety flags too, because the validator re-forces
+ * handoff whenever a vulnerability-family flag is present and those flags
+ * otherwise persist for the life of the session.
+ */
+export function cancelHandoff(state: ConversationState): ConversationState {
+  return {
+    ...state,
+    requestedFields: [],
+    safetyFlags: [],
+    handoffPending: false,
+    lastAction: undefined,
+  };
+}
+
+function buildHandoffIntroMessage({
+  servingMode,
+  safetyFlags,
+}: {
+  servingMode: ServingMode | null;
+  safetyFlags: readonly ConversationState["safetyFlags"][number][];
+}): string {
+  if (safetyFlags.includes("complaint")) {
+    return "I'm sorry you've had a poor experience. I'll pass this to the Loanslam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.";
+  }
+
+  if (hasVulnerabilitySafetyFlag(safetyFlags)) {
+    return "It sounds like you may be going through something difficult, and the best thing is to get you to a person who can help properly. Please share a few contact details below so the Loanslam team can reach you directly.";
+  }
+
+  if (
+    servingMode === "handoff_account_specific" ||
+    hasHandoffSafetyFlag(safetyFlags)
+  ) {
+    return "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.";
+  }
+
+  return "I'll pass this to the Loanslam team so a person can help. Please share a few contact details below so they can get back to you.";
 }
 
 function shouldApplyExtractedHandoffFacts(
@@ -652,12 +747,12 @@ function extractHandoffFacts(message: string): Record<string, string> {
     /\bmy name is\s+([^,.\n]+)/i,
   ]);
   captureFact(message, facts, "dateOfBirth", [
-    /\bdate of birth\s*:\s*([^.\n]+)/i,
-    /\bmy dob is\s+([^,.\n]+)/i,
+    /\b(?:date of birth|dob)\s*:\s*([^.\n]+)/i,
+    /\bmy (?:date of birth|dob) is\s+([^,.\n]+)/i,
   ]);
-  captureFact(message, facts, "address", [
-    /\baddress\s*:\s*([\s\S]*?)(?=\.\s*(?:phone|email|situation summary)\s*:|$)/i,
-    /\baddress is\s+([\s\S]*?)(?=\s+if that is enough|\.|$)/i,
+  captureFact(message, facts, "postcode", [
+    /\bpostcode\s*:\s*([A-Z0-9 ]+)/i,
+    /\bmy postcode is\s+([A-Z0-9 ]+)/i,
   ]);
   captureFact(message, facts, "phone", [
     /\bphone\s*:\s*([^.\n]+)/i,
@@ -666,10 +761,6 @@ function extractHandoffFacts(message: string): Record<string, string> {
   captureFact(message, facts, "email", [
     /\bemail\s*:\s*([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i,
     /\bmy email is\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i,
-  ]);
-  captureFact(message, facts, "situationSummary", [
-    /\bsituation summary\s*:\s*([\s\S]+)$/i,
-    /\band i want to\s+([\s\S]*?)(?=\.|$)/i,
   ]);
 
   return facts;
@@ -706,22 +797,6 @@ function cleanFactValue(value: string | undefined): string {
 
 function hasAnyStandardHandoffFact(facts: Record<string, string>): boolean {
   return standardHandoffFields.some((field) => Boolean(facts[field]?.trim()));
-}
-
-function formatList(items: readonly string[]): string {
-  if (items.length === 0) {
-    return "";
-  }
-
-  if (items.length === 1) {
-    return items[0] ?? "";
-  }
-
-  if (items.length === 2) {
-    return `${items[0]} and ${items[1]}`;
-  }
-
-  return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
 }
 
 function hasCollectedHandoffField(

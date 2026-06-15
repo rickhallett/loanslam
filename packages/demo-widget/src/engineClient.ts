@@ -1,5 +1,7 @@
 import type {
   ConversationState,
+  IntakeField,
+  UiPlan,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
 
@@ -12,11 +14,22 @@ import type {
  *   POST /sessions                      -> { conversationRef, state }
  *   POST /sessions/:ref/messages        -> ValidatedTurnResult
  *   POST /sessions/:ref/reset           -> { conversationRef, state, traces }
+ *   POST /sessions/:ref/intake          -> IntakeResult
+ *   POST /sessions/:ref/cancel-handoff  -> { conversationRef, state }
  */
 
 interface SessionResponse {
   conversationRef: string;
   state: ConversationState;
+}
+
+export interface IntakeResult {
+  conversationRef: string;
+  state: ConversationState;
+  finalAction: string;
+  ui: UiPlan;
+  customerMessage: string;
+  reference: string;
 }
 
 async function requestJson<T>(
@@ -74,4 +87,27 @@ export async function resetSession(conversationRef: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({}),
   });
+}
+
+export async function submitIntake(
+  conversationRef: string,
+  fields: Record<IntakeField, string>,
+): Promise<IntakeResult> {
+  return requestJson<IntakeResult>(
+    `/sessions/${encodeURIComponent(conversationRef)}/intake`,
+    {
+      method: "POST",
+      body: JSON.stringify(fields),
+    },
+  );
+}
+
+export async function cancelHandoff(conversationRef: string): Promise<void> {
+  await requestJson(
+    `/sessions/${encodeURIComponent(conversationRef)}/cancel-handoff`,
+    {
+      method: "POST",
+      body: JSON.stringify({}),
+    },
+  );
 }

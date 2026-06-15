@@ -17,10 +17,9 @@ export const allowedUiPrimitives = [...uiPrimitiveSchema.options];
 export const standardHandoffFields = [
   "fullName",
   "dateOfBirth",
-  "address",
-  "phone",
+  "postcode",
   "email",
-  "situationSummary",
+  "phone",
 ] as const satisfies readonly IntakeField[];
 
 export const vulnerabilitySafetyFlags = [
