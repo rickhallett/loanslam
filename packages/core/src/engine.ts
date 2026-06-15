@@ -233,6 +233,28 @@ function applyHandoffStateRules(
     );
   }
 
+  if (
+    state.handoffPending &&
+    hasHandoffSafetyFlag(state.safetyFlags) &&
+    isPendingHandoffReferentialFollowUp(userMessage)
+  ) {
+    if (missingStandardFields.length === 0) {
+      return buildCompletedHandoffFragment(
+        state,
+        currentValidated,
+        "pending_handoff_reference_complete",
+        "A pending account-specific handoff follow-up refers back to a complete handoff request.",
+      );
+    }
+
+    return buildMissingHandoffFragment(
+      currentValidated,
+      missingStandardFields,
+      "pending_handoff_reference_preserved",
+      "A pending account-specific handoff follow-up refers back to the existing handoff request.",
+    );
+  }
+
   if (state.handoffPending && hasAnyStandardHandoffFact(extractedFacts)) {
     return buildMissingHandoffFragment(
       currentValidated,
@@ -533,6 +555,13 @@ function isCompletedHandoffFollowUp(message: string): boolean {
 
 const completedHandoffFollowUpPattern =
   /\b(what\s+(happens|happen|now|next)|what'?s\s+next|what\s+is\s+next|so\s+what\s+happens|what\s+(details|fields)|which\s+(details|fields)|still\s+missing|anything\s+missing|do\s+you\s+need|stored\s+details|hidden\s+state)\b/i;
+
+function isPendingHandoffReferentialFollowUp(message: string): boolean {
+  return pendingHandoffReferencePattern.test(message);
+}
+
+const pendingHandoffReferencePattern =
+  /\b(?:can|could|will|would)\s+you\s+(?:give|show|tell|send)\s+(?:it|that|this|them)\s+(?:to\s+me|me)?\b|\b(?:give|show|send|tell)\s+(?:it|that|this|them)\s+(?:to\s+me|me)\b|\bwhat\s+is\s+(?:it|that)\b/i;
 
 async function planAndValidateTurn({
   planner,

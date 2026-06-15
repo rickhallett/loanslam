@@ -715,6 +715,56 @@ describe("processTurn", () => {
     expect(result.validatorOverrides).toEqual([]);
   });
 
+  it("preserves a pending account handoff for referential follow-up requests", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "ask_clarifying_question",
+          customerMessage: "What would you like me to give you?",
+          ui: {
+            primitive: "clarifying_prompt",
+            message: "What would you like me to give you?",
+            questions: ["What information do you need?"],
+          },
+          reasonCode: "missed_pending_account_reference",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "Planner missed the pending account-specific context.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "Can you give it to me?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:23.500Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      fields: [...standardHandoffFields],
+    });
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "pending_handoff_reference_preserved",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
   it("answers a public FAQ after completed handoff instead of repeating confirmation", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
