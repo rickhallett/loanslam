@@ -99,6 +99,25 @@ describe("calculateJourneyMetrics", () => {
       }),
     );
   });
+
+  it("uses effective serving mode for route-quality metrics", () => {
+    const metrics = calculateJourneyMetrics([
+      report({
+        journeyId: "effective-handoff",
+        finalAction: "request_handoff_intake",
+        traces: [
+          {
+            ...report({ journeyId: "effective-handoff" }).traces[0],
+            finalAction: "request_handoff_intake",
+            selectedServingMode: "answer",
+            effectiveServingMode: "handoff_account_specific",
+          },
+        ],
+      }),
+    ]);
+
+    expect(metrics.unnecessaryHandoffRate).toBe(0);
+  });
 });
 
 describe("buildModelComparisonReport", () => {

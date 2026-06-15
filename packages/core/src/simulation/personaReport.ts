@@ -133,9 +133,15 @@ function buildFailureModes(
 function sawVulnerability(transcript: ConversationTranscript): boolean {
   return transcript.turns.some(
     (turn) =>
-      turn.selectedServingMode === "route_vulnerability" ||
+      routeServingMode(turn) === "route_vulnerability" ||
       turn.safetyFlags.some(isVulnerabilityFlag),
   );
+}
+
+function routeServingMode(
+  turn: ConversationTranscript["turns"][number],
+): ConversationTranscript["turns"][number]["selectedServingMode"] {
+  return turn.effectiveServingMode ?? turn.selectedServingMode;
 }
 
 function isVulnerabilityFlag(flag: SafetyFlag): boolean {

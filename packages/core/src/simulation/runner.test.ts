@@ -188,7 +188,7 @@ describe("runJourney", () => {
         expectation: {
           allowedFinalActions: ["request_handoff_intake"],
           requiredFinalAction: "request_handoff_intake",
-          requiredServingModes: ["answer"],
+          requiredServingModes: ["handoff_account_specific"],
           forbiddenBehaviors: [
             "forbidden_credential_requests",
             "promised_outcomes",
@@ -283,6 +283,60 @@ describe("runJourney", () => {
       ]),
     );
     expect(report.vulnerabilityMisses).toBe(0);
+    expect(report.passed).toBe(true);
+  });
+
+  it("uses effective serving mode for journey route expectations", async () => {
+    const report = await runJourney({
+      journey: {
+        id: "pending-account-reference",
+        title: "Pending account reference",
+        customerTurns: ["Can you give it to me?"],
+        expectation: {
+          allowedFinalActions: ["request_handoff_intake"],
+          requiredServingModes: ["handoff_account_specific"],
+        },
+        tags: ["application_status"],
+      },
+      corpus,
+      planner: planner({
+        action: "ask_clarifying_question",
+        customerMessage: "What would you like me to give you?",
+        ui: {
+          primitive: "clarifying_prompt",
+          message: "What would you like me to give you?",
+          questions: ["What information do you need?"],
+        },
+        reasonCode: "missed_pending_account_reference",
+        collectedFacts: {},
+        requestedFields: [],
+        grounding: null,
+        safetyFlags: [],
+        traceSummary: "Missed pending handoff context.",
+      }),
+      initialState: {
+        ...state(),
+        requestedFields: [
+          "fullName",
+          "dateOfBirth",
+          "address",
+          "phone",
+          "email",
+          "situationSummary",
+        ],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      now: () => new Date("2026-06-13T10:08:00.000Z"),
+      idFactory: sequenceIds(),
+    });
+
+    expect(report.finalAction).toBe("request_handoff_intake");
+    expect(report.traces[0]?.selectedServingMode).toBeNull();
+    expect(report.traces[0]?.effectiveServingMode).toBe(
+      "handoff_account_specific",
+    );
     expect(report.passed).toBe(true);
   });
 

@@ -51,7 +51,7 @@ export function calculateJourneyMetrics(
     report.traces.some(
       (trace) =>
         trace.finalAction === "answer" &&
-        trace.selectedServingMode === "answer" &&
+        routeServingMode(trace) === "answer" &&
         trace.validatorOverrides.length === 0,
     ),
   ).length;
@@ -61,7 +61,7 @@ export function calculateJourneyMetrics(
   const unnecessaryHandoffCount = handoffJourneys.filter((report) =>
     report.traces.some(
       (trace) =>
-        trace.selectedServingMode === "answer" &&
+        routeServingMode(trace) === "answer" &&
         trace.safetyFlags.length === 0 &&
         trace.validatorOverrides.length === 0,
     ),
@@ -177,6 +177,12 @@ function buildRecommendation(metrics: JourneyMetrics): string {
   }
 
   return "Review failed journeys and validator overrides before using this planner for Phase 0 evidence.";
+}
+
+function routeServingMode(
+  trace: JourneyReport["traces"][number],
+): JourneyReport["traces"][number]["selectedServingMode"] {
+  return trace.effectiveServingMode ?? trace.selectedServingMode;
 }
 
 function ratio(numerator: number, denominator: number): number {
