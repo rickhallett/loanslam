@@ -17,18 +17,10 @@ import {
   buildInternalDataBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
-  detectAccessibilityNeed,
-  detectComplaintNegation,
-  detectComplaintRouteSignal,
-  detectDistressRouteSignal,
   detectForbiddenCredentialRequest,
-  detectHardshipNegation,
-  detectHardshipRouteSignal,
   detectInternalDataExposureRequest,
-  detectLanguageBarrier,
   detectPromisedAccountValueOrOutcome,
   detectSensitiveOvershare,
-  detectVulnerabilityRouteSignal,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   handoffSafetyFlags,
@@ -69,10 +61,7 @@ export function validateTurnPlan(
 ): ValidatedPlanFragment {
   const selectedMatch = selectPolicyMatch(plan, retrievedMatches);
   const planSafetyFlags = alignPlanSafetyFlagsWithSignal(
-    suppressNegatedCurrentSafetyFlags(
-      plan.safetyFlags,
-      options.userMessage ?? "",
-    ),
+    plan.safetyFlags,
     options.signalBundle,
   );
   const allSafetyFlags = uniqueSafetyFlags([
@@ -80,9 +69,7 @@ export function validateTurnPlan(
     ...inferSafetyFlagsFromSignal(options.signalBundle),
     ...planSafetyFlags,
     ...inferSafetyFlagsFromMatches(selectedMatch ? [selectedMatch] : []),
-    ...inferSafetyFlagsFromMessage(options.userMessage ?? "", {
-      includeRouteSignals: options.signalBundle === undefined,
-    }),
+    ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
   ]);
 
   const base: ValidatedPlanFragment = {
@@ -338,19 +325,12 @@ function inferSafetyFlagsFromMatches(
     if (match.servingMode === "handoff_account_specific") {
       flags.push("account_specific_request");
     }
-
-    if (isChangeRequestMatch(match)) {
-      flags.push("change_request");
-    }
   }
 
   return uniqueSafetyFlags(flags);
 }
 
-function inferSafetyFlagsFromMessage(
-  message: string,
-  options: { includeRouteSignals?: boolean } = {},
-): SafetyFlag[] {
+function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
   const flags: SafetyFlag[] = [];
 
   if (detectSensitiveOvershare(message)) {
@@ -358,31 +338,6 @@ function inferSafetyFlagsFromMessage(
 
     if (containsForbiddenCredentialTerm(message)) {
       flags.push("forbidden_credentials");
-    }
-  }
-
-  if (detectLanguageBarrier(message)) {
-    flags.push("language_barrier");
-  }
-
-  if (detectAccessibilityNeed(message)) {
-    flags.push("accessibility_need");
-  }
-
-  if (options.includeRouteSignals ?? true) {
-    // Fail-closed safety floor for the no-signal path. When structured signal
-    // extraction is available, route meaning should come from the signal bundle
-    // rather than another layer of phrase matching.
-    if (detectComplaintRouteSignal(message)) {
-      flags.push("complaint");
-    }
-
-    if (detectHardshipRouteSignal(message)) {
-      flags.push("hardship");
-    }
-
-    if (detectDistressRouteSignal(message)) {
-      flags.push("distress");
     }
   }
 
@@ -460,65 +415,6 @@ function includesSafetyFlag(
   flag: SafetyFlag,
 ): boolean {
   return flags.includes(flag);
-}
-
-function suppressNegatedCurrentSafetyFlags(
-  flags: readonly SafetyFlag[],
-  message: string,
-): SafetyFlag[] {
-  if (
-    !message ||
-    (!detectComplaintNegation(message) && !detectHardshipNegation(message))
-  ) {
-    return uniqueSafetyFlags(flags);
-  }
-
-  const hasComplaintSignal = detectComplaintRouteSignal(message);
-  const hasHardshipSignal = detectHardshipRouteSignal(message);
-  const hasVulnerabilitySignal = detectVulnerabilityRouteSignal(message);
-
-  return uniqueSafetyFlags(
-    flags.filter((flag) => {
-      if (flag === "complaint" && !hasComplaintSignal) {
-        return false;
-      }
-
-      if (flag === "hardship" && !hasHardshipSignal) {
-        return false;
-      }
-
-      if (
-        (flag === "vulnerability" || flag === "distress") &&
-        !hasVulnerabilitySignal
-      ) {
-        return false;
-      }
-
-      return true;
-    }),
-  );
-}
-
-function isChangeRequestMatch(match: RetrievedMatch): boolean {
-  if (match.servingMode !== "handoff_account_specific") {
-    return false;
-  }
-
-  const item = match.item;
-  const text = [
-    match.itemId,
-    item?.intent,
-    item?.question,
-    item?.route_reason,
-    ...(item?.tags ?? []),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return /\b(change|changed|changing|move|moved|update|updating|switch)\b/.test(
-    text,
-  );
 }
 
 function answerGroundingFailure(
@@ -681,9 +577,7 @@ function isCompliantRoutePlan(
 ): boolean {
   if (servingMode === "excluded") {
     return (
-      base.finalAction === "refuse" &&
-      base.ui.primitive === "safe_fallback" &&
-      isSafeExcludedRefusal(base)
+      base.finalAction === "refuse" && base.ui.primitive === "safe_fallback"
     );
   }
 
@@ -694,25 +588,6 @@ function isCompliantRoutePlan(
     sameFields(base.requestedFields, standardHandoffFields)
   );
 }
-
-function isSafeExcludedRefusal(base: ValidatedPlanFragment): boolean {
-  const text = [
-    base.customerMessage,
-    "message" in base.ui ? base.ui.message : "",
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  return (
-    refusalLanguagePattern.test(text) && !regulatedAdvicePattern.test(text)
-  );
-}
-
-const refusalLanguagePattern =
-  /\b(i|we)\s+(cannot|can't|cant|am unable|are unable|won't|will not)\b|\bnot able\b|\bmust not\b|\bdo not\b/;
-
-const regulatedAdvicePattern =
-  /\byou\s+should\s+(enter|start|take|prioritise|prioritize|pay|choose|use|do)\b|\b(i|we)\s+(recommend|suggest|advise)\b|\bit\s+(is|would be)\s+(best|better|a good idea)\b|\b(iva|debt\s+management\s+plan)\b.{0,120}\b(lets?|allows?|means|may|can|could|will|write\s+off|reduce|affordable\s+monthly\s+payment|monthly\s+payment)\b/;
 
 function sameFields(
   left: readonly IntakeField[],

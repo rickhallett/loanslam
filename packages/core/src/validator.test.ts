@@ -249,97 +249,6 @@ describe("validateTurnPlan", () => {
     expect(result.safetyFlags).not.toContain("vulnerability");
   });
 
-  it("suppresses negated complaint safety flags from the current message", () => {
-    const result = validateTurnPlan(
-      plan({
-        safetyFlags: ["complaint", "vulnerability"],
-      }),
-      [answerMatch],
-      {
-        userMessage:
-          "I'm not complaining, I'm just asking how to apply online.",
-      },
-    );
-
-    expect(result.finalAction).toBe("answer");
-    expect(result.safetyFlags).not.toContain("complaint");
-    expect(result.safetyFlags).not.toContain("vulnerability");
-    expect(result.validatorOverrides).toEqual([]);
-  });
-
-  it("suppresses negated hardship safety flags from the current message", () => {
-    const result = validateTurnPlan(
-      plan({
-        safetyFlags: ["hardship", "vulnerability"],
-      }),
-      [answerMatch],
-      {
-        userMessage:
-          "I'm not saying I cannot pay. I just want to apply online.",
-      },
-    );
-
-    expect(result.finalAction).toBe("answer");
-    expect(result.safetyFlags).not.toContain("hardship");
-    expect(result.safetyFlags).not.toContain("vulnerability");
-    expect(result.validatorOverrides).toEqual([]);
-  });
-
-  it("keeps safety routing when a negated phrase has another genuine signal", () => {
-    const result = validateTurnPlan(
-      plan({
-        safetyFlags: ["hardship", "vulnerability"],
-      }),
-      [answerMatch],
-      {
-        userMessage:
-          "I'm not complaining, but I'm really struggling to pay this month.",
-      },
-    );
-
-    expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.safetyFlags).toEqual(
-      expect.arrayContaining(["hardship", "vulnerability"]),
-    );
-  });
-
-  it("routes a hardship message to a human even when the planner proposed an answer with no flag", () => {
-    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
-      userMessage: "I lost my job and money is really tight, how do I apply?",
-    });
-
-    expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.safetyFlags).toContain("hardship");
-  });
-
-  it("routes a complaint message to a human even when the planner proposed an answer with no flag", () => {
-    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
-      userMessage: "I want to make a formal complaint about how I was treated.",
-    });
-
-    expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.safetyFlags).toContain("complaint");
-  });
-
-  it("routes a distress message to a human even when the planner proposed an answer with no flag", () => {
-    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
-      userMessage:
-        "I had a bereavement recently and I can't cope. How do I apply?",
-    });
-
-    expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.safetyFlags).toContain("distress");
-  });
-
-  it("does not infer hardship from the message when the customer negates it", () => {
-    const result = validateTurnPlan(plan({ safetyFlags: [] }), [answerMatch], {
-      userMessage: "I'm not saying I cannot pay. I just want to apply online.",
-    });
-
-    expect(result.finalAction).toBe("answer");
-    expect(result.safetyFlags).not.toContain("hardship");
-  });
-
   it("overrides forbidden credential requests and never requests forbidden fields", () => {
     const result = validateTurnPlan(
       plan({
@@ -446,7 +355,7 @@ describe("validateTurnPlan", () => {
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.selectedServingMode).toBe("handoff_account_specific");
     expect(result.safetyFlags).toEqual(
-      expect.arrayContaining(["account_specific_request", "change_request"]),
+      expect.arrayContaining(["account_specific_request"]),
     );
     expect(result.validatorOverrides).toEqual([]);
   });
@@ -578,53 +487,6 @@ describe("validateTurnPlan", () => {
     expect(result.validatorOverrides).toEqual([]);
   });
 
-  it("does not accept excluded refusal that still gives regulated advice", () => {
-    const result = validateTurnPlan(
-      refusalPlan({
-        customerMessage: "You should enter an IVA for this debt.",
-        ui: {
-          primitive: "safe_fallback",
-          message: "You should enter an IVA for this debt.",
-          links: [],
-        },
-      }),
-      [excludedMatch],
-      {},
-    );
-
-    expect(result.finalAction).toBe("refuse");
-    expect(result.customerMessage).not.toMatch(/should enter/i);
-    expect(result.validatorOverrides).toContainEqual(
-      expect.objectContaining({
-        code: "non_answer_citation_blocked",
-      }),
-    );
-  });
-
-  it("does not accept excluded refusal that explains regulated IVA effects", () => {
-    const result = validateTurnPlan(
-      refusalPlan({
-        customerMessage:
-          "I cannot advise you, but an IVA lets you make one affordable monthly payment and may write off some debt.",
-        ui: {
-          primitive: "safe_fallback",
-          message:
-            "I cannot advise you, but an IVA lets you make one affordable monthly payment and may write off some debt.",
-          links: [],
-        },
-      }),
-      [excludedMatch],
-      {},
-    );
-
-    expect(result.customerMessage).not.toMatch(/affordable monthly payment/i);
-    expect(result.validatorOverrides).toContainEqual(
-      expect.objectContaining({
-        code: "non_answer_citation_blocked",
-      }),
-    );
-  });
-
   it("routes vulnerability safety flags ahead of excluded refusal", () => {
     const result = validateTurnPlan(
       refusalPlan({
@@ -666,46 +528,6 @@ describe("validateTurnPlan", () => {
 
     expect(result.safetyFlags).toEqual(
       expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
-    );
-  });
-
-  it("preserves language-barrier signals without forcing handoff", () => {
-    const result = validateTurnPlan(
-      plan({
-        action: "ask_clarifying_question",
-        customerMessage: "I can help. What would you like to do?",
-        ui: {
-          primitive: "clarifying_prompt",
-          message: "I can help. What would you like to do?",
-          questions: ["What would you like help with?"],
-        },
-        grounding: null,
-      }),
-      [answerMatch],
-      {
-        userMessage: "English hard for me.",
-      },
-    );
-
-    expect(result.finalAction).toBe("ask_clarifying_question");
-    expect(result.safetyFlags).toContain("language_barrier");
-    expect(result.validatorOverrides).toEqual([]);
-  });
-
-  it("routes strong accessibility needs through the existing human handoff lane", () => {
-    const result = validateTurnPlan(plan(), [answerMatch], {
-      userMessage: "I cannot read the form because of my disability.",
-    });
-
-    expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.safetyFlags).toEqual(
-      expect.arrayContaining(["accessibility_need", "vulnerability"]),
-    );
-    expect(result.validatorOverrides).toContainEqual(
-      expect.objectContaining({
-        code: "safety_flag_route_to_handoff",
-        toAction: "request_handoff_intake",
-      }),
     );
   });
 

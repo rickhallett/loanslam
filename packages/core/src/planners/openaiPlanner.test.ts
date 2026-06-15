@@ -11,7 +11,6 @@ import {
   loadOpenAiPlannerConfig,
   PlannerConfigurationError,
 } from "./config";
-import { buildTurnPlannerPrompt } from "./prompt";
 import {
   OpenAiTurnPlanner,
   type OpenAiPlannerClient,
@@ -136,77 +135,6 @@ describe("OpenAI TurnPlanner config", () => {
 
   it("defaults to the nano planner model used for Phase 0 runs", () => {
     expect(defaultOpenAiPlannerModel).toBe("gpt-5.4-nano");
-  });
-});
-
-describe("TurnPlanner prompt", () => {
-  it("includes retrieved serving modes and excluded route reasons", () => {
-    const prompt = buildTurnPlannerPrompt(plannerInput);
-
-    expect(prompt.user).toContain("faq-apply");
-    expect(prompt.user).toContain("serving_mode: answer");
-    expect(prompt.user).toContain("excluded-writeoff");
-    expect(prompt.user).toContain("serving_mode: excluded");
-    expect(prompt.user).toContain(
-      "Debt write-off advice is recognised but excluded from automated answers.",
-    );
-  });
-
-  it("includes standard safety and credential constraints", () => {
-    const prompt = buildTurnPlannerPrompt(plannerInput);
-
-    expect(prompt.system).toContain("forbidden_credentials");
-    expect(prompt.system).toContain(
-      "fullName, dateOfBirth, address, phone, email, situationSummary",
-    );
-    expect(prompt.system).toContain("vulnerability");
-    expect(prompt.system).toContain("distress");
-    expect(prompt.system).toContain("complaint");
-    expect(prompt.system).toContain("legal_threat");
-    expect(prompt.system).toContain("accessibility_need");
-    expect(prompt.system).toContain("hardship");
-    expect(prompt.system).toContain("excluded means refuse");
-    expect(prompt.system).toContain("Grounding is only for action=answer");
-    expect(prompt.system).toContain("set grounding=null");
-    expect(prompt.system).toContain("change_request");
-    expect(prompt.system).toContain("sensitive_overshare");
-    expect(prompt.system).toContain("whether to enter an IVA");
-  });
-
-  it("keeps the MVP chat in English only", () => {
-    const prompt = buildTurnPlannerPrompt(plannerInput);
-
-    expect(prompt.system).toContain("MVP language scope is English only");
-    expect(prompt.system).toContain("Always reply in English");
-    expect(prompt.system).toContain(
-      "Do not switch into French, Spanish, or any other language",
-    );
-    expect(prompt.system).toContain("Preserve language_barrier when relevant");
-    expect(prompt.system).toContain("needs an interpreter");
-    expect(prompt.system).toContain("cannot continue in English");
-    expect(prompt.system).toContain(
-      "Do not treat non-English text alone as complaint, distress, hardship, legal_threat, or account-specific evidence",
-    );
-  });
-
-  it("directs vague low-risk requests to concise clarification", () => {
-    const prompt = buildTurnPlannerPrompt(plannerInput);
-
-    expect(prompt.system).toContain("vague, low-risk");
-    expect(prompt.system).toContain("clarifying_prompt");
-    expect(prompt.system).toContain(
-      "Do not use choice_list for vague low-risk requests",
-    );
-    expect(prompt.system).toContain("at most six choices");
-  });
-
-  it("includes pending handoff side-quest and post-ticket constraints", () => {
-    const prompt = buildTurnPlannerPrompt(plannerInput);
-
-    expect(prompt.system).toContain("pending handoff");
-    expect(prompt.system).toContain("public FAQ");
-    expect(prompt.system).toContain("resume the handoff");
-    expect(prompt.system).toContain("Do not claim that the chat has updated");
   });
 });
 

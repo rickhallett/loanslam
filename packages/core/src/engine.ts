@@ -387,19 +387,6 @@ function applyHandoffStateRules(
   if (
     state.lastAction === "create_ticket" &&
     missingStandardFields.length === 0 &&
-    isCompletedHandoffFollowUp(userMessage)
-  ) {
-    return buildCompletedHandoffFragment(
-      state,
-      currentValidated,
-      "completed_handoff_follow_up",
-      "A completed handoff follow-up should preserve the completed handoff state.",
-    );
-  }
-
-  if (
-    state.lastAction === "create_ticket" &&
-    missingStandardFields.length === 0 &&
     hasVulnerabilitySafetyFlag(currentValidated.safetyFlags)
   ) {
     return buildCompletedHandoffFragment(
@@ -411,12 +398,7 @@ function applyHandoffStateRules(
   }
 
   if (
-    shouldCompleteHandoffNow(
-      state,
-      currentValidated,
-      extractedFacts,
-      userMessage,
-    ) &&
+    shouldCompleteHandoffNow(state, currentValidated, extractedFacts) &&
     missingStandardFields.length === 0
   ) {
     return buildCompletedHandoffFragment(
@@ -425,71 +407,6 @@ function applyHandoffStateRules(
       "handoff_intake_complete",
       "All requested handoff intake fields are present in conversation state.",
     );
-  }
-
-  if (
-    state.handoffPending &&
-    hasHandoffSafetyFlag(state.safetyFlags) &&
-    isPendingHandoffReferentialFollowUp(userMessage)
-  ) {
-    if (missingStandardFields.length === 0) {
-      return buildCompletedHandoffFragment(
-        state,
-        currentValidated,
-        "pending_handoff_reference_complete",
-        "A pending account-specific handoff follow-up refers back to a complete handoff request.",
-      );
-    }
-
-    return buildMissingHandoffFragment(
-      currentValidated,
-      missingStandardFields,
-      "pending_handoff_reference_preserved",
-      "A pending account-specific handoff follow-up refers back to the existing handoff request.",
-    );
-  }
-
-  if (state.handoffPending && missingStandardFields.length > 0) {
-    if (currentValidated.safetyFlags.includes("complaint")) {
-      return buildPendingHandoffComplaintFragment(
-        currentValidated,
-        missingStandardFields,
-      );
-    }
-
-    if (isPendingHandoffEmergencyText(userMessage)) {
-      return buildPendingHandoffDeclinedFragment(
-        currentValidated,
-        "handoff_emergency_text",
-        "The customer entered alarming emergency-like text during handoff intake.",
-        buildHandoffEmergencyMessage(),
-      );
-    }
-
-    if (isPendingHandoffDetailsRefusal(userMessage)) {
-      return buildPendingHandoffDeclinedFragment(
-        currentValidated,
-        "handoff_details_declined",
-        "The customer declined to provide handoff details in chat.",
-        buildHandoffDetailsDeclinedMessage(),
-      );
-    }
-
-    if (isPendingHandoffHostileAbort(userMessage)) {
-      return buildPendingHandoffDeclinedFragment(
-        currentValidated,
-        "handoff_hostile_abort",
-        "The customer responded angrily to handoff intake.",
-        buildHandoffHostileAbortMessage(),
-      );
-    }
-
-    if (isPendingHandoffWhyQuestion(userMessage)) {
-      return buildPendingHandoffReasonFragment(
-        currentValidated,
-        missingStandardFields,
-      );
-    }
   }
 
   if (state.handoffPending && hasAnyStandardHandoffFact(extractedFacts)) {
@@ -621,89 +538,6 @@ function buildMissingHandoffFragment(
   };
 }
 
-function buildPendingHandoffReasonFragment(
-  validated: ValidatedPlanFragment,
-  missingFields: readonly IntakeField[],
-): ValidatedPlanFragment {
-  const customerMessage = buildPendingHandoffReasonMessage(
-    validated.safetyFlags,
-  );
-  const override: ValidatorOverride = {
-    code: "handoff_intake_reason_explained",
-    reason: "A pending handoff customer asked why details are needed.",
-    fromAction: validated.finalAction,
-    toAction: "request_handoff_intake",
-  };
-
-  return {
-    ...validated,
-    finalAction: "request_handoff_intake",
-    customerMessage,
-    ui: {
-      primitive: "intake_form",
-      message: customerMessage,
-      fields: [...missingFields],
-    },
-    requestedFields: [...missingFields],
-    validatorOverrides: [...validated.validatorOverrides, override],
-  };
-}
-
-function buildPendingHandoffComplaintFragment(
-  validated: ValidatedPlanFragment,
-  missingFields: readonly IntakeField[],
-): ValidatedPlanFragment {
-  const customerMessage =
-    "I can pass your complaint to the Loanslam team. To do that from this chat, a person needs enough details to identify the case. Please share your full name when you are ready, or tell me if you do not want to share details here.";
-  const override: ValidatorOverride = {
-    code: "pending_handoff_complaint_reframed",
-    reason:
-      "A pending handoff customer raised a complaint, so the intake copy must acknowledge the complaint.",
-    fromAction: validated.finalAction,
-    toAction: "request_handoff_intake",
-  };
-
-  return {
-    ...validated,
-    finalAction: "request_handoff_intake",
-    customerMessage,
-    ui: {
-      primitive: "intake_form",
-      message: customerMessage,
-      fields: [...missingFields],
-    },
-    requestedFields: [...missingFields],
-    validatorOverrides: [...validated.validatorOverrides, override],
-  };
-}
-
-function buildPendingHandoffDeclinedFragment(
-  validated: ValidatedPlanFragment,
-  code: string,
-  reason: string,
-  customerMessage: string,
-): ValidatedPlanFragment {
-  const override: ValidatorOverride = {
-    code,
-    reason,
-    fromAction: validated.finalAction,
-    toAction: "fallback",
-  };
-
-  return {
-    ...validated,
-    finalAction: "fallback",
-    customerMessage,
-    ui: {
-      primitive: "safe_fallback",
-      message: customerMessage,
-      links: [],
-    },
-    requestedFields: [],
-    validatorOverrides: [...validated.validatorOverrides, override],
-  };
-}
-
 function buildCompletedHandoffMessage({
   facts,
   reference,
@@ -780,32 +614,6 @@ function buildHandoffIntakeMessage(
   return `To pass this to the Loanslam team, ${needText} ${formatList(fields)}. Let's start with ${firstField}.`;
 }
 
-function buildPendingHandoffReasonMessage(
-  safetyFlags: readonly ConversationState["safetyFlags"][number][],
-): string {
-  if (safetyFlags.includes("complaint")) {
-    return "Because you said you want to complain, a person at Loanslam should handle it rather than this chat debating the issue. You do not have to share details here. If you want me to pass it to the team, they need enough details to identify the case.";
-  }
-
-  if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "Because you mentioned losing your job or financial difficulty, a person at Loanslam should handle it rather than me giving a general chat answer. You do not have to share details here. If you want me to pass it to the team, they need enough details to identify the request.";
-  }
-
-  return "Because this looks like something the Loanslam team needs to handle directly, they need enough details to identify the request. You do not have to share details here, and I can still answer general Loanslam questions.";
-}
-
-function buildHandoffDetailsDeclinedMessage(): string {
-  return "That's okay. You do not have to share details here. Without those details, I can only answer general Loanslam questions in this chat. If you want a person to help with this, the team will need enough details to identify the request.";
-}
-
-function buildHandoffHostileAbortMessage(): string {
-  return "I will not keep asking for details. You do not have to share them here. If you want help later, ask a general Loanslam question or say you want the Loanslam team.";
-}
-
-function buildHandoffEmergencyMessage(): string {
-  return "If anyone is in immediate danger, contact emergency services now. This chat cannot handle emergencies. I will stop asking for personal details here, and I can still answer general Loanslam questions.";
-}
-
 function shouldApplyExtractedHandoffFacts(
   state: ConversationState,
   validated: ValidatedPlanFragment,
@@ -822,7 +630,6 @@ function shouldCompleteHandoffNow(
   state: ConversationState,
   validated: ValidatedPlanFragment,
   extractedFacts: Record<string, string>,
-  userMessage: string,
 ): boolean {
   if (!state.handoffPending) {
     return false;
@@ -833,8 +640,7 @@ function shouldCompleteHandoffNow(
     validated.finalAction === "request_handoff_intake" ||
     validated.finalAction === "escalate" ||
     validated.finalAction === "fallback" ||
-    hasAnyStandardHandoffFact(extractedFacts) ||
-    isCompletedHandoffFollowUp(userMessage)
+    hasAnyStandardHandoffFact(extractedFacts)
   );
 }
 
@@ -938,53 +744,6 @@ function sameIntakeFields(
     right.every((field) => left.includes(field))
   );
 }
-
-function isCompletedHandoffFollowUp(message: string): boolean {
-  return completedHandoffFollowUpPattern.test(message);
-}
-
-const completedHandoffFollowUpPattern =
-  /\b(what\s+(happens|happen|now|next)|what'?s\s+next|what\s+is\s+next|so\s+what\s+happens|what\s+(details|fields)|which\s+(details|fields)|still\s+missing|anything\s+missing|do\s+you\s+need|stored\s+details|hidden\s+state)\b/i;
-
-function isPendingHandoffReferentialFollowUp(message: string): boolean {
-  return pendingHandoffReferencePattern.test(message);
-}
-
-const pendingHandoffReferencePattern =
-  /\b(?:can|could|will|would)\s+you\s+(?:give|show|tell|send)\s+(?:it|that|this|them)\s+(?:to\s+me|me)?\b|\b(?:give|show|send|tell)\s+(?:it|that|this|them)\s+(?:to\s+me|me)\b|\bwhat\s+is\s+(?:it|that)\b/i;
-
-function isPendingHandoffWhyQuestion(message: string): boolean {
-  return pendingHandoffWhyPattern.test(message);
-}
-
-const pendingHandoffWhyPattern =
-  /^\s*(?:why|why\s+(?:do\s+you|does\s+the\s+team|is\s+that|is\s+this)|what\s+for|for\s+what)(?:\s+(?:need|want|ask|asking|details|that|this|my\s+details|those\s+details))*\s*[?!.\s]*$/i;
-
-function isPendingHandoffDetailsRefusal(message: string): boolean {
-  return (
-    pendingHandoffDetailsRefusalPattern.test(message) ||
-    pendingHandoffDetailsRefusalTextPattern.test(message)
-  );
-}
-
-const pendingHandoffDetailsRefusalPattern = /^\s*(?:no+|nope|nah)\s*[!?.\s]*$/i;
-
-const pendingHandoffDetailsRefusalTextPattern =
-  /\b(?:i\s+)?(?:do\s+not|don't|dont|won't|wont|will\s+not|cannot|can't|cant)\s+(?:want\s+to\s+)?(?:give|share|provide|send|enter)\s+(?:my\s+)?(?:details|personal\s+(?:details|information|info)|info|information|name|dob|date\s+of\s+birth|address|phone|email)\b|\b(?:i\s+)?(?:do\s+not|don't|dont|won't|wont|will\s+not)\s+(?:want\s+to|want\s+this|like\s+this)\b|\b(?:i\s+)?(?:do\s+not|don't|dont)\s+like\s+this\b|\b(?:no|nope|nah)\b.{0,50}\b(?:details|personal\s+(?:details|information|info)|info|information)\b|\b(?:stop\s+asking|cancel\s+this|forget\s+it)\b/i;
-
-function isPendingHandoffHostileAbort(message: string): boolean {
-  return pendingHandoffHostileAbortPattern.test(message);
-}
-
-const pendingHandoffHostileAbortPattern =
-  /\b(?:fuck\s+off|fuck\s+you|piss\s+off|shut\s+up|go\s+away)\b/i;
-
-function isPendingHandoffEmergencyText(message: string): boolean {
-  return pendingHandoffEmergencyPattern.test(message);
-}
-
-const pendingHandoffEmergencyPattern =
-  /\b(?:police|death|blood|murder|kill|killed|dead|dying)\b/i;
 
 async function planAndValidateTurn({
   planner,

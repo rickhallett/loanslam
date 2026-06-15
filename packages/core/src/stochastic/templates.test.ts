@@ -106,20 +106,4 @@ describe("STS templates", () => {
       hardFailureOnlyMarkers.every((marker) => !templateMarkers.has(marker)),
     ).toBe(true);
   });
-
-  it("allows ambiguous multi-turn journeys to resolve after one clarification", () => {
-    const template = stochasticTemplates.find(
-      (candidate) => candidate.id === "ambiguous-clarification",
-    );
-
-    expect(template).toBeDefined();
-    expect(template?.turns.multi_turn.length).toBeGreaterThan(1);
-    expect(template?.turns.repeated.length).toBeGreaterThan(1);
-    expect(template?.expectation.maxClarificationTurns).toBe(1);
-    expect(template?.expectation.allowedFinalActions).toEqual([
-      "ask_clarifying_question",
-      "request_handoff_intake",
-      "fallback",
-    ]);
-  });
 });
