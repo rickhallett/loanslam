@@ -32,6 +32,12 @@ import {
 import { buildPersonaReport } from "./simulation/personaReport";
 import { runStochasticTestSimulator } from "./stochastic/runner";
 import { buildRouteAuditArtifacts } from "./routeAudit";
+import {
+  executeHellWeek,
+  loadJudgeVerdicts,
+  renderFromRun,
+  type HellWeekRunArtifacts,
+} from "./hellweek/run";
 
 export interface CliResult {
   exitCode: number;
@@ -94,6 +100,10 @@ export async function runCli(
 
     if (command === "route-audit") {
       return runRouteAudit(rest);
+    }
+
+    if (command === "hell-week") {
+      return await runHellWeekCommand(rest, env, plannerFactory);
     }
 
     if (command === "chat") {
@@ -348,6 +358,113 @@ function runRouteAudit(args: string[]): CliResult {
       2,
     ),
   );
+}
+
+function resolveHellWeekSignalExtractor(
+  mode: string,
+  env: CliEnv,
+): OpenAiSignalExtractor | undefined {
+  if (mode === "off") {
+    return undefined;
+  }
+
+  if (mode === "on") {
+    const config = loadOpenAiSignalExtractorConfig({
+      ...env,
+      OPENAI_SIGNAL_EXTRACTOR_ENABLED: "1",
+    });
+    return config ? new OpenAiSignalExtractor({ config }) : undefined;
+  }
+
+  return createSignalExtractor(env);
+}
+
+function hellWeekSummary(
+  artifacts: HellWeekRunArtifacts,
+  asJson: boolean,
+): string {
+  const { report } = artifacts;
+
+  if (asJson) {
+    return JSON.stringify({
+      runId: artifacts.runId,
+      verdict: report.verdict,
+      totals: report.totals,
+      safetyFloorBreached: report.safetyFloor.breached,
+      reportHtmlPath: artifacts.reportHtmlPath,
+      runDir: artifacts.runDir,
+    });
+  }
+
+  return [
+    `Hell Week: ${report.verdict.toUpperCase()}`,
+    report.headline,
+    "",
+    `Scenarios: ${report.totals.passed}/${report.totals.scenarios} pass (${Math.round(report.totals.passRate * 100)}%)`,
+    `Demo-killers: ${report.totals.demoKillers} · Dents: ${report.totals.dents} · Errored: ${report.totals.errored}`,
+    `Safety floor: ${report.safetyFloor.breached ? "BREACHED" : "holding"} (${report.safetyFloor.pass}/${report.safetyFloor.total})`,
+    report.deflection.total > 0
+      ? `Deflection: ${Math.round(report.deflection.rate * 100)}% (${report.deflection.answered}/${report.deflection.total})`
+      : "Deflection: n/a",
+    "",
+    `Report: ${artifacts.reportHtmlPath}`,
+    `Run dir: ${artifacts.runDir}`,
+    report.judged
+      ? "Graded with LLM judge verdicts."
+      : `Judge inputs: ${artifacts.scenariosDir}`,
+  ]
+    .filter((line) => line !== undefined)
+    .join("\n");
+}
+
+async function runHellWeekCommand(
+  args: string[],
+  env: CliEnv,
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekHelpText());
+  }
+
+  const profile = readOption(normalized, "--profile") ?? "full";
+  const outBaseDir = readOption(normalized, "--out") ?? defaultTraceDir;
+  const concurrencyRaw = readOption(normalized, "--concurrency");
+  const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
+  const fromDir = readOption(normalized, "--from");
+  const judgePath = readOption(normalized, "--judge-verdicts");
+  const signalsMode = readOption(normalized, "--signals") ?? "on";
+  const asJson = normalized.includes("--json");
+
+  if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency <= 0)) {
+    return fail("--concurrency must be a positive integer.");
+  }
+
+  const judgeVerdicts = judgePath ? loadJudgeVerdicts(judgePath) : undefined;
+
+  if (fromDir) {
+    const artifacts = renderFromRun({
+      runDir: fromDir,
+      ...(judgeVerdicts ? { judgeVerdicts } : {}),
+    });
+    return ok(hellWeekSummary(artifacts, asJson));
+  }
+
+  const signalExtractor = resolveHellWeekSignalExtractor(signalsMode, env);
+  const planner = plannerFactory();
+  const artifacts = await executeHellWeek({
+    profile,
+    corpus: loadCorpusFromFile().items,
+    planner,
+    ...(signalExtractor ? { signalExtractor } : {}),
+    outBaseDir,
+    ...(concurrency ? { concurrency } : {}),
+    ...(judgeVerdicts ? { judgeVerdicts } : {}),
+    onProgress: (message) => process.stderr.write(`${message}\n`),
+  });
+
+  return ok(hellWeekSummary(artifacts, asJson));
 }
 
 async function runInteractiveChat(
@@ -666,6 +783,7 @@ function helpText(): string {
     "  persona-simulate                  Run the persona scenario suite",
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
+    "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "",
@@ -684,6 +802,32 @@ function routeAuditHelpText(): string {
     "",
     "The run folder may be the lab API run root, a battery folder, or its logs folder.",
     "Reads summary.json, turn-log.jsonl, and scenario dumps, then writes route-audit.json and route-audit.md.",
+  ].join("\n");
+}
+
+function hellWeekHelpText(): string {
+  return [
+    "LoanSlam Hell Week gauntlet",
+    "",
+    "Usage:",
+    "  hell-week [--profile full|smoke] [--out <dir>] [--concurrency <n>]",
+    "            [--signals on|off|auto] [--from <runDir>]",
+    "            [--judge-verdicts <path>] [--json]",
+    "",
+    "Drives the full hostile scenario battery against the live model-backed",
+    "engine, grades each scenario (hard safety floor + envelope, plus optional",
+    "LLM judge verdicts), and writes report.html / report.json to a run folder.",
+    "",
+    "Options:",
+    "  --profile <id>          full (default) or smoke",
+    "  --out <dir>             base output dir (default artifacts/phase0)",
+    "  --concurrency <n>       scenarios driven in parallel (default 4)",
+    "  --signals <mode>        on (default), off, or auto (env-driven)",
+    "  --from <runDir>         re-render from a captured run; no live calls",
+    "  --judge-verdicts <p>    merge LLM judge verdicts (JSON array or JSONL)",
+    "  --json                  print compact JSON summary",
+    "",
+    "Planner-backed; requires OPENAI_API_KEY. Use OPENAI_MODEL to override the model.",
   ].join("\n");
 }
 

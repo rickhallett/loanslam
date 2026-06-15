@@ -44,6 +44,10 @@ core-stochastic *stochastic_flags:
 route-audit *audit_flags:
     @npm --silent run core:route-audit -- {{audit_flags}}
 
+# Run the Hell Week gauntlet (full battery) and write an HTML dashboard. e.g. -- --profile smoke
+hell-week *hell_flags:
+    @npm --silent run core:hell-week -- {{hell_flags}}
+
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{chat_flags}}
