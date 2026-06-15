@@ -10,9 +10,11 @@ import type {
 import Composer from "./components/Composer.vue";
 import MessageList from "./components/MessageList.vue";
 import {
+  cancelHandoff,
   createSession,
   resetSession,
   sendMessage as engineSend,
+  submitIntake,
 } from "./engineClient";
 import {
   announceReady,
@@ -36,7 +38,7 @@ interface ChatMessage {
 }
 
 const WELCOME =
-  "Hi, I'm the MAL assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+  "Hi, I'm the LoanSlam assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
 
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
@@ -96,24 +98,52 @@ function choose(label: string): void {
   void submit(label);
 }
 
-function onIntakeSubmit(values: Partial<Record<IntakeField, string>>): void {
-  const phrasing: Record<IntakeField, string> = {
-    fullName: "My full name is",
-    dateOfBirth: "My date of birth is",
-    postcode: "My postcode is",
-    email: "My email is",
-    phone: "My phone number is",
-  };
+async function onIntakeSubmit(
+  values: Record<IntakeField, string>,
+): Promise<void> {
+  if (isSending.value || isChatComplete.value) {
+    return;
+  }
 
-  const parts = (Object.keys(values) as IntakeField[])
-    .map((field) => {
-      const value = values[field]?.trim();
-      return value ? `${phrasing[field]} ${value}` : null;
-    })
-    .filter((part): part is string => part !== null);
+  errorMessage.value = "";
+  isSending.value = true;
 
-  if (parts.length > 0) {
-    void submit(parts.join(". "));
+  try {
+    const reference = await ensureSession();
+    const result = await submitIntake(reference, values);
+    pushMessage("customer", "Shared my contact details.");
+    pushMessage("assistant", result.customerMessage, result.ui);
+    isChatComplete.value = true;
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong sharing your details. Please try again.";
+  } finally {
+    isSending.value = false;
+  }
+}
+
+async function onIntakeCancel(): Promise<void> {
+  if (isSending.value || isChatComplete.value) {
+    return;
+  }
+
+  errorMessage.value = "";
+
+  try {
+    const reference = await ensureSession();
+    await cancelHandoff(reference);
+    pushMessage(
+      "assistant",
+      "No problem — ask me anything else about your LoanSlam loan.",
+      null,
+    );
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong cancelling the handoff. Please try again.";
   }
 }
 
@@ -159,12 +189,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="widget-shell" aria-label="MAL chat widget">
+  <main class="widget-shell" aria-label="LoanSlam chat widget">
     <section class="chat-panel">
       <header class="chat-header">
         <div>
-          <p class="eyebrow">MAL chat</p>
-          <h1>MAL assistant</h1>
+          <p class="eyebrow">LoanSlam chat</p>
+          <h1>LoanSlam assistant</h1>
           <p class="chat-status">Prototype support chat</p>
         </div>
         <div class="chat-header-actions">
@@ -192,6 +222,7 @@ onUnmounted(() => {
         :thinking="isSending"
         @choose="choose"
         @intake-submit="onIntakeSubmit"
+        @intake-cancel="onIntakeCancel"
       />
 
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
@@ -203,7 +234,7 @@ onUnmounted(() => {
         Prototype — conversations are recorded. Please use test details only.
       </p>
 
-      <Composer :disabled="isSending || isChatComplete" @send="submit" />
+      <Composer :sending="isSending" :locked="isChatComplete" @send="submit" />
     </section>
   </main>
 </template>

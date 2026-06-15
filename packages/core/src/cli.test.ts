@@ -326,7 +326,7 @@ describe("Phase 0 CLI", () => {
     const result = await runCli(["chat"], {}, plannerFactory, { io });
 
     expect(result.exitCode).toBe(0);
-    expect(io.output).toEqual(["Loanslam Phase 0 chat. Type /exit to leave."]);
+    expect(io.output).toEqual(["LoanSlam Phase 0 chat. Type /exit to leave."]);
     expect(result.stdout).toBe("");
   });
 

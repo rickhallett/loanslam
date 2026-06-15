@@ -58,7 +58,7 @@ describe("runStochasticTestSimulator", () => {
       "Stochastic Test Simulator Summary",
     );
     expect(readFileSync(result.paths.dashboardHtml, "utf8")).toContain(
-      "Loanslam Phase 0 Stochastic Test Simulator",
+      "LoanSlam Phase 0 Stochastic Test Simulator",
     );
   });
 
@@ -162,7 +162,7 @@ describe("runStochasticTestSimulator", () => {
 const corpus: CorpusItem[] = [
   {
     id: "apply-online",
-    question: "Can I apply for a Loanslam loan online?",
+    question: "Can I apply for a LoanSlam loan online?",
     question_variants: [
       "Can I apply online?",
       "Can I apply on the website?",
@@ -302,10 +302,10 @@ function testPlanner(): TurnPlanner & { metadata: PlannerMetadata } {
 
       return {
         action: "request_handoff_intake",
-        customerMessage: "I need to pass this to the Loanslam team.",
+        customerMessage: "I need to pass this to the LoanSlam team.",
         ui: {
           primitive: "intake_form",
-          message: "I need to pass this to the Loanslam team.",
+          message: "I need to pass this to the LoanSlam team.",
           fields: [
             "fullName",
             "dateOfBirth",

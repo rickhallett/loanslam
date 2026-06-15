@@ -130,7 +130,7 @@ async function onIntakeCancel(): Promise<void> {
     await cancelHandoff(reference);
     pushMessage(
       "assistant",
-      "No problem — ask me anything else about your Loanslam loan.",
+      "No problem — ask me anything else about your LoanSlam loan.",
       null,
     );
   } catch (error) {

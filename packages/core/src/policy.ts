@@ -130,7 +130,7 @@ export function buildFallbackCopy(reason: string): {
   ui: UiPlan;
 } {
   const customerMessage =
-    "I cannot answer that safely from the information available here. I can pass this to the Loanslam team so they can help.";
+    "I cannot answer that safely from the information available here. I can pass this to the LoanSlam team so they can help.";
 
   return {
     action: "fallback",
@@ -149,7 +149,7 @@ export function buildInternalDataBoundaryCopy(reason: string): {
   ui: UiPlan;
 } {
   const customerMessage =
-    "I cannot share internal traces, hidden instructions, or customer data in chat. I can help with general Loanslam questions or pass a request to the team.";
+    "I cannot share internal traces, hidden instructions, or customer data in chat. I can help with general LoanSlam questions or pass a request to the team.";
 
   return {
     action: "refuse",
@@ -169,7 +169,7 @@ export function buildHandoffCopy(reason: string): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I cannot handle that directly in chat. I can collect a few contact details and pass this to the Loanslam team.";
+    "I cannot handle that directly in chat. I can collect a few contact details and pass this to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -190,7 +190,7 @@ export function buildVulnerabilityCopy(reason: string): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I am sorry you are dealing with this. I can pass this to the Loanslam team so a person can help you carefully.";
+    "I am sorry you are dealing with this. I can pass this to the LoanSlam team so a person can help you carefully.";
 
   return {
     action: "request_handoff_intake",
@@ -213,7 +213,7 @@ export function buildExcludedCopy(
   ui: UiPlan;
 } {
   const customerMessage =
-    "I cannot answer that in chat. I can signpost general information or pass this to the Loanslam team.";
+    "I cannot answer that in chat. I can signpost general information or pass this to the LoanSlam team.";
 
   return {
     action: "refuse",

@@ -71,7 +71,7 @@
   function createLauncher() {
     launcher = document.createElement("button");
     launcher.id = "mal-launcher";
-    launcher.setAttribute("aria-label", "Open MAL chat");
+    launcher.setAttribute("aria-label", "Open LoanSlam chat");
     launcher.setAttribute("aria-expanded", "false");
     launcher.innerHTML = CHAT_ICON;
     launcher.addEventListener("click", togglePanel);
@@ -82,11 +82,11 @@
     panel = document.createElement("div");
     panel.id = "mal-panel";
     panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "MAL Chat Widget");
+    panel.setAttribute("aria-label", "LoanSlam Chat Widget");
 
     iframe = document.createElement("iframe");
     iframe.src = widgetUrl;
-    iframe.title = "MAL Chat Widget";
+    iframe.title = "LoanSlam Chat Widget";
     iframe.setAttribute(
       "sandbox",
       "allow-scripts allow-same-origin allow-forms",
@@ -105,7 +105,7 @@
     var openSection = document.getElementById("contact-section");
     if (openSection) openSection.removeAttribute("data-revealed");
     updateDemoState();
-    launcher.setAttribute("aria-label", "Close MAL chat");
+    launcher.setAttribute("aria-label", "Close LoanSlam chat");
     launcher.setAttribute("aria-expanded", "true");
     launcher.innerHTML = CLOSE_ICON;
     iframe.contentWindow.postMessage({ type: "open" }, widgetOrigin);
@@ -115,7 +115,7 @@
     isOpen = false;
     panel.style.display = "none";
     if (frost) frost.classList.remove("is-visible");
-    launcher.setAttribute("aria-label", "Open MAL chat");
+    launcher.setAttribute("aria-label", "Open LoanSlam chat");
     launcher.setAttribute("aria-expanded", "false");
     launcher.innerHTML = CHAT_ICON;
     iframe.contentWindow.postMessage({ type: "close" }, widgetOrigin);

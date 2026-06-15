@@ -69,7 +69,7 @@ const cases = [
         turnIndex: 1,
         userMessage: "i would like ot take aout a loan",
         assistantMessage:
-          "I cannot handle that directly in chat. I can collect a few contact details and pass this to the Loanslam team.",
+          "I cannot handle that directly in chat. I can collect a few contact details and pass this to the LoanSlam team.",
         finalAction: "request_handoff_intake",
         selectedServingMode: "handoff_account_specific",
         safetyFlags: ["account_specific_request", "change_request"],
@@ -80,7 +80,7 @@ const cases = [
         turnIndex: 2,
         userMessage: "sorry?",
         assistantMessage:
-          "No problem--if you'd like to take out a loan, I'll pass your details to the Loanslam team so they can help you next.",
+          "No problem--if you'd like to take out a loan, I'll pass your details to the LoanSlam team so they can help you next.",
         finalAction: "request_handoff_intake",
         selectedServingMode: "handoff_account_specific",
         safetyFlags: ["account_specific_request", "change_request"],
@@ -91,7 +91,7 @@ const cases = [
         turnIndex: 3,
         userMessage: "what details?",
         assistantMessage:
-          "To help you take out a loan, I'll pass your details to the Loanslam team. What's your full name?",
+          "To help you take out a loan, I'll pass your details to the LoanSlam team. What's your full name?",
         finalAction: "request_handoff_intake",
         selectedServingMode: "handoff_account_specific",
         safetyFlags: ["account_specific_request", "change_request"],
@@ -108,7 +108,7 @@ const cases = [
       turn({
         userMessage: "What is my settlement figure today?",
         assistantMessage:
-          "I can't check your personal settlement figure in this chat. I can pass this to the Loanslam team. They'll need your full name, date of birth, address, phone number, email, and a short summary of what you need. Let's start with your full name.",
+          "I can't check your personal settlement figure in this chat. I can pass this to the LoanSlam team. They'll need your full name, date of birth, address, phone number, email, and a short summary of what you need. Let's start with your full name.",
         finalAction: "request_handoff_intake",
         selectedServingMode: "handoff_account_specific",
         safetyFlags: ["account_specific_request"],
@@ -125,7 +125,7 @@ const cases = [
       turn({
         userMessage: "I would like to take out a loan",
         assistantMessage:
-          "You can apply online in a few minutes using the Loanslam application form. The first two pages give you a personalised quote with no impact on your credit score.",
+          "You can apply online in a few minutes using the LoanSlam application form. The first two pages give you a personalised quote with no impact on your credit score.",
         finalAction: "answer",
         selectedServingMode: "answer",
         retrievedItemIds: ["how-do-i-apply"],
@@ -143,7 +143,7 @@ const cases = [
       turn({
         userMessage: "Can you check whether my application was approved?",
         assistantMessage:
-          "I can't check that directly in chat, but I can collect a few details and pass this to the Loanslam team.",
+          "I can't check that directly in chat, but I can collect a few details and pass this to the LoanSlam team.",
         finalAction: "request_handoff_intake",
         selectedServingMode: "handoff_account_specific",
         safetyFlags: ["account_specific_request"],

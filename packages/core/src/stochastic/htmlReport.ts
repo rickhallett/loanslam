@@ -47,7 +47,7 @@ function hero(report: StochasticRunArtifact): string {
   return `
 <section class="hero ${verdictTone(report.verdict)}">
   <div>
-    <p class="eyebrow">Loanslam Phase 0 Stochastic Test Simulator</p>
+    <p class="eyebrow">LoanSlam Phase 0 Stochastic Test Simulator</p>
     <h1>${escapeHtml(report.profile)} run: ${label(report.verdict)}</h1>
     <p class="takeaway">${escapeHtml(practicalTakeaway(report))}</p>
   </div>

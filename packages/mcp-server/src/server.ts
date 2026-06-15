@@ -27,7 +27,7 @@ const conversationRefInput = z
   .min(1)
   .describe("Lab API conversationRef returned by lab_session_start.");
 
-export function createLoanslamLabApiMcpServer(): McpServer {
+export function createLoanSlamLabApiMcpServer(): McpServer {
   const server = new McpServer({
     name: "loanslam-lab-api",
     version: "0.1.0",
@@ -37,7 +37,7 @@ export function createLoanslamLabApiMcpServer(): McpServer {
     "lab_session_start",
     {
       title: "Start Lab Session",
-      description: "Create a new in-memory Loanslam Phase 0 lab API session.",
+      description: "Create a new in-memory LoanSlam Phase 0 lab API session.",
       inputSchema: {
         baseUrl: baseUrlInput,
       },
@@ -165,10 +165,10 @@ export function createLoanslamLabApiMcpServer(): McpServer {
 }
 
 export async function main(): Promise<void> {
-  const server = createLoanslamLabApiMcpServer();
+  const server = createLoanSlamLabApiMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Loanslam Lab API MCP server running on stdio");
+  console.error("LoanSlam Lab API MCP server running on stdio");
 }
 
 function options(baseUrl: string | undefined): { baseUrl?: string } {

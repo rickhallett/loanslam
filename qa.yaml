@@ -166,7 +166,7 @@ session_investigation_04ae72b2:
       finding: >
         Sticky distress and vulnerability flags caused each later turn to be
         overridden into request_handoff_intake, even when the customer said they
-        did not want a loan or asked what Loanslam is.
+        did not want a loan or asked what LoanSlam is.
       final_action: request_handoff_intake
       validator_overrides:
         - safety_flag_route_to_handoff
@@ -195,7 +195,7 @@ session_investigation_6553c3d1:
     The session got stuck in full handoff intake because a meta/status message
     about restarting the server matched a vulnerability route on the single
     token "so". The first turn set vulnerability state; the later apology and
-    "what is Loanslam?" question were then overridden into request_handoff_intake.
+    "what is LoanSlam?" question were then overridden into request_handoff_intake.
   final_state:
     history_messages: 6
     traces: 3

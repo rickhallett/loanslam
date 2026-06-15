@@ -7,7 +7,7 @@ export const journeyFixtures: JourneyFixture[] = journeyFixtureSchema
       id: "answerable-faq",
       title: "Answerable FAQ",
       description:
-        "Answers a general Loanslam question from cited corpus copy.",
+        "Answers a general LoanSlam question from cited corpus copy.",
       customerTurns: ["Can I apply on the website?"],
       expectation: {
         allowedFinalActions: ["answer"],

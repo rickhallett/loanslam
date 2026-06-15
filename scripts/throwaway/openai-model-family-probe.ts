@@ -160,13 +160,13 @@ const scenarios: Scenario[] = [
 ];
 
 const instructions = [
-  "You classify one Loanslam customer message for routing.",
+  "You classify one LoanSlam customer message for routing.",
   "Return only the structured fields requested by the schema.",
   "Routes:",
   "- answer_public: public product or process FAQ that can be answered from approved public information.",
   "- handoff_account_specific: account-specific requests, identity-specific balances, applications, tickets, or references.",
   "- route_vulnerability: hardship, payment difficulty, vulnerability, accessibility, legal, distress, or complaint signals needing a person.",
-  "- excluded: request is outside Loanslam lending support or asks for financial/legal advice.",
+  "- excluded: request is outside LoanSlam lending support or asks for financial/legal advice.",
   "- unclear: not enough information to route.",
   "Negated safety language is not active vulnerability evidence. For example, 'not a hardship thing' must not set hardship or vulnerability.",
   "Use safetyFlags ['none'] only when no other flag applies.",
@@ -386,7 +386,7 @@ function buildRequestInput(
   | { instructions: string; input: Array<{ role: "user"; content: string }> } {
   const userPayload = JSON.stringify(
     {
-      productBoundary: "Loanslam UK loan lead/customer support.",
+      productBoundary: "LoanSlam UK loan lead/customer support.",
       currentCustomerMessage: scenario.customerMessage,
       expectedOutputPurpose:
         "Probe routing reliability, not production customer wording.",

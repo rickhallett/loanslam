@@ -521,7 +521,7 @@ function buildMissingHandoffFragment(
   reason: string,
 ): ValidatedPlanFragment {
   const customerMessage =
-    "Thanks — I have some of your details, but I still need a few more before I can pass this to the Loanslam team. Please add the remaining details below.";
+    "Thanks — I have some of your details, but I still need a few more before I can pass this to the LoanSlam team. Please add the remaining details below.";
   const override: ValidatorOverride = {
     code,
     reason,
@@ -556,14 +556,14 @@ function buildCompletedHandoffMessage({
   const referenceText = `Your customer services support reference is ${reference}.`;
 
   if (safetyFlags.includes("complaint")) {
-    return `I've passed your complaint to the Loanslam team. ${contactText}\n\n${referenceText}`;
+    return `I've passed your complaint to the LoanSlam team. ${contactText}\n\n${referenceText}`;
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return `I've passed this to the Loanslam team so a person can help you carefully. ${contactText}\n\n${referenceText}`;
+    return `I've passed this to the LoanSlam team so a person can help you carefully. ${contactText}\n\n${referenceText}`;
   }
 
-  return `I've passed this to the Loanslam team. ${contactText}\n\n${referenceText}`;
+  return `I've passed this to the LoanSlam team. ${contactText}\n\n${referenceText}`;
 }
 
 function buildContactText(facts: Record<string, string>): string {
@@ -690,21 +690,21 @@ function buildHandoffIntroMessage({
   safetyFlags: readonly ConversationState["safetyFlags"][number][];
 }): string {
   if (safetyFlags.includes("complaint")) {
-    return "I'm sorry you've had a poor experience. I'll pass this to the Loanslam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.";
+    return "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.";
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "I'd rather get you to a person who can help with this properly. Please share a few contact details below and the Loanslam team will be in touch.";
+    return "I'd rather get you to a person who can help with this properly. Please share a few contact details below and the LoanSlam team will be in touch.";
   }
 
   if (
     servingMode === "handoff_account_specific" ||
     hasHandoffSafetyFlag(safetyFlags)
   ) {
-    return "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.";
+    return "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.";
   }
 
-  return "I'll pass this to the Loanslam team so a person can help. Please share a few contact details below so they can get back to you.";
+  return "I'll pass this to the LoanSlam team so a person can help. Please share a few contact details below so they can get back to you.";
 }
 
 function shouldApplyExtractedHandoffFacts(

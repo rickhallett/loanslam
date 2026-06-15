@@ -8,7 +8,7 @@ describe("renderStochasticDashboardHtml", () => {
     const html = renderStochasticDashboardHtml(report());
 
     expect(html).toContain("<!doctype html>");
-    expect(html).toContain("Loanslam Phase 0 Stochastic Test Simulator");
+    expect(html).toContain("LoanSlam Phase 0 Stochastic Test Simulator");
     expect(html).toContain("Hard failures");
     expect(html).toContain("Coverage");
     expect(html).toContain("Review Queue");

@@ -408,11 +408,11 @@ describe("processTurn", () => {
         return {
           action: "request_handoff_intake",
           customerMessage:
-            "I can collect a few details and pass this to the Loanslam team.",
+            "I can collect a few details and pass this to the LoanSlam team.",
           ui: {
             primitive: "intake_form",
             message:
-              "I can collect a few details and pass this to the Loanslam team.",
+              "I can collect a few details and pass this to the LoanSlam team.",
             fields: [...standardHandoffFields],
           },
           reasonCode: "handoff",
@@ -450,11 +450,11 @@ describe("processTurn", () => {
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+        "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
       fields: ["dateOfBirth", "postcode"],
     });
     expect(result.customerMessage).toBe(
-      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
     );
     expect(result.state.requestedFields).toEqual(["dateOfBirth", "postcode"]);
     expect(result.state.collectedFacts).toMatchObject({
@@ -470,11 +470,11 @@ describe("processTurn", () => {
         return {
           action: "request_handoff_intake",
           customerMessage:
-            "I can collect a few contact details and pass this to the Loanslam team.",
+            "I can collect a few contact details and pass this to the LoanSlam team.",
           ui: {
             primitive: "intake_form",
             message:
-              "I can collect a few contact details and pass this to the Loanslam team.",
+              "I can collect a few contact details and pass this to the LoanSlam team.",
             fields: [...standardHandoffFields],
           },
           reasonCode: "handoff",
@@ -498,12 +498,12 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "I can't view or change account details myself in this chat, so I'll pass this to the Loanslam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+        "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
       fields: standardHandoffFields,
     });
   });
@@ -598,7 +598,7 @@ describe("processTurn", () => {
       reference: "LS-CONV1",
     });
     expect(result.customerMessage).toContain(
-      "I've passed this to the Loanslam team.",
+      "I've passed this to the LoanSlam team.",
     );
     expect(result.customerMessage).toContain(
       "They will contact you on bob@example.com or 07845729939 within the next 48 hours.",
@@ -720,7 +720,7 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "Thanks — I have some of your details, but I still need a few more before I can pass this to the Loanslam team. Please add the remaining details below.",
+      "Thanks — I have some of your details, but I still need a few more before I can pass this to the LoanSlam team. Please add the remaining details below.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
@@ -747,10 +747,10 @@ describe("processTurn", () => {
       async planTurn() {
         return {
           action: "request_handoff_intake",
-          customerMessage: "I can pass this complaint to the Loanslam team.",
+          customerMessage: "I can pass this complaint to the LoanSlam team.",
           ui: {
             primitive: "intake_form",
-            message: "I can pass this complaint to the Loanslam team.",
+            message: "I can pass this complaint to the LoanSlam team.",
             fields: [...standardHandoffFields],
           },
           reasonCode: "post_ticket_complaint",
@@ -774,7 +774,7 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("create_ticket");
     expect(result.customerMessage).toMatch(/complaint/i);
-    expect(result.customerMessage).toMatch(/Loanslam team/i);
+    expect(result.customerMessage).toMatch(/LoanSlam team/i);
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
       reference: "LS-CONV1",
@@ -852,10 +852,10 @@ describe("processTurn", () => {
         return {
           action: "create_ticket",
           customerMessage:
-            "Thanks, Alex. The Loanslam team can review the request.",
+            "Thanks, Alex. The LoanSlam team can review the request.",
           ui: {
             primitive: "message",
-            message: "Thanks, Alex. The Loanslam team can review the request.",
+            message: "Thanks, Alex. The LoanSlam team can review the request.",
             links: [],
           },
           reasonCode: "ticket_with_wrong_ui",
@@ -1002,11 +1002,11 @@ describe("processTurn", () => {
         return {
           action: "request_handoff_intake",
           customerMessage:
-            "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+            "I cannot handle that directly in chat. I can pass this to the LoanSlam team.",
           ui: {
             primitive: "intake_form",
             message:
-              "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+              "I cannot handle that directly in chat. I can pass this to the LoanSlam team.",
             fields: [...standardHandoffFields],
           },
           reasonCode: "handoff_sensitive_overshare",

@@ -125,7 +125,7 @@ export const stochasticTemplates: readonly StochasticTemplate[] = [
     languageNoise: ["clean", "typo", "vague"],
     riskMarkers: ["none"],
     turns: {
-      single_turn: ["Can I apply for a Loanslam loan online?"],
+      single_turn: ["Can I apply for a LoanSlam loan online?"],
       multi_turn: [
         "I am looking at applying.",
         "Can I start the application online?",

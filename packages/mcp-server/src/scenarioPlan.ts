@@ -160,7 +160,7 @@ function faqFirstMessage(brief: string): string {
     return "Will checking a quote affect my credit score?";
   }
 
-  return "What is Loanslam?";
+  return "What is LoanSlam?";
 }
 
 function detectBlockedInputs(brief: string): string[] {

@@ -194,7 +194,7 @@ export function validateTurnPlan(
       selectedMatch?.servingMode === "handoff_account_specific"
         ? buildHandoffCopy(
             selectedMatch?.item?.route_reason ??
-              "Account-specific values, dates, rates, approvals, or account changes must be handled by the Loanslam team.",
+              "Account-specific values, dates, rates, approvals, or account changes must be handled by the LoanSlam team.",
           )
         : buildFallbackCopy(
             "Account-specific values, dates, rates, approvals, or account changes must not be promised in chat.",
@@ -514,7 +514,7 @@ function applyServingModeOverride(
   if (match.servingMode === "handoff_account_specific") {
     const handoff = buildHandoffCopy(
       match.item?.route_reason ??
-        "This needs account-specific handling by the Loanslam team.",
+        "This needs account-specific handling by the LoanSlam team.",
     );
 
     return applyOverride(

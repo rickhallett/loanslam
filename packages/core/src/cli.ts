@@ -363,7 +363,7 @@ async function runInteractiveChat(
   const signalExtractor = createSignalExtractor(env);
 
   try {
-    writeLine(io, outputLines, "Loanslam Phase 0 chat. Type /exit to leave.");
+    writeLine(io, outputLines, "LoanSlam Phase 0 chat. Type /exit to leave.");
 
     while (true) {
       const message = await io.readLine("> ");
@@ -441,7 +441,7 @@ async function runServer(
     server.listen(port, "127.0.0.1", resolve);
   });
 
-  return ok(`Loanslam Phase 0 lab API listening on http://127.0.0.1:${port}`);
+  return ok(`LoanSlam Phase 0 lab API listening on http://127.0.0.1:${port}`);
 }
 
 interface StochasticCliArgs {
@@ -657,7 +657,7 @@ function fail(stderr: string): CliResult {
 
 function helpText(): string {
   return [
-    "Loanslam Phase 0 core commands",
+    "LoanSlam Phase 0 core commands",
     "",
     "Commands:",
     "  turn --message <text>             Run one real planner-backed turn",
@@ -676,7 +676,7 @@ function helpText(): string {
 
 function routeAuditHelpText(): string {
   return [
-    "Loanslam Phase 0 route audit",
+    "LoanSlam Phase 0 route audit",
     "",
     "Usage:",
     "  route-audit <run-folder> [--json-output <path>]",
@@ -689,7 +689,7 @@ function routeAuditHelpText(): string {
 
 function stochasticHelpText(): string {
   return [
-    "Loanslam Phase 0 stochastic simulator",
+    "LoanSlam Phase 0 stochastic simulator",
     "",
     "Usage:",
     "  stochastic [--seed <value>] [--profile smoke|review|soak]",
@@ -727,7 +727,7 @@ function stochasticRunText(
 
 function serverHelpText(): string {
   return [
-    "Loanslam Phase 0 lab API",
+    "LoanSlam Phase 0 lab API",
     "",
     "Usage:",
     "  serve [--port <port>]",

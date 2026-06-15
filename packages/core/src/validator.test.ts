@@ -103,11 +103,11 @@ function handoffPlan(overrides: Partial<TurnPlan> = {}): TurnPlan {
   return plan({
     action: "request_handoff_intake",
     customerMessage:
-      "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+      "I cannot handle that directly in chat. I can pass this to the LoanSlam team.",
     ui: {
       primitive: "intake_form",
       message:
-        "I cannot handle that directly in chat. I can pass this to the Loanslam team.",
+        "I cannot handle that directly in chat. I can pass this to the LoanSlam team.",
       fields: [...standardHandoffFields],
     },
     requestedFields: [...standardHandoffFields],
@@ -639,7 +639,7 @@ describe("validateTurnPlan", () => {
           primitive: "clarifying_prompt",
           message:
             "What APR range would you like me to compare against other lenders?",
-          questions: ["Which lender should I compare Loanslam with?"],
+          questions: ["Which lender should I compare LoanSlam with?"],
         },
         grounding: null,
       }),
@@ -691,10 +691,10 @@ describe("validateTurnPlan", () => {
     };
     const fallbackPlan = plan({
       action: "fallback",
-      customerMessage: "This chat can only help with Loanslam loan questions.",
+      customerMessage: "This chat can only help with LoanSlam loan questions.",
       ui: {
         primitive: "safe_fallback",
-        message: "This chat can only help with Loanslam loan questions.",
+        message: "This chat can only help with LoanSlam loan questions.",
         links: [],
       },
       grounding: null,

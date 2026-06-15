@@ -108,7 +108,7 @@ describe("buildPersonaReport", () => {
             turn({
               turnIndex: 1,
               userMessage: "I lost my job and cannot afford repayments.",
-              botMessage: "I can pass this to the Loanslam team.",
+              botMessage: "I can pass this to the LoanSlam team.",
               proposedAction: "answer",
               finalAction: "request_handoff_intake",
               selectedServingMode: "route_vulnerability",

@@ -13,7 +13,7 @@ export const defaultPersonaScenarios: PersonaScenario[] = [
     },
     objective: "Get a grounded answer about applying online.",
     customerTurns: [
-      "Hi, can I apply for a Loanslam loan online?",
+      "Hi, can I apply for a LoanSlam loan online?",
       "Thanks. Do I need to send documents before I apply?",
     ],
     tags: ["cooperative", "answerable_faq"],
