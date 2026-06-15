@@ -9,6 +9,7 @@ import type {
   JourneyFixture,
   JourneyReport,
   PlannerMetadata,
+  SignalExtractor,
   SafetyFlag,
   ServingMode,
   TurnPlanner,
@@ -28,6 +29,7 @@ export interface RunJourneyInput {
   corpus: readonly CorpusItem[];
   planner?: PlannerWithMetadata;
   plannerFactory?: (journey: JourneyFixture) => PlannerWithMetadata;
+  signalExtractor?: SignalExtractor;
   initialState?: ConversationState;
   initialStateFactory?: (journey: JourneyFixture) => ConversationState;
   now?: Date | (() => Date);
@@ -64,6 +66,7 @@ export async function runJourney({
   corpus,
   planner,
   plannerFactory,
+  signalExtractor,
   initialState,
   initialStateFactory,
   now,
@@ -87,6 +90,7 @@ export async function runJourney({
       state,
       userMessage,
       planner: turnPlanner,
+      signalExtractor,
       corpus,
       now: resolveNow(now),
       idFactory,

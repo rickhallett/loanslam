@@ -9,6 +9,7 @@ import type {
   ConversationState,
   CorpusItem,
   PlannerMetadata,
+  SignalExtractor,
   TurnPlanner,
   TurnTrace,
 } from "@loanslam/contracts";
@@ -20,6 +21,7 @@ type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 export interface CreateLabServerOptions {
   corpus: readonly CorpusItem[];
   plannerFactory: () => PlannerWithMetadata;
+  signalExtractor?: SignalExtractor;
   idFactory?: () => string;
   now?: Date | (() => Date);
 }
@@ -36,6 +38,7 @@ interface JsonBody {
 export function createLabServer({
   corpus,
   plannerFactory,
+  signalExtractor,
   idFactory = randomUUID,
   now,
 }: CreateLabServerOptions) {
@@ -49,6 +52,7 @@ export function createLabServer({
         sessions,
         corpus,
         plannerFactory,
+        signalExtractor,
         idFactory,
         now,
       });
@@ -70,6 +74,7 @@ async function handleRequest({
   sessions,
   corpus,
   plannerFactory,
+  signalExtractor,
   idFactory,
   now,
 }: {
@@ -78,6 +83,7 @@ async function handleRequest({
   sessions: Map<string, LabSession>;
   corpus: readonly CorpusItem[];
   plannerFactory: () => PlannerWithMetadata;
+  signalExtractor?: SignalExtractor;
   idFactory: () => string;
   now: Date | (() => Date) | undefined;
 }): Promise<void> {
@@ -131,6 +137,7 @@ async function handleRequest({
       state: session.state,
       userMessage: body.message,
       planner: plannerFactory(),
+      signalExtractor,
       corpus,
       idFactory,
       now: resolveNow(now),

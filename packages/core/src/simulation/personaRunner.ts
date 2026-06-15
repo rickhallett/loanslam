@@ -8,6 +8,7 @@ import type {
   CorpusItem,
   PersonaScenario,
   PlannerMetadata,
+  SignalExtractor,
   SafetyFlag,
   TranscriptTurn,
   TurnPlanner,
@@ -25,6 +26,7 @@ export interface RunPersonaScenarioInput {
   corpus: readonly CorpusItem[];
   planner?: PlannerWithMetadata;
   plannerFactory?: (scenario: PersonaScenario) => PlannerWithMetadata;
+  signalExtractor?: SignalExtractor;
   initialState?: ConversationState;
   initialStateFactory?: (scenario: PersonaScenario) => ConversationState;
   now?: Date | (() => Date);
@@ -61,6 +63,7 @@ export async function runPersonaScenario({
   corpus,
   planner,
   plannerFactory,
+  signalExtractor,
   initialState,
   initialStateFactory,
   now,
@@ -83,10 +86,11 @@ export async function runPersonaScenario({
   const traces: TurnTrace[] = [];
 
   for (const [turnIndex, userMessage] of scenario.customerTurns.entries()) {
-    const result = await processTurn({
+  const result = await processTurn({
       state,
       userMessage,
       planner: turnPlanner,
+      signalExtractor,
       corpus,
       now: resolveNow(now),
       idFactory,

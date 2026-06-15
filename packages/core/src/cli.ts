@@ -17,6 +17,8 @@ import {
   loadOpenAiPlannerConfig,
   PlannerConfigurationError,
 } from "./planners/config";
+import { loadOpenAiSignalExtractorConfig } from "./signals/config";
+import { OpenAiSignalExtractor } from "./signals/openaiSignalExtractor";
 import { OpenAiTurnPlanner } from "./planners/openaiPlanner";
 import { policyVersion } from "./policy";
 import { buildModelComparisonReport } from "./simulation/report";
@@ -105,6 +107,18 @@ export async function runCli(
   }
 }
 
+function createSignalExtractor(
+  env = process.env,
+): OpenAiSignalExtractor | undefined {
+  const config = loadOpenAiSignalExtractorConfig(env);
+
+  if (!config) {
+    return undefined;
+  }
+
+  return new OpenAiSignalExtractor({ config });
+}
+
 async function runTurn(
   args: string[],
   plannerFactory: PlannerFactory,
@@ -119,10 +133,12 @@ async function runTurn(
   }
 
   const planner = plannerFactory();
+  const signalExtractor = createSignalExtractor();
   const result = await processTurn({
     state: emptyConversationState("cli-turn"),
     userMessage: message,
     planner,
+    signalExtractor,
     corpus: loadCorpusFromFile().items,
   });
 
@@ -137,10 +153,12 @@ async function runSimulation(
     readOption(args, "--trace-output") ??
     join(defaultTraceDir, `traces-${Date.now()}.jsonl`);
   const planner = plannerFactory();
+  const signalExtractor = createSignalExtractor();
   const reports = await runJourneySuite({
     journeys: journeyFixtures,
     corpus: loadCorpusFromFile().items,
     planner,
+    signalExtractor,
     traceOutputPath: outputPath,
   });
   const passed = reports.filter((report) => report.passed).length;
@@ -168,9 +186,11 @@ async function runComparison(
     readOption(args, "--output") ??
     join(defaultTraceDir, `comparison-${Date.now()}.json`);
   const planner = plannerFactory();
+  const signalExtractor = createSignalExtractor();
   const reports = await runJourneySuite({
     journeys: journeyFixtures,
     corpus: loadCorpusFromFile().items,
+    signalExtractor,
     planner,
     traceOutputPath: outputPath.replace(/\.json$/, ".jsonl"),
   });
@@ -197,9 +217,11 @@ async function runPersonaSimulation(
     readOption(args, "--report-output") ??
     join(defaultTraceDir, `persona-report-${Date.now()}.json`);
   const planner = plannerFactory();
+  const signalExtractor = createSignalExtractor();
   const transcripts = await runPersonaSuite({
     scenarios: defaultPersonaScenarios,
     corpus: loadCorpusFromFile().items,
+    signalExtractor,
     planner,
   });
   const report = buildPersonaReport({
@@ -255,6 +277,7 @@ async function runStochasticSimulation(
       : {}),
     corpus: loadCorpusFromFile().items,
     planner: plannerFactory(),
+    signalExtractor: createSignalExtractor(),
   });
 
   if (options.json) {
@@ -281,6 +304,7 @@ async function runInteractiveChat(
   const io = options.io ?? createTerminalIo();
   const outputLines: string[] = [];
   let state = emptyConversationState("cli-chat");
+  const signalExtractor = createSignalExtractor();
 
   try {
     writeLine(io, outputLines, "Loanslam Phase 0 chat. Type /exit to leave.");
@@ -302,6 +326,7 @@ async function runInteractiveChat(
         state,
         userMessage: trimmed,
         planner: plannerFactory(),
+        signalExtractor,
         corpus: loadCorpusFromFile().items,
       });
       state = result.state;
@@ -352,6 +377,7 @@ async function runServer(
   const server = createLabServer({
     corpus: loadCorpusFromFile().items,
     plannerFactory,
+    signalExtractor: createSignalExtractor(),
   });
 
   await new Promise<void>((resolve) => {

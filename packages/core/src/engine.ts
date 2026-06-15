@@ -4,10 +4,13 @@ import type {
   ConversationState,
   CorpusItem,
   IntakeField,
+  SignalBundle,
+  SignalExtractionComparison,
   PlannerMetadata,
   ServingMode,
   TurnPlanner,
   TurnPlan,
+  SignalExtractor,
   ValidatorOverride,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
@@ -28,6 +31,7 @@ export interface ProcessTurnInput {
   state: ConversationState;
   userMessage: string;
   planner: TurnPlanner & { metadata?: PlannerMetadata };
+  signalExtractor?: SignalExtractor;
   corpus: readonly CorpusItem[];
   now?: Date;
   idFactory?: () => string;
@@ -39,6 +43,7 @@ export async function processTurn({
   state,
   userMessage,
   planner,
+  signalExtractor,
   corpus,
   now = new Date(),
   idFactory = randomUUID,
@@ -50,7 +55,23 @@ export async function processTurn({
   const outboundMessageId = idFactory();
   const traceId = idFactory();
   const createdAt = now.toISOString();
-  const retrievedMatches = retrieveMatches(userMessage, corpus);
+
+  const retrievalPromise = Promise.resolve().then(() => retrieveMatches(userMessage, corpus));
+  const signalPromise = signalExtractor
+    ? signalExtractor.extractSignals({ conversationState: state, userMessage })
+    : Promise.resolve(undefined);
+
+  const [retrievedMatchesResult, shadowSignalResult] = await Promise.all([
+    settlement(retrievalPromise),
+    settlement(signalPromise),
+  ]);
+
+  const shadowSignals =
+    shadowSignalResult.status === "fulfilled"
+      ? shadowSignalResult.value
+      : undefined;
+  const retrievedMatches =
+    retrievedMatchesResult.status === "fulfilled" ? retrievedMatchesResult.value : [];
   const plannerInput = {
     conversationState: state,
     userMessage,
@@ -99,6 +120,13 @@ export async function processTurn({
     planner: planner.metadata ?? defaultPlannerMetadata,
     policyVersion,
     retrievedMatches,
+    shadowSignalBundle: shadowSignals,
+    shadowSignalComparison: compareSignalToOutcome({
+      signalBundle: shadowSignals,
+      finalServingMode: validated.selectedServingMode,
+      finalSafetyFlags: validated.safetyFlags,
+      signalStatus: shadowSignalResult.status,
+    }),
     selectedServingMode: validated.selectedServingMode,
     effectiveServingMode,
     selectedRouteReason: validated.selectedRouteReason,
@@ -110,6 +138,68 @@ export async function processTurn({
     createdAt,
   };
 
+function settlement<T>(
+  promise: Promise<T>,
+): Promise<PromiseSettledResult<T>> {
+  return promise
+    .then((value) => ({ status: "fulfilled", value }))
+    .catch((error) => ({
+      status: "rejected",
+      reason: error instanceof Error ? error.message : String(error),
+    }));
+}
+
+function compareSignalToOutcome(params: {
+  signalBundle?: SignalBundle;
+  finalServingMode: ReturnType<ValidatedPlanFragment["selectedServingMode"]>;
+  finalSafetyFlags: ConversationState["safetyFlags"];
+  signalStatus: PromiseSettledResult<SignalBundle>["status"];
+}): SignalExtractionComparison {
+  if (params.signalStatus !== "fulfilled") {
+    return {
+      status: "inconclusive",
+      recommendedServingMode: null,
+      finalServingMode: params.finalServingMode,
+      signalSafetyFlags: [],
+      finalSafetyFlags: [...params.finalSafetyFlags],
+      reasonCodes: ["signal_extraction_unavailable"],
+      parseStatus: params.signalStatus === "rejected" ? "failed" : "disabled",
+    };
+  }
+
+  if (!params.signalBundle) {
+    return {
+      status: "inconclusive",
+      recommendedServingMode: null,
+      finalServingMode: params.finalServingMode,
+      signalSafetyFlags: [],
+      finalSafetyFlags: [...params.finalSafetyFlags],
+      reasonCodes: ["signal_bundle_missing"],
+      parseStatus: "disabled",
+    };
+  }
+
+  const matches =
+    params.signalBundle.recommendedServingMode === params.finalServingMode;
+  const finalSafetySet = new Set(params.finalSafetyFlags);
+  const signalSafetySet = new Set(params.signalBundle.safetySignals);
+  const safetyMatch =
+    [...signalSafetySet].every((flag) => finalSafetySet.has(flag)) &&
+    [...finalSafetySet].every((flag) => signalSafetySet.has(flag));
+
+  return {
+    status: matches && safetyMatch ? "match" : "mismatch",
+    recommendedServingMode: params.signalBundle.recommendedServingMode,
+    finalServingMode: params.finalServingMode,
+    signalSafetyFlags: [...signalSafetySet],
+    finalSafetyFlags: [...finalSafetySet],
+    reasonCodes: [
+      matches ? "serving_mode_match" : "serving_mode_mismatch",
+      safetyMatch ? "safety_flags_match" : "safety_flags_mismatch",
+    ],
+    parseStatus: "ok",
+  };
+}
   return {
     conversationRef: state.conversationRef,
     requestRef,

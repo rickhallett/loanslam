@@ -1,0 +1,134 @@
+import { type ConversationState, type SignalBundle, type SignalInput } from "@loanslam/contracts";
+import {
+  servingModeSchema,
+  safetyFlagSchema,
+} from "@loanslam/contracts";
+
+export interface SignalExtractorPrompt {
+  system: string;
+  user: string;
+}
+
+export function buildSignalExtractorPrompt(input: SignalInput): SignalExtractorPrompt {
+  return {
+    system: buildSystemPrompt(),
+    user: buildUserPrompt(input),
+  };
+}
+
+function buildSystemPrompt(): string {
+  return [
+    "You are the Loanslam Phase 0 SignalExtractor.",
+    "Output one strict JSON object matching the provided schema. Do not include markdown.",
+    "Focus on interpretation only, not grounding or response choice.",
+    `If this is a public FAQ question with no account-risk or vulnerability signal, recommend servingMode=answer.`,
+    "If this is about account balances, payment dates, bank details, application status, reference numbers, or personal account data, recommend servingMode=handoff_account_specific.",
+    "If this contains vulnerability, distress, complaint, legal threat, hardship, or accessibility signals, recommend servingMode=route_vulnerability.",
+    "If this requests regulated/debt advice or similar excluded advice, recommend servingMode=excluded.",
+    "Return safetySignals as the specific safety flags from the customer message only (if any).",
+    "Set negatedOrCorrected true only when the customer appears to explicitly reject an earlier safety/account concern.",
+    "Keep uncertainty between 0 and 1, where 0 means very confident and 1 means very uncertain.",
+    `Allowed serving modes: ${servingModeSchema.options.join(", ")}.`,
+    `Allowed safety flags: ${safetyFlagSchema.options.join(", ")}.`,
+  ].join("\n");
+}
+
+function buildUserPrompt(input: SignalInput): string {
+  return [
+    `Policy version: ${"phase0-turnplanner-policy-v1"}`,
+    "Conversation state",
+    stableStringify(summarizeState(input.conversationState)),
+    "",
+    "Customer message",
+    input.userMessage,
+    "",
+    "Produce a structured signal bundle for retrieval and safety interpretation, not a final action.",
+  ].join("\n");
+}
+
+function summarizeState(
+  state: ConversationState,
+): Pick<
+  ConversationState,
+  "conversationRef" | "safetyFlags" | "handoffPending" | "lastAction" | "collectedFacts" | "requestedFields"
+> {
+  return {
+    conversationRef: state.conversationRef,
+    safetyFlags: state.safetyFlags,
+    handoffPending: state.handoffPending,
+    lastAction: state.lastAction,
+    collectedFacts: state.collectedFacts,
+    requestedFields: state.requestedFields,
+  };
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
+
+export function normalizeOpenAiParsedSignalBundle(parsed: unknown): unknown {
+  if (!parsed || typeof parsed !== "object") {
+    return parsed;
+  }
+
+  const cast = parsed as {
+    primaryIntent?: string;
+    secondaryIntents?: unknown;
+    safetySignals?: unknown;
+    retrievalQueries?: unknown;
+    routeHints?: unknown;
+    uncertainty?: number;
+    recommendedServingMode?: unknown;
+    negatedOrCorrected?: boolean;
+    parserNotes?: unknown;
+  };
+
+  return {
+    ...cast,
+    secondaryIntents: normalizeStringArray(cast.secondaryIntents),
+    safetySignals: normalizeStringArray(cast.safetySignals),
+    retrievalQueries: normalizeStringArray(cast.retrievalQueries),
+    routeHints: normalizeStringArray(cast.routeHints),
+    parserNotes: normalizeStringArray(cast.parserNotes),
+    uncertainty: clampUncertainty(cast.uncertainty),
+    negatedOrCorrected: Boolean(cast.negatedOrCorrected),
+    recommendedServingMode:
+      cast.recommendedServingMode === "answer" ||
+      cast.recommendedServingMode === "handoff_account_specific" ||
+      cast.recommendedServingMode === "route_vulnerability" ||
+      cast.recommendedServingMode === "excluded"
+        ? cast.recommendedServingMode
+        : null,
+  };
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => String(item ?? "").trim())
+    .filter((entry) => entry.length > 0);
+}
+
+function clampUncertainty(value: unknown): number {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return 0.5;
+  }
+
+  if (value < 0) {
+    return 0;
+  }
+
+  if (value > 1) {
+    return 1;
+  }
+
+  return value;
+}
+
+export function parseSignalBundle(parsed: unknown): SignalBundle {
+  const normalized = normalizeOpenAiParsedSignalBundle(parsed);
+  return normalized as SignalBundle;
+}

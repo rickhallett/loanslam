@@ -201,6 +201,52 @@ export const turnPlannerInputSchema = z.object({
 });
 export type TurnPlannerInput = z.infer<typeof turnPlannerInputSchema>;
 
+export const signalBundleSchema = z.object({
+  primaryIntent: z.enum([
+    "answer",
+    "account_specific",
+    "vulnerability",
+    "complaint",
+    "legal",
+    "excluded_advice",
+    "language_barrier",
+    "other",
+  ]),
+  secondaryIntents: z.array(
+    z.enum([
+      "answer",
+      "account_specific",
+      "vulnerability",
+      "complaint",
+      "legal",
+      "excluded_advice",
+      "language_barrier",
+      "other",
+    ]),
+  ).default([]),
+  recommendedServingMode: servingModeSchema.nullable(),
+  safetySignals: z.array(safetyFlagSchema).default([]),
+  retrievalQueries: z.array(nonEmptyStringSchema).default([]),
+  routeHints: z.array(nonEmptyStringSchema).default([]),
+  uncertainty: z.number().min(0).max(1),
+  negatedOrCorrected: z.boolean().default(false),
+  parserNotes: z.array(nonEmptyStringSchema).default([]),
+});
+export type SignalBundle = z.infer<typeof signalBundleSchema>;
+
+export const signalExtractionComparisonSchema = z.object({
+  status: z.enum(["match", "mismatch", "inconclusive"]),
+  recommendedServingMode: servingModeSchema.nullable(),
+  finalServingMode: servingModeSchema.nullable(),
+  signalSafetyFlags: z.array(safetyFlagSchema).default([]),
+  finalSafetyFlags: z.array(safetyFlagSchema).default([]),
+  reasonCodes: z.array(nonEmptyStringSchema).default([]),
+  parseStatus: z.enum(["ok", "failed", "disabled"]).default("ok"),
+});
+export type SignalExtractionComparison = z.infer<
+  typeof signalExtractionComparisonSchema
+>;
+
 export const groundingDecisionSchema = z.object({
   citedItemIds: z.array(nonEmptyStringSchema),
   servingMode: servingModeSchema,
@@ -246,6 +292,8 @@ export const turnTraceSchema = z.object({
   selectedRouteReason: z.string().trim().nullable().optional(),
   proposedAction: turnActionSchema,
   finalAction: turnActionSchema,
+  shadowSignalBundle: signalBundleSchema.optional(),
+  shadowSignalComparison: signalExtractionComparisonSchema.optional(),
   validatorOverrides: z.array(validatorOverrideSchema).default([]),
   safetyFlags: z.array(safetyFlagSchema).default([]),
   customerMessage: nonEmptyStringSchema,
@@ -738,4 +786,13 @@ type _StochasticUsefulWithFindingsPromotionStatusRejected = AssertTrue<
 
 export type TurnPlanner = {
   planTurn(input: TurnPlannerInput): Promise<TurnPlan>;
+};
+
+export type SignalInput = {
+  conversationState: ConversationState;
+  userMessage: string;
+};
+
+export type SignalExtractor = {
+  extractSignals(input: SignalInput): Promise<SignalBundle>;
 };
