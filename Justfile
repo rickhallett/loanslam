@@ -52,6 +52,10 @@ core-chat *chat_flags:
 core-serve *server_flags:
     @npm --silent run core:serve -- {{server_flags}}
 
+# Start the local stdio MCP server for the lab API simulator.
+mcp-lab-api:
+    @npm --silent run mcp:lab-api
+
 # Start the lab API on 8787 and Vue console on 5173 together.
 lab:
     @set -e; \

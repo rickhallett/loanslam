@@ -18,6 +18,7 @@
     "core:route-audit": "tsx packages/core/src/cli.ts route-audit",
     "core:chat": "tsx packages/core/src/cli.ts chat",
     "core:serve": "tsx packages/core/src/cli.ts serve",
+    "mcp:lab-api": "tsx packages/mcp-server/src/server.ts",
     "lab-ui:dev": "sh -c 'npm --prefix packages/lab-ui run dev -- \"$@\"' --",
     "lab-ui:build": "npm --workspace @loanslam/lab-ui run build",
     "demo-widget:dev": "npm --workspace @loanslam/demo-widget run dev",
