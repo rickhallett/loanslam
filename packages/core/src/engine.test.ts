@@ -1257,6 +1257,87 @@ describe("processTurn", () => {
     expect(complaintResult.state.handoffPending).toBe(true);
   });
 
+  it("handles terse pending handoff refusals and alarming text without repeating intake copy", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "To pass this to the Loanslam team, I need your full name, your date of birth, your address, your phone number, your email address, and a short summary of what you need help with. Let's start with your full name.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "pending_excluded_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["unsupported_request"],
+          traceSummary: "Preserved the pending handoff.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["unsupported_request"],
+      handoffPending: true,
+      lastAction: "request_handoff_intake",
+    };
+
+    for (const message of [
+      "why do you need my details?",
+      "i dont want to",
+      "no",
+      "i dont like this",
+      "NO!!!",
+    ]) {
+      const result = await processTurn({
+        state: initialState,
+        userMessage: message,
+        planner,
+        corpus,
+        now: new Date("2026-06-15T12:01:00.000Z"),
+        idFactory: idFactory(),
+      });
+
+      expect(result.customerMessage).not.toContain("Let's start");
+      expect(result.customerMessage).not.toContain(
+        "I need your full name, your date of birth",
+      );
+    }
+
+    const complaintResult = await processTurn({
+      state: initialState,
+      userMessage: "FUCK YOU I WANT TO COMPLAIN",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:01:01.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(complaintResult.finalAction).toBe("request_handoff_intake");
+    expect(complaintResult.customerMessage).toMatch(/complaint/i);
+    expect(complaintResult.customerMessage).not.toContain("Let's start");
+    expect(complaintResult.trace.safetyFlags).toContain("complaint");
+
+    const alarmingResult = await processTurn({
+      state: initialState,
+      userMessage: "POLICE DEATH BLOOD BABY MURDER",
+      planner,
+      corpus,
+      now: new Date("2026-06-15T12:01:02.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(alarmingResult.finalAction).toBe("fallback");
+    expect(alarmingResult.customerMessage).toMatch(/emergency|danger/i);
+    expect(alarmingResult.customerMessage).not.toContain("Let's start");
+    expect(alarmingResult.state.handoffPending).toBe(false);
+  });
+
   it("answers a public FAQ after completed handoff instead of repeating confirmation", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

@@ -457,6 +457,15 @@ function applyHandoffStateRules(
       );
     }
 
+    if (isPendingHandoffEmergencyText(userMessage)) {
+      return buildPendingHandoffDeclinedFragment(
+        currentValidated,
+        "handoff_emergency_text",
+        "The customer entered alarming emergency-like text during handoff intake.",
+        buildHandoffEmergencyMessage(),
+      );
+    }
+
     if (isPendingHandoffDetailsRefusal(userMessage)) {
       return buildPendingHandoffDeclinedFragment(
         currentValidated,
@@ -793,6 +802,10 @@ function buildHandoffHostileAbortMessage(): string {
   return "I will not keep asking for details. You do not have to share them here. If you want help later, ask a general Loanslam question or say you want the Loanslam team.";
 }
 
+function buildHandoffEmergencyMessage(): string {
+  return "If anyone is in immediate danger, contact emergency services now. This chat cannot handle emergencies. I will stop asking for personal details here, and I can still answer general Loanslam questions.";
+}
+
 function shouldApplyExtractedHandoffFacts(
   state: ConversationState,
   validated: ValidatedPlanFragment,
@@ -948,18 +961,30 @@ const pendingHandoffWhyPattern =
   /^\s*(?:why|why\s+(?:do\s+you|does\s+the\s+team|is\s+that|is\s+this)|what\s+for|for\s+what)(?:\s+(?:need|want|ask|asking|details|that|this|my\s+details|those\s+details))*\s*[?!.\s]*$/i;
 
 function isPendingHandoffDetailsRefusal(message: string): boolean {
-  return pendingHandoffDetailsRefusalPattern.test(message);
+  return (
+    pendingHandoffDetailsRefusalPattern.test(message) ||
+    pendingHandoffDetailsRefusalTextPattern.test(message)
+  );
 }
 
-const pendingHandoffDetailsRefusalPattern =
-  /\b(?:i\s+)?(?:do\s+not|don't|dont|won't|wont|will\s+not|cannot|can't|cant)\s+(?:want\s+to\s+)?(?:give|share|provide|send|enter)\s+(?:my\s+)?(?:details|personal\s+(?:details|information|info)|info|information|name|dob|date\s+of\s+birth|address|phone|email)\b|\b(?:no|nope|nah)\b.{0,50}\b(?:details|personal\s+(?:details|information|info)|info|information)\b|\b(?:stop\s+asking|cancel\s+this|forget\s+it)\b/i;
+const pendingHandoffDetailsRefusalPattern = /^\s*(?:no+|nope|nah)\s*[!?.\s]*$/i;
+
+const pendingHandoffDetailsRefusalTextPattern =
+  /\b(?:i\s+)?(?:do\s+not|don't|dont|won't|wont|will\s+not|cannot|can't|cant)\s+(?:want\s+to\s+)?(?:give|share|provide|send|enter)\s+(?:my\s+)?(?:details|personal\s+(?:details|information|info)|info|information|name|dob|date\s+of\s+birth|address|phone|email)\b|\b(?:i\s+)?(?:do\s+not|don't|dont|won't|wont|will\s+not)\s+(?:want\s+to|want\s+this|like\s+this)\b|\b(?:i\s+)?(?:do\s+not|don't|dont)\s+like\s+this\b|\b(?:no|nope|nah)\b.{0,50}\b(?:details|personal\s+(?:details|information|info)|info|information)\b|\b(?:stop\s+asking|cancel\s+this|forget\s+it)\b/i;
 
 function isPendingHandoffHostileAbort(message: string): boolean {
   return pendingHandoffHostileAbortPattern.test(message);
 }
 
 const pendingHandoffHostileAbortPattern =
-  /\b(?:fuck\s+off|piss\s+off|shut\s+up|go\s+away)\b/i;
+  /\b(?:fuck\s+off|fuck\s+you|piss\s+off|shut\s+up|go\s+away)\b/i;
+
+function isPendingHandoffEmergencyText(message: string): boolean {
+  return pendingHandoffEmergencyPattern.test(message);
+}
+
+const pendingHandoffEmergencyPattern =
+  /\b(?:police|death|blood|murder|kill|killed|dead|dying)\b/i;
 
 async function planAndValidateTurn({
   planner,
