@@ -25,14 +25,13 @@ export function renderHellWeekReportHtml(report: HellWeekReport): string {
     "</style>",
     "</head>",
     "<body>",
-    '<main>',
+    "<main>",
     header(report),
-    keyFigures(report),
+    summaryList(report),
     safetyFloor(report),
     sectionTable(report),
     dimensionTable(report),
     failureBreakdown(report),
-    findings(report),
     allScenarios(report),
     footer(report),
     "</main>",
@@ -68,7 +67,7 @@ function header(report: HellWeekReport): string {
   <dl class="meta">
     ${metaItem("Scenarios", String(report.totals.scenarios))}
     ${metaItem("Planner", `${report.planner.provider}/${report.planner.model}`)}
-    ${metaItem("Signals", report.signalExtractor.enabled ? report.signalExtractor.model ?? "on" : "off")}
+    ${metaItem("Signals", report.signalExtractor.enabled ? (report.signalExtractor.model ?? "on") : "off")}
     ${metaItem("Grading", grading)}
     ${metaItem("Policy", report.policyVersion)}
     ${metaItem("Generated", report.generatedAt.replace("T", " ").replace(/\..+/, " UTC"))}
@@ -85,20 +84,18 @@ function profileLabel(profile: string): string {
 
 // ---------------------------------------------------------------------------
 
-function keyFigures(report: HellWeekReport): string {
+function summaryList(report: HellWeekReport): string {
   const t = report.totals;
   const r = report.routingPrecision;
-  const figures: { label: string; value: string; tone?: Tone }[] = [
+  const figures: { label: string; value: string }[] = [
     { label: "Passed", value: `${t.passed}/${t.scenarios}` },
     {
       label: "Demo-killers",
       value: String(t.demoKillers),
-      tone: t.demoKillers > 0 ? "neg" : "pos",
     },
     {
       label: "Dents",
       value: String(t.dents),
-      tone: t.dents > 0 ? "warn" : "pos",
     },
     {
       label: "Deflection",
@@ -118,17 +115,9 @@ function keyFigures(report: HellWeekReport): string {
     },
   ];
   return `
-<section class="figures">
-  ${figures
-    .map(
-      (figure) => `
-  <div class="figure">
-    <span class="fig-val ${figure.tone ?? ""}">${escapeHtml(figure.value)}</span>
-    <span class="fig-label">${escapeHtml(figure.label)}</span>
-  </div>`,
-    )
-    .join("")}
-</section>`;
+<dl class="summary-list">
+  ${figures.map((figure) => metaItem(figure.label, figure.value)).join("")}
+</dl>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,14 +143,20 @@ function safetyFloor(report: HellWeekReport): string {
     : '<p class="muted">No credential, account-fact, approval-estimate, or internal-data breaches.</p>';
 
   return `
-<section>
-  <h2>Compliance floor <span class="status ${tone}">${status}</span> <span class="muted">${floor.pass}/${floor.total}</span></h2>
+<details class="panel">
+  <summary>
+    <span class="panel-title">Compliance floor</span>
+    <span class="status ${tone}">${status}</span>
+    <span class="muted">${floor.pass}/${floor.total}</span>
+  </summary>
+  <div class="panel-body">
   <table class="grid">
     <thead><tr><th>Dimension</th><th class="num">Pass</th><th class="num">Demo-killers</th></tr></thead>
     <tbody>${dimRows}</tbody>
   </table>
   ${breaches}
-</section>`;
+  </div>
+</details>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,13 +177,15 @@ function sectionTable(report: HellWeekReport): string {
     })
     .join("");
   return `
-<section>
-  <h2>By section</h2>
+<details class="panel">
+  <summary><span class="panel-title">By section</span></summary>
+  <div class="panel-body">
   <table class="grid">
     <thead><tr><th></th><th>Section</th><th class="num">Pass</th><th>Rate</th><th class="num">DK</th><th class="num">Dent</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-</section>`;
+  </div>
+</details>`;
 }
 
 function dimensionTable(report: HellWeekReport): string {
@@ -206,13 +203,15 @@ function dimensionTable(report: HellWeekReport): string {
     })
     .join("");
   return `
-<section>
-  <h2>By dimension</h2>
+<details class="panel">
+  <summary><span class="panel-title">By dimension</span></summary>
+  <div class="panel-body">
   <table class="grid">
     <thead><tr><th>Dimension</th><th class="num">Pass</th><th>Rate</th><th class="num">DK</th><th class="num">Dent</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-</section>`;
+  </div>
+</details>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -257,23 +256,6 @@ function failureBreakdown(report: HellWeekReport): string {
     <h2>Failure reasons</h2>
     ${triageBody}
   </div>
-</section>`;
-}
-
-// ---------------------------------------------------------------------------
-
-function findings(report: HellWeekReport): string {
-  if (report.topRisks.length === 0) {
-    return `
-<section>
-  <h2>Findings</h2>
-  <p class="muted">No failing scenarios.</p>
-</section>`;
-  }
-  return `
-<section>
-  <h2>Findings <span class="muted">${report.topRisks.length}</span></h2>
-  <ul class="finding-list">${report.topRisks.map(findingItem).join("")}</ul>
 </section>`;
 }
 
@@ -322,7 +304,7 @@ function allScenarios(report: HellWeekReport): string {
         )
         .join("");
       return `
-    <details class="group"${fails > 0 ? " open" : ""}>
+    <details class="group" open>
       <summary>${escapeHtml(title)} <span class="muted">${grades.length - fails}/${grades.length}</span></summary>
       <div class="group-body">${items}</div>
     </details>`;
@@ -352,7 +334,7 @@ function scenarioDetail(
         .join(", ")}</p>`
     : "";
   return `
-    <details class="sc">
+    <details class="sc" open>
       <summary>
         <span class="sc-mark ${grade.pass ? "pos" : severityTone(grade.severity)}"></span>
         <span class="sc-title">${escapeHtml(grade.title)}</span>
@@ -371,10 +353,14 @@ function expectationLine(scenario: HellWeekScenario): string {
   const e = scenario.expected;
   const parts: string[] = [];
   if (e.requiredFinalAction) parts.push(`action=${e.requiredFinalAction}`);
-  else if (e.allowedFinalActions) parts.push(`action in {${e.allowedFinalActions.join("|")}}`);
-  if (e.requiredServingModes?.length) parts.push(`route=${e.requiredServingModes.join(",")}`);
-  if (e.forbiddenServingModes?.length) parts.push(`not=${e.forbiddenServingModes.join(",")}`);
-  if (e.contentChecks?.length) parts.push(`checks=${e.contentChecks.join(",")}`);
+  else if (e.allowedFinalActions)
+    parts.push(`action in {${e.allowedFinalActions.join("|")}}`);
+  if (e.requiredServingModes?.length)
+    parts.push(`route=${e.requiredServingModes.join(",")}`);
+  if (e.forbiddenServingModes?.length)
+    parts.push(`not=${e.forbiddenServingModes.join(",")}`);
+  if (e.contentChecks?.length)
+    parts.push(`checks=${e.contentChecks.join(",")}`);
   return parts.length
     ? `<p class="line"><span class="k">expected</span>${escapeHtml(parts.join(" · "))}</p>`
     : "";
@@ -482,7 +468,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 main{max-width:920px;margin:0 auto;padding:48px 24px 80px}
 h1{font-size:1.55rem;font-weight:650;letter-spacing:-.01em;margin:.1rem 0 .5rem}
 h2{font-size:1rem;font-weight:650;margin:0 0 .7rem;padding-bottom:.4rem;border-bottom:1px solid var(--line)}
-section{margin:38px 0}
+section,.panel{margin:38px 0}
 p{margin:0 0 .6rem}
 .kicker{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 .2rem;font-weight:600}
 .verdict{font-size:1.05rem;font-weight:600;margin:.2rem 0 .3rem}
@@ -494,17 +480,25 @@ p{margin:0 0 .6rem}
 .meta div{display:flex;flex-direction:column;padding:4px 0}
 .meta dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:600}
 .meta dd{margin:1px 0 0;font-size:.86rem;font-weight:500;overflow-wrap:anywhere}
-/* figures */
-.figures{display:grid;grid-template-columns:repeat(7,1fr);gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden}
-.figure{display:flex;flex-direction:column;gap:3px;padding:14px 16px;border-right:1px solid var(--line2)}
-.figure:last-child{border-right:0}
-.fig-val{font-size:1.5rem;font-weight:650;line-height:1;letter-spacing:-.01em}
-.fig-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.summary-list{display:block;max-width:460px;margin:14px 0 0;border-top:1px solid var(--line);padding-top:8px}
+.summary-list div{display:grid;grid-template-columns:150px 1fr;gap:18px;padding:5px 0;border-bottom:1px solid var(--line2)}
+.summary-list div:last-child{border-bottom:0}
+.summary-list dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:600}
+.summary-list dd{margin:0;font-size:.86rem;font-weight:500;overflow-wrap:anywhere}
 /* status */
 .status{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border:1px solid currentColor;border-radius:3px;vertical-align:middle}
 .status.neg{color:var(--neg)}.status.pos{color:var(--pos)}.status.warn{color:var(--warn)}
 h2 .muted{font-weight:500;font-size:.85rem}
 .muted{color:var(--muted)}
+/* collapsible panels */
+.panel{border-top:1px solid var(--line)}
+.panel>summary{cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 0;font-size:1rem;font-weight:650;list-style:none}
+.panel>summary::-webkit-details-marker{display:none}
+.panel>summary::before{content:">";display:inline-block;color:var(--muted);font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:.78rem;transform-origin:50% 50%;transition:transform .12s ease}
+.panel[open]>summary::before{transform:rotate(90deg)}
+.panel-title{margin-right:auto}
+.panel-body{padding:8px 0 0}
 /* tables */
 table.grid{width:100%;border-collapse:collapse;font-size:.88rem}
 table.grid th{text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);padding:6px 10px;border-bottom:1px solid var(--line)}
@@ -527,7 +521,7 @@ table.compact td{padding:5px 10px}
 .dist-row{display:grid;grid-template-columns:84px 1fr 34px;align-items:center;gap:10px;font-size:.86rem}
 .dist-row .track{width:100%}
 .dist-num{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
-/* findings */
+/* risk list */
 .finding-list{list-style:none;margin:.4rem 0 0;padding:0;display:flex;flex-direction:column;gap:0}
 .finding-list li{padding:11px 0;border-bottom:1px solid var(--line2)}
 .finding-list li:last-child{border-bottom:0}
@@ -568,8 +562,7 @@ footer p{max-width:80ch}
 code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.82em;background:var(--line2);padding:1px 4px;border-radius:3px;color:var(--ink)}
 .run-id{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.76rem;color:var(--faint)}
 @media(max-width:760px){
-  .figures{grid-template-columns:repeat(2,1fr)}
-  .figure{border-bottom:1px solid var(--line2)}
+  .summary-list div{grid-template-columns:1fr;gap:1px}
   .cols{grid-template-columns:1fr;gap:24px}
 }
 `;
