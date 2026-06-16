@@ -38,6 +38,11 @@ import {
   renderFromRun,
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
+import {
+  compareHellWeekReportsFromPaths,
+  formatHellWeekComparison,
+  toHellWeekComparisonJson,
+} from "./hellweek/compare";
 
 export interface CliResult {
   exitCode: number;
@@ -104,6 +109,10 @@ export async function runCli(
 
     if (command === "hell-week") {
       return await runHellWeekCommand(rest, env, plannerFactory);
+    }
+
+    if (command === "hell-week-compare") {
+      return runHellWeekCompareCommand(rest);
     }
 
     if (command === "chat") {
@@ -438,7 +447,10 @@ async function runHellWeekCommand(
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
 
-  if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency <= 0)) {
+  if (
+    concurrency !== undefined &&
+    (!Number.isInteger(concurrency) || concurrency <= 0)
+  ) {
     return fail("--concurrency must be a positive integer.");
   }
 
@@ -472,6 +484,33 @@ async function runHellWeekCommand(
   });
 
   return ok(hellWeekSummary(artifacts, asJson));
+}
+
+function runHellWeekCompareCommand(args: string[]): CliResult {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekCompareHelpText());
+  }
+
+  const asJson = normalized.includes("--json");
+  const positional = normalized.filter((arg) => !arg.startsWith("--"));
+  const [baselinePath, candidatePath] = positional;
+
+  if (!baselinePath || !candidatePath) {
+    return fail(hellWeekCompareHelpText());
+  }
+
+  const comparison = compareHellWeekReportsFromPaths(
+    baselinePath,
+    candidatePath,
+  );
+
+  return ok(
+    asJson
+      ? JSON.stringify(toHellWeekComparisonJson(comparison))
+      : formatHellWeekComparison(comparison),
+  );
 }
 
 async function runInteractiveChat(
@@ -791,11 +830,28 @@ function helpText(): string {
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
+    "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function hellWeekCompareHelpText(): string {
+  return [
+    "LoanSlam Hell Week report comparison",
+    "",
+    "Usage:",
+    "  hell-week-compare <baseline-report-or-run-dir> <candidate-report-or-run-dir> [--json]",
+    "",
+    "Reads two completed Hell Week report.json files, or run folders containing",
+    "report.json, and prints the aggregate and scenario-level movement needed",
+    "for the agentic tuning loop. No model calls are made.",
+    "",
+    "Options:",
+    "  --json                  Print compact JSON stdout",
   ].join("\n");
 }
 

@@ -1,60 +1,206 @@
 # Architecture & Technical Decisions
 
-Technology stack and architectural conventions for the chat-widget MVP. The stack and conventions are largely mandated by the senior developer to standardise practice across the company's projects; follow them unless a decision below pins something specific.
+## Practical takeaway
 
-## Stack
+The live architecture is Phase 0 engine proof, not the finished support product.
+Current code proves `processTurn`, retrieval, model-backed planning, deterministic
+validation, local traces, lab sessions, and simulation evidence. Product API,
+widget deployment, durable persistence, ticketing, and real PII handling come
+after the engine has earned productisation.
 
-A TypeScript npm-workspace monorepo: a Vue 3 iframe widget, an Express 5 API, shared Zod contracts, SQL Server persistence via Prisma, and optional cloud AI/RAG adapters behind runtime switches.
+## Source-of-truth split
 
-Current implementation starts with the Phase 0 TurnPlanner engine proof in
-`docs/llm-turn-planner-architecture.md`. The stack below remains the eventual
-productisation target after the engine, journey simulation suite, and model
-comparison harness have proved the core behaviour.
+- `docs/product-brief.md` owns product scope, release rules, and safety boundaries.
+- `docs/llm-turn-planner-architecture.md` owns the Phase 0 engine contract and flow.
+- This document owns the repo-level architecture boundary between current engine proof and later productisation.
+- `README.md` is the operator map for commands, packages, and evidence surfaces.
 
-- **Monorepo:** npm workspaces — `backend`, `widget`, `contracts`. TypeScript ES modules throughout, with TypeScript source imports that do not use `.js` specifiers. Justfile is the operator command front door.
-- **Widget:** Vue 3 iframe widget built with Vite. Uses shared contract schemas. Credentialed fetch with session cookies and CSRF headers. Intentionally thin: rendering, transport, local interaction state only.
-- **Contracts:** Zod schemas define request/response contracts; export chat response states and the `ServiceResponse` envelope; shared by backend and widget to keep wire behaviour aligned.
-- **API:** Node 24, Express 5, TypeScript. Middleware: Helmet, CORS, cookie parsing, JSON body parsing, pino HTTP logging. OpenAPI generated from route-local Zod registration. Endpoints: health, session create, message turn, identity intake, reset.
-- **Domain:** `ChatService` eventually owns the fail-closed turn pipeline: conversation context -> retrieval -> constrained LLM turn planner -> policy/grounding validator -> audited response or handoff. Phase 0 proves this as a local `processTurn` engine and trace harness before the production API/widget/deployment layers.
-- **Persistence:** SQL Server via Prisma 7 (MSSQL adapter): sessions, transcript entries, client-message idempotency, audit events, UAT/evidence rows. Dockerized SQL Server for local dev and scratch verification.
-- **AI/RAG:** real API mode uses a managed knowledge-base retrieval path for grounded answers; classifier and vulnerability checks can switch to managed model services when enabled. All behind runtime switches.
-- **Infra:** backend builds into a Node 24 Alpine container; OpenTofu describes dev deployment. Shape: container registry -> managed container service -> managed SQL Server -> private static asset buckets behind CDN. Secrets and AI/RAG access injected via environment/config, never hardcoded.
-- **Testing:** Vitest (backend, contracts, widget); Vue type-check + Vite production build for the frontend; ESLint + Prettier as style gates.
+## Current Phase 0 runtime
 
-SQL Server is a deliberate standardisation requirement, not a default. Keep it; do not substitute Postgres.
+```mermaid
+flowchart TD
+  A[CLI, lab API, simulation, MCP, or demo] --> B[processTurn]
+  B --> C[Create request, message, and trace IDs]
+  C --> D{SignalExtractor configured?}
+  D -- no --> E[shadowSignalStatus disabled]
+  D -- yes --> F[captureShadowSignals with timeout]
+  E --> G[retrieveMatches]
+  F --> G
+  G --> H[TurnPlannerInput]
+  H --> I[TurnPlanner.planTurn]
+  I --> J{Schema-valid TurnPlan?}
+  J -- no --> K[Fallback plan and malformed-plan override]
+  J -- yes --> L[validateTurnPlan]
+  K --> M[Validated plan fragment]
+  L --> M
+  M --> N[applyHandoffStateRules]
+  N --> O[deriveEffectiveServingMode]
+  O --> P[mergeState]
+  P --> Q[TurnTrace]
+  Q --> R[ValidatedTurnResult]
+```
 
-## Conventions 
+`TurnPlan` is untrusted. `validateTurnPlan` and deterministic handoff state rules
+are the policy boundary. Optional signal extraction can shape retrieval and trace
+comparison, but it is not final authority.
 
-A feature-module, layered Express API with Zod-owned contracts and a uniform `ServiceResponse` envelope. Pragmatic, not framework-heavy: route files wire HTTP and OpenAPI, controllers translate HTTP into service calls, services own business flow and error boundaries, repositories own Prisma access.
+## Current workspaces
 
-- **Feature folders by domain,** each owning its routes, controllers, services, repositories, models, helpers, and tests.
-- **Route-local contracts:** routes register Express handlers and nearby OpenAPI `registerPath` docs in the same file.
-- **Zod is the boundary source of truth:** schemas validate requests, infer TS types, and feed OpenAPI. Entity schemas mirror Prisma models; input schemas are derived by `omit`/`extend`.
-- **Uniform envelope:** everything returns `{ success, message, responseObject, statusCode }` via `ServiceResponse`, including business outcomes.
-- **Thin controllers, service-owned errors:** controllers call services and return the envelope; services catch exceptions, log detail, and return safe failures.
-- **Repositories are explicit Prisma accessors:** async methods, declared return types, includes/omits close to the query.
-- **Manual composition over a DI framework:** classes plus module-level singleton exports, with constructor defaults where test seams are needed.
+- `packages/contracts` defines shared Zod contracts, planner ports, trace shapes, simulation reports, and stochastic artifacts.
+- `packages/core` implements the engine, corpus parser, lexical retriever, OpenAI planner, optional signal extractor, validator, CLI, local lab API, simulations, route audit, STS, and Hell Week.
+- `packages/lab-ui` is the local Vue engineer console over the lab API.
+- `packages/mcp-server` wraps the lab API for local agent-driven sessions and evidence dumps.
+- `packages/demo-widget` and `packages/demo-host` provide the Loanslam iframe demo over the Phase 0 engine.
+- `packages/review-widget` and `packages/review-host` provide the MAL review demo over the same engine.
 
-### Where we pin specifics
+## Core engine boundary
 
-1. **`server.ts` is composition wiring only.** Runtime singletons (logger, prisma, model/RAG clients) live under `config`, not exported from `server.ts`. The reference repo still exports them from `server.ts`; that is its cleanup debt, and as a greenfield project we start clean. Spirit, not sprawl.
-2. **Feature modules matched to this app's size.** This is essentially one domain — the conversation — not many. Use one `chat` (or `conversation`) feature module, plus `audit`, and apply the layer conventions inside it. Do not manufacture a separate feature module per endpoint.
+The engine entrypoint is `processTurn` in `packages/core/src/engine.ts`.
 
-## Decision: iframe session / cookie strategy
+Inputs:
 
-The widget is embedded as an iframe on the client's WordPress site (a different origin) to avoid fighting WordPress CSS. That makes the session cookie third-party by default, which Safari and Firefox block — a silent session failure that only shows up off localhost.
+- `ConversationState`
+- user message text
+- `TurnPlanner`
+- optional `SignalExtractor`
+- corpus items
+- optional journey/turn metadata for traces
 
-- **Now, and as the flexible default: CHIPS partitioned cookies.** The session cookie is set `HttpOnly; Secure; SameSite=None; Partitioned`. This keeps the session ID out of JavaScript, works while embedded, and scopes the cookie per embedding site (fine — there is effectively one). Must be tested in Safari, not just localhost Chrome.
-- **Closer to deploy: same-site subdomain.** The client agreed to point `chat.<their-domain>` at our infrastructure (a DNS delegation, not a WordPress change). Serving the widget and API from that subdomain makes the cookie first-party and removes third-party blocking entirely. Needs an ACM cert for the subdomain.
-- Rationale for ordering: CHIPS first gives flexibility during the build and a fallback if the subdomain hits an unexpected snag; the subdomain is the stronger end state and the client agreed to it closer to deploy.
-- CSRF protection (custom header + double-submit token) applies in both cases. The session ID is never exposed to browser JavaScript; the non-secret conversation reference returned in responses is for support correlation only, not authentication.
+Outputs:
 
-## Decision: vulnerability handling fails closed
+- updated conversation state
+- original `TurnPlan`
+- final enforced action and UI plan
+- customer-facing message
+- validator overrides
+- `TurnTrace`
 
-The production vulnerability gate runs before normal routing. When it is model-backed and the model errors or times out, it must fail **closed**: treat the turn as a possible vulnerability and route to a human. Uncertainty routes to safety, never to normal flow. This backs a non-negotiable release rule in the product brief.
+The important dependency direction is simple:
 
-Phase 0 proves the same safety boundary through one `TurnPlanner` call that proposes `safetyFlags`, followed by deterministic validation. Do not add a separate model-backed vulnerability detector during Phase 0 unless trace evidence shows the single-planner approach misses risk.
+```mermaid
+flowchart LR
+  A[contracts] --> B[core]
+  B --> C[lab API]
+  B --> D[CLI]
+  B --> E[simulation and evidence]
+  C --> F[lab UI]
+  C --> G[MCP server]
+  C --> H[demo and review widgets]
+```
 
-## Decision: grounding-adapter contract
+## Policy data and retrieval
 
-Every customer-facing answer must be grounded in retrieved knowledge, or the turn routes to handoff. The retrieval adapter must therefore return a **grounding signal** (match scores and/or citations), not just text, so the router can decide answerable-vs-handoff. If retrieval returns bare text, the grounding gate has nothing to act on.
+The synthetic corpus in `data/public-info/loanslam-synthetic-kb.json` is treated
+as approved Phase 0 policy data. Its `serving_mode` field governs whether a
+matched item can be answered, routed, escalated, or refused.
+
+```mermaid
+flowchart TD
+  A[Corpus JSON] --> B[parseCorpusDocument]
+  B --> C[CorpusItem with serving_mode]
+  C --> D[retrieveMatches]
+  E[User message] --> D
+  F[Optional SignalBundle] --> D
+  D --> G[RetrievedMatch list]
+  G --> H[Planner prompt evidence]
+  G --> I[Validator policy evidence]
+  H --> J[TurnPlan]
+  J --> I
+  I --> K[Validated output and trace]
+```
+
+Current retrieval is weighted lexical matching over corpus questions, variants,
+tags, route reasons, and answer text. Optional signal bundles can add retrieval
+queries, route hints, recommended serving mode, and safety signals. This is useful
+for recall and evidence, but final action remains validator-owned.
+
+## Validator authority
+
+The validator is a hard-rule policy/schema backstop. It must override or reject
+model output when the model proposes unsafe behaviour.
+
+Hard boundaries include:
+
+- answering without approved `serving_mode: answer` grounding
+- citing a non-answer corpus item for an answer
+- collecting forbidden payment or bank credentials
+- promising account values, loan changes, dates, balances, rates, eligibility, or outcomes
+- treating identity collection as verification
+- continuing normal flow after vulnerability, hardship, complaint, legal, accessibility, or distress signals
+- using a UI primitive that does not match the final action
+- sharing internal traces, hidden prompts, or customer data
+
+Conversation warmth, brevity, and clarification quality belong in journey reports
+and model comparison. They should not become validator override rules unless they
+cross a safety boundary.
+
+## Evidence surfaces
+
+`ValidatedTurnResult.trace` is the central evidence record. It is not the
+production audit store, but it is the shape that teaches the product what should
+be audited later.
+
+Evidence is consumed by:
+
+- CLI `core-turn` and `core-chat -- --trace`
+- lab API session state
+- lab UI diagnostics and export
+- MCP session dumps and summaries
+- fixed journey traces
+- persona transcripts and reports
+- model comparison reports
+- stochastic run artifacts
+- route audits and Hell Week dashboards
+
+Live lab API simulations are the strongest Phase 0 evidence for user-visible
+routing behaviour. Static tests are supporting guardrails.
+
+## Eventual productisation target
+
+After the Phase 0 exit gate, the product can wrap the proven engine with the
+production stack:
+
+- Node 24 TypeScript API with route-local Zod contracts and safe middleware
+- thin Vue iframe widget that renders backend-decided UI primitives
+- durable transcript and audit persistence behind explicit ports
+- handoff intake and ticket webhook side effects
+- iframe/session/cookie hardening
+- AWS deployment and observability
+- retention, access-control, and evidence-review processes
+
+Do not let the eventual stack leak backward into Phase 0. The current engine should
+stay portable and inspectable. Persistence and ticketing should be represented as
+actions and traces until productisation begins.
+
+## Session and widget decision
+
+The eventual customer widget remains an iframe to avoid WordPress CSS and hosting
+coupling. The production session strategy should keep the session identifier out of
+browser JavaScript and keep business decisions on the backend.
+
+The likely path is:
+
+- CHIPS-compatible partitioned cookies during embedded development.
+- A same-site delegated chat subdomain closer to production deployment.
+- CSRF protection using a custom header and non-secret token strategy.
+- Frontend rendering only; no business routing in the widget.
+
+## Handoff intake alignment gap
+
+Product-level wording names standard handoff intake as `fullName`, `dateOfBirth`,
+`address`, `phone`, `email`, and `situationSummary`. The current Phase 0 contracts
+use `fullName`, `dateOfBirth`, `postcode`, `email`, and `phone`.
+
+Treat this as an explicit alignment item before productisation. Either update the
+contracts to match the product wording, or record the narrower Phase 0 field set as
+a deliberate engine-only slice. Do not silently build production PII infrastructure
+around an accidental mismatch.
+
+## Non-goals in the current architecture
+
+- No production audit database yet.
+- No real customer-account reads or writes.
+- No production ticket webhook side effects.
+- No autonomous self-learning.
+- No separate model-backed vulnerability detector unless trace evidence proves the single-planner path misses risk.
+- No fixed retrieval score gates unless observed runs justify them.
