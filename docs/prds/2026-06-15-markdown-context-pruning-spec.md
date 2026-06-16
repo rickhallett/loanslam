@@ -76,85 +76,85 @@ Audit basis:
 
 These files should remain normal agent context.
 
-| Decision | Path | Why |
-|---|---|---|
-| KEEP | `AGENTS.md` | Standing repo agent contract. |
-| KEEP | `CLAUDE.md` | Symlink to `AGENTS.md`; safe duplicate entrypoint. |
-| KEEP | `CONTEXT.md` | Current shared vocabulary and ambiguity resolutions. |
-| KEEP | `README.md` | Repo front door and live command guide. |
-| KEEP | `docs/product-brief.md` | Product boundary and safety contract. |
-| KEEP | `docs/llm-turn-planner-architecture.md` | Current Phase 0 architecture. |
-| KEEP | `docs/architecture.md` | Eventual stack, explicitly not first build slice. |
-| KEEP | `docs/prds/2026-06-14-phase-0-policy-authority-consolidation-prd.md` | Explains authority consolidation and docs-as-liability direction. |
-| KEEP | `docs/prds/2026-06-15-structured-signal-routing-prd.md` | Current branch-relevant route-evidence direction. |
-| KEEP | `docs/phase-0-static-routing-restraint-audit-2026-06-15.md` | Current deletion/test discipline. |
-| KEEP | `docs/phase-0-core-api-battery.md` | Compact live API battery, useful as current operator input. |
+| Decision | Path                                                                  | Why                                                               |
+| -------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| KEEP     | `AGENTS.md`                                                           | Standing repo agent contract.                                     |
+| KEEP     | `CLAUDE.md`                                                           | Symlink to `AGENTS.md`; safe duplicate entrypoint.                |
+| KEEP     | `CONTEXT.md`                                                          | Current shared vocabulary and ambiguity resolutions.              |
+| KEEP     | `README.md`                                                           | Repo front door and live command guide.                           |
+| KEEP     | `docs/canonical/product-brief.md`                                     | Product boundary and safety contract.                             |
+| KEEP     | `docs/canonical/llm-turn-planner-architecture.md`                     | Current Phase 0 architecture.                                     |
+| KEEP     | `docs/architecture.md`                                                | Eventual stack, explicitly not first build slice.                 |
+| KEEP     | `docs/prds/2026-06-14-phase-0-policy-authority-consolidation-prd.md`  | Explains authority consolidation and docs-as-liability direction. |
+| KEEP     | `docs/prds/2026-06-15-structured-signal-routing-prd.md`               | Current branch-relevant route-evidence direction.                 |
+| KEEP     | `docs/canonical/phase-0-static-routing-restraint-audit-2026-06-15.md` | Current deletion/test discipline.                                 |
+| KEEP     | `docs/phase-0-core-api-battery.md`                                    | Compact live API battery, useful as current operator input.       |
 
 ### P1 KEEP - Useful But Not Primary Authority
 
 These can stay, but should not outrank P0 docs.
 
-| Decision | Path | Why |
-|---|---|---|
-| KEEP | `docs/stochastic-test-simulator-guide.md` | Operator guide for STS. |
-| KEEP | `docs/prds/2026-06-14-stochastic-test-simulator-prd.md` | STS product/evidence contract. |
-| KEEP | `docs/prds/2026-06-15-lab-api-mcp-session-simulator-prd.md` | Local evidence tooling contract. |
-| KEEP | `docs/prds/2026-06-14-intake-form-fallback-prd.md` | Focused pending behavior spec. |
-| KEEP | `docs/superpowers/specs/2026-06-13-phase-0-turnplanner-core-design.md` | Concise design record without unchecked plan steps. |
-| KEEP | `packages/demo-host/README.md` | Current demo host instructions. |
-| KEEP | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/STALE_DO_NOT_USE.md` | Anti-poison marker while stale folder exists. |
+| Decision | Path                                                                              | Why                                                 |
+| -------- | --------------------------------------------------------------------------------- | --------------------------------------------------- |
+| KEEP     | `docs/stochastic-test-simulator-guide.md`                                         | Operator guide for STS.                             |
+| KEEP     | `docs/prds/2026-06-14-stochastic-test-simulator-prd.md`                           | STS product/evidence contract.                      |
+| KEEP     | `docs/prds/2026-06-15-lab-api-mcp-session-simulator-prd.md`                       | Local evidence tooling contract.                    |
+| KEEP     | `docs/prds/2026-06-14-intake-form-fallback-prd.md`                                | Focused pending behavior spec.                      |
+| KEEP     | `docs/superpowers/specs/2026-06-13-phase-0-turnplanner-core-design.md`            | Concise design record without unchecked plan steps. |
+| KEEP     | `packages/demo-host/README.md`                                                    | Current demo host instructions.                     |
+| KEEP     | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/STALE_DO_NOT_USE.md` | Anti-poison marker while stale folder exists.       |
 
 ### P2 BURN - Agent-Prompt And Generated-Prose Poison
 
 Remove or quarantine these first. They read authoritative while being derivative
 or agent-shaped.
 
-| Decision | Path | Why |
-|---|---|---|
-| BURN | `docs/agents/documentation-auditor-agent.md` | Repo-local agent prompt; recursively steers future agents. |
-| BURN | `docs/presentation/README.md` | Presentation context, not engineering context. |
-| BURN | `docs/presentation/gemini-interpet-trace.md` | Generated interpretation prose. |
-| BURN | `docs/presentation/gemini-recruiter-minded-from-trace.md` | Recruiter framing, not product truth. |
-| BURN | `docs/presentation/gemini-recruiter-minded-whole-repo.md` | Recruiter framing, not product truth. |
-| BURN | `docs/presentation/gemini-technically-minded-from-trace.md` | Analogy-heavy generated explanation. |
-| BURN | `packages/review-host/README.md` | MAL review/mock branding context can poison Loanslam direction. |
+| Decision | Path                                                        | Why                                                             |
+| -------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| BURN     | `docs/agents/documentation-auditor-agent.md`                | Repo-local agent prompt; recursively steers future agents.      |
+| BURN     | `docs/presentation/README.md`                               | Presentation context, not engineering context.                  |
+| BURN     | `docs/presentation/gemini-interpet-trace.md`                | Generated interpretation prose.                                 |
+| BURN     | `docs/presentation/gemini-recruiter-minded-from-trace.md`   | Recruiter framing, not product truth.                           |
+| BURN     | `docs/presentation/gemini-recruiter-minded-whole-repo.md`   | Recruiter framing, not product truth.                           |
+| BURN     | `docs/presentation/gemini-technically-minded-from-trace.md` | Analogy-heavy generated explanation.                            |
+| BURN     | `packages/review-host/README.md`                            | MAL review/mock branding context can poison Loanslam direction. |
 
 ### P3 BURN - Completed Implementation Plans
 
 These contain unchecked task lists and workflow commands. They are historical
 receipts, not standing instructions.
 
-| Decision | Path |
-|---|---|
-| BURN | `docs/superpowers/plans/2026-06-13-phase-0-turnplanner-core.md` |
-| BURN | `docs/superpowers/plans/2026-06-13-phase-0-simulator-lab.md` |
-| BURN | `docs/superpowers/plans/2026-06-13-phase-0-engine-stakeholder-readiness.md` |
-| BURN | `docs/superpowers/plans/2026-06-14-stochastic-test-simulator.md` |
-| BURN | `docs/superpowers/plans/2026-06-15-lab-api-mcp-session-simulator.md` |
+| Decision | Path                                                                        |
+| -------- | --------------------------------------------------------------------------- |
+| BURN     | `docs/superpowers/plans/2026-06-13-phase-0-turnplanner-core.md`             |
+| BURN     | `docs/superpowers/plans/2026-06-13-phase-0-simulator-lab.md`                |
+| BURN     | `docs/superpowers/plans/2026-06-13-phase-0-engine-stakeholder-readiness.md` |
+| BURN     | `docs/superpowers/plans/2026-06-14-stochastic-test-simulator.md`            |
+| BURN     | `docs/superpowers/plans/2026-06-15-lab-api-mcp-session-simulator.md`        |
 
 ### P4 BURN - Broad Or Future Specs That Pull Scope
 
 These may contain useful thinking, but they should not remain active context in
 their current form.
 
-| Decision | Path | Why |
-|---|---|---|
-| BURN | `docs/prds/2026-06-15-llm-centric-intelligence-prd.md` | Too broad; pulls Phase 0 toward multi-model architecture. |
-| BURN | `docs/prds/2026-06-15-phase-0-turnplanner-caching-prd.md` | Future optimization with policy risk. |
-| BURN | `docs/prds/2026-06-13-phase-0-engine-stakeholder-readiness-prd.md` | Completed readiness slice; stale current-claim risk. |
-| BURN | `docs/prds/2026-06-14-phase-0-conversation-quality-evidence-prd.md` | Useful historical evidence, but stale as active direction. |
+| Decision | Path                                                                | Why                                                        |
+| -------- | ------------------------------------------------------------------- | ---------------------------------------------------------- |
+| BURN     | `docs/prds/2026-06-15-llm-centric-intelligence-prd.md`              | Too broad; pulls Phase 0 toward multi-model architecture.  |
+| BURN     | `docs/prds/2026-06-15-phase-0-turnplanner-caching-prd.md`           | Future optimization with policy risk.                      |
+| BURN     | `docs/prds/2026-06-13-phase-0-engine-stakeholder-readiness-prd.md`  | Completed readiness slice; stale current-claim risk.       |
+| BURN     | `docs/prds/2026-06-14-phase-0-conversation-quality-evidence-prd.md` | Useful historical evidence, but stale as active direction. |
 
 ### P5 BURN - Dated Analysis Docs
 
 These summarize old runs or old failure shapes. Preserve only distilled decisions
 in current docs.
 
-| Decision | Path |
-|---|---|
-| BURN | `docs/phase-0-human-validation-guide.md` |
-| BURN | `docs/phase-0-stakeholder-evidence.md` |
-| BURN | `docs/phase-0-lab-scenario-analysis-2026-06-14.md` |
-| BURN | `docs/phase-0-lab-api-battery-26-analysis-2026-06-14.md` |
+| Decision | Path                                                     |
+| -------- | -------------------------------------------------------- |
+| BURN     | `docs/phase-0-human-validation-guide.md`                 |
+| BURN     | `docs/phase-0-stakeholder-evidence.md`                   |
+| BURN     | `docs/phase-0-lab-scenario-analysis-2026-06-14.md`       |
+| BURN     | `docs/phase-0-lab-api-battery-26-analysis-2026-06-14.md` |
 
 ### P6 BURN - Artifact Markdown
 
@@ -162,29 +162,29 @@ Burn all Markdown under `artifacts/phase0/` except the stale warning marker kept
 above. Raw JSON/JSONL artifacts can remain if still useful; Markdown summaries
 should not stay in normal agent context.
 
-| Decision | Path |
-|---|---|
-| BURN | `artifacts/phase0/lab-session-notes-2026-06-14.md` |
-| BURN | `artifacts/phase0/lab-api-battery-26-2026-06-14/summary.md` |
-| BURN | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/battery-20/logs/summary.md` |
-| BURN | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/battery-26/logs/summary.md` |
-| BURN | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-20/logs/summary.md` |
-| BURN | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-26/logs/summary.md` |
-| BURN | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-26/logs/route-audit.md` |
-| BURN | `artifacts/phase0/lab-api-failure-mode-battery-20260615T093345Z/logs/summary.md` |
-| BURN | `artifacts/phase0/shadow-signal-extraction/20260615T082341Z/operator-summary.md` |
-| BURN | `artifacts/phase0/shadow-signal-extraction/20260615T084822Z/operator-summary.md` |
-| BURN | `artifacts/phase0/stakeholder-hell-test/REPORT.md` |
-| BURN | `artifacts/phase0/stochastic-summary-2026-06-14-smoke.md` |
-| BURN | `artifacts/phase0/stochastic-summary-2026-06-14-smoke-final.md` |
-| BURN | `artifacts/phase0/burn-battery/STATE-OF-PLAY.md` |
-| BURN | `artifacts/phase0/burn-battery/sts-review/stochastic-summary-1.md` |
-| BURN | `artifacts/phase0/burn-regression-testing/agent-hell-battery-2026-06-15.md` |
-| BURN | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-46-31Z/summary.md` |
-| BURN | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-49-25Z/summary.md` |
-| BURN | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-50-12Z/summary.md` |
-| BURN | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-57-24Z/summary.md` |
-| BURN | `artifacts/phase0/openai-model-family-probe-2026-06-15T05-02-26Z/summary.md` |
+| Decision | Path                                                                                               |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| BURN     | `artifacts/phase0/lab-session-notes-2026-06-14.md`                                                 |
+| BURN     | `artifacts/phase0/lab-api-battery-26-2026-06-14/summary.md`                                        |
+| BURN     | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/battery-20/logs/summary.md`           |
+| BURN     | `artifacts/phase0/lab-api-battery-rerun-2026-06-14T20-50-33Z/battery-26/logs/summary.md`           |
+| BURN     | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-20/logs/summary.md`     |
+| BURN     | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-26/logs/summary.md`     |
+| BURN     | `artifacts/phase0/lab-api-battery-rerun-fresh-2026-06-14T20-59-56Z/battery-26/logs/route-audit.md` |
+| BURN     | `artifacts/phase0/lab-api-failure-mode-battery-20260615T093345Z/logs/summary.md`                   |
+| BURN     | `artifacts/phase0/shadow-signal-extraction/20260615T082341Z/operator-summary.md`                   |
+| BURN     | `artifacts/phase0/shadow-signal-extraction/20260615T084822Z/operator-summary.md`                   |
+| BURN     | `artifacts/phase0/stakeholder-hell-test/REPORT.md`                                                 |
+| BURN     | `artifacts/phase0/stochastic-summary-2026-06-14-smoke.md`                                          |
+| BURN     | `artifacts/phase0/stochastic-summary-2026-06-14-smoke-final.md`                                    |
+| BURN     | `artifacts/phase0/burn-battery/STATE-OF-PLAY.md`                                                   |
+| BURN     | `artifacts/phase0/burn-battery/sts-review/stochastic-summary-1.md`                                 |
+| BURN     | `artifacts/phase0/burn-regression-testing/agent-hell-battery-2026-06-15.md`                        |
+| BURN     | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-46-31Z/summary.md`                       |
+| BURN     | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-49-25Z/summary.md`                       |
+| BURN     | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-50-12Z/summary.md`                       |
+| BURN     | `artifacts/phase0/openai-model-family-probe-2026-06-15T04-57-24Z/summary.md`                       |
+| BURN     | `artifacts/phase0/openai-model-family-probe-2026-06-15T05-02-26Z/summary.md`                       |
 
 ## Execution Plan
 

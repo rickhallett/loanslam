@@ -3,8 +3,17 @@
 ## Start Here
 
 - Current direction: Phase 0 proves the TurnPlanner engine before productising.
-- Read `docs/llm-turn-planner-architecture.md` before implementation planning.
-- Treat `docs/product-brief.md` as the product boundary and safety contract.
+- Canonical process docs live under `docs/canonical/`.
+- Read `docs/canonical/llm-turn-planner-architecture.md#core-model` and
+  `docs/canonical/llm-turn-planner-architecture.md#policy-and-grounding-validator`
+  before implementation planning.
+- Treat `docs/canonical/product-brief.md#4-product-boundary`,
+  `docs/canonical/product-brief.md#5-core-principles`, and
+  `docs/canonical/product-brief.md#11-response-requirements` as the product
+  boundary and safety contract.
+- Use `docs/canonical/hell-week-gauntlet.md#how-grading-works` and
+  `docs/canonical/hell-week-route-stability-evidence-contract.md#decision-rule`
+  as the Hell Week evidence contract.
 - Treat `docs/architecture.md` as the eventual product stack, not the first build slice.
 
 ## Phase 0 Scope

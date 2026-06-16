@@ -41,9 +41,12 @@ For this repository, treat these as high-priority anchors when present:
 - `AGENTS.md`
 - `README.md`
 - `CONTEXT.md`
-- `docs/product-brief.md`
+- `docs/canonical/product-brief.md`
 - `docs/architecture.md`
-- `docs/llm-turn-planner-architecture.md`
+- `docs/canonical/llm-turn-planner-architecture.md`
+- `docs/canonical/hell-week-gauntlet.md`
+- `docs/canonical/hell-week-route-stability-evidence-contract.md`
+- `docs/canonical/phase-0-static-routing-restraint-audit-2026-06-15.md`
 - `docs/core-product-decision-log.yaml`
 - `docs/phase-0-human-validation-guide.md`
 - `docs/phase-0-stakeholder-evidence.md`

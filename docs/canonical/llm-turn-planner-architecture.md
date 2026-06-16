@@ -1,7 +1,8 @@
 # LLM Turn Planner Architecture
 
-> Proposed companion architecture note. This document does not replace
-> `product-brief.md` or `architecture.md`; it describes a simpler variant for review.
+> Current companion architecture note. This document does not replace
+> `product-brief.md` or `../architecture.md`; it describes a simpler variant for
+> review.
 
 ## Practical Takeaway
 

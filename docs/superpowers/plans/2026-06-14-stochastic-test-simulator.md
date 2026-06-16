@@ -14,8 +14,8 @@
 
 - Read first: `docs/prds/2026-06-14-stochastic-test-simulator-prd.md`
 - Read first: `docs/stochastic-test-simulator-guide.md`
-- Architecture boundary: `docs/llm-turn-planner-architecture.md`
-- Product safety boundary: `docs/product-brief.md`
+- Architecture boundary: `docs/canonical/llm-turn-planner-architecture.md#core-model`
+- Product safety boundary: `docs/canonical/product-brief.md#5-core-principles`
 - Existing patterns: `packages/core/src/simulation/*`, `packages/core/src/cli.ts`, `packages/contracts/src/schemas.ts`
 
 ## Fixed V1 Decisions

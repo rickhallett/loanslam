@@ -9,8 +9,9 @@ accounts itself.
 > **Status: Phase 0 engine proof.** This repository now includes the TurnPlanner
 > core workspace, contracts, retrieval, validator, trace simulation, and model
 > comparison harness. The product widget, production API, persistence, deployment,
-> and ticket side effects are intentionally not scaffolded yet. Treat the documents
-> in `docs/` as the source of truth for scope and design.
+> and ticket side effects are intentionally not scaffolded yet. Treat the canonical
+> documents in `docs/canonical/` as the source of truth for process, safety, and
+> design.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). The repository must not be copied, modified, repurposed, or
@@ -27,7 +28,8 @@ The current implementation priority is **Phase 0: TurnPlanner engine proof**. Bu
 the core processing engine, retrieval, policy/grounding validator, local trace
 evidence, journey simulation suite, and model comparison harness before building the
 widget, AWS deployment, production audit store, real PII intake, or ticket webhook.
-See [`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
+See
+[`docs/canonical/llm-turn-planner-architecture.md#practical-takeaway`](./docs/canonical/llm-turn-planner-architecture.md#practical-takeaway).
 Phase 0 evidence must come from real model-backed planner behaviour, not a fake
 planner baseline, and the journey suite must be broad enough for extended stakeholder
 probing across multiple customer personalities.
@@ -52,15 +54,23 @@ Core behaviour:
   gate fails closed.
 - Frontend renders backend-decided state only; it makes no business or safety decisions.
 
-The full set lives in [`docs/product-brief.md`](./docs/product-brief.md) §16.
+The full release boundary lives in
+[`docs/canonical/product-brief.md#16-non-negotiable-release-rules`](./docs/canonical/product-brief.md#16-non-negotiable-release-rules).
 
 ## Repository layout
 
 ```
-docs/                              Source-of-truth design documents
-  product-brief.md                 Product scope, journeys, requirements, release rules
-  architecture.md                  Stack and architectural decisions
-  llm-turn-planner-architecture.md Current Phase 0 engine-first direction
+docs/
+  canonical/                       Current process, safety, and evidence authorities
+    product-brief.md               Product scope, journeys, requirements, release rules
+    llm-turn-planner-architecture.md
+                                   Current Phase 0 engine-first direction
+    hell-week-gauntlet.md          Hell Week scenario and grading contract
+    hell-week-route-stability-evidence-contract.md
+                                   Current route-stability improvement contract
+    phase-0-static-routing-restraint-audit-2026-06-15.md
+                                   Static-routing restraint and deletion discipline
+  architecture.md                  Eventual product stack and architectural decisions
 packages/
   contracts/                       Shared Zod contracts for Phase 0
   core/                            TurnPlanner engine, retrieval, planner adapters, simulation
@@ -77,7 +87,7 @@ data/
 The eventual product remains a TypeScript npm-workspace monorepo. Full stack detail
 and rationale live in [`docs/architecture.md`](./docs/architecture.md). The first
 implementation phase is narrower: prove the TurnPlanner engine described in
-[`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
+[`docs/canonical/llm-turn-planner-architecture.md#core-model`](./docs/canonical/llm-turn-planner-architecture.md#core-model).
 
 - **Widget:** Vue 3 iframe widget (Vite), thin — rendering and transport only.
 - **API:** Node 24, Express 5, TypeScript; Helmet/CORS/CSRF; route-local OpenAPI.
@@ -301,9 +311,17 @@ of the active Justfile front door during Phase 0.
 
 ## Documentation
 
-- [Product brief](./docs/product-brief.md)
+- [Product boundary](./docs/canonical/product-brief.md#4-product-boundary)
+- [Product principles](./docs/canonical/product-brief.md#5-core-principles)
+- [Response requirements](./docs/canonical/product-brief.md#11-response-requirements)
+- [Non-negotiable release rules](./docs/canonical/product-brief.md#16-non-negotiable-release-rules)
+- [TurnPlanner core model](./docs/canonical/llm-turn-planner-architecture.md#core-model)
+- [Policy and grounding validator](./docs/canonical/llm-turn-planner-architecture.md#policy-and-grounding-validator)
+- [Journey simulation](./docs/canonical/llm-turn-planner-architecture.md#journey-simulation)
+- [Hell Week grading](./docs/canonical/hell-week-gauntlet.md#how-grading-works)
+- [Hell Week route-stability decision rule](./docs/canonical/hell-week-route-stability-evidence-contract.md#decision-rule)
+- [Static-routing restraint recommended order](./docs/canonical/phase-0-static-routing-restraint-audit-2026-06-15.md#recommended-order)
 - [Architecture & technical decisions](./docs/architecture.md)
-- [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
 - [Phase 0 human validation guide](./docs/phase-0-human-validation-guide.md)
 - [StochasticTestSimulator PRD](./docs/prds/2026-06-14-stochastic-test-simulator-prd.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)

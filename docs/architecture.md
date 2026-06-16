@@ -10,9 +10,9 @@ shared Zod contracts, persistence behind explicit storage ports, and optional
 cloud AI/RAG adapters behind runtime switches.
 
 Current implementation starts with the Phase 0 TurnPlanner engine proof in
-`docs/llm-turn-planner-architecture.md`. The stack below remains the eventual
-productisation target after the engine, journey simulation suite, and model
-comparison harness have proved the core behaviour.
+`docs/canonical/llm-turn-planner-architecture.md#practical-takeaway`. The stack
+below remains the eventual productisation target after the engine, journey
+simulation suite, and model comparison harness have proved the core behaviour.
 
 - **Monorepo:** npm workspaces — `backend`, `widget`, `contracts`. TypeScript ES modules throughout, with TypeScript source imports that do not use `.js` specifiers. Justfile is the operator command front door.
 - **Widget:** Vue 3 iframe widget built with Vite. Uses shared contract schemas. Credentialed fetch with session cookies and CSRF headers. Intentionally thin: rendering, transport, local interaction state only.

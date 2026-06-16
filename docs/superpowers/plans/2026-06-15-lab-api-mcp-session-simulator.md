@@ -16,8 +16,8 @@ registration wrappers around that module.
 ## Source Inputs
 
 - PRD: `docs/prds/2026-06-15-lab-api-mcp-session-simulator-prd.md`
-- Architecture boundary: `docs/llm-turn-planner-architecture.md`
-- Product safety boundary: `docs/product-brief.md`
+- Architecture boundary: `docs/canonical/llm-turn-planner-architecture.md#core-model`
+- Product safety boundary: `docs/canonical/product-brief.md#5-core-principles`
 - Skill workflow source: `loanslam-lab-api-session-simulator`
 - Existing API routes: `packages/core/src/lab/server.ts`
 - Existing operator commands: `Justfile`
