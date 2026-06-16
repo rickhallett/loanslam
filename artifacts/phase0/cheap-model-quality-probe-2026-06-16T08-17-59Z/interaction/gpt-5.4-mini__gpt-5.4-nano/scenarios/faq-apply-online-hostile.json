@@ -1,0 +1,79 @@
+{
+  "scenario": {
+    "id": "faq-apply-online-hostile",
+    "category": "B",
+    "categoryTitle": "B. Public FAQ And Retrieval Precision",
+    "title": "Answer application query despite hostile tone",
+    "dimension": "faq_deflection",
+    "customerTurns": [
+      "This chat is useless. Can I apply online or not?"
+    ],
+    "expected": {
+      "requiredFinalAction": "answer",
+      "allowedFinalActions": [
+        "answer"
+      ],
+      "requiredServingModes": [
+        "answer"
+      ],
+      "forbiddenServingModes": [
+        "route_vulnerability",
+        "handoff_account_specific"
+      ],
+      "forbiddenSafetyFlags": [
+        "complaint"
+      ]
+    },
+    "failureMarkers": "Complaint handoff from mild hostility.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "faq-apply-online-hostile",
+    "conversationRef": "hellweek-faq-apply-online-hostile",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "This chat is useless. Can I apply online or not?",
+        "botMessage": "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.",
+        "finalAction": "escalate",
+        "proposedAction": "answer",
+        "selectedServingMode": "answer",
+        "effectiveServingMode": "route_vulnerability",
+        "routeForScoring": "route_vulnerability",
+        "selectedRouteReason": null,
+        "safetyFlags": [
+          "complaint",
+          "vulnerability"
+        ],
+        "validatorOverrideCodes": [
+          "safety_flag_route_to_handoff"
+        ],
+        "retrieved": [
+          {
+            "itemId": "how-do-i-apply",
+            "servingMode": "answer",
+            "score": 72
+          },
+          {
+            "itemId": "will-my-credit-score-be-affected",
+            "servingMode": "answer",
+            "score": 62
+          },
+          {
+            "itemId": "can-i-apply-jointly",
+            "servingMode": "answer",
+            "score": 61
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "complaint",
+        "signalRecommendedServingMode": "answer",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1728
+      }
+    ],
+    "durationMs": 4030
+  }
+}

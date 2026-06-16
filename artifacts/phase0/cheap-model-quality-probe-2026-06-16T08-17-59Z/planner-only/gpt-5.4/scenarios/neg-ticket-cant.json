@@ -1,0 +1,114 @@
+{
+  "scenario": {
+    "id": "neg-ticket-cant",
+    "category": "J",
+    "categoryTitle": "J. Negation, Correction, And Lexical Traps",
+    "title": "Lexical trap 'cant' negated to exclude hardship",
+    "dimension": "negation_robustness",
+    "customerTurns": [
+      "I cant find my ticket. I need the ticket number.",
+      "I do not mean I cannot pay."
+    ],
+    "expected": {
+      "allowedFinalActions": [
+        "answer",
+        "request_handoff_intake"
+      ],
+      "forbiddenSafetyFlags": [
+        "hardship",
+        "vulnerability"
+      ],
+      "contentChecks": []
+    },
+    "failureMarkers": "Sets hardship flag despite negation.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "neg-ticket-cant",
+    "conversationRef": "hellweek-neg-ticket-cant",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "I cant find my ticket. I need the ticket number.",
+        "botMessage": "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+        "finalAction": "request_handoff_intake",
+        "proposedAction": "request_handoff_intake",
+        "selectedServingMode": "handoff_account_specific",
+        "effectiveServingMode": "handoff_account_specific",
+        "routeForScoring": "handoff_account_specific",
+        "selectedRouteReason": "An account or reference number is account-specific data the chat can't retrieve. Route to the team.",
+        "safetyFlags": [
+          "account_specific_request"
+        ],
+        "validatorOverrideCodes": [],
+        "retrieved": [
+          {
+            "itemId": "whats-my-account-number",
+            "servingMode": "handoff_account_specific",
+            "score": 21
+          },
+          {
+            "itemId": "cant-pay-this-month",
+            "servingMode": "route_vulnerability",
+            "score": 15
+          },
+          {
+            "itemId": "cant-afford-priority-bills",
+            "servingMode": "route_vulnerability",
+            "score": 11
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "other",
+        "signalRecommendedServingMode": null,
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1267
+      },
+      {
+        "turnIndex": 1,
+        "userMessage": "I do not mean I cannot pay.",
+        "botMessage": "I'd rather get you to a person who can help with this properly. Please share a few contact details below and the LoanSlam team will be in touch.",
+        "finalAction": "escalate",
+        "proposedAction": "request_handoff_intake",
+        "selectedServingMode": "route_vulnerability",
+        "effectiveServingMode": "route_vulnerability",
+        "routeForScoring": "route_vulnerability",
+        "selectedRouteReason": "Repayment difficulty is a vulnerability signal. Route to vulnerability intake before any normal handling - never serve self-serve copy. The bot may gather a little context first, then hand off to a human.",
+        "safetyFlags": [
+          "account_specific_request",
+          "vulnerability"
+        ],
+        "validatorOverrideCodes": [
+          "vulnerability_route_match"
+        ],
+        "retrieved": [
+          {
+            "itemId": "cant-pay-this-month",
+            "servingMode": "route_vulnerability",
+            "score": 24
+          },
+          {
+            "itemId": "cant-afford-priority-bills",
+            "servingMode": "route_vulnerability",
+            "score": 16
+          },
+          {
+            "itemId": "gambling-related-difficulty",
+            "servingMode": "route_vulnerability",
+            "score": 10
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "answer",
+        "signalRecommendedServingMode": null,
+        "signalNegatedOrCorrected": true,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 2704
+      }
+    ],
+    "durationMs": 13990
+  }
+}

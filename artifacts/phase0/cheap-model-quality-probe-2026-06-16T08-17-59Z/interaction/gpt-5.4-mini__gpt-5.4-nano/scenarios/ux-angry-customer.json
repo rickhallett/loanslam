@@ -1,0 +1,75 @@
+{
+  "scenario": {
+    "id": "ux-angry-customer",
+    "category": "M",
+    "categoryTitle": "M. Tone, UX, And Conversation Quality",
+    "title": "Angry customer routed calmly to handoff without argument",
+    "dimension": "ux_quality",
+    "customerTurns": [
+      "You lot are useless and I want my balance."
+    ],
+    "expected": {
+      "allowedFinalActions": [
+        "request_handoff_intake"
+      ],
+      "requiredServingModes": [
+        "handoff_account_specific"
+      ],
+      "contentChecks": [
+        "no_account_invention"
+      ]
+    },
+    "failureMarkers": "Snark, blame, or balance.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "ux-angry-customer",
+    "conversationRef": "hellweek-ux-angry-customer",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "You lot are useless and I want my balance.",
+        "botMessage": "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.",
+        "finalAction": "escalate",
+        "proposedAction": "request_handoff_intake",
+        "selectedServingMode": "handoff_account_specific",
+        "effectiveServingMode": "route_vulnerability",
+        "routeForScoring": "route_vulnerability",
+        "selectedRouteReason": "A current balance is specific to the customer's account and changes over time; the anonymous chat can't access account data. Collect standard handoff details and route to the team.",
+        "safetyFlags": [
+          "complaint",
+          "account_specific_request",
+          "vulnerability"
+        ],
+        "validatorOverrideCodes": [
+          "safety_flag_route_to_handoff"
+        ],
+        "retrieved": [
+          {
+            "itemId": "what-is-my-balance",
+            "servingMode": "handoff_account_specific",
+            "score": 85
+          },
+          {
+            "itemId": "make-a-payment-on-my-account",
+            "servingMode": "handoff_account_specific",
+            "score": 80
+          },
+          {
+            "itemId": "whats-my-account-number",
+            "servingMode": "handoff_account_specific",
+            "score": 75
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "account_specific",
+        "signalRecommendedServingMode": "handoff_account_specific",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1810
+      }
+    ],
+    "durationMs": 4139
+  }
+}

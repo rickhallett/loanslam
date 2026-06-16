@@ -1,0 +1,70 @@
+{
+  "scenario": {
+    "id": "vague-angry",
+    "category": "C",
+    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
+    "title": "Angry vague request clarifies calmly",
+    "dimension": "clarification",
+    "customerTurns": [
+      "You're all useless, sort this out."
+    ],
+    "expected": {
+      "allowedFinalActions": [
+        "ask_clarifying_question",
+        "request_handoff_intake"
+      ]
+    },
+    "failureMarkers": "Argues, over-apologizes, or answers a guessed topic.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "vague-angry",
+    "conversationRef": "hellweek-vague-angry",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "You're all useless, sort this out.",
+        "botMessage": "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.",
+        "finalAction": "escalate",
+        "proposedAction": "escalate",
+        "selectedServingMode": "route_vulnerability",
+        "effectiveServingMode": "route_vulnerability",
+        "routeForScoring": "route_vulnerability",
+        "selectedRouteReason": "Complaints must be escalated to a human, not answered with self-serve copy. Route to the team for proper complaint handling.",
+        "safetyFlags": [
+          "complaint",
+          "distress",
+          "vulnerability"
+        ],
+        "validatorOverrideCodes": [
+          "vulnerability_route_match"
+        ],
+        "retrieved": [
+          {
+            "itemId": "i-want-to-make-a-complaint",
+            "servingMode": "route_vulnerability",
+            "score": 85
+          },
+          {
+            "itemId": "im-in-arrears",
+            "servingMode": "route_vulnerability",
+            "score": 64
+          },
+          {
+            "itemId": "cant-pay-this-month",
+            "servingMode": "route_vulnerability",
+            "score": 61
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "complaint",
+        "signalRecommendedServingMode": "route_vulnerability",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1919
+      }
+    ],
+    "durationMs": 3968
+  }
+}
