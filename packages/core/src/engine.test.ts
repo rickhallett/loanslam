@@ -38,6 +38,18 @@ const corpus: CorpusItem[] = [
   },
 ];
 
+const corpusWithExcludedItem: CorpusItem[] = [
+  ...corpus,
+  {
+    id: "can-you-give-me-debt-advice",
+    question: "Can you give me debt or financial advice?",
+    question_variants: ["Should I enter an IVA?"],
+    serving_mode: "excluded",
+    route_reason: "The bot must not give regulated debt or financial advice.",
+    tags: ["debt-advice", "excluded"],
+  },
+];
+
 function state(): ConversationState {
   return {
     conversationRef: "conv-1",
@@ -1176,8 +1188,8 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("refuse");
     expect(result.customerMessage).not.toMatch(/Which trace/i);
-    expect(result.trace.selectedServingMode).toBeNull();
-    expect(result.trace.effectiveServingMode).toBeNull();
+    expect(result.trace.selectedServingMode).toBe("excluded");
+    expect(result.trace.effectiveServingMode).toBe("excluded");
     expect(result.trace.selectedRouteReason).toMatch(/internal traces/i);
     expect(result.trace.safetyFlags).toContain("unsupported_request");
     expect(result.validatorOverrides).toContainEqual(
@@ -1185,6 +1197,34 @@ describe("processTurn", () => {
         code: "internal_data_exposure_blocked",
         toAction: "refuse",
       }),
+    );
+  });
+
+  it("preserves excluded route evidence when the planner malforms", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("invalid JSON");
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Should I enter an IVA?",
+      planner,
+      corpus: corpusWithExcludedItem,
+      now: new Date("2026-06-13T12:09:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.trace.selectedServingMode).toBe("excluded");
+    expect(result.trace.effectiveServingMode).toBe("excluded");
+    expect(result.trace.selectedRouteReason).toMatch(/regulated debt/i);
+    expect(result.validatorOverrides).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "malformed_plan" }),
+        expect.objectContaining({ code: "excluded_policy_request_blocked" }),
+      ]),
     );
   });
 

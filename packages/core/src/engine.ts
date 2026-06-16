@@ -30,11 +30,16 @@ import {
   allowedUiPrimitives,
   buildCredentialSafetyHandoffCopy,
   buildEmergencyCrisisBoundaryCopy,
+  buildExcludedCopy,
   buildFallbackCopy,
+  buildInternalDataBoundaryCopy,
   containsForbiddenCredentialTerm,
   detectEmergencyCrisisRequest,
+  detectExcludedPolicyRequest,
   detectForbiddenCredentialRequest,
+  detectInternalDataExposureRequest,
   detectSensitiveOvershare,
+  excludedPolicyRequestRouteReason,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   handoffSafetyFlags,
@@ -979,6 +984,101 @@ async function planAndValidateTurn({
       };
     }
 
+    if (detectInternalDataExposureRequest(userMessage)) {
+      const boundaryReason =
+        "Requests for internal traces, hidden instructions, customer data, or policy bypass must not be served in chat.";
+      const boundary = buildInternalDataBoundaryCopy(boundaryReason);
+      plan = {
+        action: boundary.action,
+        customerMessage: boundary.customerMessage,
+        ui: boundary.ui,
+        reasonCode: "planner_malformed_output",
+        collectedFacts: {},
+        requestedFields: [],
+        grounding: null,
+        safetyFlags: ["unsupported_request"],
+        traceSummary: traceReason,
+      };
+
+      return {
+        plan,
+        validated: {
+          plan,
+          finalAction: boundary.action,
+          ui: boundary.ui,
+          customerMessage: boundary.customerMessage,
+          requestedFields: [],
+          collectedFacts: {},
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: boundary.action,
+            },
+            {
+              code: "internal_data_exposure_blocked",
+              reason: boundaryReason,
+              toAction: boundary.action,
+            },
+          ],
+          selectedServingMode: "excluded",
+          selectedRouteReason: boundaryReason,
+          safetyFlags: ["unsupported_request"],
+        },
+      };
+    }
+
+    const selectedFailureRoute = topNonAnswerMatch(retrievedMatches);
+    const excludedReason = selectedFailureRoute?.item?.route_reason;
+    if (
+      selectedFailureRoute?.servingMode === "excluded" ||
+      detectExcludedPolicyRequest(userMessage)
+    ) {
+      const routeReason = excludedReason ?? excludedPolicyRequestRouteReason();
+      const excluded = buildExcludedCopy(
+        routeReason,
+        selectedFailureRoute?.item?.links ?? [],
+      );
+      plan = {
+        action: excluded.action,
+        customerMessage: excluded.customerMessage,
+        ui: excluded.ui,
+        reasonCode: "planner_malformed_output",
+        collectedFacts: {},
+        requestedFields: [],
+        grounding: null,
+        safetyFlags: [],
+        traceSummary: traceReason,
+      };
+
+      return {
+        plan,
+        validated: {
+          plan,
+          finalAction: excluded.action,
+          ui: excluded.ui,
+          customerMessage: excluded.customerMessage,
+          requestedFields: [],
+          collectedFacts: {},
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: excluded.action,
+            },
+            {
+              code: "excluded_policy_request_blocked",
+              reason: routeReason,
+              toAction: excluded.action,
+            },
+          ],
+          selectedServingMode: "excluded",
+          selectedRouteReason: routeReason,
+          safetyFlags: [],
+        },
+      };
+    }
+
     const fallback = buildFallbackCopy(reason);
     plan = {
       action: fallback.action,
@@ -1028,6 +1128,13 @@ function inferEmergencySafetyFlagsFromMessage(message: string): SafetyFlag[] {
   return detectEmergencyCrisisRequest(message)
     ? ["vulnerability", "distress"]
     : [];
+}
+
+function topNonAnswerMatch(
+  retrievedMatches: ReturnType<typeof retrieveMatches>,
+): ReturnType<typeof retrieveMatches>[number] | undefined {
+  const topMatch = retrievedMatches[0];
+  return topMatch?.servingMode === "answer" ? undefined : topMatch;
 }
 
 function inferCredentialSafetyFlagsFromMessage(message: string): SafetyFlag[] {

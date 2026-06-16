@@ -84,7 +84,18 @@ const sensitiveOversharePattern =
   /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide)|let\s+me\s+(send|share|give|provide))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|date\s+of\s+birth|dob)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
 
 const internalDataExposurePattern =
-  /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
+  /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+(prompt|rules?|instructions?)|policy\s*version|developer\s+(message|mode)|customer['’]?s?\s+(data|email\s+address|email)|other\s+customers?|last\s+customer|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\bput\b.{0,80}\b(my|customer|personal)\s+data\b.{0,80}\b(url|https?:\/\/)|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
+
+const excludedPolicyRequestPatterns = [
+  /\bwhat\s+(should|can)\s+i\s+(say|tell|put|write)\b.{0,120}\b(definitely\s+)?(get\s+)?(approved|accepted|qualify|guarantee|guaranteed)\b/i,
+  /\b(hide|conceal|cover\s+up)\b.{0,80}\b(bad\s+credit|credit\s+(score|history|file)|credit)\b.{0,80}\b(checks?|application|loan|loanslam|you)\b/i,
+  /\b(should\s+i|would\s+it\s+be\s+better|better\s+than)\b.{0,100}\b(iva|debt\s+management\s+plan|dmp|bankrupt|bankruptcy|borrow\s+from\s+another\s+lender|other\s+lender)\b/i,
+  /\b(exact|personal|personally|today)\b.{0,60}\b(apr|interest\s+rate|rate|quote|price|pricing)\b|\b(apr|interest\s+rate|rate)\b.{0,60}\b(will|would)\s+i\s+get\b/i,
+  /\bhow\s+much\s+compensation\s+should\s+i\s+demand\b/i,
+] as const;
+
+const excludedPolicyRequestReason =
+  "This is a recognised but excluded advice, evasion, prediction, or internal-policy request that the bot must not answer.";
 
 const emergencyCrisisPattern =
   /\b(chest\s+pain|heart\s+attack|stroke|can't\s+breathe|cannot\s+breathe|struggling\s+to\s+breathe|medical\s+emergency|ambulance|a\s*&\s*e|a\s+and\s+e|999|go\s+to\s+hospital|hurt\s+myself|harm\s+myself|kill\s+myself|end\s+my\s+life|suicid(?:e|al)|self[-\s]?harm)\b/i;
@@ -152,6 +163,14 @@ export function detectSensitiveOvershare(text: string): boolean {
 
 export function detectInternalDataExposureRequest(text: string): boolean {
   return internalDataExposurePattern.test(text);
+}
+
+export function detectExcludedPolicyRequest(text: string): boolean {
+  return excludedPolicyRequestPatterns.some((pattern) => pattern.test(text));
+}
+
+export function excludedPolicyRequestRouteReason(): string {
+  return excludedPolicyRequestReason;
 }
 
 /**

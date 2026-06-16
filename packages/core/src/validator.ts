@@ -24,12 +24,14 @@ import {
   buildHandoffCopy,
   buildInternalDataBoundaryCopy,
   buildVulnerabilityCopy,
+  detectExcludedPolicyRequest,
   containsForbiddenCredentialTerm,
   detectEmergencyCrisisRequest,
   detectForbiddenCredentialRequest,
   detectInternalDataExposureRequest,
   detectPromisedAccountValueOrOutcome,
   detectSensitiveOvershare,
+  excludedPolicyRequestRouteReason,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   handoffSafetyFlags,
@@ -149,7 +151,7 @@ export function validateTurnPlan(
     ) {
       return {
         ...base,
-        selectedServingMode: null,
+        selectedServingMode: "excluded",
         selectedRouteReason: boundaryReason,
         safetyFlags: uniqueSafetyFlags([
           ...base.safetyFlags,
@@ -171,12 +173,55 @@ export function validateTurnPlan(
         ui: boundary.ui,
         requestedFields: [],
         collectedFacts: {},
-        selectedServingMode: null,
+        selectedServingMode: "excluded",
         selectedRouteReason: boundaryReason,
         safetyFlags: uniqueSafetyFlags([
           ...base.safetyFlags,
           "unsupported_request",
         ]),
+      },
+    );
+  }
+
+  if (detectExcludedPolicyRequest(options.userMessage ?? "")) {
+    const excludedReason =
+      selectedMatch?.servingMode === "excluded"
+        ? (selectedMatch.item?.route_reason ??
+          excludedPolicyRequestRouteReason())
+        : excludedPolicyRequestRouteReason();
+    const excluded = buildExcludedCopy(
+      excludedReason,
+      selectedMatch?.servingMode === "excluded"
+        ? (selectedMatch.item?.links ?? [])
+        : [],
+    );
+
+    if (
+      base.finalAction === "refuse" &&
+      base.ui.primitive === "safe_fallback"
+    ) {
+      return {
+        ...base,
+        selectedServingMode: "excluded",
+        selectedRouteReason: excludedReason,
+      };
+    }
+
+    return applyOverride(
+      base,
+      {
+        code: "excluded_policy_request_blocked",
+        reason: excludedReason,
+        toAction: excluded.action,
+      },
+      {
+        finalAction: excluded.action,
+        customerMessage: excluded.customerMessage,
+        ui: excluded.ui,
+        requestedFields: [],
+        collectedFacts: {},
+        selectedServingMode: "excluded",
+        selectedRouteReason: excludedReason,
       },
     );
   }
