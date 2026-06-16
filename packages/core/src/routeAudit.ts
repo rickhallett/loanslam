@@ -8,6 +8,12 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
+/**
+ * [NODE:route-audit-core]
+ * Reads captured lab or battery artifacts and turns them into route-quality
+ * review evidence.
+ */
+
 import type {
   RetrievedMatch,
   ServingMode,
@@ -150,6 +156,10 @@ const humanSupportSignals = new Set([
   "language_barrier",
 ]);
 
+/**
+ * [NODE:route-audit-build-artifacts]
+ * Resolves inputs, classifies rows, and writes JSON/Markdown audit outputs.
+ */
 export function buildRouteAuditArtifacts(
   options: RouteAuditOptions,
 ): RouteAuditResult {
@@ -459,6 +469,10 @@ function summarizeRetrievedItem(
   };
 }
 
+/**
+ * [NODE:route-audit-classify-row]
+ * Flags mismatches between signal, route, final action, and handoff state.
+ */
 function classifyAuditRow(row: RouteAuditRow): RouteAuditFinding[] {
   const findings: RouteAuditFinding[] = [];
   const hasStateCarryoverSignal =
@@ -551,6 +565,10 @@ function classifyAuditRow(row: RouteAuditRow): RouteAuditFinding[] {
   return findings;
 }
 
+/**
+ * [NODE:route-audit-render-markdown]
+ * Renders the human review view for route audit findings.
+ */
 function renderRouteAuditMarkdown(audit: RouteAuditReport): string {
   const findingRows = audit.rows.filter((row) => row.findings.length > 0);
   const lines = [

@@ -1,6 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+/**
+ * [NODE:hellweek-orchestrator-core]
+ * Orchestrates Hell Week runs: select scenarios, execute engine turns, grade,
+ * and write report artifacts.
+ */
+
 import type {
   CorpusItem,
   PlannerMetadata,
@@ -27,7 +33,10 @@ type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
 export type HellWeekTheme = "minimal" | "jasmine";
 
-function renderReportHtml(report: HellWeekReport, theme: HellWeekTheme): string {
+function renderReportHtml(
+  report: HellWeekReport,
+  theme: HellWeekTheme,
+): string {
   return theme === "jasmine"
     ? renderHellWeekJasmineHtml(report)
     : renderHellWeekReportHtml(report);
@@ -89,7 +98,9 @@ function signalMeta(signalExtractor?: SignalExtractor): {
   return {
     enabled: true,
     ...(metadata?.model ? { model: metadata.model } : {}),
-    ...(metadata?.promptVersion ? { promptVersion: metadata.promptVersion } : {}),
+    ...(metadata?.promptVersion
+      ? { promptVersion: metadata.promptVersion }
+      : {}),
   };
 }
 
@@ -98,9 +109,7 @@ function grade(
   evidence: readonly HellWeekScenarioEvidence[],
   judgeVerdicts?: Map<string, JudgeVerdict>,
 ): HellWeekGrade[] {
-  const evidenceById = new Map(
-    evidence.map((item) => [item.scenarioId, item]),
-  );
+  const evidenceById = new Map(evidence.map((item) => [item.scenarioId, item]));
 
   return scenarios.map((scenario) => {
     const scenarioEvidence = evidenceById.get(scenario.id) ?? {
@@ -183,7 +192,10 @@ function writeRunArtifacts({
   };
 }
 
-/** Drive the gauntlet live, grade, and write the run folder. */
+/**
+ * [NODE:hellweek-execute]
+ * Drive the gauntlet live, grade, and write the run folder.
+ */
 export async function executeHellWeek(
   input: ExecuteHellWeekInput,
 ): Promise<HellWeekRunArtifacts> {
@@ -203,7 +215,9 @@ export async function executeHellWeek(
     scenarios,
     corpus: input.corpus,
     planner: input.planner,
-    ...(input.signalExtractor ? { signalExtractor: input.signalExtractor } : {}),
+    ...(input.signalExtractor
+      ? { signalExtractor: input.signalExtractor }
+      : {}),
     ...(input.concurrency ? { concurrency: input.concurrency } : {}),
     onScenarioComplete: (item, completed, total) => {
       const flag = item.error ? " [error]" : "";
@@ -237,6 +251,7 @@ export async function executeHellWeek(
 }
 
 /**
+ * [NODE:hellweek-render-from-run]
  * Re-grade and re-render from a previously captured run folder, optionally
  * merging LLM judge verdicts. No live model calls.
  */
@@ -284,6 +299,10 @@ export function renderFromRun({
   });
 }
 
+/**
+ * [NODE:hellweek-load-judge-verdicts]
+ * Loads optional LLM judge verdicts for merge-only report rendering.
+ */
 export function loadJudgeVerdicts(path: string): Map<string, JudgeVerdict> {
   const raw = readFileSync(path, "utf8").trim();
   const verdicts: JudgeVerdict[] = [];

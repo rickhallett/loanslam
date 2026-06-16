@@ -16,6 +16,12 @@ import { z } from "zod";
 import type { OpenAiSignalExtractorConfig } from "./config";
 import { buildSignalExtractorPrompt, parseSignalBundle } from "./prompt";
 
+/**
+ * [NODE:signal-openai-adapter]
+ * Optional OpenAI-backed shadow signal extractor. Its output can influence
+ * retrieval and reports, but the validator remains authoritative.
+ */
+
 export interface OpenAiSignalExtractorRequest {
   model: string;
   instructions: string;
@@ -31,6 +37,10 @@ export interface OpenAiSignalExtractorRequest {
   store: false;
 }
 
+/**
+ * [NODE:signal-openai-client-port]
+ * Narrow client shape used by tests and the real OpenAI SDK adapter.
+ */
 export interface OpenAiSignalExtractorClient {
   responses: {
     parse(
@@ -47,6 +57,10 @@ export interface OpenAiSignalExtractorOptions {
   client?: OpenAiSignalExtractorClient;
 }
 
+/**
+ * [NODE:signal-openai-extractor]
+ * Produces advisory routing/safety signals for one customer turn.
+ */
 export class OpenAiSignalExtractor implements SignalExtractor {
   readonly metadata;
 
@@ -68,6 +82,10 @@ export class OpenAiSignalExtractor implements SignalExtractor {
     };
   }
 
+  /**
+   * [NODE:signal-openai-extract-signals]
+   * One model call for the shadow signal bundle.
+   */
   async extractSignals(input: SignalInput): Promise<SignalBundle> {
     const prompt = buildSignalExtractorPrompt(input);
     const response = await this.client.responses.parse(

@@ -6,6 +6,12 @@ import type {
   SignalBundle,
 } from "@loanslam/contracts";
 
+/**
+ * [NODE:retriever-core]
+ * Local Phase 0 corpus retrieval. This is lexical plus advisory signal hints;
+ * policy still belongs to the validator.
+ */
+
 const fieldWeights = {
   question: 6,
   questionVariants: 5,
@@ -103,6 +109,10 @@ export interface RetrieveMatchesOptions {
   signalBundle?: SignalBundle;
 }
 
+/**
+ * [NODE:retriever-normalize-terms]
+ * Normalizes customer text and corpus text into stable lexical match terms.
+ */
 export function normalizeSearchTerms(text: string): string[] {
   const terms = text
     .toLowerCase()
@@ -121,6 +131,10 @@ export function normalizeSearchTerms(text: string): string[] {
   return [...new Set(terms)];
 }
 
+/**
+ * [NODE:retriever-retrieve-matches]
+ * Selects candidate corpus items and preserves their `serving_mode` policy data.
+ */
 export function retrieveMatches(
   query: string,
   items: readonly CorpusItem[],
@@ -236,6 +250,10 @@ function signalServingModeEvidence(
   return signalBundle?.recommendedServingMode ?? null;
 }
 
+/**
+ * [NODE:retriever-signal-policy-filter]
+ * Prevents advisory signal hints from widening non-answer policy routes.
+ */
 function signalAllowsServingMode(
   itemServingMode: ServingMode,
   signalServingMode: ServingMode,

@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+/**
+ * [NODE:contracts-phase0]
+ * Shared Phase 0 wire contracts. Keep exported runtime schemas and inferred
+ * types documented together so editor hover docs explain the boundary.
+ */
+
+/**
+ * [NODE:contract-serving-mode]
+ * Policy discriminator carried by corpus items, traces, and reports.
+ */
 export const servingModeSchema = z.enum([
   "answer",
   "handoff_account_specific",
@@ -8,6 +18,10 @@ export const servingModeSchema = z.enum([
 ]);
 export type ServingMode = z.infer<typeof servingModeSchema>;
 
+/**
+ * [NODE:contract-turn-action]
+ * Allowed planner actions before the validator accepts or overrides the plan.
+ */
 export const turnActionSchema = z.enum([
   "answer",
   "ask_clarifying_question",
@@ -232,6 +246,11 @@ export type SignalExtractionStatus = z.infer<
   typeof signalExtractionStatusSchema
 >;
 
+/**
+ * [NODE:contract-signal-bundle]
+ * Shadow-model signal packet used to bias retrieval and compare against the
+ * final validator-enforced route.
+ */
 export const signalBundleSchema = z.object({
   primaryIntent: signalIntentSchema,
   secondaryIntents: z.array(signalIntentSchema).default([]),
@@ -258,6 +277,10 @@ export type SignalExtractionComparison = z.infer<
   typeof signalExtractionComparisonSchema
 >;
 
+/**
+ * [NODE:contract-grounding-decision]
+ * Planner claim about which retrieved items support a customer-facing answer.
+ */
 export const groundingDecisionSchema = z.object({
   citedItemIds: z.array(nonEmptyStringSchema),
   servingMode: servingModeSchema,
@@ -266,6 +289,10 @@ export const groundingDecisionSchema = z.object({
 });
 export type GroundingDecision = z.infer<typeof groundingDecisionSchema>;
 
+/**
+ * [NODE:contract-turn-plan]
+ * Untrusted model proposal. The validator owns policy acceptance.
+ */
 export const turnPlanSchema = z.object({
   action: turnActionSchema,
   customerMessage: nonEmptyStringSchema,
@@ -287,6 +314,10 @@ export const validatorOverrideSchema = z.object({
 });
 export type ValidatorOverride = z.infer<typeof validatorOverrideSchema>;
 
+/**
+ * [NODE:contract-turn-trace]
+ * Review evidence emitted for every processed turn.
+ */
 export const turnTraceSchema = z.object({
   traceId: nonEmptyStringSchema,
   journeyId: z.string().trim().optional(),
@@ -316,6 +347,10 @@ export const turnTraceSchema = z.object({
 });
 export type TurnTrace = z.infer<typeof turnTraceSchema>;
 
+/**
+ * [NODE:contract-validated-turn-result]
+ * Enforced customer-facing result returned by the engine.
+ */
 export const validatedTurnResultSchema = z.object({
   conversationRef: nonEmptyStringSchema,
   requestRef: nonEmptyStringSchema,
@@ -802,6 +837,11 @@ type _StochasticUsefulWithFindingsPromotionStatusRejected = AssertTrue<
     : true
 >;
 
+/**
+ * [NODE:contract-turn-planner-port]
+ * Swappable planner port. Implementations propose `TurnPlan`; they do not
+ * enforce policy.
+ */
 export type TurnPlanner = {
   planTurn(input: TurnPlannerInput): Promise<TurnPlan>;
 };
@@ -812,6 +852,10 @@ export type SignalInput = {
   abortSignal?: AbortSignal;
 };
 
+/**
+ * [NODE:contract-signal-extractor-port]
+ * Optional shadow signal port used for routing comparison and retrieval hints.
+ */
 export type SignalExtractor = {
   metadata?: SignalExtractorMetadata;
   extractSignals(input: SignalInput): Promise<SignalBundle>;

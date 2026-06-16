@@ -1,12 +1,14 @@
 # Agent Instructions
 
 ## Start Here
+
 - Current direction: Phase 0 proves the TurnPlanner engine before productising.
 - Read `docs/llm-turn-planner-architecture.md` before implementation planning.
 - Treat `docs/product-brief.md` as the product boundary and safety contract.
 - Treat `docs/architecture.md` as the eventual product stack, not the first build slice.
 
 ## Phase 0 Scope
+
 - Build the engine first: `processTurn`, TurnPlanner contract, retrieval, validator, traces, journey simulation, and model comparison.
 - Use `TurnPlanner` for the planner interface, `TurnPlan` for the untrusted model proposal, and `ValidatedTurnResult` for the enforced result; reserve `ChatService` for later productisation.
 - Do not start with the Vue widget, AWS deployment, SQL Server persistence, production audit store, real PII intake, or ticket webhook.
@@ -26,30 +28,38 @@
 - Do not build a fake planner baseline. Phase 0 evidence must come from real model-backed planner behavior over a broad journey suite, not a few curated happy paths.
 
 ## Package Manager
+
 - Planned app scaffold: npm workspaces with TypeScript.
 - Use TypeScript source imports without `.js` specifiers; configure module resolution to support actual TypeScript source.
 - Current repo front door: `just --list`.
 
 ## Local Commands
-| Task | Command |
-|---|---|
-| List recipes | `just --list` |
-| Run tests | `just test` |
-| Type-check workspaces | `just typecheck` |
-| Build workspaces | `just build` |
-| Check formatting | `just format-check` |
+
+| Task                  | Command                                         |
+| --------------------- | ----------------------------------------------- |
+| List recipes          | `just --list`                                   |
+| Run tests             | `just test`                                     |
+| Type-check workspaces | `just typecheck`                                |
+| Build workspaces      | `just build`                                    |
+| Check formatting      | `just format-check`                             |
 | Probe one engine turn | `just core-turn -- --message "How do I apply?"` |
-| Start the full lab | `just lab` |
-| Start the lab API | `just core-serve -- --port 8787` |
-| Start the lab UI | `just lab-ui` |
+| Start the full lab    | `just lab`                                      |
+| Start the lab API     | `just core-serve -- --port 8787`                |
+| Start the lab UI      | `just lab-ui`                                   |
 
 ## Commit Attribution
+
 AI commits MUST NOT include:
+
 ```text
 Co-Authored-By: (the agent's name and attribution byline)
 ```
 
 ## Working Notes
+
 - Keep handoff docs concise; link to source docs rather than duplicating them.
+- Use JSDoc block comments for file headers and exported function/interface/type
+  annotations. Put stable `[NODE:lower-kebab-name]` labels on hot runtime and
+  evidence paths so `rg "\[NODE:"` is a useful trace index.
 - Markdown context cleanup is tracked in `docs/prds/2026-06-15-markdown-context-pruning-spec.md`; handle it before trusting old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.

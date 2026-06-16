@@ -5,6 +5,12 @@ import {
 } from "node:http";
 import { randomUUID } from "node:crypto";
 
+/**
+ * [NODE:lab-api-core]
+ * Dev-only HTTP wrapper around the Phase 0 engine. This is evidence tooling,
+ * not the production API shape.
+ */
+
 import type {
   ConversationState,
   CorpusItem,
@@ -40,6 +46,10 @@ interface JsonBody {
   message?: unknown;
 }
 
+/**
+ * [NODE:lab-api-create-server]
+ * Creates the in-memory lab API used by manual probes and browser sessions.
+ */
 export function createLabServer({
   corpus,
   plannerFactory,
@@ -73,6 +83,10 @@ export function createLabServer({
   });
 }
 
+/**
+ * [NODE:lab-api-handle-request]
+ * Routes lab HTTP requests into sessions, messages, intake, reset, and cancel.
+ */
 async function handleRequest({
   request,
   response,
@@ -275,6 +289,10 @@ async function handleRequest({
   });
 }
 
+/**
+ * [NODE:lab-api-validate-intake]
+ * Validates structured handoff form submissions before completing handoff.
+ */
 function validateIntakeBody(
   body: JsonBody,
 ):

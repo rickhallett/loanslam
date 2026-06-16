@@ -48,6 +48,10 @@ route-audit *audit_flags:
 hell-week *hell_flags:
     @npm --silent run core:hell-week -- {{hell_flags}}
 
+# Compare two Hell Week report.json files or run folders.
+hell-week-compare *compare_flags:
+    @npm --silent run core:hell-week-compare -- {{compare_flags}}
+
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{chat_flags}}

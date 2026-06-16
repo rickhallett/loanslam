@@ -10,13 +10,22 @@ import type {
   ValidatorOverride,
 } from "@loanslam/contracts";
 
+/**
+ * [NODE:validator-core]
+ * Hard-rule policy and grounding backstop for untrusted planner proposals.
+ * Grep `[NODE:validator-` to follow accept/override decisions.
+ */
+
 import {
+  buildCredentialSafetyHandoffCopy,
+  buildEmergencyCrisisBoundaryCopy,
   buildExcludedCopy,
   buildFallbackCopy,
   buildHandoffCopy,
   buildInternalDataBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
+  detectEmergencyCrisisRequest,
   detectForbiddenCredentialRequest,
   detectInternalDataExposureRequest,
   detectPromisedAccountValueOrOutcome,
@@ -35,6 +44,10 @@ export interface ValidateTurnPlanOptions {
   signalBundle?: SignalBundle;
 }
 
+/**
+ * [NODE:validator-fragment]
+ * Internal enforced plan shape before the engine adds state and trace fields.
+ */
 export interface ValidatedPlanFragment {
   plan: TurnPlan;
   finalAction: TurnAction;
@@ -54,6 +67,11 @@ interface OverrideInput {
   toAction: TurnAction;
 }
 
+/**
+ * [NODE:validator-policy-gate]
+ * Canonical enforcement point for grounding, route policy, safety flags, and UI
+ * compatibility.
+ */
 export function validateTurnPlan(
   plan: TurnPlan,
   retrievedMatches: readonly RetrievedMatch[],
@@ -90,6 +108,35 @@ export function validateTurnPlan(
     selectedMatch?.servingMode === "route_vulnerability"
       ? selectedMatch
       : undefined;
+
+  if (detectEmergencyCrisisRequest(options.userMessage ?? "")) {
+    const crisisReason =
+      "Emergency or self-harm crisis language needs urgent external signposting, not normal LoanSlam intake.";
+    const crisis = buildEmergencyCrisisBoundaryCopy(crisisReason);
+
+    return applyOverride(
+      base,
+      {
+        code: "emergency_crisis_boundary",
+        reason: crisisReason,
+        toAction: crisis.action,
+      },
+      {
+        finalAction: crisis.action,
+        customerMessage: crisis.customerMessage,
+        ui: crisis.ui,
+        requestedFields: [],
+        collectedFacts: {},
+        selectedServingMode: null,
+        selectedRouteReason: crisisReason,
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "vulnerability",
+          "distress",
+        ]),
+      },
+    );
+  }
 
   if (detectInternalDataExposureRequest(options.userMessage ?? "")) {
     const boundaryReason =
@@ -134,10 +181,33 @@ export function validateTurnPlan(
     );
   }
 
-  if (detectForbiddenCredentialRequest(planText(plan))) {
-    const handoff = buildHandoffCopy(
-      "Do not share bank, card, payment, or online banking credentials in chat.",
+  if (detectForbiddenCredentialRequest(options.userMessage ?? "")) {
+    const handoff = buildCredentialSafetyHandoffCopy();
+
+    return applyOverride(
+      base,
+      {
+        code: "forbidden_credential_request_blocked",
+        reason:
+          "The customer asked to share bank, card, payment, online banking, or banking app screenshot credentials.",
+        toAction: handoff.action,
+      },
+      {
+        finalAction: handoff.action,
+        customerMessage: handoff.customerMessage,
+        ui: handoff.ui,
+        requestedFields: handoff.requestedFields,
+        collectedFacts: {},
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "forbidden_credentials",
+        ]),
+      },
     );
+  }
+
+  if (detectForbiddenCredentialRequest(planText(plan))) {
+    const handoff = buildCredentialSafetyHandoffCopy();
 
     return applyOverride(
       base,
@@ -162,9 +232,7 @@ export function validateTurnPlan(
   }
 
   if (collectedFactsContainForbiddenCredentials(plan.collectedFacts)) {
-    const handoff = buildHandoffCopy(
-      "Do not share bank, card, payment, or online banking credentials in chat.",
-    );
+    const handoff = buildCredentialSafetyHandoffCopy();
 
     return applyOverride(
       base,
@@ -319,6 +387,10 @@ export function validateTurnPlan(
   return base;
 }
 
+/**
+ * [NODE:validator-select-policy-match]
+ * Chooses the corpus policy item that governs answer/route validation.
+ */
 function selectPolicyMatch(
   plan: TurnPlan,
   retrievedMatches: readonly RetrievedMatch[],
@@ -369,6 +441,14 @@ function inferSafetyFlagsFromMatches(
 
 function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
   const flags: SafetyFlag[] = [];
+
+  if (detectEmergencyCrisisRequest(message)) {
+    flags.push("vulnerability", "distress");
+  }
+
+  if (detectForbiddenCredentialRequest(message)) {
+    flags.push("forbidden_credentials");
+  }
 
   if (detectSensitiveOvershare(message)) {
     flags.push("sensitive_overshare");
@@ -507,6 +587,10 @@ function normalizeRequestedFields(plan: TurnPlan): IntakeField[] {
   return [];
 }
 
+/**
+ * [NODE:validator-serving-mode-override]
+ * Converts non-answer corpus policy into handoff/refusal/escalation output.
+ */
 function applyServingModeOverride(
   base: ValidatedPlanFragment,
   match: RetrievedMatch,
@@ -575,6 +659,10 @@ function applyServingModeOverride(
   );
 }
 
+/**
+ * [NODE:validator-vulnerability-override]
+ * Forces vulnerability-family routes to the human escalation path.
+ */
 function applyVulnerabilityOverride(
   base: ValidatedPlanFragment,
   override: OverrideInput,
@@ -618,8 +706,13 @@ function isCompliantRoutePlan(
     );
   }
 
+  const expectedAction =
+    servingMode === "route_vulnerability"
+      ? "escalate"
+      : "request_handoff_intake";
+
   return (
-    base.finalAction === "request_handoff_intake" &&
+    base.finalAction === expectedAction &&
     base.ui.primitive === "intake_form" &&
     sameFields(base.ui.fields, standardHandoffFields) &&
     sameFields(base.requestedFields, standardHandoffFields)
@@ -637,6 +730,10 @@ function sameFields(
   );
 }
 
+/**
+ * [NODE:validator-apply-override]
+ * Records the enforced replacement while preserving the original proposal.
+ */
 function applyOverride(
   base: ValidatedPlanFragment,
   override: OverrideInput,

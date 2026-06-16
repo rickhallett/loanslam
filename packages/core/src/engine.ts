@@ -1,10 +1,17 @@
 import { randomUUID } from "node:crypto";
 
+/**
+ * [NODE:engine-core]
+ * Phase 0 turn runtime: retrieve, plan, validate, update state, and emit trace
+ * evidence. Grep `[NODE:engine-` to step through one customer turn.
+ */
+
 import type {
   ConversationState,
   CorpusItem,
   IntakeField,
   PlannerMetadata,
+  SafetyFlag,
   SignalBundle,
   SignalExtractionStatus,
   SignalExtractor,
@@ -21,7 +28,13 @@ import type {
 import {
   allowedActions,
   allowedUiPrimitives,
+  buildCredentialSafetyHandoffCopy,
+  buildEmergencyCrisisBoundaryCopy,
   buildFallbackCopy,
+  containsForbiddenCredentialTerm,
+  detectEmergencyCrisisRequest,
+  detectForbiddenCredentialRequest,
+  detectSensitiveOvershare,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   handoffSafetyFlags,
@@ -31,6 +44,10 @@ import {
 import { retrieveMatches } from "./retriever";
 import { type ValidatedPlanFragment, validateTurnPlan } from "./validator";
 
+/**
+ * [NODE:engine-process-turn-input]
+ * Inputs needed to run one deterministic shell around a model-backed planner.
+ */
 export interface ProcessTurnInput {
   state: ConversationState;
   userMessage: string;
@@ -46,6 +63,13 @@ export interface ProcessTurnInput {
 
 const defaultSignalExtractorTimeoutMs = 10_000;
 
+/**
+ * [NODE:engine-process-turn]
+ * Canonical hot path for a single customer message.
+ *
+ * Flow: shadow signals -> retrieval -> planner -> validator -> handoff state
+ * rules -> trace/state result.
+ */
 export async function processTurn({
   state,
   userMessage,
@@ -173,6 +197,10 @@ type ShadowSignalOutcome =
       errorMessage: string;
     };
 
+/**
+ * [NODE:engine-shadow-signals]
+ * Runs optional signal extraction as advisory evidence with a local timeout.
+ */
 async function captureShadowSignals({
   signalExtractor,
   state,
@@ -318,6 +346,11 @@ function compareSignalToOutcome(params: {
   };
 }
 
+/**
+ * [NODE:engine-effective-serving-mode]
+ * Collapses the enforced action and safety flags into the route reported in
+ * traces and dashboards.
+ */
 function deriveEffectiveServingMode(
   validated: ValidatedPlanFragment,
   safetyFlags: ConversationState["safetyFlags"] = validated.safetyFlags,
@@ -359,6 +392,10 @@ function deriveEffectiveServingMode(
   return null;
 }
 
+/**
+ * [NODE:engine-handoff-state-rules]
+ * Applies deterministic multi-turn handoff rules after policy validation.
+ */
 function applyHandoffStateRules(
   state: ConversationState,
   validated: ValidatedPlanFragment,
@@ -433,8 +470,9 @@ function applyHandoffStateRules(
   }
 
   if (
-    currentValidated.finalAction !== "request_handoff_intake" ||
-    currentValidated.ui.primitive !== "intake_form"
+    currentValidated.ui.primitive !== "intake_form" ||
+    (currentValidated.finalAction !== "request_handoff_intake" &&
+      currentValidated.finalAction !== "escalate")
   ) {
     return currentValidated;
   }
@@ -593,6 +631,7 @@ function buildSupportReference(conversationRef: string): string {
 }
 
 /**
+ * [NODE:engine-structured-handoff-complete]
  * Deterministically completes a handoff from a structured intake form
  * submission. Bypasses the planner, signal extractor, and free-text fact
  * extractor: the form already provides exact, validated field values, so this
@@ -667,6 +706,7 @@ export function completeStructuredHandoff({
 }
 
 /**
+ * [NODE:engine-handoff-cancel]
  * Clears a pending handoff so the customer returns to the normal chat loop.
  * Resets the accumulated safety flags too, because the validator re-forces
  * handoff whenever a vulnerability-family flag is present and those flags
@@ -691,6 +731,10 @@ function buildHandoffIntroMessage({
 }): string {
   if (safetyFlags.includes("complaint")) {
     return "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.";
+  }
+
+  if (safetyFlags.includes("forbidden_credentials")) {
+    return buildCredentialSafetyHandoffCopy().customerMessage;
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
@@ -819,6 +863,10 @@ function sameIntakeFields(
   );
 }
 
+/**
+ * [NODE:engine-plan-and-validate]
+ * Calls the planner and converts malformed planner output into a safe fallback.
+ */
 async function planAndValidateTurn({
   planner,
   plannerInput,
@@ -839,6 +887,98 @@ async function planAndValidateTurn({
   } catch (error) {
     const reason = "I could not safely choose the next step from this message.";
     const traceReason = plannerFailureReason(error);
+    const emergencyFlags = inferEmergencySafetyFlagsFromMessage(userMessage);
+
+    if (emergencyFlags.length > 0) {
+      const crisisReason =
+        "Emergency or self-harm crisis language needs urgent external signposting, not normal LoanSlam intake.";
+      const crisis = buildEmergencyCrisisBoundaryCopy(crisisReason);
+      plan = {
+        action: crisis.action,
+        customerMessage: crisis.customerMessage,
+        ui: crisis.ui,
+        reasonCode: "planner_malformed_output",
+        collectedFacts: {},
+        requestedFields: [],
+        grounding: null,
+        safetyFlags: emergencyFlags,
+        traceSummary: traceReason,
+      };
+
+      return {
+        plan,
+        validated: {
+          plan,
+          finalAction: crisis.action,
+          ui: crisis.ui,
+          customerMessage: crisis.customerMessage,
+          requestedFields: [],
+          collectedFacts: {},
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: crisis.action,
+            },
+            {
+              code: "emergency_crisis_boundary",
+              reason: crisisReason,
+              toAction: crisis.action,
+            },
+          ],
+          selectedServingMode: null,
+          selectedRouteReason: crisisReason,
+          safetyFlags: emergencyFlags,
+        },
+      };
+    }
+
+    const credentialFlags = inferCredentialSafetyFlagsFromMessage(userMessage);
+
+    if (credentialFlags.includes("forbidden_credentials")) {
+      const credential = buildCredentialSafetyHandoffCopy();
+      const credentialReason =
+        "The customer message contains bank, card, payment, online banking, or banking app screenshot credentials.";
+      plan = {
+        action: credential.action,
+        customerMessage: credential.customerMessage,
+        ui: credential.ui,
+        reasonCode: "planner_malformed_output",
+        collectedFacts: {},
+        requestedFields: credential.requestedFields,
+        grounding: null,
+        safetyFlags: credentialFlags,
+        traceSummary: traceReason,
+      };
+
+      return {
+        plan,
+        validated: {
+          plan,
+          finalAction: credential.action,
+          ui: credential.ui,
+          customerMessage: credential.customerMessage,
+          requestedFields: credential.requestedFields,
+          collectedFacts: {},
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: credential.action,
+            },
+            {
+              code: "forbidden_credential_request_blocked",
+              reason: credentialReason,
+              toAction: credential.action,
+            },
+          ],
+          selectedServingMode: null,
+          selectedRouteReason: credentialReason,
+          safetyFlags: credentialFlags,
+        },
+      };
+    }
+
     const fallback = buildFallbackCopy(reason);
     plan = {
       action: fallback.action,
@@ -884,6 +1024,30 @@ async function planAndValidateTurn({
   };
 }
 
+function inferEmergencySafetyFlagsFromMessage(message: string): SafetyFlag[] {
+  return detectEmergencyCrisisRequest(message)
+    ? ["vulnerability", "distress"]
+    : [];
+}
+
+function inferCredentialSafetyFlagsFromMessage(message: string): SafetyFlag[] {
+  const flags: SafetyFlag[] = [];
+  const hasForbiddenCredential =
+    detectForbiddenCredentialRequest(message) ||
+    (detectSensitiveOvershare(message) &&
+      containsForbiddenCredentialTerm(message));
+
+  if (hasForbiddenCredential) {
+    flags.push("forbidden_credentials");
+  }
+
+  if (detectSensitiveOvershare(message)) {
+    flags.push("sensitive_overshare");
+  }
+
+  return [...new Set(flags)];
+}
+
 function plannerFailureReason(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -896,6 +1060,10 @@ const defaultPlannerMetadata: PlannerMetadata = {
   promptVersion: "phase0-task3",
 };
 
+/**
+ * [NODE:engine-merge-state]
+ * Persists the enforced turn into conversation state for the next planner call.
+ */
 function mergeState({
   state,
   userMessage,

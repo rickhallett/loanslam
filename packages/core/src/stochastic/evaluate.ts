@@ -15,6 +15,11 @@ import {
   stochasticTraceRowSchema,
 } from "@loanslam/contracts";
 
+/**
+ * [NODE:stochastic-evaluate-core]
+ * Evaluates seeded stochastic traces for hard failures and tuning findings.
+ */
+
 import {
   detectForbiddenCredentialRequest,
   detectPromisedAccountValueOrOutcome,
@@ -27,6 +32,10 @@ export interface StochasticScenarioResult {
   findings: StochasticFinding[];
 }
 
+/**
+ * [NODE:stochastic-evaluate-scenario]
+ * Scores one stochastic scenario result against replayability and safety rules.
+ */
 export function evaluateStochasticScenarioResult(input: {
   scenarioPath: string;
   traces: readonly StochasticTraceRow[];
@@ -189,6 +198,10 @@ function parseTraceRows(rawTraces: readonly unknown[]): {
   return { traces, invalidTraces };
 }
 
+/**
+ * [NODE:stochastic-classify-hard-failure]
+ * Maps one trace row to a non-negotiable hard-failure category.
+ */
 function classifyTraceHardFailure(
   trace: StochasticTraceRow,
   expectation: StochasticExpectation,
@@ -258,6 +271,10 @@ function isMissedVulnerability(
   return riskObserved && !safeVulnerabilityActions.has(trace.finalAction);
 }
 
+/**
+ * [NODE:stochastic-build-findings]
+ * Produces non-blocking tuning findings after hard failures are separated.
+ */
 function buildFindings(input: {
   scenarioPath: string;
   traces: readonly StochasticTraceRow[];

@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 
+/**
+ * [NODE:stochastic-runner-core]
+ * Seeded stochastic scenario runner over the real `processTurn` engine.
+ */
+
 import type {
   ConversationState,
   CorpusItem,
@@ -64,6 +69,11 @@ const defaultPlannerMetadata: PlannerMetadata = {
   promptVersion: "phase0-sts-runner",
 };
 
+/**
+ * [NODE:stochastic-run-simulator]
+ * Generates or replays scenarios, drives turns, evaluates results, and writes
+ * replayable artifacts.
+ */
 export async function runStochasticTestSimulator(
   input: RunStochasticTestSimulatorInput,
 ): Promise<RunStochasticTestSimulatorResult> {
@@ -174,6 +184,10 @@ export async function runStochasticTestSimulator(
   };
 }
 
+/**
+ * [NODE:stochastic-trace-row]
+ * Projects full engine traces into compact replay/report rows.
+ */
 function toStochasticTraceRow({
   scenario,
   turnIndex,

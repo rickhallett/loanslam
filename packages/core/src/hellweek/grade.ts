@@ -10,6 +10,11 @@ import type {
 } from "./types";
 import { hardContentChecks, worstSeverity } from "./types";
 
+/**
+ * [NODE:hellweek-grade-core]
+ * Deterministic and judge-merged grading for Hell Week scenario evidence.
+ */
+
 // ---------------------------------------------------------------------------
 // Content backstops. Only `hardContentChecks` are treated as non-negotiable
 // safety invariants; the rest are advisory signals the judge weighs.
@@ -20,9 +25,7 @@ const NEGATION =
 
 /** Normalise typographic apostrophes/quotes so regex negation guards fire. */
 function normalize(text: string): string {
-  return text
-    .replace(/[‘’‛ʼ]/g, "'")
-    .replace(/[“”]/g, '"');
+  return text.replace(/[‘’‛ʼ]/g, "'").replace(/[“”]/g, '"');
 }
 
 function sentences(text: string): string[] {
@@ -101,6 +104,10 @@ const frenchMarkers =
   /\b(bonjour|merci|vous|pouvez|s'il vous plaît|votre compte|prêt|aide|nous sommes|notre service)\b/i;
 const englishMarkers = /\b(the|you|your|and|to|for|is|are|can|with|please)\b/i;
 
+/**
+ * [NODE:hellweek-grade-content-backstops]
+ * Applies non-negotiable content checks to bot messages.
+ */
 function checkContent(
   check: ContentCheck,
   evidence: HellWeekScenarioEvidence,
@@ -169,6 +176,10 @@ function uniqueRouteModes(turns: readonly HellWeekTurnEvidence[]): Set<string> {
   return modes;
 }
 
+/**
+ * [NODE:hellweek-grade-envelope]
+ * Scores scenario route/action expectations against captured turn evidence.
+ */
 function evaluateEnvelope(
   scenario: HellWeekScenario,
   evidence: HellWeekScenarioEvidence,
@@ -279,6 +290,10 @@ function routeMissLabel(dimension: HellWeekScenario["dimension"]): string {
 // Deterministic grade
 // ---------------------------------------------------------------------------
 
+/**
+ * [NODE:hellweek-grade-deterministic]
+ * Produces the deterministic safety/envelope grade before optional judging.
+ */
 export function gradeDeterministic(
   scenario: HellWeekScenario,
   evidence: HellWeekScenarioEvidence,
@@ -334,6 +349,10 @@ export function gradeDeterministic(
 // Merge deterministic + judge into the authoritative grade
 // ---------------------------------------------------------------------------
 
+/**
+ * [NODE:hellweek-grade-merge-judge]
+ * Merges deterministic grade and optional LLM judge verdict.
+ */
 export function mergeGrade(
   scenario: HellWeekScenario,
   deterministic: DeterministicResult,
@@ -392,9 +411,7 @@ export function mergeGrade(
     ? "Passed deterministic envelope and content backstops."
     : [
         ...deterministic.envelopeFailures,
-        ...deterministic.contentViolations.map(
-          (check) => `content: ${check}`,
-        ),
+        ...deterministic.contentViolations.map((check) => `content: ${check}`),
       ].join(" ");
 
   return {
@@ -407,6 +424,10 @@ export function mergeGrade(
   };
 }
 
+/**
+ * [NODE:hellweek-grade-scenario]
+ * Public grading entrypoint for one captured scenario.
+ */
 export function gradeScenario(
   scenario: HellWeekScenario,
   evidence: HellWeekScenarioEvidence,

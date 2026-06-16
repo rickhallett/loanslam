@@ -18,6 +18,12 @@ import { z } from "zod";
 import type { OpenAiPlannerConfig } from "./config";
 import { buildTurnPlannerPrompt } from "./prompt";
 
+/**
+ * [NODE:planner-openai-adapter]
+ * OpenAI-backed `TurnPlanner` implementation. The model proposes a plan; the
+ * validator remains the policy boundary.
+ */
+
 export interface OpenAiPlannerRequest {
   model: string;
   instructions: string;
@@ -33,6 +39,10 @@ export interface OpenAiPlannerRequest {
   store: false;
 }
 
+/**
+ * [NODE:planner-openai-client-port]
+ * Narrow client shape used by tests and by the real OpenAI SDK adapter.
+ */
 export interface OpenAiPlannerClient {
   responses: {
     parse(request: OpenAiPlannerRequest): Promise<{
@@ -46,6 +56,11 @@ export interface OpenAiTurnPlannerOptions {
   client?: OpenAiPlannerClient;
 }
 
+/**
+ * [NODE:planner-openai-turn-planner]
+ * Builds the planner prompt, requests structured output, and normalizes it into
+ * the shared `TurnPlan` contract.
+ */
 export class OpenAiTurnPlanner implements TurnPlanner {
   readonly metadata;
 
@@ -64,6 +79,10 @@ export class OpenAiTurnPlanner implements TurnPlanner {
     };
   }
 
+  /**
+   * [NODE:planner-openai-plan-turn]
+   * One model call for the next turn proposal.
+   */
   async planTurn(input: TurnPlannerInput): Promise<TurnPlan> {
     const prompt = buildTurnPlannerPrompt(input);
     const response = await this.client.responses.parse({
@@ -134,6 +153,10 @@ const openAiTurnPlanOutputSchema = z.object({
   traceSummary: openAiStringSchema,
 });
 
+/**
+ * [NODE:planner-openai-normalize-output]
+ * Converts OpenAI-friendly structured output into the stricter app schema.
+ */
 function normalizeOpenAiParsedTurnPlan(parsed: unknown): unknown {
   if (!isRecord(parsed)) {
     return parsed;

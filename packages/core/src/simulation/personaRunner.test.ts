@@ -257,7 +257,7 @@ describe("runPersonaScenario", () => {
 
     expect(transcript).toEqual(
       expect.objectContaining({
-        finalAction: "request_handoff_intake",
+        finalAction: "escalate",
         validatorOverrideCount: 1,
         vulnerabilityHandled: true,
       }),
@@ -265,7 +265,7 @@ describe("runPersonaScenario", () => {
     expect(transcript.turns[0]).toEqual(
       expect.objectContaining({
         proposedAction: "answer",
-        finalAction: "request_handoff_intake",
+        finalAction: "escalate",
         selectedServingMode: "route_vulnerability",
         selectedRouteReason:
           "Repayment difficulty should be handled by a person.",

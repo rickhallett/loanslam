@@ -3,6 +3,12 @@ import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
+/**
+ * [NODE:cli-core]
+ * Operator entrypoint for Phase 0 engine probes, simulations, lab serving, and
+ * Hell Week evidence runs.
+ */
+
 import {
   stochasticProfileSchema,
   type ConversationState,
@@ -38,6 +44,11 @@ import {
   renderFromRun,
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
+import {
+  compareHellWeekReportsFromPaths,
+  formatHellWeekComparison,
+  toHellWeekComparisonJson,
+} from "./hellweek/compare";
 
 export interface CliResult {
   exitCode: number;
@@ -45,6 +56,10 @@ export interface CliResult {
   stderr: string;
 }
 
+/**
+ * [NODE:cli-io-port]
+ * Testable terminal IO boundary for interactive chat.
+ */
 export interface CliIo {
   readLine(prompt: string): Promise<string | null>;
   writeLine(line: string): void;
@@ -64,6 +79,11 @@ type CliEnv = Record<string, string | undefined>;
 
 const defaultTraceDir = "artifacts/phase0";
 
+/**
+ * [NODE:cli-dispatch]
+ * Dispatches shell commands into the engine, simulation, lab, and evidence
+ * workflows.
+ */
 export async function runCli(
   args = process.argv.slice(2),
   env: CliEnv = process.env,
@@ -106,6 +126,10 @@ export async function runCli(
       return await runHellWeekCommand(rest, env, plannerFactory);
     }
 
+    if (command === "hell-week-compare") {
+      return runHellWeekCompareCommand(rest);
+    }
+
     if (command === "chat") {
       return await runInteractiveChat(rest, env, plannerFactory, options);
     }
@@ -142,6 +166,10 @@ function signalExtractorInput(
   return signalExtractor ? { signalExtractor } : {};
 }
 
+/**
+ * [NODE:cli-turn-command]
+ * Runs one planner-backed `processTurn` probe and prints the full result.
+ */
 async function runTurn(
   args: string[],
   env: CliEnv,
@@ -169,6 +197,10 @@ async function runTurn(
   return ok(JSON.stringify(result, null, 2));
 }
 
+/**
+ * [NODE:cli-simulation-command]
+ * Runs the representative journey suite and writes JSONL traces.
+ */
 async function runSimulation(
   args: string[],
   env: CliEnv,
@@ -203,6 +235,10 @@ async function runSimulation(
   );
 }
 
+/**
+ * [NODE:cli-comparison-command]
+ * Runs the journey suite and writes a model comparison report.
+ */
 async function runComparison(
   args: string[],
   env: CliEnv,
@@ -417,6 +453,10 @@ function hellWeekSummary(
     .join("\n");
 }
 
+/**
+ * [NODE:cli-hell-week-command]
+ * Runs or re-renders the Hell Week gauntlet from the CLI.
+ */
 async function runHellWeekCommand(
   args: string[],
   env: CliEnv,
@@ -438,7 +478,10 @@ async function runHellWeekCommand(
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
 
-  if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency <= 0)) {
+  if (
+    concurrency !== undefined &&
+    (!Number.isInteger(concurrency) || concurrency <= 0)
+  ) {
     return fail("--concurrency must be a positive integer.");
   }
 
@@ -474,6 +517,41 @@ async function runHellWeekCommand(
   return ok(hellWeekSummary(artifacts, asJson));
 }
 
+/**
+ * [NODE:cli-hell-week-compare-command]
+ * Compares two captured Hell Week reports without model calls.
+ */
+function runHellWeekCompareCommand(args: string[]): CliResult {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekCompareHelpText());
+  }
+
+  const asJson = normalized.includes("--json");
+  const positional = normalized.filter((arg) => !arg.startsWith("--"));
+  const [baselinePath, candidatePath] = positional;
+
+  if (!baselinePath || !candidatePath) {
+    return fail(hellWeekCompareHelpText());
+  }
+
+  const comparison = compareHellWeekReportsFromPaths(
+    baselinePath,
+    candidatePath,
+  );
+
+  return ok(
+    asJson
+      ? JSON.stringify(toHellWeekComparisonJson(comparison))
+      : formatHellWeekComparison(comparison),
+  );
+}
+
+/**
+ * [NODE:cli-chat-command]
+ * Maintains local conversation state across repeated `processTurn` calls.
+ */
 async function runInteractiveChat(
   args: string[],
   env: CliEnv,
@@ -540,6 +618,10 @@ async function runInteractiveChat(
   return ok(io.captureOutput === false ? "" : outputLines.join("\n"));
 }
 
+/**
+ * [NODE:cli-serve-command]
+ * Starts the dev-only lab API around the same engine path.
+ */
 async function runServer(
   args: string[],
   env: CliEnv,
@@ -791,11 +873,28 @@ function helpText(): string {
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
+    "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function hellWeekCompareHelpText(): string {
+  return [
+    "LoanSlam Hell Week report comparison",
+    "",
+    "Usage:",
+    "  hell-week-compare <baseline-report-or-run-dir> <candidate-report-or-run-dir> [--json]",
+    "",
+    "Reads two completed Hell Week report.json files, or run folders containing",
+    "report.json, and prints the aggregate and scenario-level movement needed",
+    "for the agentic tuning loop. No model calls are made.",
+    "",
+    "Options:",
+    "  --json                  Print compact JSON stdout",
   ].join("\n");
 }
 

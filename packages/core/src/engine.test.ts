@@ -402,6 +402,111 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toContain("GBP 425");
   });
 
+  it("keeps explicit credential warnings when handoff state rewrites intake fields", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can pass this to the LoanSlam team. Please share a few contact details.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can pass this to the LoanSlam team. Please share a few contact details.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Collect handoff fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I can send my bank login to prove it is my account.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:05:30.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("Do not share bank login details");
+    expect(result.customerMessage).toContain("banking app screenshots");
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      message: result.customerMessage,
+      fields: standardHandoffFields,
+    });
+    expect(result.state.safetyFlags).toContain("forbidden_credentials");
+    expect(result.trace.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "forbidden_credential_request_blocked",
+      }),
+    );
+  });
+
+  it("keeps off-domain emergency crisis turns out of LoanSlam handoff routing", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can pass this to the LoanSlam team. Please share a few contact details.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can pass this to the LoanSlam team. Please share a few contact details.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["distress"],
+          traceSummary: "Collect handoff fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I have chest pain, should I go to hospital?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:05:45.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("fallback");
+    expect(result.customerMessage).toContain("call 999");
+    expect(result.ui).toMatchObject({
+      primitive: "safe_fallback",
+      links: [],
+    });
+    expect(result.state.handoffPending).toBe(false);
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.safetyFlags).toEqual(
+      expect.arrayContaining(["vulnerability", "distress"]),
+    );
+    expect(result.trace).toMatchObject({
+      selectedServingMode: null,
+      effectiveServingMode: null,
+      finalAction: "fallback",
+      safetyFlags: expect.arrayContaining(["vulnerability", "distress"]),
+      validatorOverrides: [
+        expect.objectContaining({
+          code: "emergency_crisis_boundary",
+          toAction: "fallback",
+        }),
+      ],
+    });
+  });
+
   it("requests only handoff fields still missing from collected facts", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
@@ -1139,6 +1244,52 @@ describe("processTurn", () => {
         content: result.customerMessage,
       }),
     ]);
+  });
+
+  it("preserves credential safety when the planner throws", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("Too big: expected array to have <=6 items");
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "My sort code is 12-34-56 and account number is 12345678.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:10:30.000Z"),
+      idFactory: idFactory(),
+      journeyId: "credential-sort-code",
+      turnIndex: 0,
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("Do not share bank login details");
+    expect(result.customerMessage).not.toContain("12-34-56");
+    expect(result.customerMessage).not.toContain("12345678");
+    expect(result.state.handoffPending).toBe(true);
+    expect(result.state.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+    expect(result.trace).toMatchObject({
+      journeyId: "credential-sort-code",
+      finalAction: "request_handoff_intake",
+      safetyFlags: expect.arrayContaining([
+        "forbidden_credentials",
+        "sensitive_overshare",
+      ]),
+      validatorOverrides: [
+        expect.objectContaining({
+          code: "malformed_plan",
+          toAction: "request_handoff_intake",
+        }),
+        expect.objectContaining({
+          code: "forbidden_credential_request_blocked",
+          toAction: "request_handoff_intake",
+        }),
+      ],
+    });
   });
 
   it("does not classify post-planner validation errors as malformed planner output", async () => {

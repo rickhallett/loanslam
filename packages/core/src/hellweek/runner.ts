@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
 
+/**
+ * [NODE:hellweek-runner-core]
+ * Drives Hell Week scenarios through the same `processTurn` engine used by the
+ * lab and CLI.
+ */
+
 import type {
   ConversationState,
   CorpusItem,
@@ -76,8 +82,7 @@ function toTurnEvidence(
           signalPrimaryIntent: trace.shadowSignalBundle.primaryIntent,
           signalRecommendedServingMode:
             trace.shadowSignalBundle.recommendedServingMode,
-          signalNegatedOrCorrected:
-            trace.shadowSignalBundle.negatedOrCorrected,
+          signalNegatedOrCorrected: trace.shadowSignalBundle.negatedOrCorrected,
         }
       : {}),
     ...(trace.shadowSignalComparison
@@ -100,6 +105,10 @@ function emptyState(conversationRef: string): ConversationState {
   };
 }
 
+/**
+ * [NODE:hellweek-run-scenario]
+ * Runs one hostile scenario in an isolated conversation state.
+ */
 export async function runScenario({
   scenario,
   corpus,
@@ -156,6 +165,7 @@ export async function runScenario({
 }
 
 /**
+ * [NODE:hellweek-run-suite]
  * Drive every scenario through the live, model-backed engine with a bounded
  * concurrency pool. Each scenario gets its own fresh session, so they are fully
  * independent.

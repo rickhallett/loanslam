@@ -2,6 +2,11 @@ import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 
+/**
+ * [NODE:simulation-runner-core]
+ * Deterministic journey-suite runner over the real `processTurn` engine.
+ */
+
 import type {
   ConversationState,
   CorpusItem,
@@ -21,6 +26,7 @@ import {
 } from "@loanslam/contracts";
 
 import { processTurn } from "../engine";
+import { detectForbiddenCredentialRequest } from "../policy";
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
@@ -61,6 +67,10 @@ const safeVulnerabilityActions = new Set([
   "fallback",
 ]);
 
+/**
+ * [NODE:simulation-run-journey]
+ * Drives one fixture through the engine and scores its behavioral envelope.
+ */
 export async function runJourney({
   journey,
   corpus,
@@ -142,6 +152,10 @@ export async function runJourney({
   return journeyReportSchema.parse(report);
 }
 
+/**
+ * [NODE:simulation-run-suite]
+ * Runs all journey fixtures sequentially and returns parsed reports.
+ */
 export async function runJourneySuite({
   journeys,
   ...input
@@ -171,6 +185,10 @@ export function writeJsonlTraces(
   }
 }
 
+/**
+ * [NODE:simulation-evaluate-expectation]
+ * Converts expected safety/route envelopes into pass/fail notes.
+ */
 function evaluateExpectation(
   rawExpectation: JourneyExpectation,
   traces: readonly TurnTrace[],
@@ -319,6 +337,10 @@ function buildUxNotes({
   return [...new Set(notes)];
 }
 
+/**
+ * [NODE:simulation-detect-forbidden-behavior]
+ * Detects explicit failure markers in turn traces.
+ */
 function detectForbiddenBehavior(
   marker: string,
   traces: readonly TurnTrace[],
@@ -332,9 +354,7 @@ function detectForbiddenBehavior(
 
   if (marker === "forbidden_credential_requests") {
     return traces.some((trace) =>
-      /\b(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|payment\s+credentials?)\b/i.test(
-        trace.customerMessage,
-      ),
+      detectForbiddenCredentialRequest(trace.customerMessage),
     );
   }
 
