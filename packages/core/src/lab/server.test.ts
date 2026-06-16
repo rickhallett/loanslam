@@ -263,6 +263,8 @@ describe("lab server", () => {
     const host = await fetch(`${baseUrl}/`);
     const widget = await fetch(`${baseUrl}/widget/`);
     const widgetAsset = await fetch(`${baseUrl}/assets/app.js`);
+    const reportsIndex = await fetch(`${baseUrl}/reports/`);
+    const report = await fetch(`${baseUrl}/reports/hell-week-full.html`);
     const inspect = await getJson(`${baseUrl}/sessions/id-1`);
 
     expect(host.status).toBe(200);
@@ -273,6 +275,10 @@ describe("lab server", () => {
     expect(widgetAsset.status).toBe(200);
     expect(widgetAsset.headers.get("cache-control")).toContain("immutable");
     expect(await widgetAsset.text()).toContain("window.widgetLoaded");
+    expect(reportsIndex.status).toBe(200);
+    expect(await reportsIndex.text()).toContain("Evidence index");
+    expect(report.status).toBe(200);
+    expect(await report.text()).toContain("Hell Week report");
     expect(inspect.status).toBe(404);
   });
 
@@ -361,6 +367,12 @@ function tempStaticAssets(): { hostRoot: string; widgetRoot: string } {
   writeFileSync(join(hostRoot, "styles.css"), "body { color: black; }");
   writeFileSync(join(hostRoot, "loader.js"), "window.hostLoaded = true;");
   writeFileSync(join(hostRoot, "devtools.js"), "window.devtoolsLoaded = true;");
+  mkdirSync(join(hostRoot, "reports"), { recursive: true });
+  writeFileSync(join(hostRoot, "reports", "index.html"), "Evidence index");
+  writeFileSync(
+    join(hostRoot, "reports", "hell-week-full.html"),
+    "Hell Week report",
+  );
   writeFileSync(join(widgetRoot, "index.html"), "<h1>Widget shell</h1>");
   writeFileSync(
     join(widgetRoot, "assets", "app.js"),

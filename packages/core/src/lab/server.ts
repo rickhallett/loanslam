@@ -810,6 +810,20 @@ function resolveDemoStaticRoute(
     };
   }
 
+  if (pathname === "/reports" || pathname === "/reports/") {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, "reports/index.html"),
+      cacheControl: "no-store",
+    };
+  }
+
+  if (pathname.startsWith("/reports/")) {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, pathname.slice(1)),
+      cacheControl: cacheControlForStaticPath(pathname),
+    };
+  }
+
   if (["/styles.css", "/loader.js", "/devtools.js"].includes(pathname)) {
     return {
       filePath: safeStaticPath(assets.hostRoot, pathname.slice(1)),

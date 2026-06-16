@@ -10,6 +10,8 @@ var/
 # Phase 0 local evidence artifacts.
 traces/
 reports/
+!packages/review-host/public/reports/
+!packages/review-host/public/reports/*.html
 exports/
 artifacts/
 *.jsonl
