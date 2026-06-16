@@ -20,6 +20,7 @@
     "core:hell-week-compare": "tsx packages/core/src/cli.ts hell-week-compare",
     "core:chat": "tsx packages/core/src/cli.ts chat",
     "core:serve": "tsx packages/core/src/cli.ts serve",
+    "core:demo-log": "tsx packages/core/src/cli.ts demo-log",
     "mcp:lab-api": "tsx packages/mcp-server/src/server.ts",
     "lab-ui:dev": "sh -c 'npm --prefix packages/lab-ui run dev -- \"$@\"' --",
     "lab-ui:build": "npm --workspace @loanslam/lab-ui run build",

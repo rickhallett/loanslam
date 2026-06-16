@@ -5,6 +5,7 @@ coverage/
 .turbo/
 .vitest/
 *.tsbuildinfo
+var/
 
 # Phase 0 local evidence artifacts.
 traces/

@@ -17,7 +17,7 @@ Two packages, no changes to the engine core:
   verbatim from `mal-ai-chat/mock` apart from the widget URL.
 - **`packages/review-widget`** — the MAL-styled Vue chat UI inside the iframe.
   Its transport is identical to `packages/demo-widget`: the same `engineClient`,
-  `hostBridge`, and proxied `/sessions` routes. The old `chat.api.ts` /
+  `hostBridge`, and proxied `/demo` routes. The old `chat.api.ts` /
   `@mal-ai-chat/contracts` transport is dropped entirely.
 
 ## Run it (three processes)
@@ -31,8 +31,8 @@ npm install
 Then start the engine, the widget, and the host page:
 
 ```bash
-npm run core:serve -- --port 8788   # engine lab server on http://127.0.0.1:8788
-npm run review-widget:dev           # widget on http://127.0.0.1:5175 (proxies /sessions -> 8788)
+npm run core:serve -- --port 8788 --demo-only  # demo API on http://127.0.0.1:8788
+npm run review-widget:dev                     # widget on http://127.0.0.1:5175 (proxies /demo -> 8788)
 npm run review-host:dev             # host page on http://127.0.0.1:5181
 ```
 
@@ -41,18 +41,32 @@ Or all three at once: `just review`.
 Open **http://127.0.0.1:5181** and use the launcher in the bottom-right corner.
 Append `?demo=true` to the host URL for manual context-reveal buttons.
 
+Stakeholder demo interactions are logged server-side by default when the engine
+runs in `--demo-only` mode:
+
+```bash
+just demo-log-summary
+just demo-log-session -- <conversationRef>
+just demo-log-turn -- <conversationRef> <turn> --full
+```
+
+The default log path is `var/demo-interactions.sqlite`. Keep that file on the
+server; it is an owner-only debugging record, not a browser/admin UI.
+
 ## How the pieces talk
 
 ```
-host page (5181) ──iframe──> widget (5175) ──/sessions proxy──> engine (8788)
+host page (5181) ──iframe──> widget (5175) ──/demo proxy──> demo API (8788)
         ^                          │
         └──── postMessage ─────────┘   (ready / open / close / session-context)
 ```
 
-- The widget calls `POST /sessions`, `POST /sessions/:ref/messages`, and
-  `POST /sessions/:ref/reset`. The engine owns OpenAI, retrieval, grounding, and
-  policy; the widget never sees any of that.
+- The widget calls `POST /demo/sessions`,
+  `POST /demo/sessions/:ref/messages`, and
+  `POST /demo/sessions/:ref/reset`. The browser receives customer-facing UI,
+  host context, content-free telemetry, and an opaque continuation token. It does
+  not receive full state, traces, planner proposals, or retrieval internals.
 - After each turn the widget posts a coarse `session-context`
-  (`general` / `vulnerability` / `handoff`) derived from the engine's
-  `safetyFlags` and `finalAction`. The page promotes the matching contact block.
-  No message content crosses the boundary.
+  (`general` / `vulnerability` / `handoff`) supplied by the demo response. The
+  page promotes the matching contact block. No message content crosses the
+  host/widget boundary.

@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import type {
   ConversationState,
   CorpusItem,
+  DemoSessionResponse,
   PlannerMetadata,
   SignalExtractor,
   TurnPlanner,
@@ -20,6 +21,19 @@ import {
   processTurn,
 } from "../engine";
 import { standardHandoffFields } from "../policy";
+import {
+  mapStructuredIntakeToDemoResponse,
+  mapTurnResultToDemoResponse,
+} from "./demoDisplay";
+import type { DemoInteractionLog } from "./demoInteractionLog";
+import {
+  recordDemoError,
+  recordDemoSessionStarted,
+  recordDemoStateEvent,
+  recordDemoStructuredIntake,
+  recordDemoTurn,
+} from "./demoInteractionLog";
+import { sealDemoStateToken, unsealDemoStateToken } from "./demoStateToken";
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
@@ -29,6 +43,11 @@ export interface CreateLabServerOptions {
   signalExtractor?: SignalExtractor;
   idFactory?: () => string;
   now?: Date | (() => Date);
+  enableTrustedLabRoutes?: boolean;
+  enableDemoRoutes?: boolean;
+  demoStateTokenSecret?: string;
+  demoAccessToken?: string;
+  demoInteractionLog?: DemoInteractionLog;
 }
 
 interface LabSession {
@@ -38,6 +57,7 @@ interface LabSession {
 
 interface JsonBody {
   message?: unknown;
+  continuationToken?: unknown;
 }
 
 export function createLabServer({
@@ -46,22 +66,54 @@ export function createLabServer({
   signalExtractor,
   idFactory = randomUUID,
   now,
+  enableTrustedLabRoutes = true,
+  enableDemoRoutes = true,
+  demoStateTokenSecret,
+  demoAccessToken,
+  demoInteractionLog,
 }: CreateLabServerOptions) {
   const sessions = new Map<string, LabSession>();
+  const demoSessions = new Map<string, LabSession>();
 
-  return createServer(async (request, response) => {
+  const server = createServer(async (request, response) => {
     try {
       await handleRequest({
         request,
         response,
         sessions,
+        demoSessions,
         corpus,
         plannerFactory,
         signalExtractor,
         idFactory,
         now,
+        enableTrustedLabRoutes,
+        enableDemoRoutes,
+        demoStateTokenSecret,
+        demoAccessToken,
+        demoInteractionLog,
       });
     } catch (error) {
+      const method = request.method ?? "GET";
+      const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+
+      if (pathname.startsWith("/demo/")) {
+        recordDemoError({
+          log: demoInteractionLog,
+          createdAt: new Date().toISOString(),
+          method,
+          path: pathname,
+          httpStatus: 500,
+          durationMs: 0,
+          errorCode: "internal_error",
+          errorMessage:
+            error instanceof Error ? error.message : "Unexpected server error.",
+          internalJson: {
+            error: error instanceof Error ? error.stack : String(error),
+          },
+        });
+      }
+
       writeJson(response, 500, {
         error: "internal_error",
         message:
@@ -71,29 +123,82 @@ export function createLabServer({
       });
     }
   });
+  server.on("close", () => demoInteractionLog?.close());
+
+  return server;
 }
 
 async function handleRequest({
   request,
   response,
   sessions,
+  demoSessions,
   corpus,
   plannerFactory,
   signalExtractor,
   idFactory,
   now,
+  enableTrustedLabRoutes,
+  enableDemoRoutes,
+  demoStateTokenSecret,
+  demoAccessToken,
+  demoInteractionLog,
 }: {
   request: IncomingMessage;
   response: ServerResponse;
   sessions: Map<string, LabSession>;
+  demoSessions: Map<string, LabSession>;
   corpus: readonly CorpusItem[];
   plannerFactory: () => PlannerWithMetadata;
   signalExtractor: SignalExtractor | undefined;
   idFactory: () => string;
   now: Date | (() => Date) | undefined;
+  enableTrustedLabRoutes: boolean;
+  enableDemoRoutes: boolean;
+  demoStateTokenSecret: string | undefined;
+  demoAccessToken: string | undefined;
+  demoInteractionLog: DemoInteractionLog | undefined;
 }): Promise<void> {
   const method = request.method ?? "GET";
   const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+
+  if (pathname.startsWith("/demo/")) {
+    if (!enableDemoRoutes) {
+      writeJson(response, 404, {
+        error: "not_found",
+        message: `${method} ${pathname} is not a demo API route.`,
+      });
+      return;
+    }
+
+    if (!authorizeDemoRequest({ request, response, demoAccessToken })) {
+      return;
+    }
+
+    await handleDemoRequest({
+      request,
+      response,
+      sessions: demoSessions,
+      corpus,
+      plannerFactory,
+      signalExtractor,
+      idFactory,
+      now,
+      demoStateTokenSecret,
+      demoInteractionLog,
+      method,
+      pathname,
+    });
+    return;
+  }
+
+  if (!enableTrustedLabRoutes) {
+    writeJson(response, 404, {
+      error: "not_found",
+      message: `${method} ${pathname} is not enabled on the demo API.`,
+    });
+    return;
+  }
 
   if (method === "POST" && pathname === "/sessions") {
     const body = await readJsonBody(request, response);
@@ -273,6 +378,440 @@ async function handleRequest({
     error: "not_found",
     message: `${method} ${pathname} is not a lab API route.`,
   });
+}
+
+async function handleDemoRequest({
+  request,
+  response,
+  sessions,
+  corpus,
+  plannerFactory,
+  signalExtractor,
+  idFactory,
+  now,
+  demoStateTokenSecret,
+  demoInteractionLog,
+  method,
+  pathname,
+}: {
+  request: IncomingMessage;
+  response: ServerResponse;
+  sessions: Map<string, LabSession>;
+  corpus: readonly CorpusItem[];
+  plannerFactory: () => PlannerWithMetadata;
+  signalExtractor: SignalExtractor | undefined;
+  idFactory: () => string;
+  now: Date | (() => Date) | undefined;
+  demoStateTokenSecret: string | undefined;
+  demoInteractionLog: DemoInteractionLog | undefined;
+  method: string;
+  pathname: string;
+}): Promise<void> {
+  const startedAt = Date.now();
+  const createdAt = resolveNow(now).toISOString();
+
+  if (method === "POST" && pathname === "/demo/sessions") {
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    const conversationRef = idFactory();
+    const state = emptyConversationState(conversationRef);
+    const responsePayload = persistDemoState({
+      sessions,
+      conversationRef,
+      state,
+      traces: [],
+      demoStateTokenSecret,
+    });
+    recordDemoSessionStarted({
+      log: demoInteractionLog,
+      createdAt,
+      method,
+      path: pathname,
+      durationMs: Date.now() - startedAt,
+      response: responsePayload,
+    });
+    writeJson(response, 201, responsePayload);
+    return;
+  }
+
+  const messageMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/messages$/);
+
+  if (method === "POST" && messageMatch) {
+    const conversationRef = decodeURIComponent(messageMatch[1] ?? "");
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    if (typeof body.message !== "string" || body.message.trim() === "") {
+      recordDemoError({
+        log: demoInteractionLog,
+        createdAt,
+        method,
+        path: pathname,
+        httpStatus: 400,
+        durationMs: Date.now() - startedAt,
+        conversationRef,
+        errorCode: "invalid_message",
+        errorMessage: "Request body must include a non-empty message string.",
+      });
+      writeJson(response, 400, {
+        error: "invalid_message",
+        message: "Request body must include a non-empty message string.",
+      });
+      return;
+    }
+
+    const session = loadDemoState({
+      body,
+      response,
+      sessions,
+      conversationRef,
+      demoStateTokenSecret,
+    });
+
+    if (!session) {
+      return;
+    }
+
+    const turn = nextDisplayTurn(session.state);
+    const result = await processTurn({
+      state: session.state,
+      userMessage: body.message,
+      planner: plannerFactory(),
+      ...(signalExtractor ? { signalExtractor } : {}),
+      corpus,
+      idFactory,
+      now: resolveNow(now),
+    });
+    session.state = result.state;
+    session.traces.push(result.trace);
+    const persisted = persistDemoState({
+      sessions,
+      conversationRef,
+      state: result.state,
+      traces: session.traces,
+      demoStateTokenSecret,
+    });
+    const responsePayload = mapTurnResultToDemoResponse({
+      result,
+      turn,
+      continuationToken: persisted.continuationToken,
+    });
+    recordDemoTurn({
+      log: demoInteractionLog,
+      createdAt,
+      method,
+      path: pathname,
+      durationMs: Date.now() - startedAt,
+      turn,
+      userMessage: body.message,
+      result,
+      response: responsePayload,
+    });
+    writeJson(response, 200, responsePayload);
+    return;
+  }
+
+  const resetMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/reset$/);
+
+  if (method === "POST" && resetMatch) {
+    const conversationRef = decodeURIComponent(resetMatch[1] ?? "");
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    const session = loadDemoState({
+      body,
+      response,
+      sessions,
+      conversationRef,
+      demoStateTokenSecret,
+    });
+
+    if (!session) {
+      return;
+    }
+
+    const state = emptyConversationState(conversationRef);
+    const responsePayload = persistDemoState({
+      sessions,
+      conversationRef,
+      state,
+      traces: [],
+      demoStateTokenSecret,
+    });
+    recordDemoStateEvent({
+      log: demoInteractionLog,
+      createdAt,
+      eventType: "reset",
+      method,
+      path: pathname,
+      durationMs: Date.now() - startedAt,
+      conversationRef,
+      state,
+      response: responsePayload,
+    });
+    writeJson(response, 200, responsePayload);
+    return;
+  }
+
+  const intakeMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/intake$/);
+
+  if (method === "POST" && intakeMatch) {
+    const conversationRef = decodeURIComponent(intakeMatch[1] ?? "");
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    const session = loadDemoState({
+      body,
+      response,
+      sessions,
+      conversationRef,
+      demoStateTokenSecret,
+    });
+
+    if (!session) {
+      return;
+    }
+
+    const validation = validateIntakeBody(body);
+
+    if (!validation.ok) {
+      recordDemoError({
+        log: demoInteractionLog,
+        createdAt,
+        method,
+        path: pathname,
+        httpStatus: 400,
+        durationMs: Date.now() - startedAt,
+        conversationRef,
+        errorCode: "invalid_intake",
+        errorMessage: validation.message,
+      });
+      writeJson(response, 400, {
+        error: "invalid_intake",
+        message: validation.message,
+      });
+      return;
+    }
+
+    const turn = nextDisplayTurn(session.state);
+    const result = completeStructuredHandoff({
+      state: session.state,
+      fields: validation.fields,
+      idFactory,
+      now: resolveNow(now),
+    });
+    session.state = result.state;
+    const persisted = persistDemoState({
+      sessions,
+      conversationRef,
+      state: result.state,
+      traces: session.traces,
+      demoStateTokenSecret,
+    });
+    const responsePayload = mapStructuredIntakeToDemoResponse({
+      conversationRef,
+      state: result.state,
+      finalAction: result.finalAction,
+      ui: result.ui,
+      customerMessage: result.customerMessage,
+      reference: result.reference,
+      turn,
+      continuationToken: persisted.continuationToken,
+    });
+    recordDemoStructuredIntake({
+      log: demoInteractionLog,
+      createdAt,
+      method,
+      path: pathname,
+      durationMs: Date.now() - startedAt,
+      conversationRef,
+      turn,
+      submittedFields: validation.fields,
+      result,
+      response: responsePayload,
+    });
+    writeJson(response, 200, responsePayload);
+    return;
+  }
+
+  const cancelMatch = pathname.match(
+    /^\/demo\/sessions\/([^/]+)\/cancel-handoff$/,
+  );
+
+  if (method === "POST" && cancelMatch) {
+    const conversationRef = decodeURIComponent(cancelMatch[1] ?? "");
+    const body = await readJsonBody(request, response);
+
+    if (body === undefined) {
+      return;
+    }
+
+    const session = loadDemoState({
+      body,
+      response,
+      sessions,
+      conversationRef,
+      demoStateTokenSecret,
+    });
+
+    if (!session) {
+      return;
+    }
+
+    session.state = cancelHandoff(session.state);
+    const responsePayload = persistDemoState({
+      sessions,
+      conversationRef,
+      state: session.state,
+      traces: session.traces,
+      demoStateTokenSecret,
+    });
+    recordDemoStateEvent({
+      log: demoInteractionLog,
+      createdAt,
+      eventType: "cancel_handoff",
+      method,
+      path: pathname,
+      durationMs: Date.now() - startedAt,
+      conversationRef,
+      state: session.state,
+      response: responsePayload,
+    });
+    writeJson(response, 200, responsePayload);
+    return;
+  }
+
+  writeJson(response, 404, {
+    error: "not_found",
+    message: `${method} ${pathname} is not a demo API route.`,
+  });
+}
+
+function authorizeDemoRequest({
+  request,
+  response,
+  demoAccessToken,
+}: {
+  request: IncomingMessage;
+  response: ServerResponse;
+  demoAccessToken: string | undefined;
+}): boolean {
+  if (!demoAccessToken) {
+    return true;
+  }
+
+  const authorization = request.headers.authorization;
+  const bearer =
+    typeof authorization === "string" && authorization.startsWith("Bearer ")
+      ? authorization.slice("Bearer ".length)
+      : null;
+  const header = request.headers["x-demo-access-token"];
+  const accessHeader = Array.isArray(header) ? header[0] : header;
+
+  if (bearer === demoAccessToken || accessHeader === demoAccessToken) {
+    return true;
+  }
+
+  writeJson(response, 401, {
+    error: "demo_access_required",
+    message: "A valid demo access token is required.",
+  });
+  return false;
+}
+
+function loadDemoState({
+  body,
+  response,
+  sessions,
+  conversationRef,
+  demoStateTokenSecret,
+}: {
+  body: JsonBody;
+  response: ServerResponse;
+  sessions: Map<string, LabSession>;
+  conversationRef: string;
+  demoStateTokenSecret: string | undefined;
+}): LabSession | null {
+  if (demoStateTokenSecret) {
+    if (
+      typeof body.continuationToken !== "string" ||
+      body.continuationToken.trim() === ""
+    ) {
+      writeJson(response, 400, {
+        error: "missing_continuation_token",
+        message: "Request body must include a continuation token.",
+      });
+      return null;
+    }
+
+    const state = unsealDemoStateToken({
+      token: body.continuationToken,
+      secret: demoStateTokenSecret,
+    });
+
+    if (!state || state.conversationRef !== conversationRef) {
+      writeJson(response, 400, {
+        error: "invalid_continuation_token",
+        message: "The demo continuation token is invalid for this session.",
+      });
+      return null;
+    }
+
+    return { state, traces: [] };
+  }
+
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return null;
+  }
+
+  return session;
+}
+
+function persistDemoState({
+  sessions,
+  conversationRef,
+  state,
+  traces,
+  demoStateTokenSecret,
+}: {
+  sessions: Map<string, LabSession>;
+  conversationRef: string;
+  state: ConversationState;
+  traces: TurnTrace[];
+  demoStateTokenSecret: string | undefined;
+}): DemoSessionResponse {
+  if (demoStateTokenSecret) {
+    return {
+      conversationRef,
+      continuationToken: sealDemoStateToken({
+        state,
+        secret: demoStateTokenSecret,
+      }),
+    };
+  }
+
+  sessions.set(conversationRef, { state, traces });
+  return { conversationRef };
+}
+
+function nextDisplayTurn(state: ConversationState): number {
+  return Math.floor(state.history.length / 2) + 1;
 }
 
 function validateIntakeBody(

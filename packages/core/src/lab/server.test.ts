@@ -4,8 +4,12 @@ import type {
   TurnPlan,
   TurnPlanner,
 } from "@loanslam/contracts";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { openDemoInteractionLog } from "./demoInteractionLog";
 import { createLabServer } from "./server";
 
 const corpus: CorpusItem[] = [
@@ -48,6 +52,7 @@ const answerPlan: TurnPlan = {
 
 const openServers: Array<{ close(callback?: (error?: Error) => void): void }> =
   [];
+const tempDirs: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
@@ -65,6 +70,9 @@ afterEach(async () => {
         }),
     ),
   );
+  for (const dir of tempDirs.splice(0)) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 describe("lab server", () => {
@@ -117,6 +125,134 @@ describe("lab server", () => {
     });
   });
 
+  it("serves demo-safe responses without trusted lab routes in demo-only mode", async () => {
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+    });
+
+    const rawSession = await postJson(`${baseUrl}/sessions`, {});
+
+    expect(rawSession.status).toBe(404);
+
+    const created = await postJson(`${baseUrl}/demo/sessions`, {});
+
+    expect(created.status).toBe(201);
+    expect(created.body).toEqual({
+      conversationRef: "id-1",
+      continuationToken: expect.any(String),
+    });
+    expect(created.body.continuationToken).not.toContain("id-1");
+
+    const turn = await postJson(`${baseUrl}/demo/sessions/id-1/messages`, {
+      message: "Can I apply online?",
+      continuationToken: created.body.continuationToken,
+    });
+
+    expect(turn.status).toBe(200);
+    expect(turn.body).toMatchObject({
+      conversationRef: "id-1",
+      requestRef: "id-2",
+      customerMessage: "You can apply online.",
+      ui: {
+        primitive: "message",
+        message: "You can apply online.",
+      },
+      terminalSession: false,
+      hostContext: "general",
+      continuationToken: expect.any(String),
+      telemetry: {
+        type: "turn-telemetry",
+        turn: 1,
+        proposedAction: "answer",
+        finalAction: "answer",
+        servingMode: "answer",
+        retrieval: {
+          count: 1,
+          matches: [
+            {
+              itemId: "how-do-i-apply",
+              servingMode: "answer",
+            },
+          ],
+        },
+        source: "turn",
+      },
+    });
+    expect(turn.body).not.toHaveProperty("state");
+    expect(turn.body).not.toHaveProperty("trace");
+    expect(turn.body).not.toHaveProperty("plan");
+    expect(JSON.stringify(turn.body)).not.toContain("retrievedMatches");
+
+    const inspect = await getJson(`${baseUrl}/sessions/id-1`);
+
+    expect(inspect.status).toBe(404);
+  });
+
+  it("can require an access token for demo routes", async () => {
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+      demoAccessToken: "stakeholder-token",
+    });
+
+    const rejected = await postJson(`${baseUrl}/demo/sessions`, {});
+
+    expect(rejected.status).toBe(401);
+    expect(rejected.body).toEqual({
+      error: "demo_access_required",
+      message: "A valid demo access token is required.",
+    });
+
+    const accepted = await postJson(
+      `${baseUrl}/demo/sessions`,
+      {},
+      { "x-demo-access-token": "stakeholder-token" },
+    );
+
+    expect(accepted.status).toBe(201);
+    expect(accepted.body).toEqual({
+      conversationRef: "id-1",
+      continuationToken: expect.any(String),
+    });
+  });
+
+  it("logs demo endpoint decision receipts for owner queries", async () => {
+    const databasePath = tempDatabasePath();
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+      demoInteractionLog: openDemoInteractionLog(databasePath),
+    });
+    const created = await postJson(`${baseUrl}/demo/sessions`, {});
+    const turn = await postJson(`${baseUrl}/demo/sessions/id-1/messages`, {
+      message: "Can I apply online?",
+      continuationToken: created.body.continuationToken,
+    });
+    const log = openDemoInteractionLog(databasePath);
+    const event = log.turnEvent("id-1", 1);
+
+    log.close();
+
+    expect(turn.status).toBe(200);
+    expect(event).toMatchObject({
+      eventType: "message",
+      conversationRef: "id-1",
+      turn: 1,
+      customerMessage: "Can I apply online?",
+      assistantMessage: "You can apply online.",
+      proposedAction: "answer",
+      finalAction: "answer",
+      servingMode: "answer",
+      retrievalCount: 1,
+      retrievedItemIds: ["how-do-i-apply"],
+    });
+    expect(JSON.stringify(event?.displayResponseJson)).not.toContain(
+      created.body.continuationToken,
+    );
+    expect(JSON.stringify(event?.internalJson)).toContain("retrievedMatches");
+  });
+
   it("returns safe JSON errors for unknown sessions and malformed JSON", async () => {
     const baseUrl = await startTestServer();
 
@@ -144,12 +280,15 @@ describe("lab server", () => {
   });
 });
 
-async function startTestServer(): Promise<string> {
+async function startTestServer(
+  options: Partial<Parameters<typeof createLabServer>[0]> = {},
+): Promise<string> {
   const server = createLabServer({
     corpus,
     plannerFactory: plannerFactory(),
     idFactory: sequenceIds(),
     now: () => new Date("2026-06-13T12:00:00.000Z"),
+    ...options,
   });
 
   openServers.push(server);
@@ -182,10 +321,20 @@ function sequenceIds(): () => string {
   return () => `id-${++next}`;
 }
 
-async function postJson(url: string, body: unknown) {
+function tempDatabasePath(): string {
+  const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-server-log-"));
+  tempDirs.push(dir);
+  return join(dir, "demo.sqlite");
+}
+
+async function postJson(
+  url: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+) {
   const response = await fetch(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 

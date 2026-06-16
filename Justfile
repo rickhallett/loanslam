@@ -64,6 +64,18 @@ core-serve *server_flags:
 mcp-lab-api:
     @npm --silent run mcp:lab-api
 
+# Summarize stakeholder demo interactions from the local SQLite log.
+demo-log-summary *log_flags:
+    @npm --silent run core:demo-log -- summary {{log_flags}}
+
+# Show a stakeholder demo conversation, e.g. just demo-log-session -- conv-ref --full
+demo-log-session *log_flags:
+    @npm --silent run core:demo-log -- session {{log_flags}}
+
+# Show one logged stakeholder demo turn, e.g. just demo-log-turn -- conv-ref 2 --full
+demo-log-turn *log_flags:
+    @npm --silent run core:demo-log -- turn {{log_flags}}
+
 # Start the lab API on 8787 and Vue console on 5173 together.
 lab:
     @set -e; \
@@ -119,7 +131,7 @@ demo:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 & \
+      npm --silent run core:serve -- --port 8788 --demo-only & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -130,7 +142,7 @@ demo:
       widget_pid=$!; \
       npm --silent run demo-host:dev & \
       host_pid=$!; \
-      echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, engine 8788)"; \
+      echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, demo API 8788)"; \
       wait "$host_pid"
 
 # Start engine (8788), MAL review widget (5175) and MAL contact page (5181).
@@ -156,7 +168,7 @@ review:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 & \
+      npm --silent run core:serve -- --port 8788 --demo-only & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -167,7 +179,7 @@ review:
       widget_pid=$!; \
       npm --silent run review-host:dev & \
       host_pid=$!; \
-      echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, engine 8788)"; \
+      echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, demo API 8788)"; \
       wait "$host_pid"
 
 # Start the local Vue lab console; pass Vite flags after -- when needed.

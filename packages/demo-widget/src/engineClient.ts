@@ -1,45 +1,32 @@
 import type {
-  ConversationState,
+  DemoSessionResponse,
+  DemoTurnResponse,
   IntakeField,
-  UiPlan,
-  ValidatedTurnResult,
 } from "@loanslam/contracts";
 
 /**
- * Thin HTTP client for the LoanSlam engine's lab server.
+ * Thin HTTP client for the LoanSlam stakeholder demo API.
  *
- * The engine owns OpenAI, retrieval, grounding, policy, and config; this client
- * only speaks its JSON contract over the proxied /sessions routes:
+ * The engine owns OpenAI, retrieval, grounding, policy, and config. The browser
+ * only receives the server-side display model over the proxied /demo routes:
  *
- *   POST /sessions                      -> { conversationRef, state }
- *   POST /sessions/:ref/messages        -> ValidatedTurnResult
- *   POST /sessions/:ref/reset           -> { conversationRef, state, traces }
- *   POST /sessions/:ref/intake          -> IntakeResult
- *   POST /sessions/:ref/cancel-handoff  -> { conversationRef, state }
+ *   POST /demo/sessions                      -> DemoSessionResponse
+ *   POST /demo/sessions/:ref/messages        -> DemoTurnResponse
+ *   POST /demo/sessions/:ref/reset           -> DemoSessionResponse
+ *   POST /demo/sessions/:ref/intake          -> DemoTurnResponse
+ *   POST /demo/sessions/:ref/cancel-handoff  -> DemoSessionResponse
  */
-
-interface SessionResponse {
-  conversationRef: string;
-  state: ConversationState;
-}
-
-export interface IntakeResult {
-  conversationRef: string;
-  state: ConversationState;
-  finalAction: string;
-  ui: UiPlan;
-  customerMessage: string;
-  reference: string;
-}
 
 async function requestJson<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
+  const accessToken = import.meta.env.VITE_DEMO_ACCESS_TOKEN;
   const response = await fetch(path, {
     ...init,
     headers: {
       "content-type": "application/json",
+      ...(accessToken ? { "x-demo-access-token": accessToken } : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -61,53 +48,63 @@ function isErrorPayload(value: unknown): value is { message?: string } {
   return typeof value === "object" && value !== null && "message" in value;
 }
 
-export async function createSession(): Promise<string> {
-  const session = await requestJson<SessionResponse>("/sessions", {
+export async function createSession(): Promise<DemoSessionResponse> {
+  return requestJson<DemoSessionResponse>("/demo/sessions", {
     method: "POST",
     body: JSON.stringify({}),
   });
-  return session.conversationRef;
 }
 
 export async function sendMessage(
   conversationRef: string,
   message: string,
-): Promise<ValidatedTurnResult> {
-  return requestJson<ValidatedTurnResult>(
-    `/sessions/${encodeURIComponent(conversationRef)}/messages`,
+  continuationToken?: string,
+): Promise<DemoTurnResponse> {
+  return requestJson<DemoTurnResponse>(
+    `/demo/sessions/${encodeURIComponent(conversationRef)}/messages`,
     {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, continuationToken }),
     },
   );
 }
 
-export async function resetSession(conversationRef: string): Promise<void> {
-  await requestJson(`/sessions/${encodeURIComponent(conversationRef)}/reset`, {
-    method: "POST",
-    body: JSON.stringify({}),
-  });
+export async function resetSession(
+  conversationRef: string,
+  continuationToken?: string,
+): Promise<DemoSessionResponse> {
+  return requestJson<DemoSessionResponse>(
+    `/demo/sessions/${encodeURIComponent(conversationRef)}/reset`,
+    {
+      method: "POST",
+      body: JSON.stringify({ continuationToken }),
+    },
+  );
 }
 
 export async function submitIntake(
   conversationRef: string,
   fields: Record<IntakeField, string>,
-): Promise<IntakeResult> {
-  return requestJson<IntakeResult>(
-    `/sessions/${encodeURIComponent(conversationRef)}/intake`,
+  continuationToken?: string,
+): Promise<DemoTurnResponse> {
+  return requestJson<DemoTurnResponse>(
+    `/demo/sessions/${encodeURIComponent(conversationRef)}/intake`,
     {
       method: "POST",
-      body: JSON.stringify(fields),
+      body: JSON.stringify({ ...fields, continuationToken }),
     },
   );
 }
 
-export async function cancelHandoff(conversationRef: string): Promise<void> {
-  await requestJson(
-    `/sessions/${encodeURIComponent(conversationRef)}/cancel-handoff`,
+export async function cancelHandoff(
+  conversationRef: string,
+  continuationToken?: string,
+): Promise<DemoSessionResponse> {
+  return requestJson<DemoSessionResponse>(
+    `/demo/sessions/${encodeURIComponent(conversationRef)}/cancel-handoff`,
     {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({ continuationToken }),
     },
   );
 }

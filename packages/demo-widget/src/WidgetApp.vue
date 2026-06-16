@@ -2,9 +2,10 @@
 import { onMounted, onUnmounted, ref } from "vue";
 
 import type {
+  DemoSessionResponse,
+  DemoTurnResponse,
   IntakeField,
   UiPlan,
-  ValidatedTurnResult,
 } from "@loanslam/contracts";
 
 import Composer from "./components/Composer.vue";
@@ -36,6 +37,7 @@ const WELCOME =
 
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
+const continuationToken = ref<string | null>(null);
 const isSending = ref(false);
 const isChatComplete = ref(false);
 const errorMessage = ref("");
@@ -50,18 +52,35 @@ function pushMessage(
   messages.value.push({ id: nextId++, role, text, ui });
 }
 
-async function ensureSession(): Promise<string> {
+async function ensureSession(): Promise<DemoSessionResponse> {
   if (sessionRef.value) {
-    return sessionRef.value;
+    return {
+      conversationRef: sessionRef.value,
+      ...(continuationToken.value
+        ? { continuationToken: continuationToken.value }
+        : {}),
+    };
   }
-  const reference = await createSession();
-  sessionRef.value = reference;
-  return reference;
+  const session = await createSession();
+  storeSession(session);
+  return session;
 }
 
-function handleResult(result: ValidatedTurnResult): void {
+function storeSession(session: DemoSessionResponse): void {
+  sessionRef.value = session.conversationRef;
+  continuationToken.value = session.continuationToken ?? null;
+}
+
+function storeResult(result: DemoTurnResponse): void {
+  if (result.continuationToken) {
+    continuationToken.value = result.continuationToken;
+  }
+}
+
+function handleResult(result: DemoTurnResponse): void {
+  storeResult(result);
   pushMessage("assistant", result.customerMessage, result.ui);
-  isChatComplete.value = isTerminalResult(result);
+  isChatComplete.value = result.terminalSession;
   sendContext(contextForTurn(result));
 }
 
@@ -76,8 +95,14 @@ async function submit(text: string): Promise<void> {
   isSending.value = true;
 
   try {
-    const reference = await ensureSession();
-    handleResult(await engineSend(reference, trimmed));
+    const session = await ensureSession();
+    handleResult(
+      await engineSend(
+        session.conversationRef,
+        trimmed,
+        session.continuationToken,
+      ),
+    );
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -103,11 +128,16 @@ async function onIntakeSubmit(
   isSending.value = true;
 
   try {
-    const reference = await ensureSession();
-    const result = await submitIntake(reference, values);
+    const session = await ensureSession();
+    const result = await submitIntake(
+      session.conversationRef,
+      values,
+      session.continuationToken,
+    );
+    storeResult(result);
     pushMessage("customer", "Shared my contact details.");
     pushMessage("assistant", result.customerMessage, result.ui);
-    isChatComplete.value = true;
+    isChatComplete.value = result.terminalSession;
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -126,8 +156,10 @@ async function onIntakeCancel(): Promise<void> {
   errorMessage.value = "";
 
   try {
-    const reference = await ensureSession();
-    await cancelHandoff(reference);
+    const session = await ensureSession();
+    storeSession(
+      await cancelHandoff(session.conversationRef, session.continuationToken),
+    );
     pushMessage(
       "assistant",
       "No problem — ask me anything else about your LoanSlam loan.",
@@ -144,24 +176,21 @@ async function onIntakeCancel(): Promise<void> {
 async function reset(): Promise<void> {
   if (sessionRef.value) {
     try {
-      await resetSession(sessionRef.value);
+      await resetSession(
+        sessionRef.value,
+        continuationToken.value ?? undefined,
+      );
     } catch {
-      // A failed reset on the lab server is non-fatal for the demo; we still
+      // A failed reset on the demo API is non-fatal for the demo; we still
       // clear the local view and start a fresh session on the next message.
     }
   }
   sessionRef.value = null;
+  continuationToken.value = null;
   isChatComplete.value = false;
   errorMessage.value = "";
   messages.value = [];
   pushMessage("assistant", WELCOME);
-}
-
-function isTerminalResult(result: ValidatedTurnResult): boolean {
-  return (
-    result.finalAction === "create_ticket" ||
-    result.ui.primitive === "handoff_confirmation"
-  );
 }
 
 let stopHostListener: (() => void) | null = null;

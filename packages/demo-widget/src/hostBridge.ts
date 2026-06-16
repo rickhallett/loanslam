@@ -1,4 +1,4 @@
-import type { SafetyFlag, ValidatedTurnResult } from "@loanslam/contracts";
+import type { DemoHostContext, DemoTurnResponse } from "@loanslam/contracts";
 
 /**
  * postMessage bridge between the embedded widget and the host page loader.
@@ -9,38 +9,10 @@ import type { SafetyFlag, ValidatedTurnResult } from "@loanslam/contracts";
  * signals cross the boundary — never message content.
  */
 
-export type HostContext = "vulnerability" | "handoff" | "general";
+export type HostContext = DemoHostContext;
 
-const VULNERABLE_FLAGS = new Set<SafetyFlag>([
-  "vulnerability",
-  "distress",
-  "hardship",
-  "accessibility_need",
-  "language_barrier",
-  "legal_threat",
-  "complaint",
-]);
-
-const HANDOFF_ACTIONS = new Set([
-  "request_handoff_intake",
-  "create_ticket",
-  "escalate",
-]);
-
-export function contextForTurn(result: ValidatedTurnResult): HostContext {
-  if (result.state.safetyFlags.some((flag) => VULNERABLE_FLAGS.has(flag))) {
-    return "vulnerability";
-  }
-
-  if (
-    result.state.handoffPending ||
-    HANDOFF_ACTIONS.has(result.finalAction) ||
-    result.ui.primitive === "handoff_confirmation"
-  ) {
-    return "handoff";
-  }
-
-  return "general";
+export function contextForTurn(result: DemoTurnResponse): HostContext {
+  return result.hostContext;
 }
 
 function postToHost(message: Record<string, unknown>): void {

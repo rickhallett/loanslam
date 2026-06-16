@@ -329,6 +329,86 @@ export const validatedTurnResultSchema = z.object({
 });
 export type ValidatedTurnResult = z.infer<typeof validatedTurnResultSchema>;
 
+export const demoHostContextSchema = z.enum([
+  "vulnerability",
+  "handoff",
+  "general",
+]);
+export type DemoHostContext = z.infer<typeof demoHostContextSchema>;
+
+export const demoTelemetrySourceSchema = z.enum(["turn", "structured-intake"]);
+export type DemoTelemetrySource = z.infer<typeof demoTelemetrySourceSchema>;
+
+export const demoSignalComparisonStatusSchema = z.enum([
+  "match",
+  "mismatch",
+  "inconclusive",
+]);
+export type DemoSignalComparisonStatus = z.infer<
+  typeof demoSignalComparisonStatusSchema
+>;
+
+export const demoDisplayTelemetrySchema = z.object({
+  type: z.literal("turn-telemetry"),
+  turn: z.number().int().positive(),
+  proposedAction: turnActionSchema,
+  finalAction: turnActionSchema,
+  servingMode: servingModeSchema.nullable(),
+  actionChanged: z.boolean(),
+  overrides: z.array(
+    z.object({
+      code: nonEmptyStringSchema,
+      fromAction: turnActionSchema.nullable(),
+      toAction: turnActionSchema,
+    }),
+  ),
+  safetyFlags: z.array(safetyFlagSchema),
+  retrieval: z.object({
+    count: z.number().int().nonnegative(),
+    topScore: z.number().finite().nonnegative(),
+    matches: z.array(
+      z.object({
+        itemId: nonEmptyStringSchema,
+        score: z.number().finite().nonnegative(),
+        servingMode: servingModeSchema,
+      }),
+    ),
+  }),
+  signal: z.object({
+    status: signalExtractionStatusSchema,
+    primaryIntent: signalIntentSchema.nullable(),
+    recommendedServingMode: servingModeSchema.nullable(),
+    uncertainty: z.number().min(0).max(1).nullable(),
+    comparison: demoSignalComparisonStatusSchema.nullable(),
+  }),
+  intake: z.object({
+    collected: z.array(intakeFieldSchema),
+    requested: z.array(intakeFieldSchema),
+    handoffPending: z.boolean(),
+  }),
+  uiPrimitive: uiPrimitiveSchema,
+  source: demoTelemetrySourceSchema,
+});
+export type DemoDisplayTelemetry = z.infer<typeof demoDisplayTelemetrySchema>;
+
+export const demoTurnResponseSchema = z.object({
+  conversationRef: nonEmptyStringSchema,
+  requestRef: nonEmptyStringSchema.optional(),
+  customerMessage: nonEmptyStringSchema,
+  ui: uiPlanSchema,
+  terminalSession: z.boolean(),
+  hostContext: demoHostContextSchema,
+  telemetry: demoDisplayTelemetrySchema,
+  continuationToken: nonEmptyStringSchema.optional(),
+});
+export type DemoTurnResponse = z.infer<typeof demoTurnResponseSchema>;
+
+export const demoSessionResponseSchema = z.object({
+  conversationRef: nonEmptyStringSchema,
+  continuationToken: nonEmptyStringSchema.optional(),
+});
+export type DemoSessionResponse = z.infer<typeof demoSessionResponseSchema>;
+
 export const journeyExpectationSchema = z.object({
   allowedFinalActions: z.array(turnActionSchema).min(1),
   requiredFinalAction: turnActionSchema.optional(),

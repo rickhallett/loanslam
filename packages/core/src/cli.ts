@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -68,6 +69,7 @@ type PlannerFactory = () => TurnPlanner & {
 type CliEnv = Record<string, string | undefined>;
 
 const defaultTraceDir = "artifacts/phase0";
+const defaultDemoInteractionLogPath = "var/demo-interactions.sqlite";
 
 export async function runCli(
   args = process.argv.slice(2),
@@ -121,6 +123,10 @@ export async function runCli(
 
     if (command === "serve") {
       return await runServer(rest, env, plannerFactory);
+    }
+
+    if (command === "demo-log") {
+      return await runDemoLog(rest, env);
     }
 
     return fail(`Unknown command: ${command}\n\n${helpText()}`);
@@ -588,23 +594,99 @@ async function runServer(
     return ok(serverHelpText());
   }
 
-  const port = Number(readOption(args, "--port") ?? "8787");
+  const normalizedArgs = stripOptionSeparator(args);
+  const port = Number(readOption(normalizedArgs, "--port") ?? "8787");
+  const demoOnly = normalizedArgs.includes("--demo-only");
+  const demoStateTokenSecret =
+    readOption(normalizedArgs, "--demo-state-token-secret") ??
+    env.DEMO_STATE_TOKEN_SECRET ??
+    (demoOnly ? randomUUID() : undefined);
+  const demoAccessToken =
+    readOption(normalizedArgs, "--demo-access-token") ?? env.DEMO_ACCESS_TOKEN;
+  const demoInteractionLogPath = normalizedArgs.includes("--no-demo-log")
+    ? undefined
+    : (readOption(normalizedArgs, "--demo-log-path") ??
+      env.DEMO_INTERACTION_LOG_PATH ??
+      (demoOnly ? defaultDemoInteractionLogPath : undefined));
 
   if (!Number.isInteger(port) || port <= 0) {
     return fail("--port must be a positive integer.");
   }
 
+  const demoInteractionLog = demoInteractionLogPath
+    ? (await import("./lab/demoInteractionLog")).openDemoInteractionLog(
+        demoInteractionLogPath,
+      )
+    : undefined;
+
   const server = createLabServer({
     corpus: loadCorpusFromFile().items,
     plannerFactory,
     ...signalExtractorInput(createSignalExtractor(env)),
+    enableTrustedLabRoutes: !demoOnly,
+    enableDemoRoutes: true,
+    ...(demoStateTokenSecret ? { demoStateTokenSecret } : {}),
+    ...(demoAccessToken ? { demoAccessToken } : {}),
+    ...(demoInteractionLog ? { demoInteractionLog } : {}),
   });
 
   await new Promise<void>((resolve) => {
     server.listen(port, "127.0.0.1", resolve);
   });
 
-  return ok(`LoanSlam Phase 0 lab API listening on http://127.0.0.1:${port}`);
+  return ok(
+    demoOnly
+      ? `LoanSlam stakeholder demo API listening on http://127.0.0.1:${port}`
+      : `LoanSlam Phase 0 lab API listening on http://127.0.0.1:${port}`,
+  );
+}
+
+async function runDemoLog(args: string[], env: CliEnv): Promise<CliResult> {
+  const parsed = parseDemoLogArgs(args, env);
+
+  if (parsed.help) {
+    return ok(demoLogHelpText());
+  }
+
+  const {
+    openDemoInteractionLog,
+    formatDemoLoggedEvent,
+    formatDemoLogSession,
+    formatDemoLogSummary,
+  } = await import("./lab/demoInteractionLog");
+  const log = openDemoInteractionLog(parsed.databasePath);
+
+  try {
+    if (parsed.command === "summary") {
+      return ok(formatDemoLogSummary(log.summaries(parsed.limit)));
+    }
+
+    if (parsed.command === "session") {
+      return ok(
+        formatDemoLogSession({
+          events: log.eventsForSession(parsed.conversationRef),
+          includeFullInternal: parsed.full,
+        }),
+      );
+    }
+
+    if (parsed.command === "turn") {
+      const event = log.turnEvent(parsed.conversationRef, parsed.turn);
+
+      return ok(
+        event
+          ? formatDemoLoggedEvent({
+              event,
+              includeFullInternal: parsed.full,
+            })
+          : "No logged message/intake event found for that turn.",
+      );
+    }
+
+    return fail(demoLogHelpText());
+  } finally {
+    log.close();
+  }
 }
 
 interface StochasticCliArgs {
@@ -623,6 +705,36 @@ interface RouteAuditCliArgs {
   markdownOutputPath?: string;
   help: boolean;
 }
+
+type DemoLogCliArgs =
+  | {
+      command: "summary";
+      databasePath: string;
+      limit: number;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "session";
+      databasePath: string;
+      conversationRef: string;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "turn";
+      databasePath: string;
+      conversationRef: string;
+      turn: number;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "help";
+      databasePath: string;
+      full: boolean;
+      help: true;
+    };
 
 function parseStochasticArgs(args: string[]): StochasticCliArgs {
   const normalizedArgs = stripOptionSeparator(args);
@@ -746,6 +858,113 @@ function parseRouteAuditArgs(args: string[]): RouteAuditCliArgs {
   return parsed;
 }
 
+function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
+  const normalizedArgs = stripOptionSeparator(args);
+  const databasePath =
+    readOption(normalizedArgs, "--db") ??
+    env.DEMO_INTERACTION_LOG_PATH ??
+    defaultDemoInteractionLogPath;
+  const full = normalizedArgs.includes("--full");
+  const help =
+    normalizedArgs.includes("--help") ||
+    normalizedArgs.includes("-h") ||
+    normalizedArgs.length === 0;
+  const positional = positionalDemoLogArgs(normalizedArgs);
+  const command = positional[0];
+
+  if (help || !command) {
+    return {
+      command: "help",
+      databasePath,
+      full,
+      help: true,
+    };
+  }
+
+  if (command === "summary") {
+    const limitRaw = readOption(normalizedArgs, "--limit") ?? "20";
+    const limit = Number(limitRaw);
+
+    if (!Number.isInteger(limit) || limit <= 0) {
+      throw new Error("--limit must be a positive integer.");
+    }
+
+    return {
+      command,
+      databasePath,
+      limit,
+      full,
+      help: false,
+    };
+  }
+
+  if (command === "session") {
+    const conversationRef = positional[1];
+
+    if (!conversationRef) {
+      throw new Error("demo-log session requires a conversationRef.");
+    }
+
+    return {
+      command,
+      databasePath,
+      conversationRef,
+      full,
+      help: false,
+    };
+  }
+
+  if (command === "turn") {
+    const conversationRef = positional[1];
+    const turn = Number(positional[2]);
+
+    if (!conversationRef) {
+      throw new Error("demo-log turn requires a conversationRef.");
+    }
+
+    if (!Number.isInteger(turn) || turn <= 0) {
+      throw new Error("demo-log turn requires a positive turn number.");
+    }
+
+    return {
+      command,
+      databasePath,
+      conversationRef,
+      turn,
+      full,
+      help: false,
+    };
+  }
+
+  throw new Error(`Unknown demo-log command: ${command}`);
+}
+
+function positionalDemoLogArgs(args: readonly string[]): string[] {
+  const positional: string[] = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (
+      arg === "--db" ||
+      arg === "--limit" ||
+      arg === "--" ||
+      arg === undefined
+    ) {
+      index += arg === "--" ? 0 : 1;
+      continue;
+    }
+
+    if (arg === "--full" || arg === "--help" || arg === "-h") {
+      continue;
+    }
+
+    positional.push(arg);
+  }
+
+  return positional;
+}
+
 function readRequiredOptionValue(
   args: readonly string[],
   index: number,
@@ -833,6 +1052,7 @@ function helpText(): string {
     "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
+    "  demo-log summary|session|turn      Query stakeholder demo interaction logs",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
@@ -938,15 +1158,43 @@ function serverHelpText(): string {
     "LoanSlam Phase 0 lab API",
     "",
     "Usage:",
-    "  serve [--port <port>]",
+    "  serve [--port <port>] [--demo-only]",
     "",
     "Routes:",
     "  POST /sessions",
     "  POST /sessions/:conversationRef/messages",
     "  GET  /sessions/:conversationRef",
     "  POST /sessions/:conversationRef/reset",
+    "  POST /demo/sessions",
+    "  POST /demo/sessions/:conversationRef/messages",
+    "  POST /demo/sessions/:conversationRef/intake",
+    "  POST /demo/sessions/:conversationRef/reset",
     "",
-    "This is a local lab surface over processTurn, not the production API.",
+    "Options:",
+    "  --demo-only                  Mount only demo-safe /demo routes",
+    "  --demo-state-token-secret s  Seal demo state into opaque continuation tokens",
+    "  --demo-access-token s        Require a bearer or x-demo-access-token value on /demo routes",
+    "  --demo-log-path p            Write VPS-local owner logs (default in demo-only: var/demo-interactions.sqlite)",
+    "  --no-demo-log                Disable demo interaction logging",
+    "",
+    "The /sessions routes are local lab evidence surfaces. Use --demo-only for stakeholder demos.",
+  ].join("\n");
+}
+
+function demoLogHelpText(): string {
+  return [
+    "LoanSlam stakeholder demo interaction log",
+    "",
+    "Usage:",
+    "  demo-log summary [--db <path>] [--limit <n>]",
+    "  demo-log session <conversationRef> [--db <path>] [--full]",
+    "  demo-log turn <conversationRef> <turn> [--db <path>] [--full]",
+    "",
+    "Default DB:",
+    `  ${defaultDemoInteractionLogPath}`,
+    "",
+    "The default view prints query-friendly decision receipts. Use --full for",
+    "owner-only internal JSON stored on the server-side SQLite database.",
   ].join("\n");
 }
 
