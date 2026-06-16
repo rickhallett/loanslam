@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "npm --workspaces --if-present run typecheck",
     "build": "npm --workspaces --if-present run build",
+    "start": "tsx packages/core/src/cli.ts serve --demo-only --host 0.0.0.0 --demo-static-host-root packages/review-host/dist --demo-static-widget-root packages/review-widget/dist",
     "format:check": "prettier --check \"package.json\" \"package-lock.json\" \"tsconfig*.json\" \"vitest.config.ts\" \"packages/**/*.{ts,vue,css,html}\" \"packages/**/package.json\" \"packages/**/tsconfig.json\"",
     "core:turn": "tsx packages/core/src/cli.ts turn",
     "core:simulate": "tsx packages/core/src/cli.ts simulate",

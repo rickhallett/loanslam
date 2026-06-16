@@ -4,6 +4,8 @@ import {
   type ServerResponse,
 } from "node:http";
 import { randomUUID } from "node:crypto";
+import { readFile, stat } from "node:fs/promises";
+import { extname, resolve, sep } from "node:path";
 
 import type {
   ConversationState,
@@ -48,6 +50,12 @@ export interface CreateLabServerOptions {
   demoStateTokenSecret?: string;
   demoAccessToken?: string;
   demoInteractionLog?: DemoInteractionLog;
+  demoStaticAssets?: DemoStaticAssets;
+}
+
+export interface DemoStaticAssets {
+  hostRoot: string;
+  widgetRoot: string;
 }
 
 interface LabSession {
@@ -71,6 +79,7 @@ export function createLabServer({
   demoStateTokenSecret,
   demoAccessToken,
   demoInteractionLog,
+  demoStaticAssets,
 }: CreateLabServerOptions) {
   const sessions = new Map<string, LabSession>();
   const demoSessions = new Map<string, LabSession>();
@@ -92,6 +101,7 @@ export function createLabServer({
         demoStateTokenSecret,
         demoAccessToken,
         demoInteractionLog,
+        demoStaticAssets,
       });
     } catch (error) {
       const method = request.method ?? "GET";
@@ -143,6 +153,7 @@ async function handleRequest({
   demoStateTokenSecret,
   demoAccessToken,
   demoInteractionLog,
+  demoStaticAssets,
 }: {
   request: IncomingMessage;
   response: ServerResponse;
@@ -158,6 +169,7 @@ async function handleRequest({
   demoStateTokenSecret: string | undefined;
   demoAccessToken: string | undefined;
   demoInteractionLog: DemoInteractionLog | undefined;
+  demoStaticAssets: DemoStaticAssets | undefined;
 }): Promise<void> {
   const method = request.method ?? "GET";
   const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -189,6 +201,18 @@ async function handleRequest({
       method,
       pathname,
     });
+    return;
+  }
+
+  if (
+    demoStaticAssets &&
+    (await serveDemoStaticAsset({
+      method,
+      pathname,
+      response,
+      assets: demoStaticAssets,
+    }))
+  ) {
     return;
   }
 
@@ -698,6 +722,137 @@ async function handleDemoRequest({
     error: "not_found",
     message: `${method} ${pathname} is not a demo API route.`,
   });
+}
+
+async function serveDemoStaticAsset({
+  method,
+  pathname,
+  response,
+  assets,
+}: {
+  method: string;
+  pathname: string;
+  response: ServerResponse;
+  assets: DemoStaticAssets;
+}): Promise<boolean> {
+  if (method !== "GET" && method !== "HEAD") {
+    return false;
+  }
+
+  const route = resolveDemoStaticRoute(pathname, assets);
+
+  if (!route) {
+    return false;
+  }
+
+  try {
+    const fileStat = await stat(route.filePath);
+
+    if (!fileStat.isFile()) {
+      return false;
+    }
+
+    response.writeHead(200, {
+      "content-type": contentTypeForPath(route.filePath),
+      "cache-control": route.cacheControl,
+    });
+
+    if (method === "HEAD") {
+      response.end();
+      return true;
+    }
+
+    response.end(await readFile(route.filePath));
+    return true;
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+function resolveDemoStaticRoute(
+  pathname: string,
+  assets: DemoStaticAssets,
+): { filePath: string; cacheControl: string } | null {
+  if (pathname === "/" || pathname === "/index.html") {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, "index.html"),
+      cacheControl: "no-store",
+    };
+  }
+
+  if (pathname === "/widget" || pathname === "/widget/") {
+    return {
+      filePath: safeStaticPath(assets.widgetRoot, "index.html"),
+      cacheControl: "no-store",
+    };
+  }
+
+  if (pathname.startsWith("/widget/")) {
+    return {
+      filePath: safeStaticPath(assets.widgetRoot, pathname.slice(8)),
+      cacheControl: cacheControlForStaticPath(pathname),
+    };
+  }
+
+  if (pathname.startsWith("/assets/")) {
+    return {
+      filePath: safeStaticPath(assets.widgetRoot, pathname.slice(1)),
+      cacheControl: cacheControlForStaticPath(pathname),
+    };
+  }
+
+  if (["/styles.css", "/loader.js", "/devtools.js"].includes(pathname)) {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, pathname.slice(1)),
+      cacheControl: cacheControlForStaticPath(pathname),
+    };
+  }
+
+  return null;
+}
+
+function safeStaticPath(root: string, relativePath: string): string {
+  const resolvedRoot = resolve(root);
+  const resolvedFile = resolve(resolvedRoot, relativePath);
+
+  if (
+    resolvedFile !== resolvedRoot &&
+    !resolvedFile.startsWith(`${resolvedRoot}${sep}`)
+  ) {
+    throw new Error("Static asset path escaped the configured root.");
+  }
+
+  return resolvedFile;
+}
+
+function cacheControlForStaticPath(pathname: string): string {
+  return pathname.startsWith("/assets/")
+    ? "public, max-age=31536000, immutable"
+    : "no-store";
+}
+
+function contentTypeForPath(filePath: string): string {
+  switch (extname(filePath)) {
+    case ".css":
+      return "text/css; charset=utf-8";
+    case ".html":
+      return "text/html; charset=utf-8";
+    case ".js":
+      return "text/javascript; charset=utf-8";
+    case ".svg":
+      return "image/svg+xml";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 function authorizeDemoRequest({

@@ -595,7 +595,10 @@ async function runServer(
   }
 
   const normalizedArgs = stripOptionSeparator(args);
-  const port = Number(readOption(normalizedArgs, "--port") ?? "8787");
+  const port = Number(
+    readOption(normalizedArgs, "--port") ?? env.PORT ?? "8787",
+  );
+  const host = readOption(normalizedArgs, "--host") ?? env.HOST ?? "127.0.0.1";
   const demoOnly = normalizedArgs.includes("--demo-only");
   const demoStateTokenSecret =
     readOption(normalizedArgs, "--demo-state-token-secret") ??
@@ -608,6 +611,12 @@ async function runServer(
     : (readOption(normalizedArgs, "--demo-log-path") ??
       env.DEMO_INTERACTION_LOG_PATH ??
       (demoOnly ? defaultDemoInteractionLogPath : undefined));
+  const demoStaticHostRoot =
+    readOption(normalizedArgs, "--demo-static-host-root") ??
+    env.DEMO_STATIC_HOST_ROOT;
+  const demoStaticWidgetRoot =
+    readOption(normalizedArgs, "--demo-static-widget-root") ??
+    env.DEMO_STATIC_WIDGET_ROOT;
 
   if (!Number.isInteger(port) || port <= 0) {
     return fail("--port must be a positive integer.");
@@ -628,16 +637,24 @@ async function runServer(
     ...(demoStateTokenSecret ? { demoStateTokenSecret } : {}),
     ...(demoAccessToken ? { demoAccessToken } : {}),
     ...(demoInteractionLog ? { demoInteractionLog } : {}),
+    ...(demoStaticHostRoot && demoStaticWidgetRoot
+      ? {
+          demoStaticAssets: {
+            hostRoot: demoStaticHostRoot,
+            widgetRoot: demoStaticWidgetRoot,
+          },
+        }
+      : {}),
   });
 
   await new Promise<void>((resolve) => {
-    server.listen(port, "127.0.0.1", resolve);
+    server.listen(port, host, resolve);
   });
 
   return ok(
     demoOnly
-      ? `LoanSlam stakeholder demo API listening on http://127.0.0.1:${port}`
-      : `LoanSlam Phase 0 lab API listening on http://127.0.0.1:${port}`,
+      ? `LoanSlam stakeholder demo API listening on http://${host}:${port}`
+      : `LoanSlam Phase 0 lab API listening on http://${host}:${port}`,
   );
 }
 
@@ -1158,7 +1175,7 @@ function serverHelpText(): string {
     "LoanSlam Phase 0 lab API",
     "",
     "Usage:",
-    "  serve [--port <port>] [--demo-only]",
+    "  serve [--port <port>] [--host <host>] [--demo-only]",
     "",
     "Routes:",
     "  POST /sessions",
@@ -1171,10 +1188,13 @@ function serverHelpText(): string {
     "  POST /demo/sessions/:conversationRef/reset",
     "",
     "Options:",
+    "  --host h                      Bind address (default: HOST or 127.0.0.1)",
     "  --demo-only                  Mount only demo-safe /demo routes",
     "  --demo-state-token-secret s  Seal demo state into opaque continuation tokens",
     "  --demo-access-token s        Require a bearer or x-demo-access-token value on /demo routes",
     "  --demo-log-path p            Write VPS-local owner logs (default in demo-only: var/demo-interactions.sqlite)",
+    "  --demo-static-host-root p     Serve the stakeholder host page from this built asset root",
+    "  --demo-static-widget-root p   Serve the stakeholder widget from this built asset root",
     "  --no-demo-log                Disable demo interaction logging",
     "",
     "The /sessions routes are local lab evidence surfaces. Use --demo-only for stakeholder demos.",

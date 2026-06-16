@@ -4,7 +4,7 @@ import type {
   TurnPlan,
   TurnPlanner,
 } from "@loanslam/contracts";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -253,6 +253,29 @@ describe("lab server", () => {
     expect(JSON.stringify(event?.internalJson)).toContain("retrievedMatches");
   });
 
+  it("serves same-origin stakeholder static assets in demo-only mode", async () => {
+    const demoStaticAssets = tempStaticAssets();
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStaticAssets,
+    });
+
+    const host = await fetch(`${baseUrl}/`);
+    const widget = await fetch(`${baseUrl}/widget/`);
+    const widgetAsset = await fetch(`${baseUrl}/assets/app.js`);
+    const inspect = await getJson(`${baseUrl}/sessions/id-1`);
+
+    expect(host.status).toBe(200);
+    expect(host.headers.get("content-type")).toContain("text/html");
+    expect(await host.text()).toContain("Review host");
+    expect(widget.status).toBe(200);
+    expect(await widget.text()).toContain("Widget shell");
+    expect(widgetAsset.status).toBe(200);
+    expect(widgetAsset.headers.get("cache-control")).toContain("immutable");
+    expect(await widgetAsset.text()).toContain("window.widgetLoaded");
+    expect(inspect.status).toBe(404);
+  });
+
   it("returns safe JSON errors for unknown sessions and malformed JSON", async () => {
     const baseUrl = await startTestServer();
 
@@ -325,6 +348,26 @@ function tempDatabasePath(): string {
   const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-server-log-"));
   tempDirs.push(dir);
   return join(dir, "demo.sqlite");
+}
+
+function tempStaticAssets(): { hostRoot: string; widgetRoot: string } {
+  const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-static-"));
+  tempDirs.push(dir);
+  const hostRoot = join(dir, "host");
+  const widgetRoot = join(dir, "widget");
+  mkdirSync(join(widgetRoot, "assets"), { recursive: true });
+  mkdirSync(hostRoot, { recursive: true });
+  writeFileSync(join(hostRoot, "index.html"), "<h1>Review host</h1>");
+  writeFileSync(join(hostRoot, "styles.css"), "body { color: black; }");
+  writeFileSync(join(hostRoot, "loader.js"), "window.hostLoaded = true;");
+  writeFileSync(join(hostRoot, "devtools.js"), "window.devtoolsLoaded = true;");
+  writeFileSync(join(widgetRoot, "index.html"), "<h1>Widget shell</h1>");
+  writeFileSync(
+    join(widgetRoot, "assets", "app.js"),
+    "window.widgetLoaded = true;",
+  );
+
+  return { hostRoot, widgetRoot };
 }
 
 async function postJson(
