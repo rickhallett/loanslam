@@ -21,10 +21,6 @@ export const severityRank: Record<Severity, number> = {
   demo_killer: 2,
 };
 
-function worstSeverity(a: Severity, b: Severity): Severity {
-  return severityRank[a] >= severityRank[b] ? a : b;
-}
-
 /**
  * The behaviour classes stakeholders care about. Each maps to a column in the
  * dashboard scorecard. `*_HARD` dimensions back the safety floor.
