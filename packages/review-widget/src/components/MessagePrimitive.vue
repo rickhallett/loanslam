@@ -15,8 +15,8 @@ import IntakeForm from "./IntakeForm.vue";
 const SHOW_INTAKE_FORM = true as boolean;
 
 // True only when this primitive has something to draw. Without it, plain
-// `message` turns (no links) and the suppressed `intake_form` would still render
-// an empty `.primitive` box and leave a stray gap under the bubble.
+// `message` turns (no links) and empty primitives would still render an
+// empty `.primitive` box and leave a stray gap under the bubble.
 function hasRenderableContent(plan: UiPlan): boolean {
   switch (plan.primitive) {
     case "choice_list":

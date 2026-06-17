@@ -20,14 +20,6 @@ export function contextForTurn(result: DemoTurnResponse): HostContext {
 }
 
 function postToHost(message: object): void {
-  const type = (message as { type?: string }).type;
-  if (type === "turn-telemetry") {
-    // eslint-disable-next-line no-console
-    console.log(
-      "[sm-devtools] widget posting telemetry; embedded =",
-      window.parent !== window,
-    );
-  }
   if (window.parent !== window) {
     window.parent.postMessage(message, "*");
   }
