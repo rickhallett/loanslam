@@ -10,10 +10,7 @@ import {
 } from "./evidence";
 
 const defaultLabApiBaseUrl = "http://127.0.0.1:8787";
-const allowedLabApiBaseUrls = [
-  defaultLabApiBaseUrl,
-  "http://127.0.0.1:5173",
-];
+const allowedLabApiBaseUrls = [defaultLabApiBaseUrl, "http://127.0.0.1:5173"];
 const defaultArtifactDir = "artifacts/phase0";
 
 export interface LabApiClientOptions {
