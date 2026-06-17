@@ -168,8 +168,6 @@ export const conversationMessageSchema = z.object({
   content: nonEmptyStringSchema,
   createdAt: z.string().datetime(),
 });
-export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
-
 export const conversationStateSchema = z.object({
   conversationRef: nonEmptyStringSchema,
   history: z.array(conversationMessageSchema).default([]),
@@ -210,8 +208,6 @@ export const signalIntentSchema = z.enum([
   "language_barrier",
   "other",
 ]);
-export type SignalIntent = z.infer<typeof signalIntentSchema>;
-
 export const signalExtractorMetadataSchema = z.object({
   provider: nonEmptyStringSchema,
   model: nonEmptyStringSchema,
@@ -264,8 +260,6 @@ export const groundingDecisionSchema = z.object({
   confidence: z.enum(["supported", "partial", "unsupported"]),
   notes: z.string().trim().optional(),
 });
-export type GroundingDecision = z.infer<typeof groundingDecisionSchema>;
-
 export const turnPlanSchema = z.object({
   action: turnActionSchema,
   customerMessage: nonEmptyStringSchema,
@@ -337,17 +331,11 @@ export const demoHostContextSchema = z.enum([
 export type DemoHostContext = z.infer<typeof demoHostContextSchema>;
 
 export const demoTelemetrySourceSchema = z.enum(["turn", "structured-intake"]);
-export type DemoTelemetrySource = z.infer<typeof demoTelemetrySourceSchema>;
-
 export const demoSignalComparisonStatusSchema = z.enum([
   "match",
   "mismatch",
   "inconclusive",
 ]);
-export type DemoSignalComparisonStatus = z.infer<
-  typeof demoSignalComparisonStatusSchema
->;
-
 export const demoDisplayTelemetrySchema = z.object({
   type: z.literal("turn-telemetry"),
   turn: z.number().int().positive(),
@@ -752,10 +740,6 @@ export const stochasticReplayCommandsSchema = z.object({
   topFindingCommands: z.array(nonEmptyStringSchema).default([]),
   hardFailureCommands: z.array(nonEmptyStringSchema).default([]),
 });
-export type StochasticReplayCommands = z.infer<
-  typeof stochasticReplayCommandsSchema
->;
-
 const stochasticRunArtifactBaseSchema = z.object({
   seed: nonEmptyStringSchema,
   profile: stochasticProfileSchema,
