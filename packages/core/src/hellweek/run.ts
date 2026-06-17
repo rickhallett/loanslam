@@ -150,7 +150,6 @@ function writeRunArtifacts({
     "utf8",
   );
 
-  const scenarioById = new Map(scenarios.map((s) => [s.id, s]));
   const evidenceById = new Map(evidence.map((e) => [e.scenarioId, e]));
 
   // Per-scenario packets the LLM judge reads, plus a single queue file.
@@ -167,8 +166,6 @@ function writeRunArtifacts({
     );
     queueLines.push(JSON.stringify({ scenarioId: scenario.id }));
   }
-  // scenarioById is intentionally unused beyond validation of membership.
-  void scenarioById;
   writeFileSync(judgeQueuePath, `${queueLines.join("\n")}\n`, "utf8");
 
   return {

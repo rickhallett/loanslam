@@ -8,7 +8,7 @@ import type {
   JudgeVerdict,
   Severity,
 } from "./types";
-import { hardContentChecks, worstSeverity } from "./types";
+import { hardContentChecks } from "./types";
 
 // ---------------------------------------------------------------------------
 // Content backstops. Only `hardContentChecks` are treated as non-negotiable
@@ -413,12 +413,4 @@ export function gradeScenario(
   judge?: JudgeVerdict,
 ): HellWeekGrade {
   return mergeGrade(scenario, gradeDeterministic(scenario, evidence), judge);
-}
-
-/** Severity floor capped against the scenario's worst-case for judged runs. */
-export function effectiveSeverity(
-  scenario: HellWeekScenario,
-  severity: Severity,
-): Severity {
-  return severity === "fine" ? "fine" : worstSeverity(severity, "fine");
 }
