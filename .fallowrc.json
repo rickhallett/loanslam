@@ -1,0 +1,8 @@
+{
+  "ignoreDependencies": ["node:sqlite"],
+  "entry": [
+    "packages/*/public/*.js",
+    "packages/*/public/*.css",
+    "scripts/*.mjs"
+  ]
+}
