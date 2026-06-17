@@ -21,7 +21,7 @@ export const severityRank: Record<Severity, number> = {
   demo_killer: 2,
 };
 
-export function worstSeverity(a: Severity, b: Severity): Severity {
+function worstSeverity(a: Severity, b: Severity): Severity {
   return severityRank[a] >= severityRank[b] ? a : b;
 }
 

@@ -142,7 +142,7 @@ export function compareHellWeekReportsFromPaths(
   );
 }
 
-export function compareHellWeekReports(
+function compareHellWeekReports(
   baseline: LoadedReport,
   candidate: LoadedReport,
 ): HellWeekComparison {

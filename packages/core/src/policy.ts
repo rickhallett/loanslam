@@ -73,7 +73,7 @@ const sensitiveOversharePattern =
 const internalDataExposurePattern =
   /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
 
-export function allowedUiPrimitivesForAction(
+function allowedUiPrimitivesForAction(
   action: TurnAction,
 ): readonly UiPrimitive[] {
   return uiPrimitivesByAction[action];

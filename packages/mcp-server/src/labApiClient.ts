@@ -9,12 +9,12 @@ import {
   type ValidatedTurnResultLike,
 } from "./evidence";
 
-export const defaultLabApiBaseUrl = "http://127.0.0.1:8787";
-export const allowedLabApiBaseUrls = [
+const defaultLabApiBaseUrl = "http://127.0.0.1:8787";
+const allowedLabApiBaseUrls = [
   defaultLabApiBaseUrl,
   "http://127.0.0.1:5173",
 ];
-export const defaultArtifactDir = "artifacts/phase0";
+const defaultArtifactDir = "artifacts/phase0";
 
 export interface LabApiClientOptions {
   baseUrl?: string;
@@ -64,7 +64,7 @@ export interface DumpSessionResult extends FetchSessionResult {
   artifactPath: string;
 }
 
-export class LabApiError extends Error {
+class LabApiError extends Error {
   constructor(
     message: string,
     readonly status: number,

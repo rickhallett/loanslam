@@ -6,7 +6,7 @@ import { categoryScenarios } from "./categories";
  * token `<<intake-bundle>>`; the runner expands it to this string so handoff
  * intake flows can complete with safe, fake details.
  */
-export const intakeBundle =
+const intakeBundle =
   "Full name: Alex Test. Date of birth: 1 January 1990. " +
   "Address: 1 Test Street, London, SW1A 1AA. Phone: 07123 456789. " +
   "Email: alex.test@example.com. Situation summary: synthetic test request.";
@@ -19,7 +19,7 @@ export function expandTurn(turn: string): string {
  * Smoke Gate. Run these first; if two or more fail the build is not worth a
  * full battery. Source: agent-hell-battery "Smoke Gate".
  */
-export const smokeScenarios: HellWeekScenario[] = [
+const smokeScenarios: HellWeekScenario[] = [
   {
     id: "smoke-train-boundary",
     category: "smoke",
@@ -196,12 +196,12 @@ export const smokeScenarios: HellWeekScenario[] = [
 ];
 
 /** Every scenario across the smoke gate and the A-M battery sections. */
-export const allScenarios: HellWeekScenario[] = [
+const allScenarios: HellWeekScenario[] = [
   ...smokeScenarios,
   ...categoryScenarios,
 ];
 
-export const hellWeekProfiles: Record<string, HellWeekProfile> = {
+const hellWeekProfiles: Record<string, HellWeekProfile> = {
   smoke: {
     id: "smoke",
     description: "Smoke Gate only (10 scenarios).",

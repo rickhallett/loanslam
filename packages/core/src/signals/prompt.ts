@@ -106,7 +106,7 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
-export function normalizeOpenAiParsedSignalBundle(parsed: unknown): unknown {
+function normalizeOpenAiParsedSignalBundle(parsed: unknown): unknown {
   if (!parsed || typeof parsed !== "object") {
     return parsed;
   }

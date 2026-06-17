@@ -100,7 +100,7 @@ function emptyState(conversationRef: string): ConversationState {
   };
 }
 
-export async function runScenario({
+async function runScenario({
   scenario,
   corpus,
   planner,
