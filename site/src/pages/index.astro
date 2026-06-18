@@ -1,0 +1,89 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="LoanSlam | Fail-closed AI for regulated lending conversations"
+  description="LoanSlam is a prototype conversation engine that keeps model output behind retrieval, validation, and trace evidence."
+>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Regulated lending support, without blind model trust</p>
+        <h1>LoanSlam</h1>
+        <p class="hero-lede">
+          A fail-closed AI conversation engine where the model proposes each turn and deterministic
+          code decides what can safely reach the user.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn--primary" href="/platform/">See the platform</a>
+          <a class="btn btn--secondary" href="/evidence/">Review the evidence model</a>
+        </div>
+      </div>
+      <img
+        class="hero-visual"
+        src="/trace-console.svg"
+        alt="A LoanSlam trace console showing planner, validator, and audit states"
+        width="720"
+        height="520"
+      />
+    </div>
+  </section>
+
+  <section class="section section--panel">
+    <div class="container">
+      <p class="eyebrow">The operating promise</p>
+      <div class="claim-row">
+        <h2>Useful AI is allowed to help. It is never allowed to be the boundary.</h2>
+        <p>
+          LoanSlam separates fluent drafting from final authority. The planner can interpret intent,
+          ask for clarification, and compose a candidate response. The validator enforces policy,
+          grounding, sensitive-data limits, and handoff rules before anything is shown.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container grid grid--3">
+      <article class="card">
+        <span class="card-kicker">Planner</span>
+        <h2>Model proposals stay untrusted.</h2>
+        <p>
+          The LLM returns a structured plan with route, answer shape, and safety flags. It does not
+          get the final say.
+        </p>
+      </article>
+      <article class="card">
+        <span class="card-kicker">Validator</span>
+        <h2>Policy checks run in code.</h2>
+        <p>
+          Unsupported answers, excluded topics, and account-specific requests are blocked or routed
+          to the right human fallback.
+        </p>
+      </article>
+      <article class="card">
+        <span class="card-kicker">Evidence</span>
+        <h2>Every turn can be inspected.</h2>
+        <p>
+          Trace artifacts keep proposals, retrieval, rule decisions, and final responses together
+          for review.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="container split">
+      <div>
+        <p class="eyebrow">Built for careful rollout</p>
+        <h2>Prototype first. Synthetic data first. Human review first.</h2>
+      </div>
+      <div class="check-list">
+        <p><strong>No live applications.</strong> The current site is a product surface, not a lending flow.</p>
+        <p><strong>No production personal data.</strong> Demo runs are synthetic and inspectable.</p>
+        <p><strong>No hidden automation.</strong> The system earns trust through route evidence and traces.</p>
+      </div>
+    </div>
+  </section>
+</Base>

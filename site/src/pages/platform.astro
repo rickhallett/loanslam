@@ -1,0 +1,71 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Platform | LoanSlam"
+  description="LoanSlam separates untrusted model planning from deterministic validation, retrieval grounding, and trace review."
+>
+  <section class="page-header">
+    <div class="container narrow">
+      <p class="eyebrow">Platform</p>
+      <h1>Untrusted model in front, deterministic guardrails at the boundary.</h1>
+      <p class="lede">
+        LoanSlam is designed around a simple constraint: the model can propose, but product code
+        decides what reaches the user.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split">
+      <div>
+        <p class="eyebrow">Flow</p>
+        <h2>One turn, four checks.</h2>
+        <p>
+          Each user message moves through a planner, retrieval layer, policy validator, and trace
+          writer before it can become a response. The validator is not a tone critic. It is a hard
+          boundary for scope, grounding, handoff, and sensitive-data rules.
+        </p>
+      </div>
+      <ol class="process-list">
+        <li>
+          <strong>Plan</strong>
+          <span>The model proposes intent, route, response shape, and safety flags.</span>
+        </li>
+        <li>
+          <strong>Ground</strong>
+          <span>Retrieval evidence is attached so supported answers can be checked.</span>
+        </li>
+        <li id="validator">
+          <strong>Validate</strong>
+          <span>Deterministic rules block unsafe, unsupported, or out-of-scope output.</span>
+        </li>
+        <li>
+          <strong>Trace</strong>
+          <span>Every accepted or blocked turn leaves reviewable evidence.</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--panel" id="boundaries">
+    <div class="container grid grid--3">
+      <article class="metric-card">
+        <span>01</span>
+        <h2>No production PII</h2>
+        <p>Prototype journeys run over synthetic data and lab conversations.</p>
+      </article>
+      <article class="metric-card">
+        <span>02</span>
+        <h2>No blind automation</h2>
+        <p>Human review stays central until trace evidence supports a narrower release path.</p>
+      </article>
+      <article class="metric-card">
+        <span>03</span>
+        <h2>No static theatre</h2>
+        <p>Live route behavior matters more than brittle fixtures that only prove themselves.</p>
+      </article>
+    </div>
+  </section>
+</Base>

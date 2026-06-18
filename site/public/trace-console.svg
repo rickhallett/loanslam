@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="title desc">
+  <title id="title">LoanSlam trace console</title>
+  <desc id="desc">A product-style trace console showing planner, validator, and audit states.</desc>
+  <rect width="720" height="520" rx="16" fill="#f8fafc"/>
+  <rect x="24" y="24" width="672" height="56" rx="8" fill="#111827"/>
+  <circle cx="52" cy="52" r="7" fill="#16a34a"/>
+  <circle cx="76" cy="52" r="7" fill="#f97316"/>
+  <circle cx="100" cy="52" r="7" fill="#2563eb"/>
+  <text x="132" y="58" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#ffffff">LoanSlam turn trace</text>
+  <rect x="24" y="104" width="208" height="360" rx="8" fill="#ffffff" stroke="#d9dee8"/>
+  <text x="48" y="140" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">Route proposal</text>
+  <rect x="48" y="164" width="130" height="26" rx="6" fill="#dbeafe"/>
+  <text x="60" y="182" font-family="Inter, Arial, sans-serif" font-size="12" font-weight="700" fill="#1d4ed8">answerable</text>
+  <rect x="48" y="212" width="152" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="48" y="236" width="116" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="48" y="260" width="138" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="48" y="324" width="136" height="34" rx="6" fill="#ecfdf5"/>
+  <text x="62" y="346" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#166534">grounded</text>
+  <rect x="256" y="104" width="208" height="360" rx="8" fill="#ffffff" stroke="#d9dee8"/>
+  <text x="280" y="140" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">Validator</text>
+  <rect x="280" y="164" width="160" height="44" rx="6" fill="#111827"/>
+  <text x="302" y="191" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#ffffff">fail closed</text>
+  <path d="M291 256l18 18 42-48" fill="none" stroke="#16a34a" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="280" y="328" width="148" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="280" y="352" width="120" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="488" y="104" width="208" height="360" rx="8" fill="#ffffff" stroke="#d9dee8"/>
+  <text x="512" y="140" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">Audit packet</text>
+  <rect x="512" y="166" width="138" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="512" y="190" width="112" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="512" y="214" width="150" height="10" rx="5" fill="#d9dee8"/>
+  <rect x="512" y="268" width="136" height="34" rx="6" fill="#fff7ed"/>
+  <text x="526" y="290" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#c2410c">reviewable</text>
+  <path d="M232 284h24" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+  <path d="M464 284h24" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+</svg>

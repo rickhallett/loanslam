@@ -1,0 +1,188 @@
+---
+const columns = [
+  {
+    heading: 'Product',
+    links: [
+      { label: 'Platform', href: '/platform/' },
+      { label: 'Evidence model', href: '/evidence/' },
+      { label: 'Demo request', href: '/contact/' },
+    ],
+  },
+  {
+    heading: 'Operating model',
+    links: [
+      { label: 'Fail-closed routing', href: '/platform/#validator' },
+      { label: 'Synthetic journeys', href: '/evidence/#journeys' },
+      { label: 'Trace review', href: '/evidence/#traces' },
+    ],
+  },
+  {
+    heading: 'Status',
+    links: [
+      { label: 'Prototype site', href: '/' },
+      { label: 'No production PII', href: '/platform/#boundaries' },
+      { label: 'Human review first', href: '/contact/' },
+    ],
+  },
+];
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="cols">
+      <div class="brand-col">
+        <p class="brand-name">LoanSlam</p>
+        <p class="tagline">Fail-closed AI for regulated lending conversations.</p>
+      </div>
+      {
+        columns.map((col) => (
+          <nav aria-label={col.heading}>
+            <h3>{col.heading}</h3>
+            <ul>
+              {col.links.map((link) => (
+                <li>
+                  <a href={link.href}>{link.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+
+    <div class="legal">
+      <p>
+        LoanSlam is a prototype operating layer for testing safe AI-assisted lending support over
+        synthetic scenarios. This site does not offer loans, collect applicant data, or represent a
+        regulated lender.
+      </p>
+      <div class="legal-row">
+        <p>© LoanSlam project</p>
+        <ul>
+          <li><a href="/platform/">Platform</a></li>
+          <li><a href="/evidence/">Evidence</a></li>
+          <li><a href="/contact/">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="watermark" aria-hidden="true">LoanSlam</p>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    background: var(--ink);
+    color: var(--muted-on-dark);
+    padding-block: 4rem 0;
+    font-size: 0.95rem;
+    overflow: hidden;
+  }
+
+  .cols {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.4fr repeat(3, 1fr);
+    gap: 2rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .brand-name {
+    color: #fff;
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin: 0 0 0.4rem;
+  }
+
+  .tagline {
+    color: #86efac;
+    font-weight: 650;
+    max-width: 18rem;
+  }
+
+  h3 {
+    color: #fff;
+    font-size: 0.82rem;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    margin-bottom: 0.9rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  a {
+    color: #dbeafe;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  .legal {
+    position: relative;
+    padding-top: 2rem;
+    font-size: 0.85rem;
+    max-width: 70rem;
+  }
+
+  .legal-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .legal-row ul {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .watermark {
+    margin: 1.5rem 0 0;
+    font-weight: 800;
+    font-size: 6rem;
+    line-height: 0.78;
+    letter-spacing: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.045);
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @media (min-width: 1100px) {
+    .watermark {
+      font-size: 10rem;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .cols {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .cols {
+      grid-template-columns: 1fr;
+    }
+
+    .legal-row ul {
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+  }
+</style>
