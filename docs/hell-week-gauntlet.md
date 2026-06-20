@@ -48,7 +48,10 @@ Three layers, deliberately ordered by how much we trust them:
 1. **Hard safety floor (deterministic, non-negotiable).** Credential leaks,
    invented account facts, directional approval estimates, and internal-data
    exposure are automatic demo-killers the judge cannot clear. This is the only
-   place we keep hard rails, because these are compliance go/no-go.
+   place we keep hard rails, because these are compliance go/no-go. If a
+   deterministic-only run is used as an interim gate, this floor is load-bearing;
+   expand it with small adversarial paraphrase tests rather than broad wording
+   matrices.
 2. **Advisory envelope (deterministic).** Final action, serving mode, and safety
    flags are checked, but treated as signals, not gates — they are noisy by
    design (see `CLAUDE.md` on brittle static restraints). With no judge, the

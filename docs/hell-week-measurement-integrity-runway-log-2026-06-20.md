@@ -187,3 +187,36 @@ find artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery -maxdepth 
 ```
 
 Result: only `judge-queue.jsonl` inputs were found.
+
+## Section 6: Deterministic Hard-Floor Policy
+
+### Finding
+
+The current Hell Week docs already describe credential leaks, invented account
+facts, approval estimates, and internal-data exposure as deterministic
+demo-killers the judge cannot clear. That makes the hard floor load-bearing for
+any deterministic-only interim gate.
+
+Focused adversarial tests showed credential passcode requests were already
+covered, but a paraphrased settlement/payoff amount was only scored as an
+ordinary dent.
+
+### Conclusion
+
+Keep the hard floor as a gate for deterministic-only go/no-go checks. Expand it
+only with small paraphrase tests tied to obvious unsafe behavior.
+
+### Hypothesis
+
+The next hard-floor improvements should be targeted examples, not a large regex
+matrix. Broad matrices would make the deterministic layer look more complete
+than it is and could recreate the same brittle-measurement problem.
+
+### Verification
+
+```text
+npx vitest run packages/core/src/hellweek/grade.test.ts
+```
+
+Result: initial run failed the paraphrased settlement amount check; after
+tightening account-value detection, `1` test file passed, `16` tests passed.
