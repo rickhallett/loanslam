@@ -1,10 +1,5 @@
 set dotenv-load
 
-railway_project := "ac98c962-34e9-4bc8-a7de-daa5b741ef05"
-railway_environment := "production"
-railway_service := "1670d5ea-f5a8-448b-a38f-4ba4bc3cc6fd"
-railway_demo_log_db := "/app/var/demo-interactions.sqlite"
-
 # Show the available Phase 0 operator commands.
 default:
     @just --list
@@ -24,6 +19,18 @@ build:
 # Check formatting without changing files.
 format-check:
     npm run format:check
+
+# Generate the Prisma client from the committed Postgres schema.
+prisma-generate:
+    npx prisma generate
+
+# Apply committed Prisma migrations to the configured Postgres database.
+prisma-migrate-deploy:
+    npx prisma migrate deploy
+
+# Run the Vercel build locally against the configured Neon/Postgres database.
+vercel-build:
+    npm run vercel-build
 
 # Probe one planner-backed turn, e.g. -- --message "How do I apply?"
 core-turn *turn_flags:
@@ -69,7 +76,7 @@ core-serve *server_flags:
 mcp-lab-api:
     @npm --silent run mcp:lab-api
 
-# Summarize stakeholder demo interactions from the local SQLite log.
+# Summarize stakeholder demo interactions from Postgres.
 demo-log-summary *log_flags:
     @npm --silent run core:demo-log -- summary {{log_flags}}
 
@@ -80,63 +87,6 @@ demo-log-session *log_flags:
 # Show one logged stakeholder demo turn, e.g. just demo-log-turn -- conv-ref 2 --full
 demo-log-turn *log_flags:
     @npm --silent run core:demo-log -- turn {{log_flags}}
-
-# Stream Railway HTTP request logs for the stakeholder demo.
-railway-http-logs:
-    railway logs --http --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}}
-
-# Watch Railway HTTP metrics for the stakeholder demo.
-railway-http-metrics:
-    railway metrics --http --watch --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}}
-
-# Group Railway HTTP request logs by source IP. Pass your IP as the second arg if auto-detect is wrong.
-railway-http-by-ip since="24h" mine="auto":
-    @mine='{{mine}}'; \
-      if [ "$mine" = "auto" ]; then mine="$(curl -fsS https://api.ipify.org 2>/dev/null || true)"; fi; \
-      for deployment_id in $(railway deployment list --json --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} | node -e 'const fs=require("node:fs"); for (const deployment of JSON.parse(fs.readFileSync(0, "utf8"))) console.log(deployment.id);'); do \
-        railway logs --http --json --since {{since}} --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} "$deployment_id" || true; \
-      done | node scripts/railway-http-by-ip.mjs --mine "$mine" --query-window "since {{since}}, all listed deployments"
-
-# Refresh the source-IP traffic summary for the stakeholder demo.
-railway-http-by-ip-watch since="24h" interval="10" mine="auto":
-    @mine='{{mine}}'; \
-      if [ "$mine" = "auto" ]; then mine="$(curl -fsS https://api.ipify.org 2>/dev/null || true)"; fi; \
-      while true; do \
-        clear; \
-        date; \
-        for deployment_id in $(railway deployment list --json --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} | node -e 'const fs=require("node:fs"); for (const deployment of JSON.parse(fs.readFileSync(0, "utf8"))) console.log(deployment.id);'); do \
-          railway logs --http --json --since {{since}} --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} "$deployment_id" || true; \
-        done | node scripts/railway-http-by-ip.mjs --mine "$mine" --query-window "since {{since}}, all listed deployments"; \
-        sleep {{interval}}; \
-      done
-
-# Poll recent stakeholder demo interactions from the Railway app volume.
-railway-demo-log-watch limit="20" interval="10":
-    railway ssh --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} -- sh -lc 'while true; do clear; date; npm run -s core:demo-log -- summary --db {{railway_demo_log_db}} --limit {{limit}}; sleep {{interval}}; done'
-
-# Show recent stakeholder demo interactions from the Railway app volume.
-railway-demo-log-summary limit="20":
-    railway ssh --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} -- sh -lc 'npm run -s core:demo-log -- summary --db {{railway_demo_log_db}} --limit {{limit}}'
-
-# Count processed stakeholder demo messages from the Railway app volume.
-railway-demo-message-count:
-    @node scripts/railway-demo-message-notifier.mjs --once --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} --db {{railway_demo_log_db}}
-
-# Send Apple notifications when new stakeholder demo messages are processed.
-railway-demo-message-notify interval="30":
-    @node scripts/railway-demo-message-notifier.mjs --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} --db {{railway_demo_log_db}} --interval {{interval}}
-
-# Send Apple notifications plus iMessages when new stakeholder demo messages are processed.
-railway-demo-message-notify-ios recipient interval="30":
-    @node scripts/railway-demo-message-notifier.mjs --project {{railway_project}} --environment {{railway_environment}} --service {{railway_service}} --db {{railway_demo_log_db}} --interval {{interval}} --imessage-to '{{recipient}}'
-
-# Send a one-off Apple notification to verify macOS permission.
-railway-demo-message-notify-test:
-    @node scripts/railway-demo-message-notifier.mjs --test-notification
-
-# Send a one-off iMessage to verify iOS notification delivery.
-railway-demo-message-notify-ios-test recipient:
-    @node scripts/railway-demo-message-notifier.mjs --test-imessage-to '{{recipient}}'
 
 # Start the lab API on 8787 and Vue console on 5173 together.
 lab:
