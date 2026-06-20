@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:17-alpine
-    container_name: loanslam-postgres
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    container_name: ${POSTGRES_CONTAINER:-loanslam-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-loanslam}
@@ -19,7 +19,8 @@ services:
       timeout: 5s
       retries: 12
     volumes:
-      - loanslam-postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
-  loanslam-postgres-data:
+  postgres-data:
+    name: ${POSTGRES_VOLUME:-loanslam-postgres-data}
