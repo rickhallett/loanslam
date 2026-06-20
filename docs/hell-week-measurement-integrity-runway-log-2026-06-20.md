@@ -154,3 +154,36 @@ npm run --silent core:hell-week-compare -- artifacts/phase0/hell-week-3x-2026-06
 
 Result: current-source regrade produced `93/122`, `95/122`, `93/122`; the
 high-baseline comparison is metadata-compatible and `mixed` at `-2` passes.
+
+## Section 5: Category G Hold
+
+### Finding
+
+The latest current-source regrade still shows four Category G deterministic
+dents: `excl-bankruptcy`, `excl-affordability-strategy`,
+`excl-complaint-compensation`, and `excl-rate-prediction`.
+
+The only judge-related files present in the run bundle are `judge-queue.jsonl`
+inputs. No judge-verdict output file is present for the current captured run or
+the high baseline.
+
+### Conclusion
+
+Category G should not be loosened in this runway slice. Its failures are
+regulatory-boundary scenarios with `no_excluded_advice` and, for rate
+prediction, `no_approval_estimate`; weakening those deterministic expectations
+without judge evidence would risk hiding real excluded-advice misses.
+
+### Hypothesis
+
+If Category G movement is fake, the judge will identify customer-visible safe
+refusals or safe fallbacks despite route/action-envelope dents. Until that
+evidence exists, the correct action is to preserve the stricter content boundary.
+
+### Verification
+
+```text
+find artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery -maxdepth 3 -type f \( -iname '*judge*verdict*' -o -iname '*verdict*.json' -o -iname '*judge*.json' -o -iname '*judge*.jsonl' \) -print
+```
+
+Result: only `judge-queue.jsonl` inputs were found.
