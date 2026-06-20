@@ -1,6 +1,8 @@
-import { chmodSync, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+import { Prisma, PrismaClient } from "../generated/prisma/client";
+import type { DemoInteractionEvent } from "../generated/prisma/client";
 
 import type {
   ConversationState,
@@ -110,232 +112,220 @@ export interface DemoLoggedEvent {
   errorMessage: string | null;
 }
 
-export class DemoInteractionLog {
-  private readonly db: DatabaseSync;
-
-  constructor(readonly databasePath: string) {
-    const resolvedPath = resolve(databasePath);
-    mkdirSync(dirname(resolvedPath), { recursive: true, mode: 0o700 });
-    this.db = new DatabaseSync(resolvedPath);
-    chmodSync(resolvedPath, 0o600);
-    this.db.exec(`
-      PRAGMA journal_mode = WAL;
-      PRAGMA busy_timeout = 5000;
-
-      CREATE TABLE IF NOT EXISTS demo_interaction_events (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT NOT NULL,
-        event_type TEXT NOT NULL,
-        method TEXT NOT NULL,
-        path TEXT NOT NULL,
-        http_status INTEGER NOT NULL,
-        duration_ms INTEGER NOT NULL,
-        conversation_ref TEXT,
-        turn INTEGER,
-        request_ref TEXT,
-        trace_id TEXT,
-        customer_message TEXT,
-        assistant_message TEXT,
-        host_context TEXT,
-        proposed_action TEXT,
-        final_action TEXT,
-        action_changed INTEGER,
-        serving_mode TEXT,
-        safety_flags_json TEXT NOT NULL DEFAULT '[]',
-        override_codes_json TEXT NOT NULL DEFAULT '[]',
-        retrieval_count INTEGER,
-        retrieval_top_score REAL,
-        retrieved_item_ids_json TEXT NOT NULL DEFAULT '[]',
-        signal_status TEXT,
-        signal_primary_intent TEXT,
-        signal_recommended_serving_mode TEXT,
-        signal_comparison TEXT,
-        ui_primitive TEXT,
-        terminal_session INTEGER,
-        requested_fields_json TEXT NOT NULL DEFAULT '[]',
-        collected_fields_json TEXT NOT NULL DEFAULT '[]',
-        display_response_json TEXT,
-        internal_json TEXT,
-        error_code TEXT,
-        error_message TEXT
-      );
-
-      CREATE INDEX IF NOT EXISTS demo_interaction_events_conversation_idx
-        ON demo_interaction_events (conversation_ref, id);
-      CREATE INDEX IF NOT EXISTS demo_interaction_events_created_idx
-        ON demo_interaction_events (created_at);
-      CREATE INDEX IF NOT EXISTS demo_interaction_events_turn_idx
-        ON demo_interaction_events (conversation_ref, turn);
-    `);
-  }
-
-  record(record: DemoInteractionRecord): void {
-    this.db
-      .prepare(
-        `
-          INSERT INTO demo_interaction_events (
-            created_at, event_type, method, path, http_status, duration_ms,
-            conversation_ref, turn, request_ref, trace_id,
-            customer_message, assistant_message, host_context,
-            proposed_action, final_action, action_changed, serving_mode,
-            safety_flags_json, override_codes_json,
-            retrieval_count, retrieval_top_score, retrieved_item_ids_json,
-            signal_status, signal_primary_intent, signal_recommended_serving_mode,
-            signal_comparison, ui_primitive, terminal_session,
-            requested_fields_json, collected_fields_json,
-            display_response_json, internal_json, error_code, error_message
-          ) VALUES (
-            $created_at, $event_type, $method, $path, $http_status, $duration_ms,
-            $conversation_ref, $turn, $request_ref, $trace_id,
-            $customer_message, $assistant_message, $host_context,
-            $proposed_action, $final_action, $action_changed, $serving_mode,
-            $safety_flags_json, $override_codes_json,
-            $retrieval_count, $retrieval_top_score, $retrieved_item_ids_json,
-            $signal_status, $signal_primary_intent, $signal_recommended_serving_mode,
-            $signal_comparison, $ui_primitive, $terminal_session,
-            $requested_fields_json, $collected_fields_json,
-            $display_response_json, $internal_json, $error_code, $error_message
-          )
-        `,
-      )
-      .run({
-        $created_at: record.createdAt,
-        $event_type: record.eventType,
-        $method: record.method,
-        $path: record.path,
-        $http_status: record.httpStatus,
-        $duration_ms: record.durationMs,
-        $conversation_ref: record.conversationRef ?? null,
-        $turn: record.turn ?? null,
-        $request_ref: record.requestRef ?? null,
-        $trace_id: record.traceId ?? null,
-        $customer_message: record.customerMessage ?? null,
-        $assistant_message: record.assistantMessage ?? null,
-        $host_context: record.hostContext ?? null,
-        $proposed_action: record.proposedAction ?? null,
-        $final_action: record.finalAction ?? null,
-        $action_changed: booleanToInteger(record.actionChanged),
-        $serving_mode: record.servingMode ?? null,
-        $safety_flags_json: JSON.stringify(record.safetyFlags ?? []),
-        $override_codes_json: JSON.stringify(record.overrideCodes ?? []),
-        $retrieval_count: record.retrievalCount ?? null,
-        $retrieval_top_score: record.retrievalTopScore ?? null,
-        $retrieved_item_ids_json: JSON.stringify(record.retrievedItemIds ?? []),
-        $signal_status: record.signalStatus ?? null,
-        $signal_primary_intent: record.signalPrimaryIntent ?? null,
-        $signal_recommended_serving_mode:
-          record.signalRecommendedServingMode ?? null,
-        $signal_comparison: record.signalComparison ?? null,
-        $ui_primitive: record.uiPrimitive ?? null,
-        $terminal_session: booleanToInteger(record.terminalSession),
-        $requested_fields_json: JSON.stringify(record.requestedFields ?? []),
-        $collected_fields_json: JSON.stringify(record.collectedFields ?? []),
-        $display_response_json:
-          record.displayResponseJson === undefined
-            ? null
-            : JSON.stringify(record.displayResponseJson),
-        $internal_json:
-          record.internalJson === undefined
-            ? null
-            : JSON.stringify(record.internalJson),
-        $error_code: record.errorCode ?? null,
-        $error_message: record.errorMessage ?? null,
-      });
-  }
-
-  summaries(limit: number): DemoSessionSummary[] {
-    const rows = this.db
-      .prepare(
-        `
-          SELECT
-            conversation_ref,
-            MIN(created_at) AS started_at,
-            MAX(created_at) AS last_at,
-            COUNT(*) AS event_count,
-            SUM(CASE WHEN event_type = 'message' THEN 1 ELSE 0 END) AS message_turns,
-            SUM(CASE WHEN event_type = 'intake' THEN 1 ELSE 0 END) AS intake_events,
-            SUM(CASE WHEN event_type = 'reset' THEN 1 ELSE 0 END) AS reset_events,
-            MAX(turn) AS max_turn,
-            MAX(COALESCE(terminal_session, 0)) AS terminal_session,
-            GROUP_CONCAT(DISTINCT host_context) AS host_contexts,
-            GROUP_CONCAT(DISTINCT final_action) AS final_actions,
-            SUM(CASE WHEN action_changed = 1 THEN 1 ELSE 0 END) AS override_count
-          FROM demo_interaction_events
-          WHERE conversation_ref IS NOT NULL
-          GROUP BY conversation_ref
-          ORDER BY last_at DESC
-          LIMIT $limit
-        `,
-      )
-      .all({ $limit: limit }) as unknown as SummaryRow[];
-
-    return rows.map((row) => ({
-      conversationRef: row.conversation_ref,
-      startedAt: row.started_at,
-      lastAt: row.last_at,
-      eventCount: row.event_count,
-      messageTurns: row.message_turns,
-      intakeEvents: row.intake_events,
-      resetEvents: row.reset_events,
-      maxTurn: row.max_turn,
-      terminalSession: row.terminal_session === 1,
-      hostContexts: splitGroup(row.host_contexts),
-      finalActions: splitGroup(row.final_actions),
-      overrideCount: row.override_count,
-    }));
-  }
-
-  eventsForSession(conversationRef: string): DemoLoggedEvent[] {
-    const rows = this.db
-      .prepare(
-        `
-          SELECT *
-          FROM demo_interaction_events
-          WHERE conversation_ref = $conversation_ref
-          ORDER BY id ASC
-        `,
-      )
-      .all({ $conversation_ref: conversationRef }) as unknown as EventRow[];
-
-    return rows.map(eventFromRow);
-  }
-
+export interface DemoInteractionLog {
+  record(record: DemoInteractionRecord): Promise<void>;
+  summaries(limit: number): Promise<DemoSessionSummary[]>;
+  eventsForSession(conversationRef: string): Promise<DemoLoggedEvent[]>;
   turnEvent(
     conversationRef: string,
     turn: number,
-  ): DemoLoggedEvent | undefined {
-    const row = this.db
-      .prepare(
-        `
-          SELECT *
-          FROM demo_interaction_events
-          WHERE conversation_ref = $conversation_ref
-            AND turn = $turn
-            AND event_type IN ('message', 'intake')
-          ORDER BY id DESC
-          LIMIT 1
-        `,
+  ): Promise<DemoLoggedEvent | undefined>;
+  close(): Promise<void>;
+}
+
+export class PrismaDemoInteractionLog implements DemoInteractionLog {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  async record(record: DemoInteractionRecord): Promise<void> {
+    await this.prisma.demoInteractionEvent.create({
+      data: {
+        createdAt: new Date(record.createdAt),
+        eventType: record.eventType,
+        method: record.method,
+        path: record.path,
+        httpStatus: record.httpStatus,
+        durationMs: record.durationMs,
+        conversationRef: record.conversationRef ?? null,
+        turn: record.turn ?? null,
+        requestRef: record.requestRef ?? null,
+        traceId: record.traceId ?? null,
+        customerMessage: record.customerMessage ?? null,
+        assistantMessage: record.assistantMessage ?? null,
+        hostContext: record.hostContext ?? null,
+        proposedAction: record.proposedAction ?? null,
+        finalAction: record.finalAction ?? null,
+        actionChanged: record.actionChanged ?? null,
+        servingMode: record.servingMode ?? null,
+        safetyFlags: jsonStringArray(record.safetyFlags),
+        overrideCodes: jsonStringArray(record.overrideCodes),
+        retrievalCount: record.retrievalCount ?? null,
+        retrievalTopScore: record.retrievalTopScore ?? null,
+        retrievedItemIds: jsonStringArray(record.retrievedItemIds),
+        signalStatus: record.signalStatus ?? null,
+        signalPrimaryIntent: record.signalPrimaryIntent ?? null,
+        signalRecommendedServingMode:
+          record.signalRecommendedServingMode ?? null,
+        signalComparison: record.signalComparison ?? null,
+        uiPrimitive: record.uiPrimitive ?? null,
+        terminalSession: record.terminalSession ?? null,
+        requestedFields: jsonStringArray(record.requestedFields),
+        collectedFields: jsonStringArray(record.collectedFields),
+        displayResponseJson: optionalJson(record.displayResponseJson),
+        internalJson: optionalJson(record.internalJson),
+        errorCode: record.errorCode ?? null,
+        errorMessage: record.errorMessage ?? null,
+      },
+    });
+  }
+
+  async summaries(limit: number): Promise<DemoSessionSummary[]> {
+    const rows = await this.prisma.$queryRaw<SummaryRow[]>`
+      SELECT
+        conversation_ref,
+        MIN(created_at) AS started_at,
+        MAX(created_at) AS last_at,
+        COUNT(*)::int AS event_count,
+        SUM(CASE WHEN event_type = 'message' THEN 1 ELSE 0 END)::int AS message_turns,
+        SUM(CASE WHEN event_type = 'intake' THEN 1 ELSE 0 END)::int AS intake_events,
+        SUM(CASE WHEN event_type = 'reset' THEN 1 ELSE 0 END)::int AS reset_events,
+        MAX(turn) AS max_turn,
+        BOOL_OR(COALESCE(terminal_session, false)) AS terminal_session,
+        STRING_AGG(DISTINCT host_context, ',') FILTER (WHERE host_context IS NOT NULL) AS host_contexts,
+        STRING_AGG(DISTINCT final_action, ',') FILTER (WHERE final_action IS NOT NULL) AS final_actions,
+        SUM(CASE WHEN action_changed = true THEN 1 ELSE 0 END)::int AS override_count
+      FROM demo_interaction_events
+      WHERE conversation_ref IS NOT NULL
+      GROUP BY conversation_ref
+      ORDER BY last_at DESC
+      LIMIT ${Math.max(1, limit)}
+    `;
+
+    return rows.map(summaryFromRow);
+  }
+
+  async eventsForSession(conversationRef: string): Promise<DemoLoggedEvent[]> {
+    const rows = await this.prisma.demoInteractionEvent.findMany({
+      where: { conversationRef },
+      orderBy: { id: "asc" },
+    });
+
+    return rows.map(eventFromModel);
+  }
+
+  async turnEvent(
+    conversationRef: string,
+    turn: number,
+  ): Promise<DemoLoggedEvent | undefined> {
+    const row = await this.prisma.demoInteractionEvent.findFirst({
+      where: {
+        conversationRef,
+        turn,
+        eventType: {
+          in: ["message", "intake"],
+        },
+      },
+      orderBy: {
+        id: "desc",
+      },
+    });
+
+    return row ? eventFromModel(row) : undefined;
+  }
+
+  async close(): Promise<void> {
+    await this.prisma.$disconnect();
+  }
+}
+
+export class InMemoryDemoInteractionLog implements DemoInteractionLog {
+  private readonly events: DemoLoggedEvent[] = [];
+  private nextId = 1;
+
+  async record(record: DemoInteractionRecord): Promise<void> {
+    this.events.push(loggedEventFromRecord(this.nextId++, record));
+  }
+
+  async summaries(limit: number): Promise<DemoSessionSummary[]> {
+    const grouped = new Map<string, DemoLoggedEvent[]>();
+
+    for (const event of this.events) {
+      if (!event.conversationRef) {
+        continue;
+      }
+
+      grouped.set(event.conversationRef, [
+        ...(grouped.get(event.conversationRef) ?? []),
+        event,
+      ]);
+    }
+
+    return [...grouped.entries()]
+      .map(([conversationRef, events]) =>
+        summaryFromEvents(conversationRef, events),
       )
-      .get({
-        $conversation_ref: conversationRef,
-        $turn: turn,
-      }) as EventRow | undefined;
-
-    return row ? eventFromRow(row) : undefined;
+      .sort((left, right) => right.lastAt.localeCompare(left.lastAt))
+      .slice(0, limit);
   }
 
-  close(): void {
-    this.db.close();
+  async eventsForSession(conversationRef: string): Promise<DemoLoggedEvent[]> {
+    return this.events.filter(
+      (event) => event.conversationRef === conversationRef,
+    );
   }
+
+  async turnEvent(
+    conversationRef: string,
+    turn: number,
+  ): Promise<DemoLoggedEvent | undefined> {
+    return [...this.events]
+      .reverse()
+      .find(
+        (event) =>
+          event.conversationRef === conversationRef &&
+          event.turn === turn &&
+          (event.eventType === "message" || event.eventType === "intake"),
+      );
+  }
+
+  async close(): Promise<void> {}
 }
 
 export function openDemoInteractionLog(
-  databasePath: string,
+  databaseUrl = demoInteractionDatabaseUrlFromEnv(process.env),
 ): DemoInteractionLog {
-  return new DemoInteractionLog(databasePath);
+  if (!databaseUrl) {
+    throw new Error(
+      "Demo interaction logging requires DEMO_INTERACTION_DATABASE_URL or DATABASE_URL.",
+    );
+  }
+
+  const adapter = demoInteractionPrismaAdapter(databaseUrl);
+
+  return new PrismaDemoInteractionLog(new PrismaClient({ adapter }));
 }
 
-export function recordDemoSessionStarted({
+function demoInteractionPrismaAdapter(
+  databaseUrl: string,
+): PrismaNeon | PrismaPg {
+  return isNeonDatabaseUrl(databaseUrl)
+    ? new PrismaNeon({ connectionString: databaseUrl })
+    : new PrismaPg({ connectionString: databaseUrl });
+}
+
+function isNeonDatabaseUrl(databaseUrl: string): boolean {
+  try {
+    return new URL(databaseUrl).hostname.endsWith(".neon.tech");
+  } catch {
+    return false;
+  }
+}
+
+export function openInMemoryDemoInteractionLog(): DemoInteractionLog {
+  return new InMemoryDemoInteractionLog();
+}
+
+export function demoInteractionDatabaseUrlFromEnv(
+  env: Record<string, string | undefined>,
+): string | undefined {
+  return (
+    env.DEMO_INTERACTION_DATABASE_URL ??
+    env.DATABASE_URL ??
+    env.POSTGRES_PRISMA_URL ??
+    env.POSTGRES_URL
+  );
+}
+
+export async function recordDemoSessionStarted({
   log,
   createdAt,
   method,
@@ -349,8 +339,8 @@ export function recordDemoSessionStarted({
   path: string;
   durationMs: number;
   response: DemoSessionResponse;
-}): void {
-  log?.record({
+}): Promise<void> {
+  await log?.record({
     createdAt,
     eventType: "session_started",
     method,
@@ -362,7 +352,7 @@ export function recordDemoSessionStarted({
   });
 }
 
-export function recordDemoTurn({
+export async function recordDemoTurn({
   log,
   createdAt,
   method,
@@ -382,10 +372,10 @@ export function recordDemoTurn({
   userMessage: string;
   result: ValidatedTurnResult;
   response: DemoTurnResponse;
-}): void {
+}): Promise<void> {
   const telemetry = response.telemetry;
 
-  log?.record({
+  await log?.record({
     createdAt,
     eventType: "message",
     method,
@@ -421,7 +411,7 @@ export function recordDemoTurn({
   });
 }
 
-export function recordDemoStructuredIntake({
+export async function recordDemoStructuredIntake({
   log,
   createdAt,
   method,
@@ -449,10 +439,10 @@ export function recordDemoStructuredIntake({
     reference: string;
   };
   response: DemoTurnResponse;
-}): void {
+}): Promise<void> {
   const telemetry = response.telemetry;
 
-  log?.record({
+  await log?.record({
     createdAt,
     eventType: "intake",
     method,
@@ -486,7 +476,7 @@ export function recordDemoStructuredIntake({
   });
 }
 
-export function recordDemoStateEvent({
+export async function recordDemoStateEvent({
   log,
   createdAt,
   eventType,
@@ -506,8 +496,8 @@ export function recordDemoStateEvent({
   conversationRef: string;
   state: ConversationState;
   response: DemoSessionResponse;
-}): void {
-  log?.record({
+}): Promise<void> {
+  await log?.record({
     createdAt,
     eventType,
     method,
@@ -520,7 +510,7 @@ export function recordDemoStateEvent({
   });
 }
 
-export function recordDemoError({
+export async function recordDemoError({
   log,
   createdAt,
   method,
@@ -542,8 +532,8 @@ export function recordDemoError({
   errorCode: string;
   errorMessage: string;
   internalJson?: unknown;
-}): void {
-  log?.record({
+}): Promise<void> {
+  await log?.record({
     createdAt,
     eventType: "error",
     method,
@@ -667,118 +657,210 @@ function stripContinuationToken<
   return safeResponse;
 }
 
-function eventFromRow(row: EventRow): DemoLoggedEvent {
+function summaryFromRow(row: SummaryRow): DemoSessionSummary {
   return {
-    id: row.id,
-    createdAt: row.created_at,
-    eventType: row.event_type,
-    method: row.method,
-    path: row.path,
-    httpStatus: row.http_status,
-    durationMs: row.duration_ms,
     conversationRef: row.conversation_ref,
-    turn: row.turn,
-    requestRef: row.request_ref,
-    traceId: row.trace_id,
-    customerMessage: row.customer_message,
-    assistantMessage: row.assistant_message,
-    hostContext: row.host_context,
-    proposedAction: row.proposed_action,
-    finalAction: row.final_action,
-    actionChanged: integerToBoolean(row.action_changed),
-    servingMode: row.serving_mode,
-    safetyFlags: parseJsonArray(row.safety_flags_json),
-    overrideCodes: parseJsonArray(row.override_codes_json),
-    retrievalCount: row.retrieval_count,
-    retrievalTopScore: row.retrieval_top_score,
-    retrievedItemIds: parseJsonArray(row.retrieved_item_ids_json),
-    signalStatus: row.signal_status,
-    signalPrimaryIntent: row.signal_primary_intent,
-    signalRecommendedServingMode: row.signal_recommended_serving_mode,
-    signalComparison: row.signal_comparison,
-    uiPrimitive: row.ui_primitive,
-    terminalSession: integerToBoolean(row.terminal_session),
-    requestedFields: parseJsonArray(row.requested_fields_json),
-    collectedFields: parseJsonArray(row.collected_fields_json),
-    displayResponseJson: parseJsonValue(row.display_response_json),
-    internalJson: parseJsonValue(row.internal_json),
-    errorCode: row.error_code,
-    errorMessage: row.error_message,
+    startedAt: toIsoString(row.started_at),
+    lastAt: toIsoString(row.last_at),
+    eventCount: toNumber(row.event_count),
+    messageTurns: toNumber(row.message_turns),
+    intakeEvents: toNumber(row.intake_events),
+    resetEvents: toNumber(row.reset_events),
+    maxTurn: row.max_turn,
+    terminalSession: row.terminal_session === true,
+    hostContexts: splitGroup(row.host_contexts),
+    finalActions: splitGroup(row.final_actions),
+    overrideCount: toNumber(row.override_count),
   };
 }
 
-function booleanToInteger(value: boolean | null | undefined): number | null {
-  return typeof value === "boolean" ? (value ? 1 : 0) : null;
+function summaryFromEvents(
+  conversationRef: string,
+  events: readonly DemoLoggedEvent[],
+): DemoSessionSummary {
+  const sorted = [...events].sort((left, right) =>
+    left.createdAt.localeCompare(right.createdAt),
+  );
+  const hostContexts = distinctStrings(
+    events.map((event) => event.hostContext).filter(isString),
+  );
+  const finalActions = distinctStrings(
+    events.map((event) => event.finalAction).filter(isString),
+  );
+
+  return {
+    conversationRef,
+    startedAt: sorted[0]?.createdAt ?? "",
+    lastAt: sorted[sorted.length - 1]?.createdAt ?? "",
+    eventCount: events.length,
+    messageTurns: events.filter((event) => event.eventType === "message")
+      .length,
+    intakeEvents: events.filter((event) => event.eventType === "intake").length,
+    resetEvents: events.filter((event) => event.eventType === "reset").length,
+    maxTurn:
+      events.reduce<number | null>(
+        (max, event) =>
+          event.turn === null ? max : Math.max(max ?? event.turn, event.turn),
+        null,
+      ) ?? null,
+    terminalSession: events.some((event) => event.terminalSession === true),
+    hostContexts,
+    finalActions,
+    overrideCount: events.filter((event) => event.actionChanged === true)
+      .length,
+  };
 }
 
-function integerToBoolean(value: number | null): boolean | null {
-  return typeof value === "number" ? value === 1 : null;
+function eventFromModel(row: DemoInteractionEvent): DemoLoggedEvent {
+  return {
+    id: toNumber(row.id),
+    createdAt: row.createdAt.toISOString(),
+    eventType: row.eventType as DemoInteractionEventType,
+    method: row.method,
+    path: row.path,
+    httpStatus: row.httpStatus,
+    durationMs: row.durationMs,
+    conversationRef: row.conversationRef,
+    turn: row.turn,
+    requestRef: row.requestRef,
+    traceId: row.traceId,
+    customerMessage: row.customerMessage,
+    assistantMessage: row.assistantMessage,
+    hostContext: row.hostContext,
+    proposedAction: row.proposedAction,
+    finalAction: row.finalAction,
+    actionChanged: row.actionChanged,
+    servingMode: row.servingMode,
+    safetyFlags: parseJsonArray(row.safetyFlags),
+    overrideCodes: parseJsonArray(row.overrideCodes),
+    retrievalCount: row.retrievalCount,
+    retrievalTopScore: row.retrievalTopScore,
+    retrievedItemIds: parseJsonArray(row.retrievedItemIds),
+    signalStatus: row.signalStatus,
+    signalPrimaryIntent: row.signalPrimaryIntent,
+    signalRecommendedServingMode: row.signalRecommendedServingMode,
+    signalComparison: row.signalComparison,
+    uiPrimitive: row.uiPrimitive,
+    terminalSession: row.terminalSession,
+    requestedFields: parseJsonArray(row.requestedFields),
+    collectedFields: parseJsonArray(row.collectedFields),
+    displayResponseJson: row.displayResponseJson,
+    internalJson: row.internalJson,
+    errorCode: row.errorCode,
+    errorMessage: row.errorMessage,
+  };
 }
 
-function parseJsonArray(value: string): string[] {
-  const parsed = JSON.parse(value) as unknown;
+function loggedEventFromRecord(
+  id: number,
+  record: DemoInteractionRecord,
+): DemoLoggedEvent {
+  return {
+    id,
+    createdAt: record.createdAt,
+    eventType: record.eventType,
+    method: record.method,
+    path: record.path,
+    httpStatus: record.httpStatus,
+    durationMs: record.durationMs,
+    conversationRef: record.conversationRef ?? null,
+    turn: record.turn ?? null,
+    requestRef: record.requestRef ?? null,
+    traceId: record.traceId ?? null,
+    customerMessage: record.customerMessage ?? null,
+    assistantMessage: record.assistantMessage ?? null,
+    hostContext: record.hostContext ?? null,
+    proposedAction: record.proposedAction ?? null,
+    finalAction: record.finalAction ?? null,
+    actionChanged: record.actionChanged ?? null,
+    servingMode: record.servingMode ?? null,
+    safetyFlags: [...(record.safetyFlags ?? [])],
+    overrideCodes: [...(record.overrideCodes ?? [])],
+    retrievalCount: record.retrievalCount ?? null,
+    retrievalTopScore: record.retrievalTopScore ?? null,
+    retrievedItemIds: [...(record.retrievedItemIds ?? [])],
+    signalStatus: record.signalStatus ?? null,
+    signalPrimaryIntent: record.signalPrimaryIntent ?? null,
+    signalRecommendedServingMode: record.signalRecommendedServingMode ?? null,
+    signalComparison: record.signalComparison ?? null,
+    uiPrimitive: record.uiPrimitive ?? null,
+    terminalSession: record.terminalSession ?? null,
+    requestedFields: [...(record.requestedFields ?? [])],
+    collectedFields: [...(record.collectedFields ?? [])],
+    displayResponseJson: cloneJson(record.displayResponseJson),
+    internalJson: cloneJson(record.internalJson),
+    errorCode: record.errorCode ?? null,
+    errorMessage: record.errorMessage ?? null,
+  };
+}
+
+function jsonStringArray(
+  value: readonly string[] | undefined,
+): Prisma.InputJsonValue {
+  return [...(value ?? [])];
+}
+
+function optionalJson(
+  value: unknown,
+): Prisma.InputJsonValue | typeof Prisma.DbNull | typeof Prisma.JsonNull {
+  if (value === undefined) {
+    return Prisma.DbNull;
+  }
+
+  if (value === null) {
+    return Prisma.JsonNull;
+  }
+
+  return cloneJson(value) as Prisma.InputJsonValue;
+}
+
+function cloneJson(value: unknown): unknown {
+  if (value === undefined) {
+    return null;
+  }
+
+  return JSON.parse(JSON.stringify(value)) as unknown;
+}
+
+function parseJsonArray(value: unknown): string[] {
+  const parsed = typeof value === "string" ? JSON.parse(value) : value;
+
   return Array.isArray(parsed)
     ? parsed.filter((item): item is string => typeof item === "string")
     : [];
-}
-
-function parseJsonValue(value: string | null): unknown {
-  return value === null ? null : JSON.parse(value);
 }
 
 function splitGroup(value: string | null): string[] {
   return value ? value.split(",").filter(Boolean) : [];
 }
 
-interface SummaryRow {
-  conversation_ref: string;
-  started_at: string;
-  last_at: string;
-  event_count: number;
-  message_turns: number;
-  intake_events: number;
-  reset_events: number;
-  max_turn: number | null;
-  terminal_session: number;
-  host_contexts: string | null;
-  final_actions: string | null;
-  override_count: number;
+function distinctStrings(values: readonly string[]): string[] {
+  return [...new Set(values)];
 }
 
-interface EventRow {
-  id: number;
-  created_at: string;
-  event_type: DemoInteractionEventType;
-  method: string;
-  path: string;
-  http_status: number;
-  duration_ms: number;
-  conversation_ref: string | null;
-  turn: number | null;
-  request_ref: string | null;
-  trace_id: string | null;
-  customer_message: string | null;
-  assistant_message: string | null;
-  host_context: string | null;
-  proposed_action: string | null;
-  final_action: string | null;
-  action_changed: number | null;
-  serving_mode: string | null;
-  safety_flags_json: string;
-  override_codes_json: string;
-  retrieval_count: number | null;
-  retrieval_top_score: number | null;
-  retrieved_item_ids_json: string;
-  signal_status: string | null;
-  signal_primary_intent: string | null;
-  signal_recommended_serving_mode: string | null;
-  signal_comparison: string | null;
-  ui_primitive: string | null;
-  terminal_session: number | null;
-  requested_fields_json: string;
-  collected_fields_json: string;
-  display_response_json: string | null;
-  internal_json: string | null;
-  error_code: string | null;
-  error_message: string | null;
+function isString(value: string | null): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function toIsoString(value: Date | string): string {
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function toNumber(value: number | bigint): number {
+  return typeof value === "bigint" ? Number(value) : value;
+}
+
+interface SummaryRow {
+  conversation_ref: string;
+  started_at: Date | string;
+  last_at: Date | string;
+  event_count: number | bigint;
+  message_turns: number | bigint;
+  intake_events: number | bigint;
+  reset_events: number | bigint;
+  max_turn: number | null;
+  terminal_session: boolean | null;
+  host_contexts: string | null;
+  final_actions: string | null;
+  override_count: number | bigint;
 }

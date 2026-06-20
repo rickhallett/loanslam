@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { openDemoInteractionLog } from "./demoInteractionLog";
+import { openInMemoryDemoInteractionLog } from "./demoInteractionLog";
 import { createLabServer } from "./server";
 
 const corpus: CorpusItem[] = [
@@ -218,21 +218,18 @@ describe("lab server", () => {
   });
 
   it("logs demo endpoint decision receipts for owner queries", async () => {
-    const databasePath = tempDatabasePath();
+    const log = openInMemoryDemoInteractionLog();
     const baseUrl = await startTestServer({
       enableTrustedLabRoutes: false,
       demoStateTokenSecret: "test-demo-secret",
-      demoInteractionLog: openDemoInteractionLog(databasePath),
+      demoInteractionLog: log,
     });
     const created = await postJson(`${baseUrl}/demo/sessions`, {});
     const turn = await postJson(`${baseUrl}/demo/sessions/id-1/messages`, {
       message: "Can I apply online?",
       continuationToken: created.body.continuationToken,
     });
-    const log = openDemoInteractionLog(databasePath);
-    const event = log.turnEvent("id-1", 1);
-
-    log.close();
+    const event = await log.turnEvent("id-1", 1);
 
     expect(turn.status).toBe(200);
     expect(event).toMatchObject({
@@ -348,12 +345,6 @@ function sequenceIds(): () => string {
   let next = 0;
 
   return () => `id-${++next}`;
-}
-
-function tempDatabasePath(): string {
-  const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-server-log-"));
-  tempDirs.push(dir);
-  return join(dir, "demo.sqlite");
 }
 
 function tempStaticAssets(): { hostRoot: string; widgetRoot: string } {

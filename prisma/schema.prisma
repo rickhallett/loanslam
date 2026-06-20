@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../packages/core/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model DemoInteractionEvent {
+  id                           BigInt   @id @default(autoincrement())
+  createdAt                    DateTime @map("created_at") @db.Timestamptz
+  eventType                    String   @map("event_type") @db.Text
+  method                       String   @db.Text
+  path                         String   @db.Text
+  httpStatus                   Int      @map("http_status")
+  durationMs                   Int      @map("duration_ms")
+  conversationRef              String?  @map("conversation_ref") @db.Text
+  turn                         Int?
+  requestRef                   String?  @map("request_ref") @db.Text
+  traceId                      String?  @map("trace_id") @db.Text
+  customerMessage              String?  @map("customer_message") @db.Text
+  assistantMessage             String?  @map("assistant_message") @db.Text
+  hostContext                  String?  @map("host_context") @db.Text
+  proposedAction               String?  @map("proposed_action") @db.Text
+  finalAction                  String?  @map("final_action") @db.Text
+  actionChanged                Boolean? @map("action_changed")
+  servingMode                  String?  @map("serving_mode") @db.Text
+  safetyFlags                  Json     @default("[]") @map("safety_flags_json")
+  overrideCodes                Json     @default("[]") @map("override_codes_json")
+  retrievalCount               Int?     @map("retrieval_count")
+  retrievalTopScore            Float?   @map("retrieval_top_score")
+  retrievedItemIds             Json     @default("[]") @map("retrieved_item_ids_json")
+  signalStatus                 String?  @map("signal_status") @db.Text
+  signalPrimaryIntent          String?  @map("signal_primary_intent") @db.Text
+  signalRecommendedServingMode String?  @map("signal_recommended_serving_mode") @db.Text
+  signalComparison             String?  @map("signal_comparison") @db.Text
+  uiPrimitive                  String?  @map("ui_primitive") @db.Text
+  terminalSession              Boolean? @map("terminal_session")
+  requestedFields              Json     @default("[]") @map("requested_fields_json")
+  collectedFields              Json     @default("[]") @map("collected_fields_json")
+  displayResponseJson          Json?    @map("display_response_json")
+  internalJson                 Json?    @map("internal_json")
+  errorCode                    String?  @map("error_code") @db.Text
+  errorMessage                 String?  @map("error_message") @db.Text
+
+  @@index([conversationRef, id], map: "demo_interaction_events_conversation_idx")
+  @@index([createdAt], map: "demo_interaction_events_created_idx")
+  @@index([conversationRef, turn], map: "demo_interaction_events_turn_idx")
+  @@map("demo_interaction_events")
+}

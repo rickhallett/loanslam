@@ -1,36 +1,23 @@
-import { mkdtempSync, rmSync, statSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
 import type {
   DemoTurnResponse,
   ValidatedTurnResult,
 } from "@loanslam/contracts";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   formatDemoLoggedEvent,
   formatDemoLogSession,
   formatDemoLogSummary,
-  openDemoInteractionLog,
+  openInMemoryDemoInteractionLog,
   recordDemoSessionStarted,
   recordDemoTurn,
 } from "./demoInteractionLog";
 
-const tempDirs: string[] = [];
-
-afterEach(() => {
-  for (const dir of tempDirs.splice(0)) {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
 describe("demo interaction log", () => {
-  it("stores queryable receipts and owner-only internal trace details", () => {
-    const databasePath = tempDatabasePath();
-    const log = openDemoInteractionLog(databasePath);
+  it("stores queryable receipts and owner-only internal trace details", async () => {
+    const log = openInMemoryDemoInteractionLog();
 
-    recordDemoSessionStarted({
+    await recordDemoSessionStarted({
       log,
       createdAt: "2026-06-16T12:00:00.000Z",
       method: "POST",
@@ -41,7 +28,7 @@ describe("demo interaction log", () => {
         continuationToken: "token-secret",
       },
     });
-    recordDemoTurn({
+    await recordDemoTurn({
       log,
       createdAt: "2026-06-16T12:00:03.000Z",
       method: "POST",
@@ -53,14 +40,12 @@ describe("demo interaction log", () => {
       response: demoTurnResponseFixture(),
     });
 
-    const summaries = log.summaries(10);
-    const events = log.eventsForSession("conv-1");
-    const turn = log.turnEvent("conv-1", 1);
-    const permissions = statSync(databasePath).mode & 0o777;
+    const summaries = await log.summaries(10);
+    const events = await log.eventsForSession("conv-1");
+    const turn = await log.turnEvent("conv-1", 1);
 
-    log.close();
+    await log.close();
 
-    expect(permissions).toBe(0o600);
     expect(summaries).toEqual([
       expect.objectContaining({
         conversationRef: "conv-1",
@@ -105,12 +90,6 @@ describe("demo interaction log", () => {
     ).toContain("trace-secret");
   });
 });
-
-function tempDatabasePath(): string {
-  const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-log-"));
-  tempDirs.push(dir);
-  return join(dir, "demo.sqlite");
-}
 
 function demoTurnResponseFixture(): DemoTurnResponse {
   return {

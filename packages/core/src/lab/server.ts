@@ -108,7 +108,7 @@ export function createLabServer({
       const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
 
       if (pathname.startsWith("/demo/")) {
-        recordDemoError({
+        await recordDemoError({
           log: demoInteractionLog,
           createdAt: new Date().toISOString(),
           method,
@@ -133,7 +133,9 @@ export function createLabServer({
       });
     }
   });
-  server.on("close", () => demoInteractionLog?.close());
+  server.on("close", () => {
+    void demoInteractionLog?.close();
+  });
 
   return server;
 }
@@ -450,7 +452,7 @@ async function handleDemoRequest({
       traces: [],
       demoStateTokenSecret,
     });
-    recordDemoSessionStarted({
+    await recordDemoSessionStarted({
       log: demoInteractionLog,
       createdAt,
       method,
@@ -473,7 +475,7 @@ async function handleDemoRequest({
     }
 
     if (typeof body.message !== "string" || body.message.trim() === "") {
-      recordDemoError({
+      await recordDemoError({
         log: demoInteractionLog,
         createdAt,
         method,
@@ -527,7 +529,7 @@ async function handleDemoRequest({
       turn,
       continuationToken: persisted.continuationToken,
     });
-    recordDemoTurn({
+    await recordDemoTurn({
       log: demoInteractionLog,
       createdAt,
       method,
@@ -572,7 +574,7 @@ async function handleDemoRequest({
       traces: [],
       demoStateTokenSecret,
     });
-    recordDemoStateEvent({
+    await recordDemoStateEvent({
       log: demoInteractionLog,
       createdAt,
       eventType: "reset",
@@ -612,7 +614,7 @@ async function handleDemoRequest({
     const validation = validateIntakeBody(body);
 
     if (!validation.ok) {
-      recordDemoError({
+      await recordDemoError({
         log: demoInteractionLog,
         createdAt,
         method,
@@ -655,7 +657,7 @@ async function handleDemoRequest({
       turn,
       continuationToken: persisted.continuationToken,
     });
-    recordDemoStructuredIntake({
+    await recordDemoStructuredIntake({
       log: demoInteractionLog,
       createdAt,
       method,
@@ -703,7 +705,7 @@ async function handleDemoRequest({
       traces: session.traces,
       demoStateTokenSecret,
     });
-    recordDemoStateEvent({
+    await recordDemoStateEvent({
       log: demoInteractionLog,
       createdAt,
       eventType: "cancel_handoff",

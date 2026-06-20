@@ -26,7 +26,7 @@ items:
         an explicitly server-owned equivalent.
       - Demo access control and source-map suppression are verified before the
         URL is shared.
-      - Demo endpoints write owner-only SQLite interaction receipts that can be
+      - Demo endpoints write owner-only Postgres interaction receipts that can be
         queried by summary, conversation, or turn without exposing them to the
         browser.
       - Focused mapper/API/widget tests, typecheck, and build checks pass.

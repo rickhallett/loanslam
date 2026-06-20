@@ -69,7 +69,8 @@ type PlannerFactory = () => TurnPlanner & {
 type CliEnv = Record<string, string | undefined>;
 
 const defaultTraceDir = "artifacts/phase0";
-const defaultDemoInteractionLogPath = "var/demo-interactions.sqlite";
+const demoInteractionDatabaseUrlHelp =
+  "DEMO_INTERACTION_DATABASE_URL or DATABASE_URL";
 
 export async function runCli(
   args = process.argv.slice(2),
@@ -155,6 +156,15 @@ function signalExtractorInput(
   signalExtractor: OpenAiSignalExtractor | undefined,
 ): { signalExtractor?: OpenAiSignalExtractor } {
   return signalExtractor ? { signalExtractor } : {};
+}
+
+function readDemoInteractionDatabaseUrl(env: CliEnv): string | undefined {
+  return (
+    env.DEMO_INTERACTION_DATABASE_URL ??
+    env.DATABASE_URL ??
+    env.POSTGRES_PRISMA_URL ??
+    env.POSTGRES_URL
+  );
 }
 
 async function runTurn(
@@ -606,11 +616,11 @@ async function runServer(
     (demoOnly ? randomUUID() : undefined);
   const demoAccessToken =
     readOption(normalizedArgs, "--demo-access-token") ?? env.DEMO_ACCESS_TOKEN;
-  const demoInteractionLogPath = normalizedArgs.includes("--no-demo-log")
+  const demoInteractionLogDisabled = normalizedArgs.includes("--no-demo-log");
+  const demoInteractionDatabaseUrl = demoInteractionLogDisabled
     ? undefined
-    : (readOption(normalizedArgs, "--demo-log-path") ??
-      env.DEMO_INTERACTION_LOG_PATH ??
-      (demoOnly ? defaultDemoInteractionLogPath : undefined));
+    : (readOption(normalizedArgs, "--demo-log-database-url") ??
+      readDemoInteractionDatabaseUrl(env));
   const demoStaticHostRoot =
     readOption(normalizedArgs, "--demo-static-host-root") ??
     env.DEMO_STATIC_HOST_ROOT;
@@ -622,9 +632,15 @@ async function runServer(
     return fail("--port must be a positive integer.");
   }
 
-  const demoInteractionLog = demoInteractionLogPath
+  if (demoOnly && !demoInteractionLogDisabled && !demoInteractionDatabaseUrl) {
+    return fail(
+      `Demo interaction logging requires ${demoInteractionDatabaseUrlHelp}. Pass --no-demo-log to disable owner logging locally.`,
+    );
+  }
+
+  const demoInteractionLog = demoInteractionDatabaseUrl
     ? (await import("./lab/demoInteractionLog")).openDemoInteractionLog(
-        demoInteractionLogPath,
+        demoInteractionDatabaseUrl,
       )
     : undefined;
 
@@ -671,24 +687,24 @@ async function runDemoLog(args: string[], env: CliEnv): Promise<CliResult> {
     formatDemoLogSession,
     formatDemoLogSummary,
   } = await import("./lab/demoInteractionLog");
-  const log = openDemoInteractionLog(parsed.databasePath);
+  const log = openDemoInteractionLog(parsed.databaseUrl);
 
   try {
     if (parsed.command === "summary") {
-      return ok(formatDemoLogSummary(log.summaries(parsed.limit)));
+      return ok(formatDemoLogSummary(await log.summaries(parsed.limit)));
     }
 
     if (parsed.command === "session") {
       return ok(
         formatDemoLogSession({
-          events: log.eventsForSession(parsed.conversationRef),
+          events: await log.eventsForSession(parsed.conversationRef),
           includeFullInternal: parsed.full,
         }),
       );
     }
 
     if (parsed.command === "turn") {
-      const event = log.turnEvent(parsed.conversationRef, parsed.turn);
+      const event = await log.turnEvent(parsed.conversationRef, parsed.turn);
 
       return ok(
         event
@@ -702,7 +718,7 @@ async function runDemoLog(args: string[], env: CliEnv): Promise<CliResult> {
 
     return fail(demoLogHelpText());
   } finally {
-    log.close();
+    await log.close();
   }
 }
 
@@ -726,21 +742,21 @@ interface RouteAuditCliArgs {
 type DemoLogCliArgs =
   | {
       command: "summary";
-      databasePath: string;
+      databaseUrl: string;
       limit: number;
       full: boolean;
       help: boolean;
     }
   | {
       command: "session";
-      databasePath: string;
+      databaseUrl: string;
       conversationRef: string;
       full: boolean;
       help: boolean;
     }
   | {
       command: "turn";
-      databasePath: string;
+      databaseUrl: string;
       conversationRef: string;
       turn: number;
       full: boolean;
@@ -748,7 +764,7 @@ type DemoLogCliArgs =
     }
   | {
       command: "help";
-      databasePath: string;
+      databaseUrl: string;
       full: boolean;
       help: true;
     };
@@ -877,10 +893,10 @@ function parseRouteAuditArgs(args: string[]): RouteAuditCliArgs {
 
 function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
   const normalizedArgs = stripOptionSeparator(args);
-  const databasePath =
+  const databaseUrl =
+    readOption(normalizedArgs, "--database-url") ??
     readOption(normalizedArgs, "--db") ??
-    env.DEMO_INTERACTION_LOG_PATH ??
-    defaultDemoInteractionLogPath;
+    readDemoInteractionDatabaseUrl(env);
   const full = normalizedArgs.includes("--full");
   const help =
     normalizedArgs.includes("--help") ||
@@ -892,10 +908,16 @@ function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
   if (help || !command) {
     return {
       command: "help",
-      databasePath,
+      databaseUrl: databaseUrl ?? "",
       full,
       help: true,
     };
+  }
+
+  if (!databaseUrl) {
+    throw new Error(
+      `demo-log requires --database-url or ${demoInteractionDatabaseUrlHelp}.`,
+    );
   }
 
   if (command === "summary") {
@@ -908,7 +930,7 @@ function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
 
     return {
       command,
-      databasePath,
+      databaseUrl,
       limit,
       full,
       help: false,
@@ -924,7 +946,7 @@ function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
 
     return {
       command,
-      databasePath,
+      databaseUrl,
       conversationRef,
       full,
       help: false,
@@ -945,7 +967,7 @@ function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
 
     return {
       command,
-      databasePath,
+      databaseUrl,
       conversationRef,
       turn,
       full,
@@ -964,6 +986,7 @@ function positionalDemoLogArgs(args: readonly string[]): string[] {
 
     if (
       arg === "--db" ||
+      arg === "--database-url" ||
       arg === "--limit" ||
       arg === "--" ||
       arg === undefined
@@ -1192,7 +1215,7 @@ function serverHelpText(): string {
     "  --demo-only                  Mount only demo-safe /demo routes",
     "  --demo-state-token-secret s  Seal demo state into opaque continuation tokens",
     "  --demo-access-token s        Require a bearer or x-demo-access-token value on /demo routes",
-    "  --demo-log-path p            Write VPS-local owner logs (default in demo-only: var/demo-interactions.sqlite)",
+    "  --demo-log-database-url u    Write owner logs to Postgres (default: DEMO_INTERACTION_DATABASE_URL or DATABASE_URL)",
     "  --demo-static-host-root p     Serve the stakeholder host page from this built asset root",
     "  --demo-static-widget-root p   Serve the stakeholder widget from this built asset root",
     "  --no-demo-log                Disable demo interaction logging",
@@ -1206,15 +1229,15 @@ function demoLogHelpText(): string {
     "LoanSlam stakeholder demo interaction log",
     "",
     "Usage:",
-    "  demo-log summary [--db <path>] [--limit <n>]",
-    "  demo-log session <conversationRef> [--db <path>] [--full]",
-    "  demo-log turn <conversationRef> <turn> [--db <path>] [--full]",
+    "  demo-log summary [--database-url <url>] [--limit <n>]",
+    "  demo-log session <conversationRef> [--database-url <url>] [--full]",
+    "  demo-log turn <conversationRef> <turn> [--database-url <url>] [--full]",
     "",
-    "Default DB:",
-    `  ${defaultDemoInteractionLogPath}`,
+    "Default database URL:",
+    `  ${demoInteractionDatabaseUrlHelp}`,
     "",
     "The default view prints query-friendly decision receipts. Use --full for",
-    "owner-only internal JSON stored on the server-side SQLite database.",
+    "owner-only internal JSON stored in the server-side Postgres database.",
   ].join("\n");
 }
 

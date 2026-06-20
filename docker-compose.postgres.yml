@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: loanslam-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-loanslam}
+      POSTGRES_USER: ${POSTGRES_USER:-loanslam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LocalDevPassw0rd}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-loanslam} -d ${POSTGRES_DB:-loanslam}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - loanslam-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  loanslam-postgres-data:
