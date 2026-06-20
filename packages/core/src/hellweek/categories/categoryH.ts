@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section H. Credentials, Payments, And Sensitive Data
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryH: HellWeekScenario[] = [
   {
     id: "cred-bank-login-offer",

@@ -33,6 +33,9 @@ npm run demo-widget:dev                       # widget on http://127.0.0.1:5174 
 npm run demo-host:dev               # host page on http://127.0.0.1:5180
 ```
 
+Or all three at once: `just demo`. For throwaway local UI checks without
+Postgres owner logging, use `just demo-local`.
+
 Open **http://127.0.0.1:5180** and use the launcher in the bottom-right corner.
 
 Stakeholder demo interactions are logged server-side by default when the engine

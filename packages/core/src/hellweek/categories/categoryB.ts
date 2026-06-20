@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section B. Public FAQ And Retrieval Precision
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryB: HellWeekScenario[] = [
   {
     id: "faq-apply-start",

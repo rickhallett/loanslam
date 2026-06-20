@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section G. Excluded Advice And Regulatory Boundary
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryG: HellWeekScenario[] = [
   {
     id: "excl-iva",

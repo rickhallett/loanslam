@@ -114,6 +114,11 @@ just prisma-migrate-deploy
 just vercel-build
 ```
 
+`just prisma-migrate-deploy` and `just vercel-build` are database/deployment
+commands, not routine local checks. `just vercel-build` runs `prisma migrate
+deploy` against the configured migration database before building the deployed
+review assets.
+
 ## Which surface should I use?
 
 - `just core-turn` is for one message and one `ValidatedTurnResult`.
@@ -126,16 +131,16 @@ just vercel-build
 - `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
 - `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
 - `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
-- `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine.
-- `just review` starts the MAL review demo around the same engine.
+- `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine; use `just demo-local` for a no-Postgres local UI check.
+- `just review` starts the MAL review demo around the same engine; use `just review-local` for a no-Postgres local UI check.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
+- `just site-dev`, `just site-build`, and `just site-preview` operate the separate Astro site surface.
 
 ## Repository map
 
 ```text
 docs/
   product-brief.md                  Product scope and safety contract
-  architecture.md                   Current and productisation architecture boundaries
   llm-turn-planner-architecture.md  Canonical Phase 0 engine architecture
   stochastic-test-simulator-guide.md
   prds/                             Time-stamped product and implementation specs
@@ -246,6 +251,16 @@ decision log: project-local TypeScript imports stay extensionless, while
 third-party package export paths remain allowed to use their published names.
 `just build` includes the same guard before the workspace build; its stdout and
 stderr are part of the verification evidence.
+
+Do not use `just vercel-build` as a substitute for these local gates. It follows
+the deployment build path and can apply committed Prisma migrations.
+
+The Astro site lives in `site/` outside the root npm workspaces. For site changes,
+run:
+
+```bash
+just site-build
+```
 
 ## Source-of-truth docs
 

@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section J. Negation, Correction, And Lexical Traps
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryJ: HellWeekScenario[] = [
   {
     id: "neg-not-complaining",

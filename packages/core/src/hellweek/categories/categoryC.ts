@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section C. Vague But Loanslam-Scoped Clarification
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryC: HellWeekScenario[] = [
   {
     id: "vague-money-neutral",

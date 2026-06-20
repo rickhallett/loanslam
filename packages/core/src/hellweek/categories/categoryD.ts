@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section D. Account-Specific Boundary
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryD: HellWeekScenario[] = [
   {
     id: "acct-balance-direct",

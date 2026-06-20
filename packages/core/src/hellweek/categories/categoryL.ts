@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section L. Shadow Signal And Trace Integrity
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryL: HellWeekScenario[] = [
   {
     id: "signal-outdomain-null",

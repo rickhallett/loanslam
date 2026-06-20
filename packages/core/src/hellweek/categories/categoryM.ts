@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section M. Tone, UX, And Conversation Quality
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryM: HellWeekScenario[] = [
   {
     id: "ux-short-answer",
