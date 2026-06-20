@@ -1,40 +1,24 @@
 ---
-const APPLY_URL = '/apply/';
-const LOGIN_URL = 'https://monthlyadvanceloans.anchor.co.uk/Login';
+import { siteChrome } from '../lib/site-copy.ts';
 
-const nav = [
-  { label: 'Loans', href: '/instalment-loan/' },
-  { label: 'Open Banking', href: '/open-banking/' },
-  { label: 'About us', href: '/about-us/' },
-  {
-    label: 'Help & Support',
-    children: [
-      { label: 'FAQs', href: '/faq/' },
-      { label: 'Existing customers', href: '/existing-customers/' },
-      { label: 'Extra support', href: '/extra-support/' },
-      { label: 'Positive outcomes', href: '/positive-outcomes/' },
-      { label: 'Complaints', href: '/complaints/' },
-    ],
-  },
-  { label: 'Contact', href: '/contact/' },
-];
+const { applyUrl, brand, header, loginUrl } = siteChrome;
 ---
 
 <header class="site-header">
   <div class="container bar">
     <a class="brand" href="/">
-      <img src="/logo.png" alt="loans by mal — web based loans" width="132" height="51" />
+      <img src="/logo.png" alt={brand.logoAlt} width="132" height="51" />
     </a>
 
     <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true" />
-    <label for="nav-toggle" class="burger" aria-label="Open menu">
+    <label for="nav-toggle" class="burger" aria-label={header.menuLabel}>
       <span></span><span></span><span></span>
     </label>
 
-    <nav class="nav" aria-label="Main navigation">
+    <nav class="nav" aria-label={header.navigationLabel}>
       <ul>
         {
-          nav.map((item) =>
+          header.items.map((item) =>
             item.children ? (
               <li class="has-drop">
                 <details>
@@ -57,8 +41,8 @@ const nav = [
         }
       </ul>
       <div class="actions">
-        <a class="btn btn--ghost" href={LOGIN_URL}>Log in</a>
-        <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+        <a class="btn btn--ghost" href={loginUrl}>{header.actions.loginLabel}</a>
+        <a class="btn btn--apply" href={applyUrl}>{header.actions.applyLabel}</a>
       </div>
     </nav>
   </div>

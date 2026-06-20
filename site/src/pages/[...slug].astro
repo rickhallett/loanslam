@@ -8,6 +8,7 @@ import {
   stripLeadingH1,
   withToc,
 } from '../lib/content.ts';
+import { newsCopy } from '../lib/site-copy.ts';
 
 export function getStaticPaths() {
   // Pages with bespoke templates; everything else renders through this prose layout.
@@ -20,7 +21,6 @@ export function getStaticPaths() {
     }));
 }
 
-const APPLY_URL = 'https://applyloansbymal.co.uk';
 const { record } = Astro.props as { record: ContentRecord };
 const { html, toc } = withToc(rewriteLinks(stripLeadingH1(record.html)));
 const showToc = toc.length >= 2;
@@ -40,8 +40,8 @@ const showToc = toc.length >= 2;
     <aside class="side">
       {
         showToc && (
-          <nav class="toc" aria-label="On this page">
-            <p class="side-label">On this page</p>
+          <nav class="toc" aria-label={newsCopy.genericPage.tocLabel}>
+            <p class="side-label">{newsCopy.genericPage.tocLabel}</p>
             <ul>
               {toc.map((item) => (
                 <li>
@@ -54,11 +54,11 @@ const showToc = toc.length >= 2;
       }
       <div class="side-cta">
         <img src="/duck.png" alt="" width="58" height="65" loading="lazy" />
-        <p class="side-cta-title">Borrow £1,000 – £5,000</p>
-        <p class="small">
-          Check your eligibility in minutes — it won’t impact your credit score.
-        </p>
-        <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+        <p class="side-cta-title">{newsCopy.genericPage.sideCta.title}</p>
+        <p class="small">{newsCopy.genericPage.sideCta.body}</p>
+        <a class="btn btn--apply" href={newsCopy.genericPage.sideCta.cta.href}>
+          {newsCopy.genericPage.sideCta.cta.label}
+        </a>
       </div>
     </aside>
   </div>

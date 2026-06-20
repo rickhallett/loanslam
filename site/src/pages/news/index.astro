@@ -1,20 +1,21 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { formatDate, posts } from '../../lib/content.ts';
+import { newsCopy } from '../../lib/site-copy.ts';
 
 const [featured, ...rest] = posts;
 ---
 
 <Base
-  title="Money guides & news | Loans by MAL"
-  description="Guides on credit scores, credit history and borrowing well, from the Loans by MAL team."
+  title={newsCopy.index.title}
+  description={newsCopy.index.description}
 >
   <div class="page-head">
     <div class="ripples"></div>
     <div class="container" style="position: relative;">
-      <p class="crumb"><a href="/">Home</a> / News</p>
-      <h1>Borrow smarter</h1>
-      <p>Practical guides on credit scores, credit history and borrowing well.</p>
+      <p class="crumb" set:html={newsCopy.index.head.crumbHtml} />
+      <h1>{newsCopy.index.head.title}</h1>
+      <p>{newsCopy.index.head.body}</p>
     </div>
   </div>
 
@@ -24,7 +25,7 @@ const [featured, ...rest] = posts;
         <time class="small" datetime={featured.date ?? undefined}>{formatDate(featured.date)}</time>
         <h2>{featured.title}</h2>
         <p>{featured.seo_description}</p>
-        <span class="more">Read the guide</span>
+        <span class="more">{newsCopy.index.featuredLabel}</span>
       </div>
       <img src="/duck.png" alt="" width="120" height="135" loading="lazy" />
     </a>
@@ -36,7 +37,7 @@ const [featured, ...rest] = posts;
             <time class="small" datetime={post.date ?? undefined}>{formatDate(post.date)}</time>
             <h3>{post.title}</h3>
             <p>{post.seo_description}</p>
-            <span class="more">Read more</span>
+            <span class="more">{newsCopy.index.cardLabel}</span>
           </a>
         ))
       }

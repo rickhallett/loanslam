@@ -1,44 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import { formatDate, page, posts } from '../lib/content.ts';
+import { homeCopy } from '../lib/site-copy.ts';
 
-const APPLY_URL = '/apply/';
 const home = page('home');
-
-const eligibility = [
-  {
-    title: 'Age',
-    body: 'Aged between 21 and 71 years old at the time of application.',
-  },
-  {
-    title: 'UK residency',
-    body: 'You live and work in the UK on a permanent basis.',
-  },
-  {
-    title: 'Income',
-    body: 'You earn at least £1,300 per month after tax — employment, self-employment or pensions.',
-  },
-  {
-    title: 'Bank account',
-    body: 'A UK bank account that supports Open Banking connections.',
-  },
-];
-
-const steps = [
-  {
-    title: 'Apply online',
-    body: 'Choose your amount and term, tell us a little about yourself. The first two steps won’t impact your credit score.',
-  },
-  {
-    title: 'We check affordability',
-    body: 'Credit file plus Open Banking data — a responsible, personalised lending decision, not a tick-box one.',
-  },
-  {
-    title: 'Sign. Funds land.',
-    body: 'Sign, verify your banking, and after a quick 5–10 minute call we pay out — usually within hours.',
-  },
-];
-
 const [featured, ...rest] = posts;
 ---
 
@@ -48,59 +13,52 @@ const [featured, ...rest] = posts;
     <div class="ripples"></div>
     <div class="container hero-grid">
       <div class="hero-copy">
-        <span class="overline">Direct lender · Powered by Open Banking</span>
-        <h1>Fair and <em>affordable</em> unsecured loans</h1>
-        <p class="lede">
-          Borrow £1,000 – £5,000 over up to 36 months. APR from 22.0% to 93.8%, personalised to
-          your circumstances — and checking your eligibility won’t touch your credit score.
-        </p>
+        <span class="overline">{homeCopy.hero.overline}</span>
+        <h1 set:html={homeCopy.hero.titleHtml} />
+        <p class="lede">{homeCopy.hero.body}</p>
         <div class="hero-ctas">
-          <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
-          <a class="btn btn--ghost-dark" href="/instalment-loan/">How it works</a>
+          {
+            homeCopy.hero.ctas.map((cta, index) => (
+              <a class={`btn ${index === 0 ? 'btn--apply' : 'btn--ghost-dark'}`} href={cta.href}>
+                {cta.label}
+              </a>
+            ))
+          }
         </div>
-        <p class="hero-fineprint">
-          Applicants must be aged 21–71, earn at least £1,300 a month, and live in the UK.
-        </p>
+        <p class="hero-fineprint">{homeCopy.hero.fineprint}</p>
       </div>
 
       <!-- Quote card: representative example without JS, sliders with -->
       <div class="quote-card">
         <img class="quote-duck" src="/duck.png" alt="" width="118" height="133" />
-        <p class="quote-title">Your quick quote</p>
+        <p class="quote-title">{homeCopy.quote.title}</p>
         <div class="calc" id="calc" hidden>
           <label>
-            <span class="calc-label">I’d like to borrow</span>
-            <output id="amt-out">£2,500</output>
+            <span class="calc-label">{homeCopy.quote.amountLabel}</span>
+            <output id="amt-out">{homeCopy.quote.amountDefault}</output>
             <input type="range" id="amt" min="1000" max="5000" step="100" value="2500" />
-            <span class="calc-range"><i>£1,000</i><i>£5,000</i></span>
+            <span class="calc-range"><i>{homeCopy.quote.amountMinLabel}</i><i>{homeCopy.quote.amountMaxLabel}</i></span>
           </label>
           <label>
-            <span class="calc-label">repaid over</span>
-            <output id="term-out">24 months</output>
+            <span class="calc-label">{homeCopy.quote.termLabel}</span>
+            <output id="term-out">{homeCopy.quote.termDefault}</output>
             <input type="range" id="term" min="9" max="36" step="3" value="24" />
-            <span class="calc-range"><i>9 mo</i><i>36 mo</i></span>
+            <span class="calc-range"><i>{homeCopy.quote.termMinLabel}</i><i>{homeCopy.quote.termMaxLabel}</i></span>
           </label>
           <div class="calc-result">
             <div>
-              <span class="calc-label">Monthly repayment</span>
-              <strong id="monthly" class="calc-figure">£154.38</strong>
+              <span class="calc-label">{homeCopy.quote.monthlyLabel}</span>
+              <strong id="monthly" class="calc-figure">{homeCopy.quote.monthlyDefault}</strong>
             </div>
             <div>
-              <span class="calc-label">Total repayable</span>
-              <strong id="total" class="calc-figure calc-figure--sub">£3,705.12</strong>
+              <span class="calc-label">{homeCopy.quote.totalLabel}</span>
+              <strong id="total" class="calc-figure calc-figure--sub">{homeCopy.quote.totalDefault}</strong>
             </div>
           </div>
-          <p class="small">
-            Illustrative, based on our representative 24.1% p.a. fixed rate — your personalised
-            rate may differ.
-          </p>
+          <p class="small">{homeCopy.quote.illustrativeNote}</p>
         </div>
-        <a class="btn btn--apply btn-block" href={APPLY_URL}>Get your personalised quote</a>
-        <p class="small rep-example">
-          Representative example: on an assumed loan amount of £2,500 over a 24 month repayment
-          period. Rate of interest 24.1% per annum (fixed). Representative 49.6% APR. Total amount
-          payable is £3,705.12 of which £1,205.12 is interest, 24 monthly repayments of £154.38.
-        </p>
+        <a class="btn btn--apply btn-block" href={homeCopy.quote.cta.href}>{homeCopy.quote.cta.label}</a>
+        <p class="small rep-example">{homeCopy.quote.representativeExample}</p>
       </div>
     </div>
     <svg class="wave wave--hero" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
@@ -111,31 +69,21 @@ const [featured, ...rest] = posts;
   </section>
 
   <!-- ── Trust ticker ─────────────────────────────────────── -->
-  <aside class="ticker" aria-label="Trust signals">
+  <aside class="ticker" aria-label={homeCopy.trustSignalsLabel}>
     <div class="ticker-track">
       {
         [0, 1].map(() => (
           <div class="ticker-item" aria-hidden={true}>
-            <span>
-              <strong>FCA</strong> authorised &amp; regulated — firm ref 912359
-            </span>
-            <span class="ticker-dot">●</span>
-            <span>
-              <strong>37,500</strong> customers helped
-            </span>
-            <span class="ticker-dot">●</span>
-            <a href="https://www.trustpilot.com/review/loansbymal.co.uk">
-              Rated <strong>‘Excellent’</strong> on Trustpilot
-            </a>
-            <span class="ticker-dot">●</span>
-            <span>
-              <strong>Direct lender</strong> — not a broker
-            </span>
-            <span class="ticker-dot">●</span>
-            <span>
-              <strong>100% online</strong> — no documents required
-            </span>
-            <span class="ticker-dot">●</span>
+            {homeCopy.trustSignals.map((signal) => (
+              <>
+                {signal.href ? (
+                  <a href={signal.href} set:html={signal.html} />
+                ) : (
+                  <span set:html={signal.html} />
+                )}
+                <span class="ticker-dot">●</span>
+              </>
+            ))}
           </div>
         ))
       }
@@ -147,43 +95,26 @@ const [featured, ...rest] = posts;
     <div class="container">
       <div class="why-grid reveal">
         <div>
-          <span class="overline">Unsecured loans up to £5,000</span>
-          <h2>The bank said no.<br />We look properly.</h2>
+          <span class="overline">{homeCopy.why.overline}</span>
+          <h2 set:html={homeCopy.why.titleHtml} />
         </div>
         <div class="why-copy">
-          <p>
-            <strong>Loans by MAL</strong> is a direct lender offering unsecured loans from £1,000
-            to £5,000, over terms of 9 to 36 months. We lend to a wide range of customers, using a
-            combination of credit file and Open Banking data to make responsible and personalised
-            lending decisions.
-          </p>
-          <p>
-            By using Open Banking technology, we can often help customers who are unable to borrow
-            from banks and other lenders — we read the real picture, not just the score.
-          </p>
-          <a class="btn btn--ghost" href="/about-us/">More about us</a>
+          {homeCopy.why.paragraphsHtml.map((paragraph) => <p set:html={paragraph} />)}
+          <a class="btn btn--ghost" href={homeCopy.why.cta.href}>{homeCopy.why.cta.label}</a>
         </div>
       </div>
 
       <dl class="stats reveal">
-        <div>
-          <dd>37,500</dd>
-          <dt>customers helped since 2020</dt>
-        </div>
-        <div>
-          <dd>22.0<span class="stat-unit">%</span></dd>
-          <dt>APR from*, personalised to you</dt>
-        </div>
-        <div>
-          <dd>£5k</dd>
-          <dt>borrow £1,000 up to £5,000</dt>
-        </div>
-        <div>
-          <dd>0</dd>
-          <dt>documents, branches or brokers</dt>
-        </div>
+        {
+          homeCopy.stats.map((stat) => (
+            <div>
+              <dd set:html={stat.valueHtml} />
+              <dt>{stat.label}</dt>
+            </div>
+          ))
+        }
       </dl>
-      <p class="small">*Subject to status. Terms &amp; conditions apply.</p>
+      <p class="small">{homeCopy.statsFootnote}</p>
     </div>
   </section>
 
@@ -191,12 +122,12 @@ const [featured, ...rest] = posts;
   <section class="section section--white elig">
     <div class="container">
       <div class="elig-head reveal">
-        <span class="overline">Eligibility</span>
-        <h2>Four quick checks before you apply</h2>
+        <span class="overline">{homeCopy.eligibility.overline}</span>
+        <h2>{homeCopy.eligibility.title}</h2>
       </div>
       <ol class="elig-list">
         {
-          eligibility.map((item, i) => (
+          homeCopy.eligibility.items.map((item, i) => (
             <li class="reveal">
               <span class="ghost-num">{String(i + 1).padStart(2, '0')}</span>
               <h3>{item.title}</h3>
@@ -213,13 +144,13 @@ const [featured, ...rest] = posts;
     <div class="ripples"></div>
     <div class="container">
       <div class="steps-head reveal">
-        <span class="overline">How it works</span>
-        <h2>Easy as one, two, funded.</h2>
-        <p class="lede">Quick and easy application — with a fast in-principle decision.</p>
+        <span class="overline">{homeCopy.process.overline}</span>
+        <h2>{homeCopy.process.title}</h2>
+        <p class="lede">{homeCopy.process.lede}</p>
       </div>
       <ol class="steps">
         {
-          steps.map((step, i) => (
+          homeCopy.process.items.map((step, i) => (
             <li class="reveal">
               <span class="step-num">{i + 1}</span>
               <h3>{step.title}</h3>
@@ -228,7 +159,7 @@ const [featured, ...rest] = posts;
           ))
         }
       </ol>
-      <a class="btn btn--apply reveal" href={APPLY_URL}>Start your application</a>
+      <a class="btn btn--apply reveal" href={homeCopy.process.cta.href}>{homeCopy.process.cta.label}</a>
     </div>
   </section>
 
@@ -236,21 +167,14 @@ const [featured, ...rest] = posts;
   <section class="section review-section">
     <div class="container review reveal">
       <span class="big-quote" aria-hidden="true">“</span>
-      <blockquote>
-        Very easy to deal with. Professional people who look after you. Very impressed — thank you
-        for the outstanding service.
-      </blockquote>
+      <blockquote>{homeCopy.review.quote}</blockquote>
       <div class="tp-row">
-        <span class="tp-stars" aria-label="Five star rating">
+        <span class="tp-stars" aria-label={homeCopy.review.ratingLabel}>
           <i></i><i></i><i></i><i></i><i></i>
         </span>
-        <a href="https://www.trustpilot.com/review/loansbymal.co.uk">
-          Rated ‘Excellent’ on Trustpilot
-        </a>
+        <a href={homeCopy.review.link.href}>{homeCopy.review.link.label}</a>
       </div>
-      <p class="small">
-        We encourage all customers to leave an honest review of their experience with Loans by MAL.
-      </p>
+      <p class="small">{homeCopy.review.note}</p>
     </div>
   </section>
 
@@ -259,17 +183,17 @@ const [featured, ...rest] = posts;
     <div class="container">
       <div class="news-head reveal">
         <div>
-          <span class="overline">Money guides &amp; news</span>
-          <h2>Borrow smarter</h2>
+          <span class="overline">{homeCopy.news.overline}</span>
+          <h2>{homeCopy.news.title}</h2>
         </div>
-        <a class="btn btn--ghost" href="/news/">All guides</a>
+        <a class="btn btn--ghost" href={homeCopy.news.allGuides.href}>{homeCopy.news.allGuides.label}</a>
       </div>
       <div class="news-grid reveal">
         <a class="news-feature" href={`/news/${featured.slug}/`}>
           <time class="small" datetime={featured.date ?? undefined}>{formatDate(featured.date)}</time>
           <h3>{featured.title}</h3>
           <p>{featured.seo_description}</p>
-          <span class="news-more">Read the guide</span>
+          <span class="news-more">{homeCopy.news.featuredLabel}</span>
         </a>
         <div class="news-list">
           {

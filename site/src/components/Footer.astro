@@ -1,39 +1,7 @@
 ---
-const APPLY_URL = '/apply/';
-const LOGIN_URL = 'https://monthlyadvanceloans.anchor.co.uk/Login';
+import { siteChrome } from '../lib/site-copy.ts';
 
-const columns = [
-  {
-    heading: 'Loans',
-    links: [
-      { label: 'Apply for a loan', href: APPLY_URL },
-      { label: 'Instalment loans', href: '/instalment-loan/' },
-      { label: 'Personal loans guide', href: '/about-us/personal-loans/' },
-      { label: 'Credit score guide', href: '/about-us/credit-score/' },
-      { label: 'Open Banking', href: '/open-banking/' },
-    ],
-  },
-  {
-    heading: 'Help & support',
-    links: [
-      { label: 'FAQs', href: '/faq/' },
-      { label: 'Existing customers', href: '/existing-customers/' },
-      { label: 'Extra support', href: '/extra-support/' },
-      { label: 'Positive outcomes', href: '/positive-outcomes/' },
-      { label: 'COVID-19 help', href: '/covid-19-help/' },
-      { label: 'Contact us', href: '/contact/' },
-    ],
-  },
-  {
-    heading: 'Company',
-    links: [
-      { label: 'About us', href: '/about-us/' },
-      { label: 'News', href: '/news/' },
-      { label: 'Complaints', href: '/complaints/' },
-      { label: 'Log in to your account', href: LOGIN_URL },
-    ],
-  },
-];
+const { brand, footer } = siteChrome;
 ---
 
 <footer class="site-footer">
@@ -41,11 +9,11 @@ const columns = [
     <div class="cols">
       <div class="brand-col">
         <img src="/duck.png" alt="" width="69" height="78" loading="lazy" />
-        <p class="brand-name">loans by mal</p>
-        <p class="tagline">web based loans</p>
+        <p class="brand-name">{brand.footerName}</p>
+        <p class="tagline">{brand.tagline}</p>
       </div>
       {
-        columns.map((col) => (
+        footer.columns.map((col) => (
           <nav aria-label={col.heading}>
             <h3>{col.heading}</h3>
             <ul>
@@ -61,30 +29,22 @@ const columns = [
     </div>
 
     <div class="legal">
-      <p>
-        Late repayments can lead to serious money problems. For debt counselling advice please
-        visit <a href="https://www.moneyhelper.org.uk">moneyhelper.org.uk</a>.
-      </p>
-      <p>
-        <strong>Loans by MAL</strong> is the trading name of Monthly Advance Loans Limited.
-        Authorised and regulated by the Financial Conduct Authority (firm reference 912359).
-        Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the
-        Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a
-        private limited company registered in England and Wales (company number 12070468) and has
-        its registered office at Bourne Park, Exeter Park Road, Bournemouth BH2 5BD. Monthly
-        Advance Loans Limited is a consumer credit lender not a broker.
-      </p>
+      {footer.legalParagraphsHtml.map((paragraph) => <p set:html={paragraph} />)}
       <div class="legal-row">
-        <p>© Monthly Advance Loans Limited</p>
+        <p>{footer.copyright}</p>
         <ul>
-          <li><a href="/privacy-policy/">Privacy policy</a></li>
-          <li><a href="/terms-and-conditions/">Terms &amp; conditions</a></li>
-          <li><a href="/complaints/">Complaints</a></li>
+          {
+            footer.policyLinks.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))
+          }
         </ul>
       </div>
     </div>
   </div>
-  <p class="watermark" aria-hidden="true">loans by mal</p>
+  <p class="watermark" aria-hidden="true">{footer.watermark}</p>
 </footer>
 
 <style>

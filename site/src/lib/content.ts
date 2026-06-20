@@ -29,6 +29,7 @@ export function page(slug: string): ContentRecord {
 /** Original absolute URLs become local paths; the old /faqs/ redirect becomes /faq/. */
 export function rewriteLinks(html: string): string {
   return html
+    .replace(/https?:\/\/(www\.)?applyloansbymal\.co\.uk(?:\/[^"'<\s]*)?/g, '/apply/')
     .replace(/https?:\/\/(www\.)?loansbymal\.co\.uk/g, '')
     .replaceAll('/faqs/', '/faq/');
 }

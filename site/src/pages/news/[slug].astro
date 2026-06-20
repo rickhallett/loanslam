@@ -7,12 +7,12 @@ import {
   rewriteLinks,
   stripLeadingH1,
 } from '../../lib/content.ts';
+import { newsCopy } from '../../lib/site-copy.ts';
 
 export function getStaticPaths() {
   return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
 }
 
-const APPLY_URL = 'https://applyloansbymal.co.uk';
 const { post } = Astro.props as { post: ContentRecord };
 const words = post.html.replace(/<[^>]+>/g, ' ').split(/\s+/).length;
 const readMins = Math.max(1, Math.round(words / 220));
@@ -23,8 +23,8 @@ const readMins = Math.max(1, Math.round(words / 220));
     <div class="ripples"></div>
     <div class="container" style="position: relative;">
       <p class="crumb">
-        <a href="/news/">← All guides</a> ·
-        <time datetime={post.date ?? undefined}>{formatDate(post.date)}</time> · {readMins} min read
+        <a href="/news/">{newsCopy.article.backLabel}</a> ·
+        <time datetime={post.date ?? undefined}>{formatDate(post.date)}</time> · {readMins} {newsCopy.article.readTimeSuffix}
       </p>
       <h1>{post.title}</h1>
     </div>
@@ -34,9 +34,11 @@ const readMins = Math.max(1, Math.round(words / 220));
     <article class="prose" set:html={rewriteLinks(stripLeadingH1(post.html))} />
     <aside class="side-cta">
       <img src="/duck.png" alt="" width="58" height="65" loading="lazy" />
-      <p class="side-title">Borrow £1,000 – £5,000</p>
-      <p class="small">Check your eligibility in minutes — it won’t impact your credit score.</p>
-      <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+      <p class="side-title">{newsCopy.article.sideCta.title}</p>
+      <p class="small">{newsCopy.article.sideCta.body}</p>
+      <a class="btn btn--apply" href={newsCopy.article.sideCta.cta.href}>
+        {newsCopy.article.sideCta.cta.label}
+      </a>
     </aside>
   </div>
 </Base>
