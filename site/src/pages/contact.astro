@@ -1,0 +1,130 @@
+---
+import Base from '../layouts/Base.astro';
+import { page } from '../lib/content.ts';
+
+const contact = page('contact');
+
+const channels = [
+  {
+    title: 'Taking out a new loan?',
+    phone: '01202 122699',
+    sms: '07984 393896',
+    email: 'support@loansbymal.co.uk',
+    note: 'Please include your full name when emailing.',
+  },
+  {
+    title: 'Struggling with repayments?',
+    phone: '01202 138850',
+    sms: '07984 352847',
+    email: 'customercare@loansbymal.co.uk',
+    note: 'If you’re in difficulty, reach out — ignoring the problem only makes it worse.',
+  },
+  {
+    title: 'Update details or settle your loan?',
+    phone: '01202 138850',
+    sms: '07984 352847',
+    email: 'customercare@loansbymal.co.uk',
+    note: 'For settlements, include your full name and ‘SETTLEMENT’ in your message.',
+  },
+];
+---
+
+<Base title={contact.seo_title ?? contact.title} description={contact.seo_description ?? undefined}>
+  <div class="page-head">
+    <div class="ripples"></div>
+    <div class="container" style="position: relative;">
+      <p class="crumb"><a href="/">Home</a> / Contact</p>
+      <h1>Talk to a human</h1>
+      <p>Our dedicated customer care team is available by phone, text and email.</p>
+    </div>
+  </div>
+
+  <div class="container section">
+    <div class="grid grid--3">
+      {
+        channels.map((c, i) => (
+          <div class="card channel reveal">
+            <span class="channel-num">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{c.title}</h3>
+            <ul class="channel-list">
+              <li>
+                <span>Call</span>
+                <a href={`tel:${c.phone.replaceAll(' ', '')}`}>{c.phone}</a>
+              </li>
+              <li>
+                <span>Text</span>
+                <a href={`sms:${c.sms.replaceAll(' ', '')}`}>{c.sms}</a>
+              </li>
+              <li>
+                <span>Email</span>
+                <a href={`mailto:${c.email}`}>{c.email}</a>
+              </li>
+            </ul>
+            <p class="small">{c.note}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="notice" style="margin-top: 2.5rem;">
+      You can always seek free, independent and impartial debt advice from
+      <a href="https://www.stepchange.org">StepChange</a> (0800 138 1111) or
+      <a href="https://www.moneyhelper.org.uk/debt-advice-locator">MoneyHelper</a> (0800 138 7777).
+    </div>
+  </div>
+</Base>
+
+<style>
+  .channel {
+    position: relative;
+    padding-top: 2rem;
+  }
+
+  .channel-num {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: var(--teal-100);
+    margin-bottom: 0.6rem;
+  }
+
+  .channel-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+
+  .channel-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--line-cool);
+  }
+
+  .channel-list span {
+    flex: none;
+    width: 3.2rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+
+  .channel-list a {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--ink);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .channel-list a:hover {
+    color: var(--teal-500);
+  }
+</style>

@@ -1,0 +1,155 @@
+---
+import Base from '../layouts/Base.astro';
+import {
+  type ContentRecord,
+  pages,
+  pathFromLink,
+  rewriteLinks,
+  stripLeadingH1,
+  withToc,
+} from '../lib/content.ts';
+
+export function getStaticPaths() {
+  // Pages with bespoke templates; everything else renders through this prose layout.
+  const BESPOKE = new Set(['home', 'faq', 'contact', 'instalment-loan']);
+  return pages
+    .filter((p) => !BESPOKE.has(p.slug))
+    .map((p) => ({
+      params: { slug: pathFromLink(p.link).replace(/^\/|\/$/g, '') },
+      props: { record: p },
+    }));
+}
+
+const APPLY_URL = 'https://applyloansbymal.co.uk';
+const { record } = Astro.props as { record: ContentRecord };
+const { html, toc } = withToc(rewriteLinks(stripLeadingH1(record.html)));
+const showToc = toc.length >= 2;
+---
+
+<Base title={record.seo_title ?? record.title} description={record.seo_description ?? undefined}>
+  <div class="page-head">
+    <div class="ripples"></div>
+    <div class="container" style="position: relative;">
+      <p class="crumb"><a href="/">Home</a> / {record.title}</p>
+      <h1>{record.title}</h1>
+    </div>
+  </div>
+
+  <div class="container section body-grid">
+    <article class="prose" set:html={html} />
+    <aside class="side">
+      {
+        showToc && (
+          <nav class="toc" aria-label="On this page">
+            <p class="side-label">On this page</p>
+            <ul>
+              {toc.map((item) => (
+                <li>
+                  <a href={`#${item.id}`}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+      <div class="side-cta">
+        <img src="/duck.png" alt="" width="58" height="65" loading="lazy" />
+        <p class="side-cta-title">Borrow £1,000 – £5,000</p>
+        <p class="small">
+          Check your eligibility in minutes — it won’t impact your credit score.
+        </p>
+        <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+      </div>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .body-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
+  }
+
+  .side {
+    position: sticky;
+    top: 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  .side-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.7rem;
+  }
+
+  .toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--line-cool);
+  }
+
+  .toc a {
+    display: block;
+    padding: 0.4rem 0 0.4rem 1rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--body);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    margin-left: -2px;
+  }
+
+  .toc a:hover {
+    color: var(--teal-500);
+    border-left-color: var(--amber-400);
+  }
+
+  .side-cta {
+    background: var(--ink-900);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    color: var(--on-dark);
+  }
+
+  .side-cta img {
+    margin-bottom: 0.4rem;
+  }
+
+  .side-cta-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #fff;
+    margin-bottom: 0.4rem;
+  }
+
+  .side-cta .small {
+    color: var(--on-dark-muted);
+  }
+
+  .side-cta .btn {
+    width: 100%;
+  }
+
+  @media (max-width: 880px) {
+    .body-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .side {
+      position: static;
+    }
+
+    .toc {
+      display: none;
+    }
+  }
+</style>

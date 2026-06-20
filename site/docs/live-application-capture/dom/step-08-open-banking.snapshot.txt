@@ -1,0 +1,515 @@
+uid=28_0 RootWebArea url="https://applyloansbymal.co.uk/step-eight/open-banking.html"
+  uid=29_0 ignored
+    uid=29_1 generic
+      uid=29_2 generic
+        uid=28_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=28_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=29_3 ignored
+              uid=29_4 generic
+                uid=29_5 generic
+                uid=29_6 generic
+                  uid=28_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=29_7 ignored
+                  uid=29_8 generic
+                    uid=28_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=29_9 generic
+                    uid=28_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=29_10 generic
+      uid=28_6 banner
+        uid=28_7 link url="http://loansbymal.co.uk/"
+          uid=29_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=29_12 generic
+        uid=28_8 heading "Congratulations you've completed your application" level="4"
+          uid=29_13 StaticText "Congratulations you've completed your application"
+        uid=29_14 ignored
+          uid=29_15 generic
+            uid=29_16 ignored
+              uid=29_17 ignored
+                uid=29_18 paragraph
+                  uid=28_9 StaticText "You now need to verify the bank account that you want us to pay the money into. The account needs to be a UK bank account in your name. This should also be the account your salary is paid into."
+            uid=29_19 ignored
+              uid=29_20 generic
+                uid=28_10 button " VERIFY MY ACCOUNT"
+                  uid=29_21 generic
+                    uid=29_22 ignored
+                      uid=28_13 StaticText ""
+                  uid=29_23 StaticText "VERIFY MY ACCOUNT"
+            uid=29_24 generic
+              uid=29_25 ignored
+                uid=29_26 paragraph
+                  uid=28_11 StaticText "If you have any problems verifying your account, don’t worry, our customer support team will be in touch to help you."
+                uid=29_27 paragraph
+                  uid=28_12 StaticText "Once you’ve connected your account we’ll complete our final checks and payout the money within 24 hours."
+            uid=29_28 ignored
+              uid=29_29 ignored
+                uid=29_30 ignored
+                  uid=29_31 ignored
+                    uid=29_32 generic
+                      uid=29_33 ignored
+                        uid=28_13 StaticText ""
+                    uid=29_34 ignored
+                      uid=28_14 StaticText "Safe and Secure Check"
+                  uid=29_35 ignored
+                    uid=29_36 generic
+                      uid=29_37 ignored
+                        uid=28_13 StaticText ""
+                    uid=29_38 ignored
+                      uid=28_15 StaticText "We've helped over 40,000 people"
+                  uid=29_39 ignored
+                    uid=29_40 generic
+                      uid=29_41 ignored
+                        uid=28_13 StaticText ""
+                    uid=29_42 ignored
+                      uid=28_16 StaticText "2000+ Customers Rate Us Excellent"
+            uid=29_43 generic
+      uid=28_17 contentinfo
+        uid=29_44 ignored
+          uid=29_45 ignored
+            uid=28_18 heading "Customer Reviews" level="3"
+              uid=29_46 StaticText "Customer Reviews"
+            uid=29_47 generic
+              uid=28_19 Iframe "Customer reviews powered by Trustpilot"
+                uid=28_20 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/53aa8912dec7e10d38f59f36/index.html?templateId=53aa8912dec7e10d38f59f36&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=140px&styleWidth=100%25&theme=light&stars=5&reviewLanguages=en"
+                  uid=29_48 ignored
+                    uid=29_49 generic
+                      uid=29_50 generic
+                      uid=29_51 generic
+                        uid=29_52 generic
+                          uid=28_21 link "Trustpilot reviews. Rated Excellent. 4.8 out of 5. Based on 2,186 reviews on Trustpilot. Click to view Trustpilot profile." url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=Carousel"
+                            uid=29_53 generic
+                              uid=28_22 StaticText "Excellent"
+                            uid=29_54 generic
+                              uid=29_55 ignored
+                                uid=29_56 ignored
+                                  uid=29_57 generic
+                                    uid=28_23 image "4.8 out of 5 star rating on Trustpilot"
+                                      uid=29_58 ignored
+                            uid=29_59 generic
+                              uid=28_24 StaticText "Based on "
+                              uid=29_60 strong
+                                uid=28_25 StaticText "2,186 reviews"
+                            uid=29_61 generic
+                              uid=29_62 ignored
+                                uid=29_63 generic
+                                  uid=28_26 image "Trustpilot" description="Trustpilot"
+                                    uid=29_64 ignored
+                                      uid=29_65 ignored
+                          uid=29_66 generic
+                        uid=29_67 generic
+                          uid=29_68 generic
+                            uid=28_27 button "Carousel scroll left" disableable disabled
+                              uid=29_69 ignored
+                                uid=29_70 generic
+                                  uid=29_71 image
+                          uid=29_72 generic
+                            uid=28_28 button "Carousel scroll right"
+                              uid=29_73 ignored
+                                uid=29_74 generic
+                                  uid=29_75 image
+                          uid=29_76 generic
+                            uid=29_77 list "Showing our 5 star reviews"
+                              uid=29_78 listitem level="1"
+                                uid=29_79 ignored
+                                  uid=29_80 ignored
+                                    uid=29_81 ignored
+                                      uid=29_82 ignored
+                                        uid=29_83 generic
+                                          uid=28_29 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_84 ignored
+                                uid=28_30 link "Excellent company to deal with no… Excellent company to deal with no problems at all Excellent Review by Ian Pickett, 17 hours ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a3556cbd2e40899c79d79cb?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_85 ignored
+                                    uid=29_86 generic
+                                      uid=28_31 StaticText "Excellent company to deal with no…"
+                                    uid=29_87 generic
+                                      uid=28_32 StaticText "Excellent company to deal with no problems at all Excellent"
+                                    uid=29_88 ignored
+                                      uid=29_89 generic
+                                        uid=28_33 StaticText "Review by"
+                                      uid=29_90 generic
+                                        uid=28_34 StaticText "Ian Pickett,"
+                                      uid=29_91 generic
+                                        uid=28_35 StaticText "17 hours ago"
+                                    uid=29_92 generic
+                                      uid=28_36 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_93 listitem level="1"
+                                uid=29_94 ignored
+                                  uid=29_95 ignored
+                                    uid=29_96 ignored
+                                      uid=29_97 ignored
+                                        uid=29_98 generic
+                                          uid=28_37 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_99 ignored
+                                uid=28_38 link "Quick and fast Quick and fast, great service. Review by Shannan Rasputia McDonald Wisd, 17 hours ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a355408302098c8bea56d5b?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_100 ignored
+                                    uid=29_101 generic
+                                      uid=28_39 StaticText "Quick and fast"
+                                    uid=29_102 generic
+                                      uid=28_40 StaticText "Quick and fast, great service."
+                                    uid=29_103 ignored
+                                      uid=29_104 generic
+                                        uid=28_41 StaticText "Review by"
+                                      uid=29_105 generic
+                                        uid=28_42 StaticText "Shannan Rasputia McDonald Wisd,"
+                                      uid=29_106 generic
+                                        uid=28_43 StaticText "17 hours ago"
+                                    uid=29_107 generic
+                                      uid=28_44 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_108 listitem level="1"
+                                uid=29_109 ignored
+                                  uid=29_110 ignored
+                                    uid=29_111 ignored
+                                      uid=29_112 ignored
+                                        uid=29_113 generic
+                                          uid=28_45 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_114 ignored
+                                uid=28_46 link "Really excellent straight forward… Really excellent straight forward process open banking easy to do when applying... Review by J c, 22 hours ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a35106ba24df6e36bbc7a2f?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_115 ignored
+                                    uid=29_116 generic
+                                      uid=28_47 StaticText "Really excellent straight forward…"
+                                    uid=29_117 generic
+                                      uid=28_48 StaticText "Really excellent straight forward process open banking easy to do when applying..."
+                                    uid=29_118 ignored
+                                      uid=29_119 generic
+                                        uid=28_49 StaticText "Review by"
+                                      uid=29_120 generic
+                                        uid=28_50 StaticText "J c,"
+                                      uid=29_121 generic
+                                        uid=28_51 StaticText "22 hours ago"
+                                    uid=29_122 generic
+                                      uid=28_52 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_123 listitem level="1"
+                                uid=29_124 ignored
+                                  uid=29_125 ignored
+                                    uid=29_126 ignored
+                                      uid=29_127 ignored
+                                        uid=29_128 generic
+                                          uid=28_53 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_129 ignored
+                                uid=28_54 link "Excellent service fast response Excellent service fast response, used a number of times all i can say is a reall... Review by Jamie Whalley, 1 day ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a346a5751614d4cebfbd69f?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_130 ignored
+                                    uid=29_131 generic
+                                      uid=28_55 StaticText "Excellent service fast response"
+                                    uid=29_132 generic
+                                      uid=28_56 StaticText "Excellent service fast response, used a number of times all i can say is a reall..."
+                                    uid=29_133 ignored
+                                      uid=29_134 generic
+                                        uid=28_57 StaticText "Review by"
+                                      uid=29_135 generic
+                                        uid=28_58 StaticText "Jamie Whalley,"
+                                      uid=29_136 generic
+                                        uid=28_59 StaticText "1 day ago"
+                                    uid=29_137 generic
+                                      uid=28_60 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_138 listitem level="1"
+                                uid=29_139 ignored
+                                  uid=29_140 ignored
+                                    uid=29_141 ignored
+                                      uid=29_142 ignored
+                                        uid=29_143 generic
+                                          uid=28_61 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_144 ignored
+                                uid=28_62 link "Customer feedback from jade was first… Customer feedback from jade was first class, transparency and step by step updat... Review by Cd, 2 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a34116b7e959886c64f585e?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_145 ignored
+                                    uid=29_146 generic
+                                      uid=28_63 StaticText "Customer feedback from jade was first…"
+                                    uid=29_147 generic
+                                      uid=28_64 StaticText "Customer feedback from jade was first class, transparency and step by step updat..."
+                                    uid=29_148 ignored
+                                      uid=29_149 generic
+                                        uid=28_65 StaticText "Review by"
+                                      uid=29_150 generic
+                                        uid=28_66 StaticText "Cd,"
+                                      uid=29_151 generic
+                                        uid=28_67 StaticText "2 days ago"
+                                    uid=29_152 generic
+                                      uid=28_68 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_153 listitem level="1"
+                                uid=29_154 ignored
+                                  uid=29_155 ignored
+                                    uid=29_156 ignored
+                                      uid=29_157 ignored
+                                        uid=29_158 generic
+                                          uid=28_69 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_159 ignored
+                                uid=28_70 link "So easy and efficient So easy and efficient, will definitely recommend them Review by Andrew, 2 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a340e58c5c02a31afdc54c3?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_160 ignored
+                                    uid=29_161 generic
+                                      uid=28_71 StaticText "So easy and efficient"
+                                    uid=29_162 generic
+                                      uid=28_72 StaticText "So easy and efficient, will definitely recommend them"
+                                    uid=29_163 ignored
+                                      uid=29_164 generic
+                                        uid=28_73 StaticText "Review by"
+                                      uid=29_165 generic
+                                        uid=28_74 StaticText "Andrew,"
+                                      uid=29_166 generic
+                                        uid=28_75 StaticText "2 days ago"
+                                    uid=29_167 generic
+                                      uid=28_76 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_168 listitem level="1"
+                                uid=29_169 ignored
+                                  uid=29_170 ignored
+                                    uid=29_171 ignored
+                                      uid=29_172 ignored
+                                        uid=29_173 generic
+                                          uid=28_77 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_174 ignored
+                                uid=28_78 link "Easy to apply for a loan. Easy to apply for a loan. Decision made within a few minutes. No badgering to... Review by Monique Scotney-Murfin, 2 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a33d40731e95648de1817cb?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_175 ignored
+                                    uid=29_176 generic
+                                      uid=28_79 StaticText "Easy to apply for a loan."
+                                    uid=29_177 generic
+                                      uid=28_80 StaticText "Easy to apply for a loan. Decision made within a few minutes. No badgering to..."
+                                    uid=29_178 ignored
+                                      uid=29_179 generic
+                                        uid=28_81 StaticText "Review by"
+                                      uid=29_180 generic
+                                        uid=28_82 StaticText "Monique Scotney-Murfin,"
+                                      uid=29_181 generic
+                                        uid=28_83 StaticText "2 days ago"
+                                    uid=29_182 generic
+                                      uid=28_84 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_183 listitem level="1"
+                                uid=29_184 ignored
+                                  uid=29_185 ignored
+                                    uid=29_186 ignored
+                                      uid=29_187 ignored
+                                        uid=29_188 generic
+                                          uid=28_85 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_189 ignored
+                                uid=28_86 link "First time I’ve used Mal First time I’ve used Mal, easy application quick response and funds paid in to m... Review by customer, 3 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a329faea3f8c35ac75f5195?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_190 ignored
+                                    uid=29_191 generic
+                                      uid=28_87 StaticText "First time I’ve used Mal"
+                                    uid=29_192 generic
+                                      uid=28_88 StaticText "First time I’ve used Mal, easy application quick response and funds paid in to m..."
+                                    uid=29_193 ignored
+                                      uid=29_194 generic
+                                        uid=28_89 StaticText "Review by"
+                                      uid=29_195 generic
+                                        uid=28_90 StaticText "customer,"
+                                      uid=29_196 generic
+                                        uid=28_91 StaticText "3 days ago"
+                                    uid=29_197 generic
+                                      uid=28_92 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_198 listitem level="1"
+                                uid=29_199 ignored
+                                  uid=29_200 ignored
+                                    uid=29_201 ignored
+                                      uid=29_202 ignored
+                                        uid=29_203 generic
+                                          uid=28_93 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_204 ignored
+                                uid=28_94 link "They helped me when I was in need of a… They helped me when I was in need of a loan with loans by MAL Thank you. Review by Kenny Martin, 3 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a3284dc1926def46229694a?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_205 ignored
+                                    uid=29_206 generic
+                                      uid=28_95 StaticText "They helped me when I was in need of a…"
+                                    uid=29_207 generic
+                                      uid=28_96 StaticText "They helped me when I was in need of a loan with loans by MAL Thank you."
+                                    uid=29_208 ignored
+                                      uid=29_209 generic
+                                        uid=28_97 StaticText "Review by"
+                                      uid=29_210 generic
+                                        uid=28_98 StaticText "Kenny Martin,"
+                                      uid=29_211 generic
+                                        uid=28_99 StaticText "3 days ago"
+                                    uid=29_212 generic
+                                      uid=28_100 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_213 listitem level="1"
+                                uid=29_214 ignored
+                                  uid=29_215 ignored
+                                    uid=29_216 ignored
+                                      uid=29_217 ignored
+                                        uid=29_218 generic
+                                          uid=28_101 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_219 ignored
+                                uid=28_102 link "This was the first time hearing of this… This was the first time hearing of this company I wish I’d have heard of it soon... Review by H R, 4 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a31737562e5db86f498c9d7?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_220 ignored
+                                    uid=29_221 generic
+                                      uid=28_103 StaticText "This was the first time hearing of this…"
+                                    uid=29_222 generic
+                                      uid=28_104 StaticText "This was the first time hearing of this company I wish I’d have heard of it soon..."
+                                    uid=29_223 ignored
+                                      uid=29_224 generic
+                                        uid=28_105 StaticText "Review by"
+                                      uid=29_225 generic
+                                        uid=28_106 StaticText "H R,"
+                                      uid=29_226 generic
+                                        uid=28_107 StaticText "4 days ago"
+                                    uid=29_227 generic
+                                      uid=28_108 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_228 listitem level="1"
+                                uid=29_229 ignored
+                                  uid=29_230 ignored
+                                    uid=29_231 ignored
+                                      uid=29_232 ignored
+                                        uid=29_233 generic
+                                          uid=28_109 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_234 ignored
+                                uid=28_110 link "Very easy to use ...helpful with any… Very easy to use ...helpful with any questions...keep the customer informed thro... Review by Mark Brumby, 4 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a310e3011b129585d6bdc5f?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_235 ignored
+                                    uid=29_236 generic
+                                      uid=28_111 StaticText "Very easy to use ...helpful with any…"
+                                    uid=29_237 generic
+                                      uid=28_112 StaticText "Very easy to use ...helpful with any questions...keep the customer informed thro..."
+                                    uid=29_238 ignored
+                                      uid=29_239 generic
+                                        uid=28_113 StaticText "Review by"
+                                      uid=29_240 generic
+                                        uid=28_114 StaticText "Mark Brumby,"
+                                      uid=29_241 generic
+                                        uid=28_115 StaticText "4 days ago"
+                                    uid=29_242 generic
+                                      uid=28_116 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_243 listitem level="1"
+                                uid=29_244 ignored
+                                  uid=29_245 ignored
+                                    uid=29_246 ignored
+                                      uid=29_247 ignored
+                                        uid=29_248 generic
+                                          uid=28_117 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_249 ignored
+                                uid=28_118 link "Easy application Easy application process, quick response Review by Lou Hendo, 5 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a301a447bc6373faa452fb3?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_250 ignored
+                                    uid=29_251 generic
+                                      uid=28_119 StaticText "Easy application"
+                                    uid=29_252 generic
+                                      uid=28_120 StaticText "Easy application process, quick response"
+                                    uid=29_253 ignored
+                                      uid=29_254 generic
+                                        uid=28_121 StaticText "Review by"
+                                      uid=29_255 generic
+                                        uid=28_122 StaticText "Lou Hendo,"
+                                      uid=29_256 generic
+                                        uid=28_123 StaticText "5 days ago"
+                                    uid=29_257 generic
+                                      uid=28_124 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_258 listitem level="1"
+                                uid=29_259 ignored
+                                  uid=29_260 ignored
+                                    uid=29_261 ignored
+                                      uid=29_262 ignored
+                                        uid=29_263 generic
+                                          uid=28_125 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_264 ignored
+                                uid=28_126 link "The website was easy . The website was easy . Review by Vel Trivassen, 5 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a3018718f43740132037025?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_265 ignored
+                                    uid=29_266 generic
+                                      uid=28_127 StaticText "The website was easy ."
+                                    uid=29_267 generic
+                                      uid=28_128 StaticText "The website was easy ."
+                                    uid=29_268 ignored
+                                      uid=29_269 generic
+                                        uid=28_129 StaticText "Review by"
+                                      uid=29_270 generic
+                                        uid=28_130 StaticText "Vel Trivassen,"
+                                      uid=29_271 generic
+                                        uid=28_131 StaticText "5 days ago"
+                                    uid=29_272 generic
+                                      uid=28_132 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_273 listitem level="1"
+                                uid=29_274 ignored
+                                  uid=29_275 ignored
+                                    uid=29_276 ignored
+                                      uid=29_277 ignored
+                                        uid=29_278 generic
+                                          uid=28_133 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_279 ignored
+                                uid=28_134 link "Very helpful and great… Very helpful and great staff,transparent from the start!! Review by Dar Shan, 5 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a3013a4253d2e7284269fc3?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_280 ignored
+                                    uid=29_281 generic
+                                      uid=28_135 StaticText "Very helpful and great…"
+                                    uid=29_282 generic
+                                      uid=28_136 StaticText "Very helpful and great staff,transparent from the start!!"
+                                    uid=29_283 ignored
+                                      uid=29_284 generic
+                                        uid=28_137 StaticText "Review by"
+                                      uid=29_285 generic
+                                        uid=28_138 StaticText "Dar Shan,"
+                                      uid=29_286 generic
+                                        uid=28_139 StaticText "5 days ago"
+                                    uid=29_287 generic
+                                      uid=28_140 StaticText "Click to view the full review on Trustpilot"
+                              uid=29_288 listitem level="1"
+                                uid=29_289 ignored
+                                  uid=29_290 ignored
+                                    uid=29_291 ignored
+                                      uid=29_292 ignored
+                                        uid=29_293 generic
+                                          uid=28_141 image "5 out of 5 star rating on Trustpilot"
+                                            uid=29_294 ignored
+                                uid=28_142 link "Loan Spot on in every department, everything is clear as day and customer service was... Review by simon, 5 days ago Click to view the full review on Trustpilot" url="https://uk.trustpilot.com/reviews/6a30081a81805f0b827b6ef3?utm_medium=trustbox&utm_source=Carousel"
+                                  uid=29_295 ignored
+                                    uid=29_296 generic
+                                      uid=28_143 StaticText "Loan"
+                                    uid=29_297 generic
+                                      uid=28_144 StaticText "Spot on in every department, everything is clear as day and customer service was..."
+                                    uid=29_298 ignored
+                                      uid=29_299 generic
+                                        uid=28_145 StaticText "Review by"
+                                      uid=29_300 generic
+                                        uid=28_146 StaticText "simon,"
+                                      uid=29_301 generic
+                                        uid=28_147 StaticText "5 days ago"
+                                    uid=29_302 generic
+                                      uid=28_148 StaticText "Click to view the full review on Trustpilot"
+                          uid=29_303 ignored
+                            uid=29_304 ignored
+            uid=29_305 separator orientation="horizontal"
+          uid=29_306 ignored
+            uid=29_307 ignored
+              uid=29_308 ignored
+                uid=28_149 link url="http://loansbymal.co.uk/"
+                  uid=29_309 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=29_310 ignored
+                uid=29_311 ignored
+                  uid=29_312 generic
+                    uid=28_150 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=28_151 StaticText "FAQs"
+                  uid=29_313 generic
+                    uid=28_152 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=28_153 StaticText "Contact us"
+          uid=29_314 ignored
+            uid=29_315 ignored
+              uid=29_316 ignored
+                uid=29_317 generic
+                  uid=29_318 paragraph
+                    uid=28_154 StaticText "© Monthly Advance Loans Limited."
+                  uid=29_319 paragraph
+                    uid=29_320 strong
+                      uid=28_155 StaticText "loans by mal"
+                    uid=28_156 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=29_321 ignored
+                uid=29_322 paragraph
+                  uid=28_157 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=29_323 strong
+                      uid=28_158 StaticText "Privacy Policy"
+                    uid=28_159 StaticText " |"
+                  uid=28_160 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=29_324 strong
+                      uid=28_161 StaticText " Terms & Conditions"
+                    uid=28_162 StaticText " |"
+                  uid=28_163 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=29_325 strong
+                      uid=28_164 StaticText " Complaints"
+                    uid=28_165 StaticText " |"
+                  uid=28_166 StaticText " "
+                  uid=29_326 strong
+                    uid=28_167 StaticText "Version 1.237.4"
+              uid=29_327 ignored
+                uid=28_168 link "" url="https://www.facebook.com/loansbymal"
+                  uid=29_328 generic
+                    uid=29_329 ignored
+                      uid=28_13 StaticText ""
+                uid=28_169 link "" url="https://twitter.com/loansbymal"
+                  uid=29_330 generic
+                    uid=29_331 ignored
+                      uid=28_13 StaticText ""
+                uid=28_170 link "" url="https://www.instagram.com/loansbymal"
+                  uid=29_332 generic
+                    uid=29_333 ignored
+                      uid=28_13 StaticText ""
+                uid=28_171 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=29_334 generic
+                    uid=29_335 ignored
+                      uid=28_13 StaticText ""

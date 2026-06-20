@@ -1,0 +1,869 @@
+---
+import Base from '../layouts/Base.astro';
+import { formatDate, page, posts } from '../lib/content.ts';
+
+const APPLY_URL = '/apply/';
+const home = page('home');
+
+const eligibility = [
+  {
+    title: 'Age',
+    body: 'Aged between 21 and 71 years old at the time of application.',
+  },
+  {
+    title: 'UK residency',
+    body: 'You live and work in the UK on a permanent basis.',
+  },
+  {
+    title: 'Income',
+    body: 'You earn at least £1,300 per month after tax — employment, self-employment or pensions.',
+  },
+  {
+    title: 'Bank account',
+    body: 'A UK bank account that supports Open Banking connections.',
+  },
+];
+
+const steps = [
+  {
+    title: 'Apply online',
+    body: 'Choose your amount and term, tell us a little about yourself. The first two steps won’t impact your credit score.',
+  },
+  {
+    title: 'We check affordability',
+    body: 'Credit file plus Open Banking data — a responsible, personalised lending decision, not a tick-box one.',
+  },
+  {
+    title: 'Sign. Funds land.',
+    body: 'Sign, verify your banking, and after a quick 5–10 minute call we pay out — usually within hours.',
+  },
+];
+
+const [featured, ...rest] = posts;
+---
+
+<Base title={home.seo_title ?? home.title} description={home.seo_description ?? undefined}>
+  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="ripples"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="overline">Direct lender · Powered by Open Banking</span>
+        <h1>Fair and <em>affordable</em> unsecured loans</h1>
+        <p class="lede">
+          Borrow £1,000 – £5,000 over up to 36 months. APR from 22.0% to 93.8%, personalised to
+          your circumstances — and checking your eligibility won’t touch your credit score.
+        </p>
+        <div class="hero-ctas">
+          <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+          <a class="btn btn--ghost-dark" href="/instalment-loan/">How it works</a>
+        </div>
+        <p class="hero-fineprint">
+          Applicants must be aged 21–71, earn at least £1,300 a month, and live in the UK.
+        </p>
+      </div>
+
+      <!-- Quote card: representative example without JS, sliders with -->
+      <div class="quote-card">
+        <img class="quote-duck" src="/duck.png" alt="" width="118" height="133" />
+        <p class="quote-title">Your quick quote</p>
+        <div class="calc" id="calc" hidden>
+          <label>
+            <span class="calc-label">I’d like to borrow</span>
+            <output id="amt-out">£2,500</output>
+            <input type="range" id="amt" min="1000" max="5000" step="100" value="2500" />
+            <span class="calc-range"><i>£1,000</i><i>£5,000</i></span>
+          </label>
+          <label>
+            <span class="calc-label">repaid over</span>
+            <output id="term-out">24 months</output>
+            <input type="range" id="term" min="9" max="36" step="3" value="24" />
+            <span class="calc-range"><i>9 mo</i><i>36 mo</i></span>
+          </label>
+          <div class="calc-result">
+            <div>
+              <span class="calc-label">Monthly repayment</span>
+              <strong id="monthly" class="calc-figure">£154.38</strong>
+            </div>
+            <div>
+              <span class="calc-label">Total repayable</span>
+              <strong id="total" class="calc-figure calc-figure--sub">£3,705.12</strong>
+            </div>
+          </div>
+          <p class="small">
+            Illustrative, based on our representative 24.1% p.a. fixed rate — your personalised
+            rate may differ.
+          </p>
+        </div>
+        <a class="btn btn--apply btn-block" href={APPLY_URL}>Get your personalised quote</a>
+        <p class="small rep-example">
+          Representative example: on an assumed loan amount of £2,500 over a 24 month repayment
+          period. Rate of interest 24.1% per annum (fixed). Representative 49.6% APR. Total amount
+          payable is £3,705.12 of which £1,205.12 is interest, 24 monthly repayments of £154.38.
+        </p>
+      </div>
+    </div>
+    <svg class="wave wave--hero" viewBox="0 0 1440 90" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        d="M0,48 C240,88 480,8 720,38 C960,68 1200,18 1440,52 L1440,90 L0,90 Z"
+        fill="var(--ink-950)"></path>
+    </svg>
+  </section>
+
+  <!-- ── Trust ticker ─────────────────────────────────────── -->
+  <aside class="ticker" aria-label="Trust signals">
+    <div class="ticker-track">
+      {
+        [0, 1].map(() => (
+          <div class="ticker-item" aria-hidden={true}>
+            <span>
+              <strong>FCA</strong> authorised &amp; regulated — firm ref 912359
+            </span>
+            <span class="ticker-dot">●</span>
+            <span>
+              <strong>37,500</strong> customers helped
+            </span>
+            <span class="ticker-dot">●</span>
+            <a href="https://www.trustpilot.com/review/loansbymal.co.uk">
+              Rated <strong>‘Excellent’</strong> on Trustpilot
+            </a>
+            <span class="ticker-dot">●</span>
+            <span>
+              <strong>Direct lender</strong> — not a broker
+            </span>
+            <span class="ticker-dot">●</span>
+            <span>
+              <strong>100% online</strong> — no documents required
+            </span>
+            <span class="ticker-dot">●</span>
+          </div>
+        ))
+      }
+    </div>
+  </aside>
+
+  <!-- ── Why MAL / big stats ──────────────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="why-grid reveal">
+        <div>
+          <span class="overline">Unsecured loans up to £5,000</span>
+          <h2>The bank said no.<br />We look properly.</h2>
+        </div>
+        <div class="why-copy">
+          <p>
+            <strong>Loans by MAL</strong> is a direct lender offering unsecured loans from £1,000
+            to £5,000, over terms of 9 to 36 months. We lend to a wide range of customers, using a
+            combination of credit file and Open Banking data to make responsible and personalised
+            lending decisions.
+          </p>
+          <p>
+            By using Open Banking technology, we can often help customers who are unable to borrow
+            from banks and other lenders — we read the real picture, not just the score.
+          </p>
+          <a class="btn btn--ghost" href="/about-us/">More about us</a>
+        </div>
+      </div>
+
+      <dl class="stats reveal">
+        <div>
+          <dd>37,500</dd>
+          <dt>customers helped since 2020</dt>
+        </div>
+        <div>
+          <dd>22.0<span class="stat-unit">%</span></dd>
+          <dt>APR from*, personalised to you</dt>
+        </div>
+        <div>
+          <dd>£5k</dd>
+          <dt>borrow £1,000 up to £5,000</dt>
+        </div>
+        <div>
+          <dd>0</dd>
+          <dt>documents, branches or brokers</dt>
+        </div>
+      </dl>
+      <p class="small">*Subject to status. Terms &amp; conditions apply.</p>
+    </div>
+  </section>
+
+  <!-- ── Eligibility ──────────────────────────────────────── -->
+  <section class="section section--white elig">
+    <div class="container">
+      <div class="elig-head reveal">
+        <span class="overline">Eligibility</span>
+        <h2>Four quick checks before you apply</h2>
+      </div>
+      <ol class="elig-list">
+        {
+          eligibility.map((item, i) => (
+            <li class="reveal">
+              <span class="ghost-num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── How it works ─────────────────────────────────────── -->
+  <section class="section section--dark steps-section">
+    <div class="ripples"></div>
+    <div class="container">
+      <div class="steps-head reveal">
+        <span class="overline">How it works</span>
+        <h2>Easy as one, two, funded.</h2>
+        <p class="lede">Quick and easy application — with a fast in-principle decision.</p>
+      </div>
+      <ol class="steps">
+        {
+          steps.map((step, i) => (
+            <li class="reveal">
+              <span class="step-num">{i + 1}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <a class="btn btn--apply reveal" href={APPLY_URL}>Start your application</a>
+    </div>
+  </section>
+
+  <!-- ── Review ───────────────────────────────────────────── -->
+  <section class="section review-section">
+    <div class="container review reveal">
+      <span class="big-quote" aria-hidden="true">“</span>
+      <blockquote>
+        Very easy to deal with. Professional people who look after you. Very impressed — thank you
+        for the outstanding service.
+      </blockquote>
+      <div class="tp-row">
+        <span class="tp-stars" aria-label="Five star rating">
+          <i></i><i></i><i></i><i></i><i></i>
+        </span>
+        <a href="https://www.trustpilot.com/review/loansbymal.co.uk">
+          Rated ‘Excellent’ on Trustpilot
+        </a>
+      </div>
+      <p class="small">
+        We encourage all customers to leave an honest review of their experience with Loans by MAL.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Guides / news ────────────────────────────────────── -->
+  <section class="section section--white">
+    <div class="container">
+      <div class="news-head reveal">
+        <div>
+          <span class="overline">Money guides &amp; news</span>
+          <h2>Borrow smarter</h2>
+        </div>
+        <a class="btn btn--ghost" href="/news/">All guides</a>
+      </div>
+      <div class="news-grid reveal">
+        <a class="news-feature" href={`/news/${featured.slug}/`}>
+          <time class="small" datetime={featured.date ?? undefined}>{formatDate(featured.date)}</time>
+          <h3>{featured.title}</h3>
+          <p>{featured.seo_description}</p>
+          <span class="news-more">Read the guide</span>
+        </a>
+        <div class="news-list">
+          {
+            rest.slice(0, 4).map((post) => (
+              <a href={`/news/${post.slug}/`}>
+                <time class="small" datetime={post.date ?? undefined}>{formatDate(post.date)}</time>
+                <span class="news-list-title">{post.title}</span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+</Base>
+
+<script>
+  // Progressive enhancement: static representative example without JS;
+  // sliders calibrated to it (flat 24.1% p.a. -> £2,500/24mo = £154.38/mo).
+  const RATE = 0.241;
+  const calc = document.getElementById('calc')!;
+  const amt = document.getElementById('amt') as HTMLInputElement;
+  const term = document.getElementById('term') as HTMLInputElement;
+  const monthly = document.getElementById('monthly')!;
+  const total = document.getElementById('total')!;
+  const gbp = (n: number) =>
+    n.toLocaleString('en-GB', { style: 'currency', currency: 'GBP' });
+
+  function paintTrack(input: HTMLInputElement) {
+    const pct =
+      ((Number(input.value) - Number(input.min)) / (Number(input.max) - Number(input.min))) * 100;
+    input.style.setProperty('--fill', `${pct}%`);
+  }
+
+  function update() {
+    const principal = Number(amt.value);
+    const months = Number(term.value);
+    const totalDue = principal + principal * RATE * (months / 12);
+    document.getElementById('amt-out')!.textContent = gbp(principal).replace('.00', '');
+    document.getElementById('term-out')!.textContent = `${months} months`;
+    monthly.textContent = gbp(totalDue / months);
+    total.textContent = gbp(totalDue);
+    for (const el of [monthly, total]) {
+      el.classList.remove('pulse');
+      void el.offsetWidth; // restart animation
+      el.classList.add('pulse');
+    }
+    paintTrack(amt);
+    paintTrack(term);
+  }
+
+  calc.hidden = false;
+  amt.addEventListener('input', update);
+  term.addEventListener('input', update);
+  update();
+</script>
+
+<style>
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    background:
+      radial-gradient(50rem 26rem at 78% 8%, rgba(0, 135, 155, 0.35), transparent 70%),
+      var(--ink-900);
+    color: var(--on-dark);
+    padding-top: clamp(3rem, 7vw, 5.5rem);
+  }
+
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.12fr 0.88fr;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+    padding-bottom: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .hero-copy h1 {
+    color: #fff;
+  }
+
+  .hero-copy h1 em {
+    font-style: normal;
+    color: var(--teal-300);
+    position: relative;
+  }
+
+  .hero-copy h1 em::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.04em;
+    height: 0.14em;
+    background: var(--amber-400);
+    border-radius: 99px;
+    opacity: 0.9;
+  }
+
+  .hero-copy .lede {
+    color: var(--on-dark);
+  }
+
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-block: 1.8rem 1.2rem;
+  }
+
+  .hero-fineprint {
+    font-size: 0.85rem;
+    color: var(--on-dark-muted);
+  }
+
+  /* ── Quote card ── */
+  .quote-card {
+    position: relative;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 2.1rem;
+    box-shadow: var(--shadow-md);
+    /* clearance so the duck (-106px overhang) never slides under the sticky header */
+    margin-top: 3rem;
+  }
+
+  .quote-duck {
+    position: absolute;
+    top: -106px;
+    right: 26px;
+    filter: drop-shadow(0 10px 14px rgba(4, 33, 41, 0.35));
+  }
+
+  .quote-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin-bottom: 1.3rem;
+  }
+
+  .calc label {
+    display: block;
+    margin-bottom: 1.35rem;
+  }
+
+  .calc-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .calc output {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.7rem;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .calc input[type='range'] {
+    --fill: 37.5%;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    margin-top: 0.55rem;
+    border-radius: 99px;
+    background: linear-gradient(
+      to right,
+      var(--teal-500) var(--fill),
+      var(--teal-50) var(--fill)
+    );
+    outline-offset: 4px;
+  }
+
+  .calc input[type='range']::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--amber-400);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(4, 33, 41, 0.35);
+    cursor: grab;
+  }
+
+  .calc input[type='range']::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--amber-400);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(4, 33, 41, 0.35);
+    cursor: grab;
+  }
+
+  .calc-range {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  .calc-range i {
+    font-style: normal;
+  }
+
+  .calc-result {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1rem;
+    background: var(--ink-900);
+    border-radius: var(--radius);
+    padding: 1.15rem 1.4rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .calc-result .calc-label {
+    color: var(--on-dark-muted);
+  }
+
+  .calc-figure {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 2rem;
+    color: #fff;
+    line-height: 1.15;
+  }
+
+  .calc-figure--sub {
+    font-size: 1.35rem;
+    color: var(--teal-300);
+    align-self: end;
+  }
+
+  :global(.calc-figure.pulse) {
+    animation: pulse 0.35s ease;
+  }
+
+  @keyframes pulse {
+    40% {
+      transform: scale(1.06);
+      color: var(--amber-400);
+    }
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  .rep-example {
+    margin: 1.1rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .wave--hero {
+    margin-bottom: -1px;
+  }
+
+  /* ── Why / stats ── */
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+    margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .why-copy {
+    padding-top: 0.6rem;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.4rem;
+    margin: 0 0 0.8rem;
+    padding-top: 2.2rem;
+    border-top: 2px solid var(--line);
+  }
+
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 5vw, 4rem);
+    color: var(--teal-500);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .stat-unit {
+    font-size: 0.55em;
+  }
+
+  .stats dt {
+    margin-top: 0.5rem;
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 13rem;
+  }
+
+  /* ── Eligibility ── */
+  .elig-head {
+    max-width: 34rem;
+    margin-bottom: 3rem;
+  }
+
+  .elig-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(1.4rem, 3vw, 2.5rem);
+    padding: 0;
+    margin: 0;
+  }
+
+  .elig-list li {
+    border-top: 2px solid var(--ink);
+    padding-top: 1.1rem;
+  }
+
+  .ghost-num {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.8rem, 5vw, 4rem);
+    line-height: 1;
+    color: var(--teal-100);
+    margin-bottom: 0.7rem;
+  }
+
+  .elig-list p {
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  /* ── Steps ── */
+  .steps-section {
+    position: relative;
+  }
+
+  .steps-head {
+    max-width: 36rem;
+    margin-bottom: 3.2rem;
+  }
+
+  .steps {
+    list-style: none;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1.6rem, 4vw, 3rem);
+    padding: 0;
+    margin: 0 0 2.6rem;
+  }
+
+  .steps li {
+    position: relative;
+  }
+
+  .steps li::before {
+    content: '';
+    position: absolute;
+    top: 1.55rem;
+    left: 3.6rem;
+    right: -1.5rem;
+    border-top: 2px dashed rgba(255, 255, 255, 0.18);
+  }
+
+  .steps li:last-child::before {
+    display: none;
+  }
+
+  .step-num {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 3.1rem;
+    height: 3.1rem;
+    border-radius: 50%;
+    background: var(--amber-400);
+    color: var(--ink-950);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .steps p {
+    color: var(--on-dark);
+    font-size: 0.97rem;
+    margin: 0;
+  }
+
+  /* ── Review ── */
+  .review-section {
+    padding-block: clamp(4rem, 9vw, 7rem);
+  }
+
+  .review {
+    position: relative;
+    max-width: 52rem;
+    text-align: center;
+  }
+
+  .big-quote {
+    position: absolute;
+    top: -4.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 11rem;
+    line-height: 1;
+    color: var(--teal-100);
+    pointer-events: none;
+  }
+
+  .review blockquote {
+    position: relative;
+    margin: 0 0 1.6rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 3.2vw, 2.3rem);
+    line-height: 1.3;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .tp-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .tp-stars {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .tp-stars i {
+    width: 1.5rem;
+    height: 1.5rem;
+    background: #00b67a;
+    display: grid;
+    place-items: center;
+  }
+
+  .tp-stars i::before {
+    content: '★';
+    color: #fff;
+    font-size: 0.95rem;
+    font-style: normal;
+  }
+
+  .tp-row a {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── News ── */
+  .news-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.4rem;
+  }
+
+  .news-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .news-feature {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    text-decoration: none;
+    background: var(--ink-900);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.6rem, 3.5vw, 2.6rem);
+    min-height: 21rem;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .news-feature:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .news-feature time {
+    color: var(--teal-300);
+  }
+
+  .news-feature h3 {
+    color: #fff;
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    margin: 0.5rem 0 0.6rem;
+  }
+
+  .news-feature p {
+    color: var(--on-dark);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+
+  .news-more {
+    color: var(--amber-400);
+    font-weight: 800;
+  }
+
+  .news-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .news-list a {
+    text-decoration: none;
+    padding: 1.15rem 0.2rem;
+    border-bottom: 1px solid var(--line-cool);
+    transition: padding-left 0.18s ease;
+  }
+
+  .news-list a:first-child {
+    padding-top: 0.3rem;
+  }
+
+  .news-list a:hover {
+    padding-left: 0.7rem;
+  }
+
+  .news-list-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.12rem;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .news-list a:hover .news-list-title {
+    color: var(--teal-500);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 980px) {
+    .hero-grid,
+    .why-grid,
+    .news-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .quote-card {
+      margin-top: 7rem;
+    }
+
+    .stats,
+    .elig-list {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 2.2rem;
+    }
+
+    .steps {
+      grid-template-columns: 1fr;
+      gap: 1.8rem;
+    }
+
+    .steps li::before {
+      display: none;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .stats,
+    .elig-list {
+      grid-template-columns: 1fr;
+    }
+
+    .news-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

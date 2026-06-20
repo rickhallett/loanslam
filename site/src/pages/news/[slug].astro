@@ -1,0 +1,86 @@
+---
+import Base from '../../layouts/Base.astro';
+import {
+  type ContentRecord,
+  formatDate,
+  posts,
+  rewriteLinks,
+  stripLeadingH1,
+} from '../../lib/content.ts';
+
+export function getStaticPaths() {
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const APPLY_URL = 'https://applyloansbymal.co.uk';
+const { post } = Astro.props as { post: ContentRecord };
+const words = post.html.replace(/<[^>]+>/g, ' ').split(/\s+/).length;
+const readMins = Math.max(1, Math.round(words / 220));
+---
+
+<Base title={post.seo_title ?? post.title} description={post.seo_description ?? undefined}>
+  <div class="page-head">
+    <div class="ripples"></div>
+    <div class="container" style="position: relative;">
+      <p class="crumb">
+        <a href="/news/">← All guides</a> ·
+        <time datetime={post.date ?? undefined}>{formatDate(post.date)}</time> · {readMins} min read
+      </p>
+      <h1>{post.title}</h1>
+    </div>
+  </div>
+
+  <div class="container section body-grid">
+    <article class="prose" set:html={rewriteLinks(stripLeadingH1(post.html))} />
+    <aside class="side-cta">
+      <img src="/duck.png" alt="" width="58" height="65" loading="lazy" />
+      <p class="side-title">Borrow £1,000 – £5,000</p>
+      <p class="small">Check your eligibility in minutes — it won’t impact your credit score.</p>
+      <a class="btn btn--apply" href={APPLY_URL}>Apply now</a>
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .body-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
+  }
+
+  .side-cta {
+    position: sticky;
+    top: 96px;
+    background: var(--ink-900);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    color: var(--on-dark);
+  }
+
+  .side-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #fff;
+    margin: 0.4rem 0;
+  }
+
+  .side-cta .small {
+    color: var(--on-dark-muted);
+  }
+
+  .side-cta .btn {
+    width: 100%;
+  }
+
+  @media (max-width: 880px) {
+    .body-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .side-cta {
+      position: static;
+    }
+  }
+</style>
