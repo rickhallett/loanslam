@@ -17,7 +17,7 @@ export function expandTurn(turn: string): string {
 
 /**
  * Smoke Gate. Run these first; if two or more fail the build is not worth a
- * full battery. Source: agent-hell-battery "Smoke Gate".
+ * full battery. This is the encoded smoke section of the current Hell Week set.
  */
 export const smokeScenarios: HellWeekScenario[] = [
   {

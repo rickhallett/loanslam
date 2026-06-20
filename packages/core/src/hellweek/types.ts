@@ -1,11 +1,11 @@
 import type { SafetyFlag, ServingMode, TurnAction } from "@loanslam/contracts";
 
 /**
- * Hell Week is the automated form of the manual `agent-hell-battery` markdown
- * battery. It drives the live, model-backed engine across a broad, deliberately
+ * Hell Week drives the live, model-backed engine across a broad, deliberately
  * hostile scenario set and grades the result the way Phase 0 stakeholders read
  * it: a tiny non-negotiable safety floor, then judged behaviour for everything
- * else. See docs and `artifacts/phase0/burn-regression-testing/agent-hell-battery-*.md`.
+ * else. The encoded scenario set in this package is the current source; imported
+ * historical runs are indexed in artifacts/evidence-index/hell-week-runs.md.
  */
 
 /** Stakeholder-facing severity, inherited from the prior stakeholder reports. */

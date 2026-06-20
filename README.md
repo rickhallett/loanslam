@@ -135,7 +135,6 @@ just vercel-build
 ```text
 docs/
   product-brief.md                  Product scope and safety contract
-  architecture.md                   Current and productisation architecture boundaries
   llm-turn-planner-architecture.md  Canonical Phase 0 engine architecture
   stochastic-test-simulator-guide.md
   prds/                             Time-stamped product and implementation specs

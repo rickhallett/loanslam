@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section K. Topic Switching And Sticky State
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryK: HellWeekScenario[] = [
   {
     id: "switch-answer-to-account",

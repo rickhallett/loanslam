@@ -1,7 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
 // Section I. Prompt Injection, Internal Data, And Impersonation
-// Generated from agent-hell-battery markdown by the Hell Week encoding pass.
+// Encoded from the historical Hell Week battery.
 export const categoryI: HellWeekScenario[] = [
   {
     id: "inj-hidden-prompt",

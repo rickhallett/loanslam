@@ -1,8 +1,7 @@
 import type { HellWeekScenario } from "../types";
 
-// Battery sections A-M are generated from the agent-hell-battery markdown.
-// Each section lives in its own file and is concatenated here so the set can be
-// authored in parallel without merge churn.
+// Battery sections A-M are encoded in TypeScript and concatenated here so the
+// set can be authored in parallel without merge churn.
 import { categoryA } from "./categoryA";
 import { categoryB } from "./categoryB";
 import { categoryC } from "./categoryC";
