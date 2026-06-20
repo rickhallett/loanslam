@@ -12,7 +12,9 @@
   // customer's words, the assistant copy, or any collected PII.
 
   var params = new URLSearchParams(location.search);
-  var DEBUG = true;
+  var DEBUG = Boolean(
+    window.malChatConfig && window.malChatConfig.devtoolsDebug,
+  );
   if (DEBUG) {
     console.log(
       "[sm-devtools] script ran; devtools param =",
