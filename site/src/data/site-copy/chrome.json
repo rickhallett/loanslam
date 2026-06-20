@@ -1,6 +1,6 @@
 {
   "applyUrl": "/apply/",
-  "loginUrl": "https://monthlyadvanceloans.anchor.co.uk/Login",
+  "loginUrl": "/login/",
   "brand": {
     "logoAlt": "loans by mal — web based loans",
     "footerName": "loans by mal",
@@ -62,7 +62,7 @@
           { "label": "About us", "href": "/about-us/" },
           { "label": "News", "href": "/news/" },
           { "label": "Complaints", "href": "/complaints/" },
-          { "label": "Log in to your account", "href": "https://monthlyadvanceloans.anchor.co.uk/Login" }
+          { "label": "Log in to your account", "href": "/login/" }
         ]
       }
     ],

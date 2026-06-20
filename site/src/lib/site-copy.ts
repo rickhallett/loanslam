@@ -196,6 +196,11 @@ export interface NotFoundCopy {
 export interface ApplyCopy {
   title: string;
   description: string;
+  head: {
+    crumbHtml: string;
+    body: string;
+    signals: string[];
+  };
 }
 
 export interface ApplicationJourneyCopy {
@@ -663,9 +668,15 @@ function validateNotFound(raw: unknown): NotFoundCopy {
 
 function validateApply(raw: unknown): ApplyCopy {
   const root = objectAt(raw, 'apply');
+  const head = objectAt(root.head, 'apply.head');
   return {
     title: stringAt(root.title, 'apply.title'),
     description: stringAt(root.description, 'apply.description'),
+    head: {
+      crumbHtml: stringAt(head.crumbHtml, 'apply.head.crumbHtml'),
+      body: stringAt(head.body, 'apply.head.body'),
+      signals: stringArrayAt(head.signals, 'apply.head.signals'),
+    },
   };
 }
 

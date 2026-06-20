@@ -482,6 +482,11 @@ img {
   color: var(--ink);
 }
 
+.prose h1 {
+  margin-top: 2.4em;
+  font-size: 1.7rem;
+}
+
 .prose h2 {
   position: relative;
   margin-top: 2.4em;
@@ -543,7 +548,7 @@ img {
   color: var(--ink);
 }
 
-.prose a[href='/apply/'] {
+.prose a[href^='/apply'] {
   display: inline-flex;
   background: var(--amber-400);
   color: var(--ink-950);
