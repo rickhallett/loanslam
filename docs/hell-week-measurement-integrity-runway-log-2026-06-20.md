@@ -113,3 +113,44 @@ npx vitest run packages/core/src/hellweek/compare.test.ts packages/core/src/hell
 ```
 
 Result: `2` test files passed, `3` tests passed.
+
+## Section 4: Regression Report Update
+
+### Finding
+
+Before this slice, `hell-week -- --from <runDir>` reused the scenario contracts
+embedded in the captured report. That made it impossible for the standard
+rerender command to reproduce a current-source deterministic regrade after a
+scenario contract change.
+
+After updating rerender behavior to use current source contracts for matching
+captured scenario IDs, the three post-malformed-recovery captures regrade to
+`93/122`, `95/122`, and `93/122`.
+
+### Conclusion
+
+The tracked report
+`docs/hell-week-performance-regression-report-2026-06-20.md` now states:
+
+- the old `80/80/79` headline is a measurement artifact;
+- the current deterministic regrade is a sanity check, not product truth;
+- the missing judge-verdict artifact keeps the product-quality conclusion mixed
+  and unaudited.
+
+### Hypothesis
+
+The remaining deterministic dents are a narrower route/action/state set, not the
+broad planner regression implied by the original pass-count drop.
+
+### Verification
+
+```text
+npx vitest run packages/core/src/hellweek/run.test.ts
+npm run --silent core:hell-week -- --from artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-17-01-160Z --json
+npm run --silent core:hell-week -- --from artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-20-33-231Z --json
+npm run --silent core:hell-week -- --from artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-28-24-564Z --json
+npm run --silent core:hell-week-compare -- artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/baselines/hell-week-full-2026-06-16T07-47-56-459Z artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-28-24-564Z
+```
+
+Result: current-source regrade produced `93/122`, `95/122`, `93/122`; the
+high-baseline comparison is metadata-compatible and `mixed` at `-2` passes.
