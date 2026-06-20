@@ -110,6 +110,18 @@ function keyFigures(report: HellWeekReport): string {
       value: r.signalTurns === 0 ? "—" : pct(r.signalAgreementRate),
     },
     {
+      label: "Scenario p95",
+      value: runtimeStat(report, "scenarioWallTimeMs", "p95Ms"),
+    },
+    {
+      label: "Signal p50",
+      value: runtimeStat(report, "signalLatencyMs", "medianMs"),
+    },
+    {
+      label: "Planner p50",
+      value: runtimeStat(report, "plannerLatencyMs", "medianMs"),
+    },
+    {
       label: "Avg UX",
       value:
         report.uxQuality.averageScore === null
@@ -129,6 +141,16 @@ function keyFigures(report: HellWeekReport): string {
     )
     .join("")}
 </section>`;
+}
+
+function runtimeStat(
+  report: HellWeekReport,
+  key: keyof NonNullable<HellWeekReport["runtime"]>,
+  field: "medianMs" | "p95Ms",
+): string {
+  const value = report.runtime?.[key][field];
+
+  return typeof value === "number" ? formatDuration(value) : "—";
 }
 
 // ---------------------------------------------------------------------------

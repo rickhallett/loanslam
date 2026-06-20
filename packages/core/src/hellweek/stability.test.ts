@@ -49,6 +49,35 @@ describe("Hell Week stability report", () => {
     expect(classification(report, "recurring")).toBe("recurring_failure");
     expect(classification(report, "one-off")).toBe("one_off_failure");
     expect(report.pairwiseComparisons).toHaveLength(2);
+    expect(report.comparability.compatible).toBe(true);
+  });
+
+  it("preserves comparability warnings across repeated runs", () => {
+    const report = buildHellWeekStabilityReport({
+      setId: "mixed-metadata",
+      runs: [
+        run("run-1", [grade("stable-pass", true, "fine")], {
+          plannerModel: "planner-a",
+          policyVersion: "policy-a",
+          judged: false,
+        }),
+        run("run-2", [grade("stable-pass", true, "fine")], {
+          plannerModel: "planner-b",
+          policyVersion: "policy-b",
+          judged: true,
+        }),
+      ],
+      now: () => new Date("2026-06-20T10:30:00.000Z"),
+    });
+
+    expect(report.comparability.compatible).toBe(false);
+    expect(report.comparability.warnings.map((warning) => warning.field))
+      .toEqual(["planner_model", "policy_version", "judged_state"]);
+    expect(report.runs[0]).toMatchObject({
+      planner: { model: "planner-a" },
+      policyVersion: "policy-a",
+      judged: false,
+    });
   });
 });
 
@@ -108,7 +137,16 @@ function grade(
   };
 }
 
-function run(runId: string, grades: HellWeekGrade[]): HellWeekReport {
+function run(
+  runId: string,
+  grades: HellWeekGrade[],
+  overrides: {
+    plannerModel?: string;
+    plannerPrompt?: string;
+    policyVersion?: string;
+    judged?: boolean;
+  } = {},
+): HellWeekReport {
   const passed = grades.filter((item) => item.pass).length;
   const failed = grades.length - passed;
   const dents = grades.filter((item) => item.severity === "dent").length;
@@ -120,12 +158,12 @@ function run(runId: string, grades: HellWeekGrade[]): HellWeekReport {
     profile: "smoke",
     planner: {
       provider: "test",
-      model: "test",
-      promptVersion: "test",
+      model: overrides.plannerModel ?? "test",
+      promptVersion: overrides.plannerPrompt ?? "test",
     },
     signalExtractor: { enabled: false },
-    policyVersion: "test",
-    judged: false,
+    policyVersion: overrides.policyVersion ?? "test",
+    judged: overrides.judged ?? false,
     durationMs: 1,
     verdict: failed > 0 ? "needs_work" : "ship_ready",
     headline: "test",

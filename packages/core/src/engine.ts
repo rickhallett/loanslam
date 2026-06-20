@@ -84,7 +84,11 @@ export async function processTurn({
     policyVersion,
   };
 
-  const { plan, validated: policyValidated } = await planAndValidateTurn({
+  const {
+    plan,
+    validated: policyValidated,
+    plannerLatencyMs,
+  } = await planAndValidateTurn({
     planner,
     plannerInput,
     retrievedMatches,
@@ -126,6 +130,7 @@ export async function processTurn({
     inboundMessageId,
     outboundMessageId,
     planner: planner.metadata ?? defaultPlannerMetadata,
+    plannerLatencyMs,
     policyVersion,
     retrievedMatches,
     shadowSignalStatus: shadowSignal.status,
@@ -831,12 +836,18 @@ async function planAndValidateTurn({
   retrievedMatches: ReturnType<typeof retrieveMatches>;
   userMessage: string;
   signalBundle: SignalBundle | undefined;
-}): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
+}): Promise<{
+  plan: TurnPlan;
+  validated: ValidatedPlanFragment;
+  plannerLatencyMs: number;
+}> {
   let plan: TurnPlan;
+  const plannerStartedAt = Date.now();
 
   try {
     plan = await planner.planTurn(plannerInput);
   } catch (error) {
+    const plannerLatencyMs = Date.now() - plannerStartedAt;
     const reason = "I could not safely choose the next step from this message.";
     const traceReason = plannerFailureReason(error);
     const fallback = buildFallbackCopy(reason);
@@ -852,8 +863,34 @@ async function planAndValidateTurn({
       traceSummary: traceReason,
     };
 
+    if (
+      canRecoverMalformedPlanFromRouteEvidence(signalBundle, retrievedMatches)
+    ) {
+      const recovered = validateTurnPlan(plan, retrievedMatches, {
+        userMessage,
+        ...(signalBundle ? { signalBundle } : {}),
+      });
+
+      return {
+        plan,
+        plannerLatencyMs,
+        validated: {
+          ...recovered,
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: recovered.finalAction,
+            },
+            ...recovered.validatorOverrides,
+          ],
+        },
+      };
+    }
+
     return {
       plan,
+      plannerLatencyMs,
       validated: {
         plan,
         finalAction: fallback.action,
@@ -877,11 +914,25 @@ async function planAndValidateTurn({
 
   return {
     plan,
+    plannerLatencyMs: Date.now() - plannerStartedAt,
     validated: validateTurnPlan(plan, retrievedMatches, {
       userMessage,
       ...(signalBundle ? { signalBundle } : {}),
     }),
   };
+}
+
+function canRecoverMalformedPlanFromRouteEvidence(
+  signalBundle: SignalBundle | undefined,
+  retrievedMatches: ReturnType<typeof retrieveMatches>,
+): boolean {
+  const recommendedMode = signalBundle?.recommendedServingMode;
+
+  if (!recommendedMode || recommendedMode === "answer") {
+    return false;
+  }
+
+  return retrievedMatches[0]?.servingMode === recommendedMode;
 }
 
 function plannerFailureReason(error: unknown): string {
@@ -919,6 +970,8 @@ function mergeState({
   safetyFlags: ConversationState["safetyFlags"];
   finalAction: ConversationState["lastAction"];
 }): ConversationState {
+  const handoffPending = nextHandoffPending(state, finalAction);
+
   return {
     ...state,
     history: [
@@ -941,10 +994,38 @@ function mergeState({
       ...collectedFacts,
     },
     requestedFields: [...new Set(requestedFields)],
-    safetyFlags: [...new Set([...state.safetyFlags, ...safetyFlags])],
+    safetyFlags: nextStateSafetyFlags({
+      state,
+      safetyFlags,
+      finalAction,
+      handoffPending,
+    }),
     lastAction: finalAction,
-    handoffPending: nextHandoffPending(state, finalAction),
+    handoffPending,
   };
+}
+
+function nextStateSafetyFlags({
+  state,
+  safetyFlags,
+  finalAction,
+  handoffPending,
+}: {
+  state: ConversationState;
+  safetyFlags: ConversationState["safetyFlags"];
+  finalAction: ConversationState["lastAction"];
+  handoffPending: boolean;
+}): ConversationState["safetyFlags"] {
+  if (
+    handoffPending &&
+    (finalAction === "request_handoff_intake" ||
+      finalAction === "escalate" ||
+      finalAction === "create_ticket")
+  ) {
+    return mergeSafetyFlags(state.safetyFlags, safetyFlags);
+  }
+
+  return mergeSafetyFlags(safetyFlags);
 }
 
 function nextHandoffPending(

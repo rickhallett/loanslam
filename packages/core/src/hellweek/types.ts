@@ -158,6 +158,7 @@ export interface HellWeekTurnEvidence {
   signalNegatedOrCorrected?: boolean;
   signalComparisonStatus?: string;
   signalLatencyMs?: number;
+  plannerLatencyMs?: number;
 }
 
 export interface HellWeekScenarioEvidence {
@@ -260,6 +261,7 @@ export interface HellWeekReport {
   policyVersion: string;
   judged: boolean;
   durationMs: number;
+  runtime?: HellWeekRuntimeSummary;
 
   verdict: HellWeekVerdict;
   headline: string;
@@ -313,4 +315,20 @@ export interface HellWeekReport {
   grades: HellWeekGrade[];
   evidence: HellWeekScenarioEvidence[];
   scenarios: HellWeekScenario[];
+}
+
+export interface HellWeekRuntimeStat {
+  count: number;
+  missing: number;
+  totalMs: number;
+  averageMs: number | null;
+  medianMs: number | null;
+  p95Ms: number | null;
+  maxMs: number | null;
+}
+
+export interface HellWeekRuntimeSummary {
+  scenarioWallTimeMs: HellWeekRuntimeStat;
+  signalLatencyMs: HellWeekRuntimeStat;
+  plannerLatencyMs: HellWeekRuntimeStat;
 }

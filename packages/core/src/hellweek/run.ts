@@ -264,7 +264,7 @@ export function renderFromRun({
     readFileSync(join(runDir, "report.json"), "utf8"),
   ) as HellWeekReport;
 
-  const scenarios = priorReport.scenarios;
+  const scenarios = currentScenariosForCapturedRun(priorReport);
   const grades = grade(scenarios, evidence, judgeVerdicts);
   const report = buildHellWeekReport({
     runId: priorReport.runId,
@@ -288,6 +288,21 @@ export function renderFromRun({
     evidence,
     theme,
   });
+}
+
+function currentScenariosForCapturedRun(
+  priorReport: HellWeekReport,
+): HellWeekScenario[] {
+  const currentById = new Map(
+    selectScenarios(priorReport.profile).map((scenario) => [
+      scenario.id,
+      scenario,
+    ]),
+  );
+
+  return priorReport.scenarios.map(
+    (scenario) => currentById.get(scenario.id) ?? scenario,
+  );
 }
 
 export async function storeHellWeekReport({

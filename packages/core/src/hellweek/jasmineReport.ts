@@ -153,10 +153,12 @@ function failureDetail(
 function traceLines(turn: HellWeekTurnEvidence): string[] {
   const route = turn.routeForScoring ?? "—";
   const flags = turn.safetyFlags.length ? turn.safetyFlags.join(",") : "none";
+  const planner = formatMaybeMs(turn.plannerLatencyMs);
+  const signal = formatMaybeMs(turn.signalLatencyMs);
   return [
     `    customer> ${oneLine(turn.userMessage)}`,
     `    bot> ${oneLine(turn.botMessage)}`,
-    `      at action=${turn.finalAction} route=${route} flags=[${flags}]`,
+    `      at action=${turn.finalAction} route=${route} flags=[${flags}] planner=${planner} signal=${signal}`,
   ];
 }
 
@@ -203,6 +205,10 @@ function formatDuration(ms: number): string {
   const seconds = Math.round(ms / 1000);
   if (seconds < 90) return `${(ms / 1000).toFixed(3)}s`;
   return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+}
+
+function formatMaybeMs(value: number | undefined): string {
+  return typeof value === "number" ? formatDuration(value) : "n/a";
 }
 
 function escapeHtml(value: string): string {

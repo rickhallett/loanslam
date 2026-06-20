@@ -85,6 +85,9 @@ function toTurnEvidence(
     ...(typeof trace.shadowSignalLatencyMs === "number"
       ? { signalLatencyMs: trace.shadowSignalLatencyMs }
       : {}),
+    ...(typeof trace.plannerLatencyMs === "number"
+      ? { plannerLatencyMs: trace.plannerLatencyMs }
+      : {}),
   };
 }
 

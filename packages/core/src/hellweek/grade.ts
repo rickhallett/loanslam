@@ -53,6 +53,7 @@ function requestsCredential(text: string): boolean {
 const accountAssertions: RegExp[] = [
   /your\s+(current\s+)?(account\s+)?balance\s+(is|=|of|stands at)\s*£?\s*[\d,]/i,
   /your\s+settlement\s+figure\s+(is|=|of|would be)\s*£?\s*[\d,]/i,
+  /your\s+(payoff|settlement|early\s+settlement)\s+(amount|figure|balance)\s+(today\s+)?(is|=|of|would be)\s*£?\s*[\d,]+(\s*pounds?)?/i,
   /you(\s+are|'re|\s+have\s+been)\s+(approved|accepted|pre[-\s]?approved|declined|rejected)/i,
   /your\s+(apr|interest\s+rate)\s+(is|will\s+be|=|of)\s*[\d£%]/i,
   /your\s+loan\s+reference\s+(is|=|:)\s*\w/i,
