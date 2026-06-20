@@ -17,6 +17,10 @@ default:
 test:
     npm test
 
+# Enforce local TypeScript import-source policy.
+source-policy:
+    npm run source-policy:check
+
 # Type-check all npm workspaces.
 typecheck:
     npm run typecheck
@@ -24,6 +28,10 @@ typecheck:
 # Build all npm workspaces.
 build:
     npm run build
+
+# Run the reviewable local verification chain.
+verify:
+    npm run verify
 
 # Check formatting without changing files.
 format-check:
