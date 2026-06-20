@@ -160,6 +160,7 @@ class PrismaHellWeekReportStore implements HellWeekReportStore {
 
       return grade;
     });
+    const judge = optionalJson<HellWeekReport["judge"]>(run.judge);
 
     return buildHellWeekReport({
       runId: run.runId,
@@ -169,6 +170,7 @@ class PrismaHellWeekReportStore implements HellWeekReportStore {
       signalExtractor: castJson(run.signalExtractor),
       policyVersion: run.policyVersion,
       judged: run.judged,
+      ...(judge ? { judge } : {}),
       durationMs: run.durationMs,
       scenarios,
       evidence,
@@ -317,6 +319,7 @@ function runData(report: HellWeekReport) {
     signalExtractor: json(report.signalExtractor),
     policyVersion: report.policyVersion,
     judged: report.judged,
+    judge: nullableJson(report.judge),
     durationMs: report.durationMs,
     verdict: report.verdict,
     headline: report.headline,
@@ -445,6 +448,14 @@ function nullableJson(
 
 function castJson<T>(value: unknown): T {
   return value as T;
+}
+
+function optionalJson<T>(value: unknown): T | undefined {
+  if (value === null || value === undefined || value === Prisma.DbNull) {
+    return undefined;
+  }
+
+  return castJson<T>(value);
 }
 
 function cloneJson(value: unknown): unknown {

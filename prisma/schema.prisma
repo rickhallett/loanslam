@@ -60,6 +60,7 @@ model HellWeekRun {
   signalExtractor  Json     @map("signal_extractor_json")
   policyVersion    String   @map("policy_version") @db.Text
   judged           Boolean
+  judge            Json?    @map("judge_json")
   durationMs       Int      @map("duration_ms")
   verdict          String   @db.Text
   headline         String   @db.Text
