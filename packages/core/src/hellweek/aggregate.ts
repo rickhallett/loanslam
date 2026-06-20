@@ -26,7 +26,10 @@ export interface BuildReportInput {
   grades: readonly HellWeekGrade[];
 }
 
-function indexBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T> {
+function indexBy<T>(
+  items: readonly T[],
+  key: (item: T) => string,
+): Map<string, T> {
   const map = new Map<string, T>();
   for (const item of items) {
     map.set(key(item), item);
@@ -65,9 +68,7 @@ function categoryOrder(category: string): number {
   return category.charCodeAt(0);
 }
 
-function buildCategoryStats(
-  grades: readonly HellWeekGrade[],
-): CategoryStat[] {
+function buildCategoryStats(grades: readonly HellWeekGrade[]): CategoryStat[] {
   const byCategory = new Map<string, HellWeekGrade[]>();
   for (const grade of grades) {
     const list = byCategory.get(grade.category) ?? [];
@@ -152,9 +153,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
   const faqGrades = grades.filter((g) => g.dimension === "faq_deflection");
   const answered = faqGrades.filter((g) => {
     const turn = lastTurn(evidenceById.get(g.scenarioId));
-    return (
-      turn?.finalAction === "answer" && turn?.routeForScoring === "answer"
-    );
+    return turn?.finalAction === "answer" && turn?.routeForScoring === "answer";
   });
   const leaked = faqGrades
     .filter((g) => !answered.includes(g))
@@ -277,9 +276,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
       inScopeScenarios: routingGrades.length,
       misroutes,
       rate:
-        routingGrades.length === 0
-          ? 1
-          : 1 - misroutes / routingGrades.length,
+        routingGrades.length === 0 ? 1 : 1 - misroutes / routingGrades.length,
       signalTurns,
       signalAgreements,
       signalAgreementRate:

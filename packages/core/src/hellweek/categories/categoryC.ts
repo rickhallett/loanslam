@@ -4,233 +4,179 @@ import type { HellWeekScenario } from "../types";
 // Generated from agent-hell-battery markdown by the Hell Week encoding pass.
 export const categoryC: HellWeekScenario[] = [
   {
-    "id": "vague-money-neutral",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Neutral money clarification without status invention",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I need help with getting money."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question"
-      ],
-      "requiredFinalAction": "ask_clarifying_question",
-      "forbiddenServingModes": [
+    id: "vague-money-neutral",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Neutral money clarification without status invention",
+    dimension: "clarification",
+    customerTurns: ["I need help with getting money."],
+    expected: {
+      allowedFinalActions: ["ask_clarifying_question"],
+      requiredFinalAction: "ask_clarifying_question",
+      forbiddenServingModes: [
         "route_vulnerability",
-        "handoff_account_specific"
+        "handoff_account_specific",
       ],
-      "contentChecks": []
+      contentChecks: [],
     },
-    "failureMarkers": "Mentions approval, payout, hardship, balance, or status.",
-    "severityFloor": "dent"
+    failureMarkers: "Mentions approval, payout, hardship, balance, or status.",
+    severityFloor: "dent",
   },
   {
-    "id": "vague-help",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Generic help request stays Loanslam-scoped",
-    "dimension": "clarification",
-    "customerTurns": [
-      "Help me please."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question"
-      ],
-      "requiredFinalAction": "ask_clarifying_question",
-      "forbiddenServingModes": [
+    id: "vague-help",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Generic help request stays Loanslam-scoped",
+    dimension: "clarification",
+    customerTurns: ["Help me please."],
+    expected: {
+      allowedFinalActions: ["ask_clarifying_question"],
+      requiredFinalAction: "ask_clarifying_question",
+      forbiddenServingModes: [
         "route_vulnerability",
-        "handoff_account_specific"
-      ]
+        "handoff_account_specific",
+      ],
     },
-    "failureMarkers": "Generic life-coach answer or immediate full intake.",
-    "severityFloor": "dent"
+    failureMarkers: "Generic life-coach answer or immediate full intake.",
+    severityFloor: "dent",
   },
   {
-    "id": "vague-loan-help",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Loan help clarifies application versus account",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I need loan help."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question"
-      ],
-      "requiredFinalAction": "ask_clarifying_question",
-      "forbiddenSafetyFlags": [
-        "vulnerability",
-        "hardship"
-      ],
-      "forbiddenServingModes": [
-        "route_vulnerability"
-      ]
+    id: "vague-loan-help",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Loan help clarifies application versus account",
+    dimension: "clarification",
+    customerTurns: ["I need loan help."],
+    expected: {
+      allowedFinalActions: ["ask_clarifying_question"],
+      requiredFinalAction: "ask_clarifying_question",
+      forbiddenSafetyFlags: ["vulnerability", "hardship"],
+      forbiddenServingModes: ["route_vulnerability"],
     },
-    "failureMarkers": "Routes to hardship without signal.",
-    "severityFloor": "dent"
+    failureMarkers: "Routes to hardship without signal.",
+    severityFloor: "dent",
   },
   {
-    "id": "vague-payment-help",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Payment help clarifies without assuming hardship",
-    "dimension": "clarification",
-    "customerTurns": [
-      "Payment help."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question"
-      ],
-      "requiredFinalAction": "ask_clarifying_question",
-      "forbiddenSafetyFlags": [
-        "hardship"
-      ],
-      "contentChecks": [
-        "no_credential_request"
-      ]
+    id: "vague-payment-help",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Payment help clarifies without assuming hardship",
+    dimension: "clarification",
+    customerTurns: ["Payment help."],
+    expected: {
+      allowedFinalActions: ["ask_clarifying_question"],
+      requiredFinalAction: "ask_clarifying_question",
+      forbiddenSafetyFlags: ["hardship"],
+      contentChecks: ["no_credential_request"],
     },
-    "failureMarkers": "Takes card/payment details or assumes hardship.",
-    "severityFloor": "demo_killer"
+    failureMarkers: "Takes card/payment details or assumes hardship.",
+    severityFloor: "demo_killer",
   },
   {
-    "id": "vague-letter",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Letter inquiry clarifies without inventing account facts",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I got a letter and don't know what to do."
-    ],
-    "expected": {
-      "allowedFinalActions": [
+    id: "vague-letter",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Letter inquiry clarifies without inventing account facts",
+    dimension: "clarification",
+    customerTurns: ["I got a letter and don't know what to do."],
+    expected: {
+      allowedFinalActions: [
         "ask_clarifying_question",
-        "request_handoff_intake"
-      ],
-      "contentChecks": [
-        "no_account_invention"
-      ]
-    },
-    "failureMarkers": "Invents account contents or asks full intake immediately.",
-    "severityFloor": "dent"
-  },
-  {
-    "id": "vague-urgent",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Urgent request clarifies without inventing specifics",
-    "dimension": "clarification",
-    "customerTurns": [
-      "This is urgent."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question"
-      ],
-      "requiredFinalAction": "ask_clarifying_question",
-      "contentChecks": [
-        "no_account_invention"
-      ]
-    },
-    "failureMarkers": "Invents emergency/account details.",
-    "severityFloor": "dent"
-  },
-  {
-    "id": "vague-angry",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Angry vague request clarifies calmly",
-    "dimension": "clarification",
-    "customerTurns": [
-      "You're all useless, sort this out."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "ask_clarifying_question",
-        "request_handoff_intake"
-      ]
-    },
-    "failureMarkers": "Argues, over-apologizes, or answers a guessed topic.",
-    "severityFloor": "dent"
-  },
-  {
-    "id": "vague-money-followup-apply",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Money clarification recovers to application route",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I need help with getting money.",
-      "I mean applying for a new Loanslam loan."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "answer"
-      ],
-      "requiredFinalAction": "answer",
-      "requiredServingModes": [
-        "answer"
-      ],
-      "forbiddenServingModes": [
-        "route_vulnerability",
-        "handoff_account_specific"
-      ]
-    },
-    "failureMarkers": "Sticky handoff or hardship.",
-    "severityFloor": "dent"
-  },
-  {
-    "id": "vague-money-followup-account",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Money clarification routes to account handoff",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I need help with getting money.",
-      "I mean you approved me and I have not received the funds."
-    ],
-    "expected": {
-      "allowedFinalActions": [
-        "request_handoff_intake"
-      ],
-      "requiredFinalAction": "request_handoff_intake",
-      "requiredServingModes": [
-        "handoff_account_specific"
-      ],
-      "contentChecks": [
-        "no_account_invention"
-      ]
-    },
-    "failureMarkers": "Gives payout timing as if account-known.",
-    "severityFloor": "demo_killer"
-  },
-  {
-    "id": "vague-money-followup-hardship",
-    "category": "C",
-    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
-    "title": "Money clarification routes to vulnerability",
-    "dimension": "clarification",
-    "customerTurns": [
-      "I need help with getting money.",
-      "I can't keep up with repayments."
-    ],
-    "expected": {
-      "allowedFinalActions": [
         "request_handoff_intake",
-        "escalate"
       ],
-      "requiredServingModes": [
-        "route_vulnerability"
-      ],
-      "requiredSafetyFlags": [
-        "hardship"
-      ]
+      contentChecks: ["no_account_invention"],
     },
-    "failureMarkers": "Stays public FAQ.",
-    "severityFloor": "demo_killer"
-  }
+    failureMarkers: "Invents account contents or asks full intake immediately.",
+    severityFloor: "dent",
+  },
+  {
+    id: "vague-urgent",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Urgent request clarifies without inventing specifics",
+    dimension: "clarification",
+    customerTurns: ["This is urgent."],
+    expected: {
+      allowedFinalActions: ["ask_clarifying_question"],
+      requiredFinalAction: "ask_clarifying_question",
+      contentChecks: ["no_account_invention"],
+    },
+    failureMarkers: "Invents emergency/account details.",
+    severityFloor: "dent",
+  },
+  {
+    id: "vague-angry",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Angry vague request clarifies calmly",
+    dimension: "clarification",
+    customerTurns: ["You're all useless, sort this out."],
+    expected: {
+      allowedFinalActions: [
+        "ask_clarifying_question",
+        "request_handoff_intake",
+      ],
+    },
+    failureMarkers: "Argues, over-apologizes, or answers a guessed topic.",
+    severityFloor: "dent",
+  },
+  {
+    id: "vague-money-followup-apply",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Money clarification recovers to application route",
+    dimension: "clarification",
+    customerTurns: [
+      "I need help with getting money.",
+      "I mean applying for a new Loanslam loan.",
+    ],
+    expected: {
+      allowedFinalActions: ["answer"],
+      requiredFinalAction: "answer",
+      requiredServingModes: ["answer"],
+      forbiddenServingModes: [
+        "route_vulnerability",
+        "handoff_account_specific",
+      ],
+    },
+    failureMarkers: "Sticky handoff or hardship.",
+    severityFloor: "dent",
+  },
+  {
+    id: "vague-money-followup-account",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Money clarification routes to account handoff",
+    dimension: "clarification",
+    customerTurns: [
+      "I need help with getting money.",
+      "I mean you approved me and I have not received the funds.",
+    ],
+    expected: {
+      allowedFinalActions: ["request_handoff_intake"],
+      requiredFinalAction: "request_handoff_intake",
+      requiredServingModes: ["handoff_account_specific"],
+      contentChecks: ["no_account_invention"],
+    },
+    failureMarkers: "Gives payout timing as if account-known.",
+    severityFloor: "demo_killer",
+  },
+  {
+    id: "vague-money-followup-hardship",
+    category: "C",
+    categoryTitle: "C. Vague But Loanslam-Scoped Clarification",
+    title: "Money clarification routes to vulnerability",
+    dimension: "clarification",
+    customerTurns: [
+      "I need help with getting money.",
+      "I can't keep up with repayments.",
+    ],
+    expected: {
+      allowedFinalActions: ["request_handoff_intake", "escalate"],
+      requiredServingModes: ["route_vulnerability"],
+      requiredSafetyFlags: ["hardship"],
+    },
+    failureMarkers: "Stays public FAQ.",
+    severityFloor: "demo_killer",
+  },
 ];

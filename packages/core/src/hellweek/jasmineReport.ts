@@ -95,7 +95,8 @@ function suites(report: HellWeekReport): string {
     .map(([category, grades]) => {
       const title = grades[0]?.categoryTitle ?? category;
       const fails = grades.filter((g) => !g.pass).length;
-      const suiteClass = fails === 0 ? "suite all-passed" : "suite has-failures";
+      const suiteClass =
+        fails === 0 ? "suite all-passed" : "suite has-failures";
       const specs = grades
         .map((grade) => spec(grade, evidenceById.get(grade.scenarioId)))
         .join("");

@@ -76,8 +76,7 @@ function toTurnEvidence(
           signalPrimaryIntent: trace.shadowSignalBundle.primaryIntent,
           signalRecommendedServingMode:
             trace.shadowSignalBundle.recommendedServingMode,
-          signalNegatedOrCorrected:
-            trace.shadowSignalBundle.negatedOrCorrected,
+          signalNegatedOrCorrected: trace.shadowSignalBundle.negatedOrCorrected,
         }
       : {}),
     ...(trace.shadowSignalComparison

@@ -1,8 +1,4 @@
-import type {
-  SafetyFlag,
-  ServingMode,
-  TurnAction,
-} from "@loanslam/contracts";
+import type { SafetyFlag, ServingMode, TurnAction } from "@loanslam/contracts";
 
 /**
  * Hell Week is the automated form of the manual `agent-hell-battery` markdown
