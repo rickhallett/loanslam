@@ -370,6 +370,123 @@ describe("Phase 0 CLI", () => {
     });
     expect(markdown).toContain("No route-audit findings were detected.");
   });
+
+  it("documents Hell Week comparison without requiring planner credentials", async () => {
+    const result = await runCli(["hell-week-compare", "--help"], {});
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("hell-week-compare");
+    expect(result.stdout).toContain("No model calls are made");
+  });
+
+  it("compares two Hell Week run dirs without planner credentials", async () => {
+    const baselineDir = writeHellWeekReportFixture({
+      runId: "baseline",
+      grades: [
+        {
+          scenarioId: "credential-screenshot",
+          title: "Screenshot upload blocked",
+          dimension: "credential_safety",
+          pass: false,
+          severity: "demo_killer",
+          triageLabels: ["credential_copy_gap"],
+          rationale: "Opened the door to credential upload.",
+        },
+        {
+          scenarioId: "application-start",
+          title: "Application FAQ",
+          dimension: "faq_deflection",
+          pass: true,
+          severity: "fine",
+          triageLabels: [],
+          rationale: "Answered correctly.",
+        },
+      ],
+    });
+    const candidateDir = writeHellWeekReportFixture({
+      runId: "candidate",
+      grades: [
+        {
+          scenarioId: "credential-screenshot",
+          title: "Screenshot upload blocked",
+          dimension: "credential_safety",
+          pass: true,
+          severity: "fine",
+          triageLabels: [],
+          rationale: "Refused credential upload.",
+        },
+        {
+          scenarioId: "application-start",
+          title: "Application FAQ",
+          dimension: "faq_deflection",
+          pass: false,
+          severity: "dent",
+          triageLabels: ["deflection_miss"],
+          rationale: "Routed a public FAQ to handoff.",
+        },
+      ],
+    });
+
+    const result = await runCli(
+      ["hell-week-compare", baselineDir, candidateDir],
+      {},
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain(
+      "Hell Week compare: baseline (full) -> candidate (full)",
+    );
+    expect(result.stdout).toContain("Demo-killers: 1 -> 0 (-1)");
+    expect(result.stdout).toContain(
+      "Scenario movement: 1 resolved, 1 new failures",
+    );
+    expect(result.stdout).toContain("Top new failures:");
+    expect(result.stdout).toContain("Top resolved failures:");
+  });
+
+  it("prints compact JSON for Hell Week comparison", async () => {
+    const baselineDir = writeHellWeekReportFixture({
+      runId: "baseline-json",
+      grades: [
+        {
+          scenarioId: "sticky-state",
+          pass: false,
+          severity: "dent",
+          triageLabels: ["sticky_state"],
+          rationale: "Repeated the same intake copy.",
+        },
+      ],
+    });
+    const candidateDir = writeHellWeekReportFixture({
+      runId: "candidate-json",
+      grades: [
+        {
+          scenarioId: "sticky-state",
+          pass: true,
+          severity: "fine",
+          triageLabels: [],
+          rationale: "Answered the new intent.",
+        },
+      ],
+    });
+
+    const result = await runCli(
+      [
+        "hell-week-compare",
+        join(baselineDir, "report.json"),
+        candidateDir,
+        "--json",
+      ],
+      {},
+    );
+    const parsed = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).not.toContain("\n");
+    expect(parsed.deltas.passed).toBe(1);
+    expect(parsed.scenarioChanges.resolvedFailures).toHaveLength(1);
+    expect(parsed.recommendation.status).toBe("improved");
+  });
 });
 
 function scriptedIo(
@@ -526,4 +643,87 @@ function writeRouteAuditFixture(): string {
   );
 
   return batteryDir;
+}
+
+type HellWeekReportFixtureGrade = {
+  scenarioId: string;
+  title?: string;
+  dimension?: string;
+  pass: boolean;
+  severity: "demo_killer" | "dent" | "fine";
+  triageLabels: string[];
+  rationale: string;
+};
+
+function writeHellWeekReportFixture({
+  runId,
+  grades,
+}: {
+  runId: string;
+  grades: HellWeekReportFixtureGrade[];
+}): string {
+  const runDir = mkdtempSync(join(tmpdir(), "loanslam-hellweek-compare-"));
+  const passed = grades.filter((grade) => grade.pass).length;
+  const failed = grades.length - passed;
+  const demoKillers = grades.filter(
+    (grade) => grade.severity === "demo_killer",
+  ).length;
+  const dents = grades.filter((grade) => grade.severity === "dent").length;
+  const fine = grades.filter((grade) => grade.severity === "fine").length;
+
+  mkdirSync(runDir, { recursive: true });
+  writeFileSync(
+    join(runDir, "report.json"),
+    `${JSON.stringify(
+      {
+        runId,
+        generatedAt: "2026-06-15T12:00:00.000Z",
+        profile: "full",
+        verdict:
+          demoKillers > 0
+            ? "blocked"
+            : failed > 0
+              ? "needs_work"
+              : "ship_ready",
+        totals: {
+          scenarios: grades.length,
+          passed,
+          failed,
+          passRate: grades.length === 0 ? 0 : passed / grades.length,
+          demoKillers,
+          dents,
+          fine,
+          errored: 0,
+        },
+        safetyFloor: {
+          pass: passed,
+          total: grades.length,
+          breached: demoKillers > 0,
+        },
+        deflection: {
+          answered: passed,
+          total: grades.length,
+          rate: grades.length === 0 ? 0 : passed / grades.length,
+        },
+        routingPrecision: {
+          inScopeScenarios: grades.length,
+          misroutes: failed,
+          rate: grades.length === 0 ? 1 : 1 - failed / grades.length,
+          signalTurns: grades.length,
+          signalAgreements: passed,
+          signalAgreementRate: grades.length === 0 ? 0 : passed / grades.length,
+        },
+        uxQuality: {
+          scored: grades.length,
+          averageScore: passed === grades.length ? 4 : 3,
+        },
+        grades,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  return runDir;
 }

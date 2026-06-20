@@ -27,3 +27,27 @@ OR: I would appreciate a good reference etc etc
 
 Best,
 Kai
+
+
+--------
+
+Subject: A follow-up
+
+  Hi Sam,
+
+  I’ll be straight with you. Wrapping up when we did stayed with me, mostly because I believed in what you’re building, and still do.
+
+  So I kept working on it.
+
+  The prototype is here: https://x827e1872-production.up.railway.app/?devtools=true
+
+  It’s close to what you saw on the surface, but the engine underneath is much further along. The panel on the left shows the live routing: general answers, handoff, vulnerability handling, fallback, and the
+  safety checks around the model’s proposal.
+
+  There were calls I should have made earlier in the build, and those are mine. With a clearer view now of what the product needs, I think this is much closer to the shape it should have been.
+
+  I’m sending it because I think it’s worth another conversation. If you agree, I’d be glad to talk.
+
+  Best,
+
+  [Your name]
