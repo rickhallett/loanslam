@@ -3,6 +3,7 @@ import FaqList from '../components/FaqList.astro';
 import faqQa from '../data/faq-qa.json';
 import Base from '../layouts/Base.astro';
 import { page, rewriteLinks } from '../lib/content.ts';
+import { faqPageCopy } from '../lib/site-copy.ts';
 
 const faq = page('faq');
 
@@ -16,29 +17,26 @@ const existing = items.slice(9);
   <div class="page-head">
     <div class="ripples"></div>
     <div class="container" style="position: relative;">
-      <p class="crumb"><a href="/">Home</a> / Help &amp; support</p>
-      <h1>Questions? Good.</h1>
-      <p>
-        Everything about the Loans by MAL product in one place. If you don’t see your question
-        answered, our customer support team is always happy to help.
-      </p>
+      <p class="crumb" set:html={faqPageCopy.head.crumbHtml} />
+      <h1>{faqPageCopy.head.title}</h1>
+      <p>{faqPageCopy.head.body}</p>
     </div>
   </div>
 
   <div class="container section faq-grid">
     <div>
-      <h2 class="group-title"><span>01</span>Application questions</h2>
+      <h2 class="group-title"><span>{faqPageCopy.groups[0].number}</span>{faqPageCopy.groups[0].title}</h2>
       <FaqList items={application} />
 
-      <h2 class="group-title spaced"><span>02</span>Existing customer support</h2>
+      <h2 class="group-title spaced"><span>{faqPageCopy.groups[1].number}</span>{faqPageCopy.groups[1].title}</h2>
       <FaqList items={existing} />
     </div>
 
     <aside class="side-cta">
       <img src="/duck.png" alt="" width="64" height="72" loading="lazy" />
-      <p class="side-title">Still got questions?</p>
-      <p>If you can’t find the answer, our friendly team will be happy to help.</p>
-      <a class="btn btn--teal" href="/contact/">Contact us</a>
+      <p class="side-title">{faqPageCopy.sideCta.title}</p>
+      <p>{faqPageCopy.sideCta.body}</p>
+      <a class="btn btn--teal" href={faqPageCopy.sideCta.cta.href}>{faqPageCopy.sideCta.cta.label}</a>
     </aside>
   </div>
 </Base>

@@ -13,7 +13,7 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
-- Markdown context cleanup is tracked in `docs/prds/2026-06-15-markdown-context-pruning-spec.md`; handle it before trusting old docs/artifacts.
+- Documentation cleanup decisions are recorded in `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`; check it before reintroducing old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
 ## Git Branch Discipline

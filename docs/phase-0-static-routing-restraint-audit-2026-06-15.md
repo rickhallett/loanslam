@@ -2,7 +2,11 @@
 
 Practical takeaway: keep static restraints/tests only where they guard a tiny non-negotiable safety/schema/determinism invariant. Burn or demote everything that adjudicates natural-language **routing** quality via regex phrase matching, lexical cue sets, score boosts, or wording-specific test assertions; that behaviour must be proven by live lab API simulation sessions, not static fixtures.
 
-This version was verified file-by-file against the current code (one reader per file). Line numbers and classifications below are checked, not inferred.
+Historical status: this is a dated 2026-06-15 decision note, not current code
+authority. The durable rule still applies, but the file paths, line numbers, and
+KEEP/BURN classifications below were verified against the code as it existed on
+2026-06-15. Re-check current code and live evidence before using any specific
+line reference or deletion recommendation.
 
 Definitions:
 - KEEP: leave as a static invariant or code backstop.

@@ -1,17 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
+import { notFoundCopy } from '../lib/site-copy.ts';
 ---
 
-<Base title="Page not found — Loans by MAL">
+<Base title={notFoundCopy.title}>
   <div class="page-head">
     <div class="ripples"></div>
     <div class="container" style="position: relative;">
-      <p class="crumb"><a href="/">Home</a> / Page not found</p>
-      <h1>That page has paddled off.</h1>
-      <p>
-        The page you’re after doesn’t exist, or it may have moved. Head back to the
-        <a href="/">homepage</a> or browse our <a href="/faq">help &amp; support</a>.
-      </p>
+      <p class="crumb" set:html={notFoundCopy.head.crumbHtml} />
+      <h1>{notFoundCopy.head.title}</h1>
+      <p set:html={notFoundCopy.head.bodyHtml} />
     </div>
   </div>
 </Base>

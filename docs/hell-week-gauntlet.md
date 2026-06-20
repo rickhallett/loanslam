@@ -1,11 +1,12 @@
 # Hell Week gauntlet
 
-Hell Week is the automated form of the manual agent battery in
-`artifacts/phase0/burn-regression-testing/agent-hell-battery-2026-06-15.md`. It
-drives the whole hostile scenario set through the live, model-backed engine and
-produces a stakeholder HTML dashboard with the numbers a Phase 0 reviewer cares
-about: the compliance safety floor, demo-killers, deflection, routing precision,
-and per-category / per-dimension pass rates.
+Hell Week is the structured hostile scenario battery encoded under
+`packages/core/src/hellweek/`. It drives the whole hostile scenario set through
+the live, model-backed engine and produces a stakeholder HTML dashboard with the
+numbers a Phase 0 reviewer cares about: the compliance safety floor,
+demo-killers, deflection, routing precision, and per-category / per-dimension
+pass rates. Imported historical runs are indexed in
+`artifacts/evidence-index/hell-week-runs.md`.
 
 ## Run it
 

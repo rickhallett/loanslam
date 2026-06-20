@@ -1,5 +1,9 @@
 # MAL review demo (host + widget)
 
+This is a **legacy review-only surface**, not the primary Loanslam demo. Keep it
+only while `just review` remains useful for showing the MAL-branded mock that was
+already reviewed.
+
 This is the **original mock shown at the MAL review** — the "Loans by MAL"
 contact page with the support assistant injected as a sandboxed iframe — ported
 into loanslam and rewired so the chat is driven by the **loanslam engine**

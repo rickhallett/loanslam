@@ -5,15 +5,15 @@
 > raised: the bot must now hold a conversation (memory and adaptivity), collect
 > information intelligently, and answer from an operationalised call-centre
 > knowledge base — while keeping the same safety boundary and routing the hard,
-> account-specific work to humans. The hard constraints are a 30-day deadline
-> ending in a live AWS deployment, and full auditability of everything the bot
-> receives and sends. The MVP is exploratory: the goal is to deploy by day 30,
-> run it for a few weeks, and collect data on how it performs. No success-rate
-> target has been set for the MVP.
+> account-specific work to humans. The original brief included a 30-day live AWS
+> deployment target. For the current implementation, that deadline and deployment
+> shape are historical context; Phase 0 first proves the engine and evidence
+> boundary before product deployment work resumes. Full auditability of everything
+> the bot receives and sends remains the non-negotiable product requirement.
 >
-> The technology stack and architectural decisions live in `docs/architecture.md`
-> (session/cookie strategy, fail-closed vulnerability gate, grounding-adapter
-> contract, and the conventions emulated from the senior developer's reference repo).
+> The current Phase 0 engine architecture lives in
+> `docs/llm-turn-planner-architecture.md`. This brief owns the product boundary,
+> safety constraints, and later productisation expectations.
 >
 > Delivery update: the original all-layer delivery sequence in §14 is superseded
 > for current implementation by `docs/llm-turn-planner-architecture.md`. Phase 0
@@ -315,9 +315,11 @@ Before live customer traffic, the business must decide:
 > slices only after the TurnPlanner exit gate has produced enough evidence to
 > productise the engine.
 
-Delivered as narrow vertical slices. Because deployment is a hard pass/fail gate, a deployable walking skeleton on AWS comes early, not last.
+Delivered as narrow vertical slices. The historical MVP plan treated deployment
+as a hard pass/fail gate; the current Phase 0 sequence defers that deployment
+slice until the TurnPlanner evidence gate is credible.
 
-1. Anonymous session, basic message flow, and a deployed AWS walking skeleton
+1. Anonymous session, basic message flow, and a deployable walking skeleton
 2. Conversation memory and structured per-session state
 3. Knowledge-base retrieval and grounded answer path (with answerability gating)
 4. Vulnerability-first routing

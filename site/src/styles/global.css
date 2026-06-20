@@ -543,7 +543,7 @@ img {
   color: var(--ink);
 }
 
-.prose a[href^='https://applyloansbymal'] {
+.prose a[href='/apply/'] {
   display: inline-flex;
   background: var(--amber-400);
   color: var(--ink-950);
