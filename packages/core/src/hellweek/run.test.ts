@@ -164,6 +164,38 @@ describe("Hell Week judge verdict loading", () => {
     }
   });
 
+  it("rejects empty files and artifact scenario-count mismatches", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-bad-artifact-"));
+
+    try {
+      const emptyPath = join(runDir, "empty.json");
+      const mismatchPath = join(runDir, "mismatch.json");
+      writeFileSync(emptyPath, "", "utf8");
+      writeFileSync(
+        mismatchPath,
+        `${JSON.stringify({
+          schemaVersion: 1,
+          metadata: {
+            generatedAt: "2026-06-20T18:30:00.000Z",
+            tool: "test",
+            scenarioCount: 2,
+          },
+          verdicts: [judgeVerdict("vuln-cant-pay")],
+        })}\n`,
+        "utf8",
+      );
+
+      expect(() => loadJudgeVerdicts(emptyPath)).toThrow(
+        /Judge verdict file is empty/,
+      );
+      expect(() => loadJudgeVerdicts(mismatchPath)).toThrow(
+        /scenarioCount 2 does not match 1 verdict/,
+      );
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects verdicts for scenarios outside the rendered run", () => {
     const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-unknown-"));
 

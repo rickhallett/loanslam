@@ -482,14 +482,16 @@ function parseJudgeVerdicts(
   }
 
   if (raw.startsWith("{")) {
+    let parsed: unknown;
     try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (isRecord(parsed) && "verdicts" in parsed) {
-        return validateJudgeVerdictArtifact(parsed, sourceLabel);
-      }
+      parsed = JSON.parse(raw) as unknown;
     } catch {
       // Fall through to JSONL parsing so a multi-line JSONL file reports the
       // precise bad line rather than a whole-file parse failure.
+    }
+
+    if (isRecord(parsed) && "verdicts" in parsed) {
+      return validateJudgeVerdictArtifact(parsed, sourceLabel);
     }
   }
 
