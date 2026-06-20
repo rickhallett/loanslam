@@ -262,3 +262,34 @@ npm run --silent core:hell-week-compare -- artifacts/phase0/hell-week-3x-2026-06
 Result: focused tests passed (`6` files, `49` tests). Rerendered comparison
 separated scenario wall p50 (`5.2s -> 4.5s`) and signal p50 (`1.9s -> 1.6s`);
 planner p50 correctly warned as unavailable for pre-change captures.
+
+## Section 8: Deterministic Helper Cleanup Audit
+
+### Finding
+
+The deterministic content helpers remain wired into scenario contracts and the
+grading path. The current usage scan found `contentChecks` across the expanded
+category files, `english_only` in Categories F and M, and the hard-floor
+content checks in both scenarios and focused regression tests.
+
+### Conclusion
+
+No cleanup deletion belongs in this runway. The earlier sections changed the
+measurement surface enough that removing deterministic helpers now would risk
+changing routing evidence semantics instead of reducing noise.
+
+### Hypothesis
+
+Cleanup should wait for repeated evidence that identifies a specific helper as
+dead or misleading. The likely next candidate evidence is judge verdict output,
+not another broad deterministic helper sweep.
+
+### Verification
+
+```text
+rg -n "ContentCheck|english_only|no_offdomain_help|no_excluded_advice|no_credential_request|no_account_invention|checkContent|contentChecks|routeMissLabel|offDomainEngagement|accountAssertions|approvalEstimates" packages/core/src/hellweek packages/core/src/policy.ts
+npm --workspace @loanslam/core run typecheck
+```
+
+Result: the usage scan found live references and the core typecheck passed, so
+Section 8 is intentionally documentation-only.
