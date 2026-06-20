@@ -1,8 +1,9 @@
 # Loanslam TurnPlanner Core
 
-> **Status: Phase 0 engine proof.** This repo is currently proving the
-> TurnPlanner engine before productising the customer widget, production API,
-> durable persistence, deployment, ticket webhooks, or real PII intake.
+> **Status: Phase 0 engine proof with stakeholder demo deployment wiring.** This
+> repo is proving the TurnPlanner engine before productising ticket webhooks or
+> real PII intake. The stakeholder demo now has Vercel deployment wiring and
+> owner-only Postgres interaction logging.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
@@ -91,6 +92,28 @@ just lab
 Model-backed commands require `OPENAI_API_KEY`. `OPENAI_MODEL` can override the
 default planner model.
 
+## Vercel + Neon demo deployment
+
+The Vercel entrypoint is [`api/index.ts`](./api/index.ts). It serves the
+demo-safe `/demo` API plus the built review host/widget assets, and it writes
+owner-only interaction receipts through Prisma to Postgres.
+
+Required Vercel/Neon environment:
+
+- `DATABASE_URL`: pooled Neon Postgres URL used by runtime Prisma traffic.
+- `DATABASE_URL_UNPOOLED` or `DATABASE_MIGRATE_URL`: direct URL used by Prisma migrations.
+- `DEMO_STATE_TOKEN_SECRET`: stable secret for opaque continuation tokens.
+- `OPENAI_API_KEY`: required for planner-backed demo turns.
+- `DEMO_ACCESS_TOKEN`: optional bearer or `x-demo-access-token` gate for shared demos.
+
+Useful commands:
+
+```bash
+just prisma-generate
+just prisma-migrate-deploy
+just vercel-build
+```
+
 ## Which surface should I use?
 
 - `just core-turn` is for one message and one `ValidatedTurnResult`.
@@ -104,6 +127,7 @@ default planner model.
 - `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard.
 - `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine.
 - `just review` starts the MAL review demo around the same engine.
+- `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
 
 ## Repository map
 
@@ -123,6 +147,10 @@ packages/
   demo-host/                        Host page for the demo widget
   review-widget/                    MAL review widget demo
   review-host/                      Host page for the review widget
+prisma/
+  schema.prisma                     Postgres schema for owner-only demo interaction receipts
+api/
+  index.ts                          Vercel Function entrypoint for demo deployment
 data/
   public-info/                      Synthetic Loanslam corpus treated as approved Phase 0 policy data
 scripts/
@@ -137,7 +165,7 @@ artifacts/
 - `packages/core` owns `processTurn`, corpus loading, retrieval, OpenAI planner adapters, signal extraction, validation, local lab API, CLI commands, simulations, route audits, STS, and Hell Week.
 - `packages/lab-ui` visualizes the lab API result with action, serving mode, retrieval, validator overrides, safety flags, requested fields, raw trace JSON, and session export.
 - `packages/mcp-server` lets agents start, drive, dump, reset, and summarize lab API sessions without browser automation.
-- `packages/demo-*` and `packages/review-*` are customer-facing demo shells over the current engine, not production deployment surfaces.
+- `packages/demo-*` and `packages/review-*` are customer-facing demo shells over the current engine; `api/index.ts` mounts the review demo for Vercel.
 
 ## Knowledge base and policy data
 

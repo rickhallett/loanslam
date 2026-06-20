@@ -28,7 +28,10 @@ From the worktree root, install once so the new workspaces link:
 npm install
 ```
 
-Then start the engine, the widget, and the host page:
+Then start the engine, the widget, and the host page. Demo logging now writes
+to Postgres through Prisma, so set `DATABASE_URL` or
+`DEMO_INTERACTION_DATABASE_URL` first; for throwaway local UI checks, add
+`--no-demo-log` to the engine command.
 
 ```bash
 npm run core:serve -- --port 8788 --demo-only  # demo API on http://127.0.0.1:8788
@@ -50,8 +53,8 @@ just demo-log-session -- <conversationRef>
 just demo-log-turn -- <conversationRef> <turn> --full
 ```
 
-The default log path is `var/demo-interactions.sqlite`. Keep that file on the
-server; it is an owner-only debugging record, not a browser/admin UI.
+The demo log is an owner-only debugging record in Postgres; it is not exposed as
+a browser/admin UI.
 
 ## How the pieces talk
 
