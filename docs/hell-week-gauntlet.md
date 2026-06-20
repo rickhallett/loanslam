@@ -71,7 +71,8 @@ Three layers, deliberately ordered by how much we trust them:
    # 1. capture (writes the run folder)
    just hell-week
    # 2. judge it (Workflow tool): .claude/workflows/hellweek-judge.js with
-   #    args.runDir = the run folder
+   #    args.runDir = the run folder; save the returned artifact envelope
+   #    as judge-verdicts.json
    # 3. merge verdicts + re-render, no live model calls
    just hell-week -- --from <runDir> --judge-verdicts <verdicts.json>
    ```

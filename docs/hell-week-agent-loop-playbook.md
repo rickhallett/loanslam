@@ -35,7 +35,8 @@ Judging still follows the existing Hell Week flow:
 
 ```bash
 just hell-week
-# Run .claude/workflows/hellweek-judge.js with args.runDir = the run folder.
+# Run .claude/workflows/hellweek-judge.js with args.runDir = the run folder,
+# then save the returned schemaVersion/metadata/verdicts envelope.
 just hell-week -- --from <run-dir> --judge-verdicts <verdicts.json>
 ```
 
