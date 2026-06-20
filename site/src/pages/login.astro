@@ -1,0 +1,20 @@
+---
+import LoginPanel from '../components/LoginPanel.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Log in to your Loans by MAL account"
+  description="Existing customer account access for the rebuilt Loans by MAL website."
+>
+  <div class="page-head login-head">
+    <div class="ripples"></div>
+    <div class="container" style="position: relative;">
+      <p class="crumb"><a href="/">Home</a> / Log in</p>
+      <h1>Existing customer login</h1>
+      <p>Account entry and support routes for existing Loans by MAL customers.</p>
+    </div>
+  </div>
+
+  <LoginPanel />
+</Base>

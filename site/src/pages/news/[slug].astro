@@ -12,7 +12,7 @@ export function getStaticPaths() {
   return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
 }
 
-const APPLY_URL = 'https://applyloansbymal.co.uk';
+const APPLY_URL = '/apply/';
 const { post } = Astro.props as { post: ContentRecord };
 const words = post.html.replace(/<[^>]+>/g, ' ').split(/\s+/).length;
 const readMins = Math.max(1, Math.round(words / 220));

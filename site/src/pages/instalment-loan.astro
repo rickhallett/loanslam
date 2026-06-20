@@ -4,7 +4,7 @@ import instalmentQa from '../data/instalment-qa.json';
 import Base from '../layouts/Base.astro';
 import { page, rewriteLinks } from '../lib/content.ts';
 
-const APPLY_URL = 'https://applyloansbymal.co.uk';
+const APPLY_URL = '/apply/';
 const record = page('instalment-loan');
 const items = instalmentQa.map((item) => ({ ...item, a: rewriteLinks(item.a) }));
 

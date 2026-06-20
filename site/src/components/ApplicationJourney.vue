@@ -399,19 +399,10 @@ function skipCard() {
 </script>
 
 <template>
-  <div class="application">
-    <div class="trust-strip">
-      <span>Rated Excellent. 4.8 out of 5 on Trustpilot</span>
-    </div>
-
-    <header class="application-header">
-      <a href="/" aria-label="Loans by MAL home">
-        <img src="/logo.png" alt="loans by mal - web based loans" width="132" height="51" />
-      </a>
-    </header>
-
-    <section class="application-stage">
+  <section class="application" aria-label="Loan application journey">
+    <div class="application-stage container">
       <aside class="progress-panel" aria-label="Application progress">
+        <p class="progress-eyebrow">Step {{ activeStep + 1 }} of {{ steps.length }}</p>
         <div class="progress-meter" aria-hidden="true">
           <span :style="{ width: progressWidth }"></span>
         </div>
@@ -598,7 +589,7 @@ function skipCard() {
             </div>
           </dl>
 
-          <button class="secondary-action" type="button" @click="activeStep = 1">Change Term</button>
+          <button class="btn btn--ghost secondary-action" type="button" @click="activeStep = 1">Change Term</button>
           <p>If you're happy with the loan offer, continue and tell us the account you would like the money paid into</p>
         </section>
 
@@ -624,7 +615,7 @@ function skipCard() {
             <span>Signature of customer</span>
             <input v-model="signature" name="signature" :placeholder="applicantName" />
           </label>
-          <button class="secondary-action" type="button" @click="acceptAgreement">Accept</button>
+          <button class="btn btn--ghost secondary-action" type="button" @click="acceptAgreement">Accept</button>
           <em v-if="visibleError('signature')">{{ visibleError('signature') }}</em>
         </section>
 
@@ -873,7 +864,7 @@ function skipCard() {
           </div>
 
           <p>If you are having difficulties verifying your card, when the 60 second timer has finished, please use the skip button</p>
-          <button class="secondary-action" type="button" @click="skipCard">Skip To Next Step</button>
+          <button class="btn btn--ghost secondary-action" type="button" @click="skipCard">Skip To Next Step</button>
         </section>
 
         <section v-else-if="current.id === 'openBanking'" class="single-step open-banking">
@@ -894,7 +885,7 @@ function skipCard() {
         <section v-else class="single-step open-banking">
           <h1>Congratulations you've completed your application</h1>
           <p>You now need to verify the bank account that you want us to pay the money into. The account needs to be a UK bank account in your name. This should also be the account your salary is paid into.</p>
-          <button class="primary-action" type="button">VERIFY MY ACCOUNT</button>
+          <button class="btn btn--apply primary-action" type="button">VERIFY MY ACCOUNT</button>
           <p>If you have any problems verifying your account, don’t worry, our customer support team will be in touch to help you.</p>
           <p>Once you’ve connected your account we’ll complete our final checks and payout the money within 24 hours.</p>
           <ul class="tick-list compact">
@@ -905,26 +896,11 @@ function skipCard() {
         </section>
 
         <div class="actions-row">
-          <button v-if="activeStep > 0" class="secondary-action" type="button" @click="previousStep">Back</button>
-          <button v-if="activeStep < steps.length - 1" class="primary-action" type="submit">Continue</button>
+          <button v-if="activeStep > 0" class="btn btn--ghost secondary-action" type="button" @click="previousStep">Back</button>
+          <button v-if="activeStep < steps.length - 1" class="btn btn--apply primary-action" type="submit">Continue</button>
         </div>
       </form>
-    </section>
-
-    <footer class="application-footer">
-      <div class="customer-reviews">Customer Reviews</div>
-      <p>
-        <strong>loans by mal</strong> is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a consumer credit lender not a broker.
-      </p>
-      <nav aria-label="Application footer">
-        <a href="/faq/">FAQs</a>
-        <a href="/contact/">Contact us</a>
-        <a href="/privacy-policy/">Privacy Policy</a>
-        <a href="/terms-and-conditions/">Terms &amp; Conditions</a>
-        <a href="/complaints/">Complaints</a>
-      </nav>
-      <small>Version 1.237.4</small>
-    </footer>
+    </div>
 
     <div v-if="addressModalOpen" class="modal-backdrop" role="presentation">
       <div class="address-modal" role="dialog" aria-modal="true" aria-labelledby="address-title">
@@ -939,69 +915,60 @@ function skipCard() {
           <option>Lord Chamberlains Office Buckingham Palace, London SW1A 1AA</option>
         </select>
         <footer>
-          <button class="secondary-action" type="button" @click="enterAddressManually">Enter Manually</button>
-          <button class="primary-action" type="button" @click="selectAddress">Select Address</button>
+          <button class="btn btn--ghost secondary-action" type="button" @click="enterAddressManually">Enter Manually</button>
+          <button class="btn btn--apply primary-action" type="button" @click="selectAddress">Select Address</button>
         </footer>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
 .application {
-  min-height: 100vh;
-  background: #f8fbfc;
-  color: #17363f;
+  background:
+    linear-gradient(180deg, rgba(233, 246, 248, 0.78), rgba(250, 247, 241, 0) 34rem),
+    var(--sand-50);
+  color: var(--body);
+  padding-block: clamp(2rem, 5vw, 4rem) clamp(3rem, 6vw, 5rem);
 }
 
 .application :is(h1, h2, h3, p, span, label, button, input, select, small) {
   letter-spacing: 0;
 }
 
-.trust-strip {
-  display: flex;
-  justify-content: center;
-  background: linear-gradient(180deg, #2b9baf, #00879b);
-  color: #fff;
-  padding: 0.38rem 1rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
-.application-header {
-  display: flex;
-  justify-content: center;
-  padding: 1.4rem 1rem 1.1rem;
-  background: #fff;
-  border-bottom: 1px solid #dbe8eb;
-}
-
 .application-stage {
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 820px);
-  gap: 1.25rem;
-  width: min(1180px, calc(100% - 2rem));
-  margin: 2rem auto 3rem;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2rem);
   align-items: start;
 }
 
 .progress-panel,
 .application-panel {
   background: #fff;
-  border: 1px solid #dbe8eb;
-  border-radius: 8px;
-  box-shadow: 0 12px 32px -26px rgba(4, 33, 41, 0.35);
+  border: 1px solid var(--line-cool);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .progress-panel {
   position: sticky;
-  top: 1rem;
-  padding: 1rem;
+  top: 96px;
+  padding: 1.15rem;
+}
+
+.progress-eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--teal-500);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .progress-meter {
-  height: 6px;
-  background: #dbe8eb;
+  height: 0.45rem;
+  background: var(--teal-50);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 1rem;
@@ -1010,7 +977,7 @@ function skipCard() {
 .progress-meter span {
   display: block;
   height: 100%;
-  background: #00879b;
+  background: linear-gradient(90deg, var(--teal-500), var(--amber-400));
 }
 
 .progress-panel ol {
@@ -1029,7 +996,7 @@ function skipCard() {
   text-align: left;
   border: 0;
   background: transparent;
-  color: #496972;
+  color: var(--muted);
   border-radius: 8px;
   padding: 0.55rem;
   font: inherit;
@@ -1049,24 +1016,24 @@ function skipCard() {
   width: 1.55rem;
   height: 1.55rem;
   border-radius: 50%;
-  background: #e9f6f8;
-  color: #00879b;
+  background: var(--teal-50);
+  color: var(--teal-500);
   font-size: 0.8rem;
   flex: none;
 }
 
 .progress-panel button.active {
-  color: #062e38;
-  background: #e9f6f8;
+  color: var(--ink);
+  background: var(--teal-50);
 }
 
 .progress-panel button.done span {
-  background: #44a06d;
+  background: var(--green-500);
   color: #fff;
 }
 
 .application-panel {
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
 }
 
 .step-grid,
@@ -1077,7 +1044,12 @@ function skipCard() {
 
 .step-copy h1,
 .single-step h1 {
-  font-size: clamp(1.85rem, 4vw, 2.55rem);
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+}
+
+.step-copy p,
+.single-step > p {
+  max-width: 58rem;
 }
 
 .single-step h2 {
@@ -1097,6 +1069,7 @@ function skipCard() {
   position: relative;
   padding-left: 1.8rem;
   font-weight: 700;
+  color: var(--ink);
 }
 
 .tick-list li::before {
@@ -1104,7 +1077,7 @@ function skipCard() {
   position: absolute;
   left: 0;
   top: 0;
-  color: #44a06d;
+  color: var(--green-500);
 }
 
 .compact {
@@ -1114,14 +1087,14 @@ function skipCard() {
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1rem 1.1rem;
 }
 
 label,
 .choice-field {
   display: grid;
   gap: 0.35rem;
-  color: #17363f;
+  color: var(--ink);
   font-weight: 750;
 }
 
@@ -1137,23 +1110,23 @@ b {
 input,
 select {
   width: 100%;
-  min-height: 46px;
-  border: 1px solid #b7cbd1;
+  min-height: 3rem;
+  border: 1px solid #b8cfd5;
   border-radius: 8px;
   background: #fff;
-  color: #17363f;
+  color: var(--ink);
   font: inherit;
   padding: 0.65rem 0.75rem;
 }
 
 input:focus,
 select:focus {
-  border-color: #00879b;
+  border-color: var(--teal-500);
   outline: 3px solid rgba(0, 135, 155, 0.18);
 }
 
 small {
-  color: #55717a;
+  color: var(--muted);
   font-weight: 600;
   line-height: 1.45;
 }
@@ -1180,10 +1153,10 @@ em {
 .lookup-input button {
   display: grid;
   place-items: center;
-  min-height: 46px;
-  border: 1px solid #b7cbd1;
-  background: #eef7f9;
-  color: #17363f;
+  min-height: 3rem;
+  border: 1px solid #b8cfd5;
+  background: var(--teal-50);
+  color: var(--ink);
   font-weight: 800;
   padding-inline: 0.85rem;
 }
@@ -1204,6 +1177,7 @@ em {
 .lookup-input button {
   border-radius: 0 8px 8px 0;
   cursor: pointer;
+  font: inherit;
 }
 
 .check-row {
@@ -1252,17 +1226,17 @@ em {
 .repayment-note,
 .notice-strip,
 .direct-debit {
-  border: 1px solid #dbe8eb;
-  border-radius: 8px;
-  background: #f8fbfc;
-  padding: 1rem;
+  border: 1px solid var(--line-cool);
+  border-radius: var(--radius);
+  background: var(--teal-50);
+  padding: clamp(1rem, 2vw, 1.35rem);
 }
 
 .summary-list {
   display: grid;
   margin: 0;
-  border: 1px solid #dbe8eb;
-  border-radius: 8px;
+  border: 1px solid var(--line-cool);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -1271,7 +1245,7 @@ em {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #dbe8eb;
+  border-bottom: 1px solid var(--line-cool);
 }
 
 .summary-list div:last-child {
@@ -1284,7 +1258,7 @@ em {
 
 .summary-list dd {
   margin: 0;
-  color: #062e38;
+  color: var(--ink);
   font-weight: 800;
 }
 
@@ -1298,10 +1272,10 @@ em {
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-  border: 1px solid #dbe8eb;
+  border: 1px solid var(--line-cool);
   border-radius: 8px;
   background: #fff;
-  color: #17363f;
+  color: var(--ink);
   padding: 0.9rem 1rem;
   font: inherit;
   text-align: left;
@@ -1309,8 +1283,8 @@ em {
 }
 
 .document-list button.read {
-  border-color: #44a06d;
-  background: #ecf7f0;
+  border-color: var(--green-500);
+  background: var(--green-50);
 }
 
 .document-list b {
@@ -1361,10 +1335,10 @@ em {
   display: grid;
   place-items: center;
   min-height: 4rem;
-  border: 1px solid #dbe8eb;
+  border: 1px solid var(--line-cool);
   border-radius: 8px;
   background: #fff;
-  color: #55717a;
+  color: var(--muted);
   font-size: 0.9rem;
   font-weight: 800;
 }
@@ -1378,57 +1352,8 @@ em {
 
 .primary-action,
 .secondary-action {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 46px;
-  border-radius: 999px;
-  border: 2px solid transparent;
-  font: inherit;
-  font-weight: 850;
-  padding: 0.7rem 1.5rem;
-  cursor: pointer;
-}
-
-.primary-action {
-  background: #f7a823;
-  color: #042129;
-}
-
-.secondary-action {
-  background: #fff;
-  color: #17363f;
-  border-color: #dbe8eb;
-}
-
-.application-footer {
-  background: #062e38;
-  color: #c2dde3;
-  padding: 2.5rem max(1rem, calc((100vw - 980px) / 2));
-  font-size: 0.86rem;
-}
-
-.customer-reviews {
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-}
-
-.application-footer p {
-  max-width: 70rem;
-}
-
-.application-footer nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.85rem 1.5rem;
-  margin: 1rem 0;
-}
-
-.application-footer a {
-  color: #fff;
+  min-height: 3rem;
+  overflow-wrap: anywhere;
 }
 
 .modal-backdrop {
@@ -1444,9 +1369,9 @@ em {
 .address-modal {
   width: min(520px, 100%);
   background: #fff;
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 26px 80px -30px rgba(4, 33, 41, 0.6);
-  padding: 1rem;
+  padding: clamp(1rem, 3vw, 1.3rem);
 }
 
 .address-modal header,
@@ -1490,18 +1415,36 @@ em {
 
 @media (max-width: 680px) {
   .application-stage {
-    width: min(100% - 1rem, 1180px);
-    margin-top: 1rem;
+    padding-inline: 1rem;
+  }
+
+  .progress-panel {
+    overflow: visible;
+  }
+
+  .progress-panel ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .progress-panel li {
+    min-width: 0;
+  }
+
+  .progress-panel button {
+    min-height: 4.35rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
   }
 
   .field-grid,
   .summary-list div,
   .direct-debit dl div,
   .bank-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .progress-panel ol {
     grid-template-columns: 1fr;
   }
 

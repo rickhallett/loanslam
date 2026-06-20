@@ -2,10 +2,10 @@
 import Base from '../layouts/Base.astro';
 import {
   type ContentRecord,
+  normalizeContentHeadings,
   pages,
   pathFromLink,
   rewriteLinks,
-  stripLeadingH1,
   withToc,
 } from '../lib/content.ts';
 
@@ -20,9 +20,9 @@ export function getStaticPaths() {
     }));
 }
 
-const APPLY_URL = 'https://applyloansbymal.co.uk';
+const APPLY_URL = '/apply/';
 const { record } = Astro.props as { record: ContentRecord };
-const { html, toc } = withToc(rewriteLinks(stripLeadingH1(record.html)));
+const { html, toc } = withToc(rewriteLinks(normalizeContentHeadings(record.html)));
 const showToc = toc.length >= 2;
 ---
 
