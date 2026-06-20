@@ -15,4 +15,8 @@ reports/
 !packages/review-host/public/reports/*.html
 exports/
 artifacts/
+!artifacts/
+artifacts/*
+!artifacts/evidence-index/
+!artifacts/evidence-index/*.md
 *.jsonl
