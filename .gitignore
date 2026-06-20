@@ -18,6 +18,8 @@ secrets/*.env.local
 # Phase 0 local evidence artifacts.
 traces/
 reports/
+!docs/reports/
+!docs/reports/*.md
 !packages/review-host/public/reports/
 !packages/review-host/public/reports/*.html
 exports/
