@@ -84,3 +84,32 @@ npx vitest run packages/core/src/engine.test.ts
 ```
 
 Result: `1` test file passed, `23` tests passed.
+
+## Section 3: Compare And Stability Comparability Warnings
+
+### Finding
+
+`hell-week-compare` previously only surfaced scenario-set mismatch explicitly.
+The report data already carried model, prompt, policy, and judged-state
+metadata, but the comparison layer did not normalize or warn on those fields.
+
+### Conclusion
+
+Comparison output now carries soft comparability warnings for profile,
+scenario-set, planner provider/model/prompt, signal extractor enabled/model/
+prompt, policy version, and judged state. Stability reports aggregate the same
+pairwise warnings and expose run metadata in the HTML run table.
+
+### Hypothesis
+
+This prevents the regression report from treating mismatched deterministic-only
+runs as clean product movement while still allowing exploratory comparison of
+imperfect evidence.
+
+### Verification
+
+```text
+npx vitest run packages/core/src/hellweek/compare.test.ts packages/core/src/hellweek/stability.test.ts
+```
+
+Result: `2` test files passed, `3` tests passed.

@@ -36,6 +36,18 @@ interface CompareReport {
   runId: string;
   generatedAt?: string;
   profile: string;
+  planner: {
+    provider: string;
+    model: string;
+    promptVersion: string;
+  };
+  signalExtractor: {
+    enabled: boolean;
+    model?: string;
+    promptVersion?: string;
+  };
+  policyVersion: string;
+  judged: boolean;
   verdict: HellWeekVerdict;
   totals: ReportTotals;
   safetyFloor: {
@@ -63,6 +75,30 @@ interface CompareReport {
   grades: CompareGrade[];
 }
 
+export type HellWeekComparabilityField =
+  | "profile"
+  | "scenario_set"
+  | "planner_provider"
+  | "planner_model"
+  | "planner_prompt"
+  | "signal_enabled"
+  | "signal_model"
+  | "signal_prompt"
+  | "policy_version"
+  | "judged_state";
+
+export interface HellWeekComparabilityWarning {
+  field: HellWeekComparabilityField;
+  baseline: string;
+  candidate: string;
+  message: string;
+}
+
+export interface HellWeekComparability {
+  compatible: boolean;
+  warnings: HellWeekComparabilityWarning[];
+}
+
 interface LoadedReport {
   path: string;
   report: CompareReport;
@@ -84,6 +120,7 @@ export interface HellWeekComparison {
   baseline: LoadedReport;
   candidate: LoadedReport;
   scenarioSetChanged: boolean;
+  comparability: HellWeekComparability;
   deltas: {
     scenarios: number;
     passed: number;
@@ -115,6 +152,7 @@ export interface HellWeekComparisonJson {
   baseline: ReportSummary;
   candidate: ReportSummary;
   scenarioSetChanged: boolean;
+  comparability: HellWeekComparability;
   deltas: HellWeekComparison["deltas"];
   scenarioChanges: HellWeekComparison["scenarioChanges"];
   recommendation: HellWeekComparison["recommendation"];
@@ -124,6 +162,10 @@ interface ReportSummary {
   path: string;
   runId: string;
   profile: string;
+  planner: CompareReport["planner"];
+  signalExtractor: CompareReport["signalExtractor"];
+  policyVersion: string;
+  judged: boolean;
   verdict: HellWeekVerdict;
   totals: ReportTotals;
   safetyFloor: CompareReport["safetyFloor"];
@@ -193,13 +235,24 @@ export function compareHellWeekReports(
     }
   }
 
+  const scenarioSetChanged =
+    baselineIds.size !== candidateIds.size ||
+    sharedIds.length !== baselineIds.size ||
+    sharedIds.length !== candidateIds.size;
+  const comparabilityWarnings = buildComparabilityWarnings({
+    baseline,
+    candidate,
+    scenarioSetChanged,
+  });
+
   const comparison: HellWeekComparison = {
     baseline,
     candidate,
-    scenarioSetChanged:
-      baselineIds.size !== candidateIds.size ||
-      sharedIds.length !== baselineIds.size ||
-      sharedIds.length !== candidateIds.size,
+    scenarioSetChanged,
+    comparability: {
+      compatible: comparabilityWarnings.length === 0,
+      warnings: comparabilityWarnings,
+    },
     deltas: buildDeltas(baseline.report, candidate.report),
     scenarioChanges: {
       resolvedFailures: sortChanges(resolvedFailures),
@@ -225,6 +278,7 @@ export function toHellWeekComparisonJson(
     baseline: summarizeReport(comparison.baseline),
     candidate: summarizeReport(comparison.candidate),
     scenarioSetChanged: comparison.scenarioSetChanged,
+    comparability: comparison.comparability,
     deltas: comparison.deltas,
     scenarioChanges: comparison.scenarioChanges,
     recommendation: comparison.recommendation,
@@ -236,12 +290,9 @@ export function formatHellWeekComparison(
 ): string {
   const { baseline, candidate, deltas, scenarioChanges, recommendation } =
     comparison;
-  const scenarioWarning = comparison.scenarioSetChanged
-    ? [
-        "",
-        "Warning: scenario sets differ; scenario movement only counts overlapping ids.",
-      ]
-    : [];
+  const comparabilityWarnings = formatComparabilityWarnings(
+    comparison.comparability.warnings,
+  );
 
   return [
     `Hell Week compare: ${label(baseline)} -> ${label(candidate)}`,
@@ -255,9 +306,9 @@ export function formatHellWeekComparison(
     `Routing precision: ${rateOrNa(baseline.report.routingPrecision.rate, baseline.report.routingPrecision.inScopeScenarios)} -> ${rateOrNa(candidate.report.routingPrecision.rate, candidate.report.routingPrecision.inScopeScenarios)} (${signedPoints(deltas.routingPrecisionPoints)})`,
     `Signal agreement: ${rateOrNa(baseline.report.routingPrecision.signalAgreementRate, baseline.report.routingPrecision.signalTurns)} -> ${rateOrNa(candidate.report.routingPrecision.signalAgreementRate, candidate.report.routingPrecision.signalTurns)} (${signedPoints(deltas.signalAgreementPoints)})`,
     `Scenario movement: ${scenarioChanges.resolvedFailures.length} resolved, ${scenarioChanges.newFailures.length} new failures, ${scenarioChanges.worsenedSeverity.length} worsened severity, ${scenarioChanges.improvedSeverity.length} improved severity.`,
+    ...comparabilityWarnings,
     "",
     `Recommendation: ${recommendation.status} - ${recommendation.summary}`,
-    ...scenarioWarning,
     changeBlock("Top new failures", scenarioChanges.newFailures),
     changeBlock("Top resolved failures", scenarioChanges.resolvedFailures),
     changeBlock("Top worsened severity", scenarioChanges.worsenedSeverity),
@@ -272,6 +323,10 @@ function summarizeReport(item: LoadedReport): ReportSummary {
     path: item.path,
     runId: item.report.runId,
     profile: item.report.profile,
+    planner: item.report.planner,
+    signalExtractor: item.report.signalExtractor,
+    policyVersion: item.report.policyVersion,
+    judged: item.report.judged,
     verdict: item.report.verdict,
     totals: item.report.totals,
     safetyFloor: item.report.safetyFloor,
@@ -323,6 +378,10 @@ function normalizeReport(raw: unknown, path: string): CompareReport {
       ? { generatedAt: report.generatedAt }
       : {}),
     profile: stringValue(report.profile, "unknown"),
+    planner: plannerValue(report.planner),
+    signalExtractor: signalExtractorValue(report.signalExtractor),
+    policyVersion: stringValue(report.policyVersion, "unknown"),
+    judged: report.judged === true,
     verdict: verdictValue(report.verdict),
     totals: totalsValue(report.totals),
     safetyFloor: {
@@ -375,6 +434,120 @@ function normalizeGrade(raw: unknown): CompareGrade {
   };
 }
 
+function buildComparabilityWarnings({
+  baseline,
+  candidate,
+  scenarioSetChanged,
+}: {
+  baseline: LoadedReport;
+  candidate: LoadedReport;
+  scenarioSetChanged: boolean;
+}): HellWeekComparabilityWarning[] {
+  const warnings: HellWeekComparabilityWarning[] = [];
+  const before = baseline.report;
+  const after = candidate.report;
+
+  addWarning(warnings, {
+    field: "profile",
+    baseline: before.profile,
+    candidate: after.profile,
+    message: "Profiles differ; pass movement may reflect a different battery.",
+  });
+
+  if (scenarioSetChanged) {
+    warnings.push({
+      field: "scenario_set",
+      baseline: scenarioIds(before).join(", "),
+      candidate: scenarioIds(after).join(", "),
+      message:
+        "Scenario sets differ; scenario movement only counts overlapping ids.",
+    });
+  }
+
+  addWarning(warnings, {
+    field: "planner_provider",
+    baseline: before.planner.provider,
+    candidate: after.planner.provider,
+    message: "Planner providers differ.",
+  });
+  addWarning(warnings, {
+    field: "planner_model",
+    baseline: before.planner.model,
+    candidate: after.planner.model,
+    message: "Planner models differ.",
+  });
+  addWarning(warnings, {
+    field: "planner_prompt",
+    baseline: before.planner.promptVersion,
+    candidate: after.planner.promptVersion,
+    message: "Planner prompt versions differ.",
+  });
+  addWarning(warnings, {
+    field: "signal_enabled",
+    baseline: String(before.signalExtractor.enabled),
+    candidate: String(after.signalExtractor.enabled),
+    message: "Signal-extractor enabled state differs.",
+  });
+  addWarning(warnings, {
+    field: "signal_model",
+    baseline: before.signalExtractor.model ?? "none",
+    candidate: after.signalExtractor.model ?? "none",
+    message: "Signal-extractor models differ.",
+  });
+  addWarning(warnings, {
+    field: "signal_prompt",
+    baseline: before.signalExtractor.promptVersion ?? "none",
+    candidate: after.signalExtractor.promptVersion ?? "none",
+    message: "Signal-extractor prompt versions differ.",
+  });
+  addWarning(warnings, {
+    field: "policy_version",
+    baseline: before.policyVersion,
+    candidate: after.policyVersion,
+    message: "Policy versions differ.",
+  });
+  addWarning(warnings, {
+    field: "judged_state",
+    baseline: before.judged ? "judged" : "deterministic_only",
+    candidate: after.judged ? "judged" : "deterministic_only",
+    message: "Judged state differs.",
+  });
+
+  return warnings;
+}
+
+function addWarning(
+  warnings: HellWeekComparabilityWarning[],
+  warning: HellWeekComparabilityWarning,
+): void {
+  if (warning.baseline === warning.candidate) {
+    return;
+  }
+
+  warnings.push(warning);
+}
+
+function scenarioIds(report: CompareReport): string[] {
+  return report.grades.map((grade) => grade.scenarioId).sort();
+}
+
+function formatComparabilityWarnings(
+  warnings: readonly HellWeekComparabilityWarning[],
+): string[] {
+  if (warnings.length === 0) {
+    return [];
+  }
+
+  return [
+    "",
+    "Comparability warnings:",
+    ...warnings.map(
+      (warning) =>
+        `- ${warning.field}: ${warning.baseline} -> ${warning.candidate}. ${warning.message}`,
+    ),
+  ];
+}
+
 function totalsValue(raw: unknown): ReportTotals {
   const totals = raw as Partial<ReportTotals>;
   return {
@@ -386,6 +559,30 @@ function totalsValue(raw: unknown): ReportTotals {
     dents: numberValue(totals.dents),
     fine: numberValue(totals.fine),
     errored: numberValue(totals.errored),
+  };
+}
+
+function plannerValue(raw: unknown): CompareReport["planner"] {
+  const planner = raw as Partial<CompareReport["planner"]> | undefined;
+
+  return {
+    provider: stringValue(planner?.provider, "unknown"),
+    model: stringValue(planner?.model, "unknown"),
+    promptVersion: stringValue(planner?.promptVersion, "unknown"),
+  };
+}
+
+function signalExtractorValue(
+  raw: unknown,
+): CompareReport["signalExtractor"] {
+  const signal = raw as Partial<CompareReport["signalExtractor"]> | undefined;
+
+  return {
+    enabled: signal?.enabled === true,
+    ...(typeof signal?.model === "string" ? { model: signal.model } : {}),
+    ...(typeof signal?.promptVersion === "string"
+      ? { promptVersion: signal.promptVersion }
+      : {}),
   };
 }
 

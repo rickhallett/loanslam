@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   compareHellWeekReports,
   toHellWeekComparisonJson,
+  type HellWeekComparabilityWarning,
   type HellWeekComparisonJson,
 } from "./compare";
 import {
@@ -24,6 +25,11 @@ export interface HellWeekStabilityRunSummary {
   runId: string;
   position: number;
   generatedAt: string;
+  profile: string;
+  planner: HellWeekReport["planner"];
+  signalExtractor: HellWeekReport["signalExtractor"];
+  policyVersion: string;
+  judged: boolean;
   verdict: HellWeekReport["verdict"];
   totals: HellWeekReport["totals"];
 }
@@ -78,6 +84,10 @@ export interface HellWeekStabilityReport {
   runCount: number;
   scenarioCount: number;
   scenarioSetChanged: boolean;
+  comparability: {
+    compatible: boolean;
+    warnings: HellWeekComparabilityWarning[];
+  };
   runs: HellWeekStabilityRunSummary[];
   summary: HellWeekStabilitySummary;
   scenarios: HellWeekStabilityScenario[];
@@ -113,6 +123,8 @@ export function buildHellWeekStabilityReport({
   );
   const summary = summarizeScenarios(scenarios);
   const pairwiseComparisons = pairwiseStabilityComparisons(runs);
+  const comparabilityWarnings =
+    stabilityComparabilityWarnings(pairwiseComparisons);
   const scenarioSetChanged = runs.some(
     (run) => run.scenarios.length !== scenarioOrder.length,
   );
@@ -126,10 +138,19 @@ export function buildHellWeekStabilityReport({
     runCount: runs.length,
     scenarioCount: scenarios.length,
     scenarioSetChanged,
+    comparability: {
+      compatible: comparabilityWarnings.length === 0,
+      warnings: comparabilityWarnings,
+    },
     runs: runs.map((run, index) => ({
       runId: run.runId,
       position: index,
       generatedAt: run.generatedAt,
+      profile: run.profile,
+      planner: run.planner,
+      signalExtractor: run.signalExtractor,
+      policyVersion: run.policyVersion,
+      judged: run.judged,
       verdict: run.verdict,
       totals: run.totals,
     })),
@@ -220,14 +241,24 @@ export function renderHellWeekStabilityHtml(
       ? '<p class="warn">Scenario sets differ; inspect missing/mixed rows before treating this as a clean stability report.</p>'
       : ""
   }
+  ${
+    report.comparability.warnings.length > 0
+      ? `<section><h2>Comparability Warnings</h2><ul>${report.comparability.warnings
+          .map(
+            (warning) =>
+              `<li><strong>${escapeHtml(warning.field)}</strong>: ${escapeHtml(warning.baseline)} -> ${escapeHtml(warning.candidate)}. ${escapeHtml(warning.message)}</li>`,
+          )
+          .join("")}</ul></section>`
+      : ""
+  }
   <h2>Runs</h2>
   <table>
-    <thead><tr><th>#</th><th>Run</th><th>Verdict</th><th>Pass</th><th>Generated</th></tr></thead>
+    <thead><tr><th>#</th><th>Run</th><th>Verdict</th><th>Pass</th><th>Planner</th><th>Signal</th><th>Policy</th><th>Judged</th><th>Generated</th></tr></thead>
     <tbody>
       ${report.runs
         .map(
           (run) =>
-            `<tr><td>${run.position + 1}</td><td>${escapeHtml(run.runId)}</td><td>${escapeHtml(run.verdict)}</td><td>${run.totals.passed}/${run.totals.scenarios}</td><td>${escapeHtml(run.generatedAt)}</td></tr>`,
+            `<tr><td>${run.position + 1}</td><td>${escapeHtml(run.runId)}</td><td>${escapeHtml(run.verdict)}</td><td>${run.totals.passed}/${run.totals.scenarios}</td><td>${escapeHtml(`${run.planner.model} / ${run.planner.promptVersion}`)}</td><td>${escapeHtml(signalSummary(run.signalExtractor))}</td><td>${escapeHtml(run.policyVersion)}</td><td>${run.judged ? "yes" : "no"}</td><td>${escapeHtml(run.generatedAt)}</td></tr>`,
         )
         .join("\n")}
     </tbody>
@@ -411,6 +442,33 @@ function pairwiseStabilityComparisons(
   return comparisons;
 }
 
+function stabilityComparabilityWarnings(
+  comparisons: readonly HellWeekStabilityPairwiseComparison[],
+): HellWeekComparabilityWarning[] {
+  const warnings: HellWeekComparabilityWarning[] = [];
+  const seen = new Set<string>();
+
+  for (const item of comparisons) {
+    for (const warning of item.comparison.comparability.warnings) {
+      const key = [
+        warning.field,
+        warning.baseline,
+        warning.candidate,
+        warning.message,
+      ].join("\u0000");
+
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.add(key);
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
 function firstPresentGrade(
   runs: readonly HellWeekReport[],
   scenarioId: string,
@@ -452,6 +510,14 @@ function worstSeverityForOutcomes(
 
 function metric(label: string, value: string): string {
   return `<div><span class="k">${escapeHtml(label)}</span><span class="v">${escapeHtml(value)}</span></div>`;
+}
+
+function signalSummary(signal: HellWeekReport["signalExtractor"]): string {
+  if (!signal.enabled) {
+    return "disabled";
+  }
+
+  return `${signal.model ?? "unknown"} / ${signal.promptVersion ?? "unknown"}`;
 }
 
 function escapeHtml(value: string): string {
