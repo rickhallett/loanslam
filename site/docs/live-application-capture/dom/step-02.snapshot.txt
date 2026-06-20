@@ -1,0 +1,152 @@
+uid=13_0 RootWebArea url="https://applyloansbymal.co.uk/step-two/step-two.html"
+  uid=14_0 ignored
+    uid=14_1 generic
+      uid=14_2 generic
+        uid=13_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=13_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=14_3 ignored
+              uid=14_4 generic
+                uid=14_5 generic
+                uid=14_6 generic
+                  uid=13_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=14_7 ignored
+                  uid=14_8 generic
+                    uid=13_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=14_9 generic
+                    uid=13_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=14_10 generic
+      uid=13_6 banner
+        uid=13_7 link url="http://loansbymal.co.uk/"
+          uid=14_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=14_12 generic
+        uid=14_13 ignored
+          uid=13_8 heading "You have been credit check approved to borrow up to £4,600." level="5"
+            uid=14_14 StaticText "You have been credit check approved to borrow up to £4,600."
+          uid=14_15 paragraph
+            uid=13_9 StaticText "The amount you borrow doesn’t affect your loan being accepted. As long as you can afford the monthly repayments we can pay your money out in the next 24 hours."
+          uid=13_10 form
+            uid=14_16 ignored
+              uid=14_17 ignored
+                uid=14_18 LabelText
+                  uid=13_11 StaticText "Loan Amount "
+                  uid=13_12 StaticText "*"
+                uid=14_19 generic
+                  uid=14_20 ignored
+                    uid=14_21 ignored
+                      uid=13_13 StaticText "£"
+                  uid=13_14 textbox "Loan Amount *" value="4600"
+                    uid=14_22 generic
+                      uid=14_23 StaticText "4600"
+                uid=14_24 paragraph
+            uid=14_25 ignored
+              uid=14_26 group
+                uid=14_27 LabelText
+                  uid=13_15 StaticText "Loan Term"
+                uid=14_28 generic
+                  uid=14_29 ignored
+                    uid=13_16 radio "36 months"
+                    uid=14_30 ignored
+                uid=14_31 generic
+                  uid=14_32 LabelText
+                  uid=13_17 radio checked
+                  uid=13_18 StaticText "24 months"
+                uid=14_33 generic
+                  uid=14_34 LabelText
+                  uid=13_19 radio
+                  uid=13_20 StaticText "18 months"
+                uid=14_35 generic
+                  uid=14_36 LabelText
+                  uid=13_21 radio
+                  uid=13_22 StaticText "12 months"
+                uid=14_37 generic
+                  uid=14_38 LabelText
+                  uid=13_23 radio
+                  uid=13_24 StaticText "9 months"
+            uid=14_39 ignored
+              uid=14_40 ignored
+                uid=14_41 paragraph
+                  uid=13_25 StaticText "Repayment date"
+                uid=14_42 paragraph
+                  uid=13_26 StaticText "Your first repayment date will be "
+                  uid=14_43 strong
+                    uid=13_27 StaticText "30th December 1899"
+                uid=13_28 LineBreak "
+"
+                uid=13_29 StaticText "All future payments will be on "
+                uid=14_44 strong
+                  uid=13_30 StaticText "1"
+                  uid=14_45 superscript
+                    uid=13_31 StaticText "st"
+                  uid=13_32 StaticText " of each month"
+        uid=14_46 ignored
+          uid=14_47 generic
+            uid=13_33 button "Continue  "
+              uid=14_48 StaticText "Continue "
+              uid=14_49 generic
+                uid=14_50 ignored
+                  uid=13_57 StaticText ""
+      uid=13_34 contentinfo
+        uid=14_51 ignored
+          uid=14_52 ignored
+            uid=13_35 heading "Customer Reviews" level="3"
+              uid=14_53 StaticText "Customer Reviews"
+            uid=14_54 generic
+              uid=13_36 Iframe "Customer reviews powered by Trustpilot"
+            uid=14_55 separator orientation="horizontal"
+          uid=14_56 ignored
+            uid=14_57 ignored
+              uid=14_58 ignored
+                uid=13_37 link url="http://loansbymal.co.uk/"
+                  uid=14_59 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=14_60 ignored
+                uid=14_61 ignored
+                  uid=14_62 generic
+                    uid=13_38 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=13_39 StaticText "FAQs"
+                  uid=14_63 generic
+                    uid=13_40 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=13_41 StaticText "Contact us"
+          uid=14_64 ignored
+            uid=14_65 ignored
+              uid=14_66 ignored
+                uid=14_67 generic
+                  uid=14_68 paragraph
+                    uid=13_42 StaticText "© Monthly Advance Loans Limited."
+                  uid=14_69 paragraph
+                    uid=14_70 strong
+                      uid=13_43 StaticText "loans by mal"
+                    uid=13_44 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=14_71 ignored
+                uid=14_72 paragraph
+                  uid=13_45 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=14_73 strong
+                      uid=13_46 StaticText "Privacy Policy"
+                    uid=13_47 StaticText " |"
+                  uid=13_48 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=14_74 strong
+                      uid=13_49 StaticText " Terms & Conditions"
+                    uid=13_50 StaticText " |"
+                  uid=13_51 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=14_75 strong
+                      uid=13_52 StaticText " Complaints"
+                    uid=13_53 StaticText " |"
+                  uid=13_54 StaticText " "
+                  uid=14_76 strong
+                    uid=13_55 StaticText "Version 1.237.4"
+              uid=14_77 ignored
+                uid=13_56 link "" url="https://www.facebook.com/loansbymal"
+                  uid=14_78 generic
+                    uid=14_79 ignored
+                      uid=13_57 StaticText ""
+                uid=13_58 link "" url="https://twitter.com/loansbymal"
+                  uid=14_80 generic
+                    uid=14_81 ignored
+                      uid=13_57 StaticText ""
+                uid=13_59 link "" url="https://www.instagram.com/loansbymal"
+                  uid=14_82 generic
+                    uid=14_83 ignored
+                      uid=13_57 StaticText ""
+                uid=13_60 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=14_84 generic
+                    uid=14_85 ignored
+                      uid=13_57 StaticText ""

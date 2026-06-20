@@ -1,0 +1,148 @@
+uid=30_0 RootWebArea url="https://applyloansbymal.co.uk/step-eight/step-eight.html"
+  uid=31_0 ignored
+    uid=31_1 generic
+      uid=31_2 generic
+        uid=30_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=30_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=31_3 ignored
+              uid=31_4 generic
+                uid=31_5 generic
+                uid=31_6 generic
+                  uid=30_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=31_7 ignored
+                  uid=31_8 generic
+                    uid=30_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=31_9 generic
+                    uid=30_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=31_10 generic
+      uid=30_6 banner
+        uid=30_7 link url="http://loansbymal.co.uk/"
+          uid=31_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=31_12 generic
+        uid=31_13 ignored
+          uid=30_8 heading "Last step, this bits's really fast!" level="5"
+            uid=31_14 StaticText "Last step, this bits's really fast!"
+          uid=31_15 ignored
+            uid=31_16 paragraph
+              uid=30_9 StaticText "We need to verify the bank account you want your loan paid into. This must be the account your income is paid into. Please click continue and follow the instructions. As soon as you have verified your bank account you will have finished your loan application."
+        uid=31_17 ignored
+          uid=31_18 generic
+            uid=31_19 paragraph
+              uid=30_10 StaticText "Simply click Continue and follow the prompts"
+            uid=31_20 paragraph
+              uid=30_11 StaticText "Supporting information is sent instantly and securely"
+            uid=31_21 paragraph
+              uid=30_12 StaticText "Fully encrypted"
+        uid=31_22 ignored
+          uid=31_23 generic
+            uid=30_13 button "Continue  "
+              uid=31_24 StaticText "Continue "
+              uid=31_25 generic
+                uid=31_26 ignored
+                  uid=30_14 StaticText ""
+        uid=31_27 ignored
+          uid=31_28 generic
+            uid=31_29 ignored
+              uid=31_30 ignored
+                uid=31_31 generic
+                  uid=31_32 paragraph
+                    uid=31_33 generic
+                      uid=31_34 ignored
+                        uid=30_14 StaticText ""
+                    uid=30_15 StaticText "Consents.Online is powered by "
+                    uid=30_16 link "OpenBanking" url="https://www.openbanking.org.uk/why-open-banking-is-safe/"
+                      uid=30_17 StaticText "OpenBanking"
+                    uid=30_18 StaticText ", a free and secure service, which keeps you safe when sharing banking transaction data. We will not have access to your money, and cannot make changes to your account. It's safe and secure. "
+                    uid=30_19 StaticText " "
+                    uid=30_20 link "Find out more" url="https://www.openbanking.org.uk/why-open-banking-is-safe/"
+                      uid=30_21 StaticText "Find out more"
+                  uid=30_22 LineBreak "
+"
+                  uid=31_35 paragraph
+                    uid=30_23 StaticText "Trusted and integrated with most major banks"
+            uid=31_36 ignored
+              uid=31_37 ignored
+                uid=31_38 list
+                  uid=31_39 listitem level="1"
+                    uid=30_24 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_40 ignored
+                  uid=31_41 listitem level="1"
+                    uid=30_25 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_42 ignored
+                  uid=31_43 listitem level="1"
+                    uid=30_26 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_44 ignored
+                  uid=31_45 listitem level="1"
+                    uid=30_27 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_46 ignored
+                  uid=31_47 listitem level="1"
+                    uid=30_28 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_48 ignored
+                  uid=31_49 listitem level="1"
+                    uid=30_29 link url="https://applyloansbymal.co.uk/step-eight/step-eight.html#"
+                      uid=31_50 ignored
+      uid=30_30 contentinfo
+        uid=31_51 ignored
+          uid=31_52 ignored
+            uid=30_31 heading "Customer Reviews" level="3"
+              uid=31_53 StaticText "Customer Reviews"
+            uid=31_54 generic
+              uid=30_32 Iframe "Customer reviews powered by Trustpilot"
+            uid=31_55 separator orientation="horizontal"
+          uid=31_56 ignored
+            uid=31_57 ignored
+              uid=31_58 ignored
+                uid=30_33 link url="http://loansbymal.co.uk/"
+                  uid=31_59 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=31_60 ignored
+                uid=31_61 ignored
+                  uid=31_62 generic
+                    uid=30_34 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=30_35 StaticText "FAQs"
+                  uid=31_63 generic
+                    uid=30_36 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=30_37 StaticText "Contact us"
+          uid=31_64 ignored
+            uid=31_65 ignored
+              uid=31_66 ignored
+                uid=31_67 generic
+                  uid=31_68 paragraph
+                    uid=30_38 StaticText "© Monthly Advance Loans Limited."
+                  uid=31_69 paragraph
+                    uid=31_70 strong
+                      uid=30_39 StaticText "loans by mal"
+                    uid=30_40 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=31_71 ignored
+                uid=31_72 paragraph
+                  uid=30_41 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=31_73 strong
+                      uid=30_42 StaticText "Privacy Policy"
+                    uid=30_43 StaticText " |"
+                  uid=30_44 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=31_74 strong
+                      uid=30_45 StaticText " Terms & Conditions"
+                    uid=30_46 StaticText " |"
+                  uid=30_47 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=31_75 strong
+                      uid=30_48 StaticText " Complaints"
+                    uid=30_49 StaticText " |"
+                  uid=30_50 StaticText " "
+                  uid=31_76 strong
+                    uid=30_51 StaticText "Version 1.237.4"
+              uid=31_77 ignored
+                uid=30_52 link "" url="https://www.facebook.com/loansbymal"
+                  uid=31_78 generic
+                    uid=31_79 ignored
+                      uid=30_14 StaticText ""
+                uid=30_53 link "" url="https://twitter.com/loansbymal"
+                  uid=31_80 generic
+                    uid=31_81 ignored
+                      uid=30_14 StaticText ""
+                uid=30_54 link "" url="https://www.instagram.com/loansbymal"
+                  uid=31_82 generic
+                    uid=31_83 ignored
+                      uid=30_14 StaticText ""
+                uid=30_55 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=31_84 generic
+                    uid=31_85 ignored
+                      uid=30_14 StaticText ""

@@ -1,0 +1,133 @@
+uid=21_0 RootWebArea url="https://applyloansbymal.co.uk/step-six/step-six.html"
+  uid=22_0 ignored
+    uid=22_1 generic
+      uid=22_2 generic
+        uid=21_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=21_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=22_3 ignored
+              uid=22_4 generic
+                uid=22_5 generic
+                uid=22_6 generic
+                  uid=21_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=22_7 ignored
+                  uid=22_8 generic
+                    uid=21_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=22_9 generic
+                    uid=21_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=22_10 generic
+      uid=21_6 banner
+        uid=21_7 link url="http://loansbymal.co.uk/"
+          uid=22_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=22_12 generic
+        uid=22_13 ignored
+          uid=22_14 ignored
+            uid=21_8 heading "Read and Sign" level="2"
+              uid=22_15 StaticText "Read and Sign"
+            uid=22_16 paragraph
+              uid=21_9 StaticText "Please open and read through all 4 documents below. You need to read and sign the last document called 'Your Loan Agreement'. To do this type your name into the box that says 'Signature of customer' and press 'Accept'. Then click Continue at the bottom of this page."
+          uid=22_17 ignored
+            uid=22_18 ignored
+              uid=21_10 alert atomic live="assertive" relevant="additions text"
+                uid=22_19 generic
+                  uid=22_20 ignored
+                    uid=21_11 StaticText ""
+                uid=22_21 generic
+                  uid=21_12 StaticText "Explanation of Your Fixed Sum Loan Agreement"
+                uid=22_22 generic
+                  uid=22_23 generic
+                    uid=21_13 StaticText "*Required"
+            uid=22_24 ignored
+              uid=21_14 alert atomic live="assertive" relevant="additions text"
+                uid=22_25 generic
+                  uid=22_26 ignored
+                    uid=21_11 StaticText ""
+                uid=22_27 generic
+                  uid=21_15 StaticText "Pre-Contract Credit Information"
+                uid=22_28 generic
+                  uid=22_29 generic
+                    uid=21_16 StaticText "*Required"
+            uid=22_30 ignored
+              uid=21_17 alert atomic live="assertive" relevant="additions text"
+                uid=22_31 generic
+                  uid=22_32 ignored
+                    uid=21_11 StaticText ""
+                uid=22_33 generic
+                  uid=21_18 StaticText "Terms And Conditions"
+                uid=22_34 generic
+                  uid=22_35 generic
+                    uid=21_19 StaticText "*Required"
+            uid=22_36 ignored
+              uid=21_20 alert atomic live="assertive" relevant="additions text"
+                uid=22_37 generic
+                  uid=22_38 ignored
+                    uid=21_11 StaticText ""
+                uid=22_39 generic
+                  uid=21_21 StaticText "Important Information: Your Loan Agreement"
+                uid=22_40 generic
+                  uid=22_41 generic
+                    uid=21_22 StaticText "*Required"
+      uid=21_23 contentinfo
+        uid=22_42 ignored
+          uid=22_43 ignored
+            uid=21_24 heading "Customer Reviews" level="3"
+              uid=22_44 StaticText "Customer Reviews"
+            uid=22_45 generic
+              uid=21_25 Iframe "Customer reviews powered by Trustpilot"
+            uid=22_46 separator orientation="horizontal"
+          uid=22_47 ignored
+            uid=22_48 ignored
+              uid=22_49 ignored
+                uid=21_26 link url="http://loansbymal.co.uk/"
+                  uid=22_50 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=22_51 ignored
+                uid=22_52 ignored
+                  uid=22_53 generic
+                    uid=21_27 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=21_28 StaticText "FAQs"
+                  uid=22_54 generic
+                    uid=21_29 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=21_30 StaticText "Contact us"
+          uid=22_55 ignored
+            uid=22_56 ignored
+              uid=22_57 ignored
+                uid=22_58 generic
+                  uid=22_59 paragraph
+                    uid=21_31 StaticText "© Monthly Advance Loans Limited."
+                  uid=22_60 paragraph
+                    uid=22_61 strong
+                      uid=21_32 StaticText "loans by mal"
+                    uid=21_33 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=22_62 ignored
+                uid=22_63 paragraph
+                  uid=21_34 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=22_64 strong
+                      uid=21_35 StaticText "Privacy Policy"
+                    uid=21_36 StaticText " |"
+                  uid=21_37 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=22_65 strong
+                      uid=21_38 StaticText " Terms & Conditions"
+                    uid=21_39 StaticText " |"
+                  uid=21_40 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=22_66 strong
+                      uid=21_41 StaticText " Complaints"
+                    uid=21_42 StaticText " |"
+                  uid=21_43 StaticText " "
+                  uid=22_67 strong
+                    uid=21_44 StaticText "Version 1.237.4"
+              uid=22_68 ignored
+                uid=21_45 link "" url="https://www.facebook.com/loansbymal"
+                  uid=22_69 generic
+                    uid=22_70 ignored
+                      uid=21_11 StaticText ""
+                uid=21_46 link "" url="https://twitter.com/loansbymal"
+                  uid=22_71 generic
+                    uid=22_72 ignored
+                      uid=21_11 StaticText ""
+                uid=21_47 link "" url="https://www.instagram.com/loansbymal"
+                  uid=22_73 generic
+                    uid=22_74 ignored
+                      uid=21_11 StaticText ""
+                uid=21_48 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=22_75 generic
+                    uid=22_76 ignored
+                      uid=21_11 StaticText ""

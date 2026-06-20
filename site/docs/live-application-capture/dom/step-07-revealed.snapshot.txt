@@ -1,0 +1,390 @@
+uid=25_0 RootWebArea url="https://applyloansbymal.co.uk/step-seven/step-seven.html"
+  uid=27_0 ignored
+    uid=27_1 generic
+      uid=27_2 generic
+        uid=25_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=25_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=27_3 ignored
+              uid=27_4 generic
+                uid=27_5 generic
+                uid=27_6 generic
+                  uid=25_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=27_7 ignored
+                  uid=27_8 generic
+                    uid=25_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=27_9 generic
+                    uid=25_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=27_10 generic
+      uid=25_6 banner
+        uid=25_7 link url="http://loansbymal.co.uk/"
+          uid=27_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=27_12 generic
+        uid=25_8 heading "Affordability check" level="1"
+          uid=27_13 StaticText "Affordability check"
+        uid=27_14 ignored
+          uid=27_15 ignored
+            uid=27_16 ignored
+              uid=27_17 LabelText
+                uid=25_9 StaticText "Loan Purpose "
+                uid=25_10 StaticText "*"
+              uid=25_11 combobox "Loan Purpose *" expandable haspopup="menu" value="Unexpected expense"
+                uid=27_18 MenuListPopup
+                  uid=25_12 option "Please Select" selectable value="Please Select"
+                  uid=25_13 option "Vehicle purchase" selectable value="Vehicle purchase"
+                  uid=25_14 option "Vehicle repairs" selectable value="Vehicle repairs"
+                  uid=25_15 option "Home improvements" selectable value="Home improvements"
+                  uid=25_16 option "Holiday" selectable value="Holiday"
+                  uid=25_17 option "Health care/medical" selectable value="Health care/medical"
+                  uid=25_18 option "Wedding" selectable value="Wedding"
+                  uid=25_19 option "Major purchase (electronics, furniture)" selectable value="Major purchase (electronics, furniture)"
+                  uid=25_20 option "Moving/relocation" selectable value="Moving/relocation"
+                  uid=25_21 option "Urgent home/car repairs" selectable value="Urgent home/car repairs"
+                  uid=25_22 option "Unexpected expense" selectable selected value="Unexpected expense"
+                  uid=25_23 option "Funeral expense" selectable value="Funeral expense"
+                  uid=25_24 option "Pet expense" selectable value="Pet expense"
+                  uid=25_25 option "Debt consolidation" selectable value="Debt consolidation"
+                  uid=25_26 option "Legal expense" selectable value="Legal expense"
+            uid=27_19 paragraph
+            uid=27_20 ignored
+              uid=27_21 ignored
+            uid=27_22 ignored
+              uid=27_23 LabelText
+                uid=25_27 StaticText "Dependants "
+                uid=25_28 StaticText "*"
+              uid=25_29 combobox "Dependants *" expandable haspopup="menu" value="0"
+                uid=27_24 MenuListPopup
+                  uid=25_30 option "Please Select" selectable value="Please Select"
+                  uid=25_31 option "0" selectable selected value="0"
+                  uid=25_32 option "1" selectable value="1"
+                  uid=25_33 option "2" selectable value="2"
+                  uid=25_34 option "3" selectable value="3"
+                  uid=25_35 option "4" selectable value="4"
+                  uid=25_36 option "5" selectable value="5"
+                  uid=25_37 option "6" selectable value="6"
+                  uid=25_38 option "7" selectable value="7"
+                  uid=25_39 option "8" selectable value="8"
+                  uid=25_40 option "9" selectable value="9"
+                  uid=25_41 option "10" selectable value="10"
+            uid=27_25 paragraph
+      uid=27_26 generic
+        uid=27_27 ignored
+          uid=27_28 ignored
+            uid=26_0 heading "This part is really important!" level="5"
+              uid=27_29 StaticText "This part is really important!"
+                uid=25_65 InlineTextBox "This part is really important!"
+            uid=27_30 list
+              uid=27_31 listitem level="1"
+                uid=27_32 generic
+                  uid=25_65 StaticText "✓"
+                    uid=25_65 InlineTextBox "✓"
+                uid=26_1 StaticText "Your answers will help us ensure the loan repayments are affordable for you"
+                  uid=25_65 InlineTextBox "Your answers will help us ensure the loan repayments are affordable for you"
+              uid=27_33 listitem level="1"
+                uid=27_34 generic
+                  uid=25_65 StaticText "✓"
+                    uid=25_65 InlineTextBox "✓"
+                uid=26_2 StaticText "We just need to know what you pay towards the total costs below out of your income, not the total spend as a household."
+                  uid=25_65 InlineTextBox "We just need to know what you pay towards the total costs below out of your income, not "
+                  uid=25_65 InlineTextBox "the total spend as a household."
+              uid=27_35 listitem level="1"
+                uid=27_36 generic
+                  uid=25_65 StaticText "✓"
+                    uid=25_65 InlineTextBox "✓"
+                uid=26_3 StaticText "If you don't pay anything or less than we expect, that's fine, just select a reason why"
+                  uid=25_65 InlineTextBox "If you don't pay anything or less than we expect, that's fine, just select a reason why"
+        uid=27_37 ignored
+          uid=27_38 ignored
+          uid=27_39 ignored
+            uid=27_40 ignored
+        uid=27_41 ignored
+        uid=27_42 generic
+          uid=27_43 ignored
+            uid=27_44 ignored
+              uid=27_45 LabelText
+                uid=27_46 ignored
+                  uid=26_4 StaticText "Your"
+                    uid=25_65 InlineTextBox "Your"
+                uid=26_5 StaticText " contribution to "
+                  uid=25_65 InlineTextBox " contribution to "
+                uid=27_47 ignored
+                  uid=26_6 StaticText "Rent/Mortgage "
+                    uid=25_65 InlineTextBox "Rent/Mortgage "
+                uid=26_7 StaticText "*"
+                  uid=25_65 InlineTextBox "*"
+              uid=27_48 generic
+                uid=27_49 ignored
+                  uid=27_50 ignored
+                    uid=26_8 StaticText "£"
+                      uid=25_65 InlineTextBox "£"
+                uid=26_9 spinbutton "Your contribution to Rent/Mortgage *" valuemax="0" valuemin="0" valuetext=""
+                  uid=27_51 ignored
+                  uid=27_52 ignored
+                    uid=27_53 generic
+              uid=27_54 paragraph
+          uid=27_55 ignored
+            uid=27_56 ignored
+              uid=27_57 ignored
+                uid=27_58 ignored
+                uid=27_59 ignored
+                  uid=27_60 ignored
+              uid=27_61 ignored
+                uid=27_62 ignored
+                  uid=27_63 ignored
+                  uid=27_64 ignored
+                  uid=27_65 ignored
+                  uid=27_66 ignored
+                  uid=27_67 ignored
+                  uid=27_68 ignored
+                  uid=27_69 ignored
+                  uid=27_70 ignored
+                  uid=27_71 ignored
+                  uid=27_72 ignored
+                  uid=27_73 ignored
+                uid=27_74 paragraph
+        uid=27_75 ignored
+          uid=27_76 ignored
+            uid=27_77 ignored
+          uid=27_78 ignored
+          uid=27_79 ignored
+            uid=27_80 ignored
+          uid=27_81 ignored
+            uid=27_82 ignored
+        uid=27_83 ignored
+        uid=27_84 ignored
+        uid=27_85 ignored
+          uid=27_86 ignored
+          uid=27_87 ignored
+            uid=27_88 ignored
+        uid=27_89 ignored
+          uid=27_90 ignored
+          uid=27_91 ignored
+          uid=27_92 ignored
+          uid=27_93 ignored
+          uid=27_94 ignored
+          uid=27_95 ignored
+          uid=27_96 ignored
+        uid=27_97 ignored
+          uid=27_98 ignored
+            uid=27_99 ignored
+          uid=27_100 ignored
+          uid=27_101 ignored
+            uid=27_102 ignored
+          uid=27_103 ignored
+            uid=27_104 ignored
+        uid=27_105 ignored
+        uid=27_106 ignored
+        uid=27_107 ignored
+          uid=27_108 ignored
+        uid=27_109 ignored
+          uid=27_110 ignored
+          uid=27_111 ignored
+            uid=27_112 ignored
+        uid=27_113 ignored
+          uid=27_114 ignored
+          uid=27_115 ignored
+          uid=27_116 ignored
+          uid=27_117 ignored
+          uid=27_118 ignored
+          uid=27_119 ignored
+          uid=27_120 ignored
+          uid=27_121 ignored
+          uid=27_122 ignored
+          uid=27_123 ignored
+          uid=27_124 ignored
+        uid=27_125 ignored
+          uid=27_126 ignored
+            uid=27_127 ignored
+          uid=27_128 ignored
+          uid=27_129 ignored
+            uid=27_130 ignored
+          uid=27_131 ignored
+            uid=27_132 ignored
+        uid=27_133 ignored
+        uid=27_134 ignored
+        uid=27_135 ignored
+          uid=27_136 ignored
+          uid=27_137 ignored
+            uid=27_138 ignored
+        uid=27_139 ignored
+          uid=27_140 ignored
+          uid=27_141 ignored
+          uid=27_142 ignored
+          uid=27_143 ignored
+          uid=27_144 ignored
+          uid=27_145 ignored
+          uid=27_146 ignored
+        uid=27_147 ignored
+          uid=27_148 ignored
+            uid=27_149 ignored
+          uid=27_150 ignored
+          uid=27_151 ignored
+            uid=27_152 ignored
+          uid=27_153 ignored
+            uid=27_154 ignored
+        uid=27_155 ignored
+        uid=27_156 ignored
+        uid=27_157 ignored
+          uid=27_158 ignored
+        uid=27_159 ignored
+          uid=27_160 ignored
+          uid=27_161 ignored
+            uid=27_162 ignored
+        uid=27_163 ignored
+          uid=27_164 ignored
+          uid=27_165 ignored
+          uid=27_166 ignored
+          uid=27_167 ignored
+          uid=27_168 ignored
+          uid=27_169 ignored
+          uid=27_170 ignored
+          uid=27_171 ignored
+        uid=27_172 ignored
+          uid=27_173 ignored
+            uid=27_174 ignored
+          uid=27_175 ignored
+          uid=27_176 ignored
+            uid=27_177 ignored
+          uid=27_178 ignored
+            uid=27_179 ignored
+        uid=27_180 ignored
+        uid=27_181 ignored
+        uid=27_182 ignored
+          uid=27_183 ignored
+        uid=27_184 ignored
+          uid=27_185 ignored
+          uid=27_186 ignored
+            uid=27_187 ignored
+        uid=27_188 ignored
+          uid=27_189 ignored
+          uid=27_190 ignored
+          uid=27_191 ignored
+          uid=27_192 ignored
+          uid=27_193 ignored
+          uid=27_194 ignored
+        uid=27_195 ignored
+          uid=27_196 ignored
+        uid=27_197 ignored
+          uid=27_198 ignored
+            uid=27_199 ignored
+              uid=27_200 ignored
+            uid=27_201 ignored
+            uid=27_202 ignored
+              uid=27_203 ignored
+            uid=27_204 ignored
+              uid=27_205 ignored
+          uid=27_206 ignored
+          uid=27_207 ignored
+          uid=27_208 ignored
+            uid=27_209 ignored
+          uid=27_210 generic
+            uid=27_211 ignored
+              uid=27_212 ignored
+                uid=27_213 ignored
+                uid=27_214 ignored
+                  uid=27_215 ignored
+              uid=27_216 ignored
+                uid=27_217 ignored
+                  uid=27_218 ignored
+                  uid=27_219 ignored
+                  uid=27_220 ignored
+                  uid=27_221 ignored
+                  uid=27_222 ignored
+                  uid=27_223 ignored
+                  uid=27_224 ignored
+                  uid=27_225 ignored
+                uid=27_226 paragraph
+          uid=27_227 ignored
+            uid=27_228 ignored
+              uid=27_229 ignored
+            uid=27_230 ignored
+            uid=27_231 ignored
+              uid=27_232 ignored
+            uid=27_233 ignored
+              uid=27_234 ignored
+          uid=27_235 ignored
+          uid=27_236 ignored
+          uid=27_237 ignored
+            uid=27_238 ignored
+          uid=27_239 generic
+            uid=27_240 ignored
+              uid=27_241 ignored
+                uid=27_242 ignored
+                uid=27_243 ignored
+                  uid=27_244 ignored
+              uid=27_245 ignored
+                uid=27_246 ignored
+                  uid=27_247 ignored
+                  uid=27_248 ignored
+                  uid=27_249 ignored
+                  uid=27_250 ignored
+                  uid=27_251 ignored
+                uid=27_252 paragraph
+          uid=27_253 ignored
+            uid=27_254 ignored
+            uid=27_255 ignored
+              uid=27_256 ignored
+      uid=25_42 contentinfo
+        uid=27_257 ignored
+          uid=27_258 ignored
+            uid=25_43 heading "Customer Reviews" level="3"
+              uid=27_259 StaticText "Customer Reviews"
+            uid=27_260 generic
+              uid=25_44 Iframe "Customer reviews powered by Trustpilot"
+            uid=27_261 separator orientation="horizontal"
+          uid=27_262 ignored
+            uid=27_263 ignored
+              uid=27_264 ignored
+                uid=25_45 link url="http://loansbymal.co.uk/"
+                  uid=27_265 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=27_266 ignored
+                uid=27_267 ignored
+                  uid=27_268 generic
+                    uid=25_46 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=25_47 StaticText "FAQs"
+                  uid=27_269 generic
+                    uid=25_48 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=25_49 StaticText "Contact us"
+          uid=27_270 ignored
+            uid=27_271 ignored
+              uid=27_272 ignored
+                uid=27_273 generic
+                  uid=27_274 paragraph
+                    uid=25_50 StaticText "© Monthly Advance Loans Limited."
+                  uid=27_275 paragraph
+                    uid=27_276 strong
+                      uid=25_51 StaticText "loans by mal"
+                    uid=25_52 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=27_277 ignored
+                uid=27_278 paragraph
+                  uid=25_53 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=27_279 strong
+                      uid=25_54 StaticText "Privacy Policy"
+                    uid=25_55 StaticText " |"
+                  uid=25_56 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=27_280 strong
+                      uid=25_57 StaticText " Terms & Conditions"
+                    uid=25_58 StaticText " |"
+                  uid=25_59 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=27_281 strong
+                      uid=25_60 StaticText " Complaints"
+                    uid=25_61 StaticText " |"
+                  uid=25_62 StaticText " "
+                  uid=27_282 strong
+                    uid=25_63 StaticText "Version 1.237.4"
+              uid=27_283 ignored
+                uid=25_64 link "" url="https://www.facebook.com/loansbymal"
+                  uid=27_284 generic
+                    uid=27_285 ignored
+                      uid=25_65 StaticText ""
+                uid=25_66 link "" url="https://twitter.com/loansbymal"
+                  uid=27_286 generic
+                    uid=27_287 ignored
+                      uid=25_65 StaticText ""
+                uid=25_67 link "" url="https://www.instagram.com/loansbymal"
+                  uid=27_288 generic
+                    uid=27_289 ignored
+                      uid=25_65 StaticText ""
+                uid=25_68 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=27_290 generic
+                    uid=27_291 ignored
+                      uid=25_65 StaticText ""

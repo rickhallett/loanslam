@@ -1,0 +1,237 @@
+uid=23_0 RootWebArea url="https://applyloansbymal.co.uk/step-four/step-four.html"
+  uid=24_0 ignored
+    uid=24_1 generic
+      uid=24_2 generic
+        uid=23_1 Iframe "Customer reviews powered by Trustpilot"
+          uid=23_2 RootWebArea "Trustpilot Custom Widget" url="https://widget.trustpilot.com/trustboxes/5419b732fbfb950b10de65e5/index.html?templateId=5419b732fbfb950b10de65e5&businessunitId=5fdca6b06ea7810001b2e384#locale=en-GB&styleHeight=20px&styleWidth=100%25&theme=dark"
+            uid=24_3 ignored
+              uid=24_4 generic
+                uid=24_5 generic
+                uid=24_6 generic
+                  uid=23_3 link "Trustpilot reviews" description="Rated Excellent. 4.8 out of 5 on Trustpilot Click to view the company's Trustpilot profile" url="https://uk.trustpilot.com/review/loansbymal.co.uk?utm_medium=trustbox&utm_source=MicroStar"
+                    uid=24_7 ignored
+                  uid=24_8 generic
+                    uid=23_4 StaticText "Rated Excellent. 4.8 out of 5 on Trustpilot"
+                  uid=24_9 generic
+                    uid=23_5 StaticText "Click to view the company's Trustpilot profile"
+                  uid=24_10 generic
+      uid=23_6 banner
+        uid=23_7 link url="http://loansbymal.co.uk/"
+          uid=24_11 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+      uid=24_12 generic
+        uid=23_8 form
+          uid=24_13 ignored
+            uid=23_9 heading "You're all signed up and ready to go! We now need to take your payment details" level="1"
+              uid=24_14 StaticText "You're all signed up and ready to go! We now need to take your payment details"
+            uid=24_15 list
+              uid=24_16 listitem level="1"
+                uid=24_17 generic
+                  uid=23_10 StaticText "✓"
+                uid=23_11 StaticText "After your loan is paid out your first repayment will be taken on 30th December 1899"
+              uid=24_18 listitem level="1"
+                uid=24_19 generic
+                  uid=23_10 StaticText "✓"
+                uid=23_12 StaticText "If you want to change the loan repayment date you can arrange this after your loan is paid out"
+              uid=24_20 listitem level="1"
+                uid=24_21 generic
+                  uid=23_10 StaticText "✓"
+                uid=23_13 StaticText "Enter the account below that you want us to pay the loan into"
+              uid=24_22 listitem level="1"
+                uid=24_23 generic
+                  uid=23_10 StaticText "✓"
+                uid=23_14 StaticText "The account you choose must be in your name and where your income is paid"
+            uid=24_24 generic
+              uid=24_25 ignored
+                uid=23_15 heading "Direct Debit Authorisation" level="2"
+                  uid=24_26 StaticText "Direct Debit Authorisation"
+              uid=24_27 ignored
+                uid=24_28 paragraph
+                  uid=23_16 StaticText "Your loan repayment date is the "
+                  uid=23_17 StaticText "1st"
+                  uid=23_18 StaticText " of each month."
+                uid=24_29 ignored
+                  uid=24_30 ignored
+                    uid=24_31 ignored
+                      uid=24_32 ignored
+                        uid=24_33 ignored
+                          uid=24_34 LabelText
+                            uid=23_19 StaticText "Account Holder Name "
+                            uid=23_20 StaticText "*"
+                          uid=24_35 ignored
+                            uid=23_21 textbox "Account Holder Name *" value="Test Applicant"
+                              uid=24_36 generic
+                                uid=24_37 StaticText "Test Applicant"
+                            uid=24_38 paragraph
+                      uid=24_39 ignored
+                        uid=24_40 ignored
+                          uid=24_41 LabelText
+                            uid=23_22 StaticText "Sort Code "
+                            uid=23_23 StaticText "*"
+                          uid=24_42 ignored
+                            uid=23_24 textbox
+                              uid=24_43 generic
+                            uid=24_44 ignored
+                              uid=23_25 StaticText "-"
+                            uid=23_26 textbox
+                              uid=24_45 generic
+                            uid=24_46 ignored
+                              uid=23_27 StaticText "-"
+                            uid=23_28 textbox
+                              uid=24_47 generic
+                          uid=24_48 paragraph
+                      uid=24_49 ignored
+                        uid=24_50 ignored
+                          uid=24_51 LabelText
+                            uid=23_29 StaticText "Account Number "
+                            uid=23_30 StaticText "*"
+                          uid=24_52 ignored
+                            uid=23_31 textbox "Account Number *"
+                              uid=24_53 generic
+                            uid=24_54 paragraph
+                      uid=24_55 ignored
+                        uid=24_56 group
+                          uid=24_57 generic
+                            uid=23_32 checkbox "I confirm that I am the account holder. I am authorised to set up Direct Debit payments on this account"
+                            uid=24_58 ignored
+                              uid=24_59 ignored
+                          uid=24_60 generic
+                            uid=23_33 checkbox "More than one person is required to authorise payments on this account"
+                            uid=24_61 ignored
+                              uid=24_62 ignored
+                  uid=24_63 ignored
+                    uid=24_64 ignored
+                      uid=24_65 generic
+                        uid=23_34 StaticText "Instruction to your bank or building society to pay by Direct Debit"
+                      uid=24_66 ignored
+                        uid=24_67 ignored
+                          uid=24_68 generic
+                            uid=23_35 StaticText "Service User Number"
+                          uid=24_69 ignored
+                            uid=24_70 generic
+                              uid=23_36 StaticText "1"
+                            uid=24_71 generic
+                              uid=23_37 StaticText "7"
+                            uid=24_72 generic
+                              uid=23_38 StaticText "9"
+                            uid=24_73 generic
+                              uid=23_39 StaticText "5"
+                            uid=24_74 generic
+                              uid=23_40 StaticText "9"
+                            uid=24_75 generic
+                              uid=23_41 StaticText "0"
+                        uid=24_76 generic
+                          uid=24_77 image url="https://applyloansbymal.co.uk/assets/images/direct-debit.png"
+                    uid=24_78 ignored
+                      uid=24_79 generic
+                        uid=23_42 StaticText "Reference"
+                      uid=23_43 textbox disableable disabled value="UK0292911"
+                        uid=24_80 generic
+                          uid=24_81 StaticText "UK0292911"
+                    uid=24_82 ignored
+                      uid=24_83 generic
+                        uid=23_44 StaticText "Instruction to your Bank or Building Society"
+                      uid=23_45 StaticText "Please Pay GC re LOANS BY MAL Direct Debits from the account detailed in this Instruction subject to the safeguards assured by the Direct Debit Guarantee. I understand that this instruction may remain with GC re LOANS BY MAL and, if so, details will be passed electronically to my bank/building society."
+                    uid=24_84 generic
+                      uid=23_46 StaticText "Date"
+                    uid=23_47 textbox disableable disabled value="20/06/2026"
+                      uid=24_85 generic
+                        uid=24_86 StaticText "20/06/2026"
+                uid=24_87 ignored
+            uid=24_88 ignored
+              uid=24_89 ignored
+                uid=24_90 generic
+                  uid=23_48 StaticText "The Direct Debit Guarantee"
+                uid=24_91 image url="https://applyloansbymal.co.uk/assets/images/direct-debit.png"
+              uid=24_92 list
+                uid=24_93 listitem level="1"
+                  uid=24_94 generic
+                    uid=23_10 StaticText "•"
+                  uid=23_49 StaticText "This Guarantee is offered by all banks and building societies that accept instructions to pay Direct Debits."
+                uid=24_95 listitem level="1"
+                  uid=24_96 generic
+                    uid=23_10 StaticText "•"
+                  uid=23_50 StaticText "If there are any changes to the amount, date or frequency of your Direct Debit GoCardless will notify you 3 working days in advance of your account being debited or as otherwise agreed. If you request GoCardless to collect a payment, confirmation of the amount and date will be given to you at the time of the request."
+                uid=24_97 listitem level="1"
+                  uid=24_98 generic
+                    uid=23_10 StaticText "•"
+                  uid=23_51 StaticText "If an error is made in the payment of your Direct Debit, by GoCardless or your bank or building society, you are entitled to a full and immediate refund of the amount paid from your bank or building society — if you receive a refund you are not entitled to, you must pay it back when GoCardless asks you to."
+                uid=24_99 listitem level="1"
+                  uid=24_100 generic
+                    uid=23_10 StaticText "•"
+                  uid=23_52 StaticText "You can cancel a Direct Debit at any time by simply contacting your bank or building society. Written confirmation may be required. Please also notify us."
+              uid=24_101 generic
+                uid=23_53 StaticText "Direct Debit Payments by GoCardless. Read the "
+                uid=23_54 link "GoCardless privacy policy" url="https://gocardless.com/privacy"
+                  uid=23_55 StaticText "GoCardless privacy policy"
+        uid=24_102 ignored
+          uid=24_103 generic
+            uid=23_56 button "Continue  " disableable disabled
+              uid=24_104 StaticText "Continue "
+              uid=24_105 generic
+                uid=24_106 ignored
+                  uid=23_10 StaticText ""
+      uid=23_57 contentinfo
+        uid=24_107 ignored
+          uid=24_108 ignored
+            uid=23_58 heading "Customer Reviews" level="3"
+              uid=24_109 StaticText "Customer Reviews"
+            uid=24_110 generic
+              uid=23_59 Iframe "Customer reviews powered by Trustpilot"
+            uid=24_111 separator orientation="horizontal"
+          uid=24_112 ignored
+            uid=24_113 ignored
+              uid=24_114 ignored
+                uid=23_60 link url="http://loansbymal.co.uk/"
+                  uid=24_115 image url="https://applyloansbymal.co.uk/assets/images/header-logo.png"
+              uid=24_116 ignored
+                uid=24_117 ignored
+                  uid=24_118 generic
+                    uid=23_61 link "FAQs" url="https://loansbymal.co.uk/faqs/"
+                      uid=23_62 StaticText "FAQs"
+                  uid=24_119 generic
+                    uid=23_63 link "Contact us" url="https://loansbymal.co.uk/contact/"
+                      uid=23_64 StaticText "Contact us"
+          uid=24_120 ignored
+            uid=24_121 ignored
+              uid=24_122 ignored
+                uid=24_123 generic
+                  uid=24_124 paragraph
+                    uid=23_65 StaticText "© Monthly Advance Loans Limited."
+                  uid=24_125 paragraph
+                    uid=24_126 strong
+                      uid=23_66 StaticText "loans by mal"
+                    uid=23_67 StaticText " is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth, BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+                  uid=24_127 ignored
+                uid=24_128 paragraph
+                  uid=23_68 link "Privacy Policy |" url="https://loansbymal.co.uk/privacy-policy/"
+                    uid=24_129 strong
+                      uid=23_69 StaticText "Privacy Policy"
+                    uid=23_70 StaticText " |"
+                  uid=23_71 link " Terms & Conditions |" url="https://loansbymal.co.uk/terms-and-conditions/"
+                    uid=24_130 strong
+                      uid=23_72 StaticText " Terms & Conditions"
+                    uid=23_73 StaticText " |"
+                  uid=23_74 link " Complaints |" url="https://loansbymal.co.uk/complaints/"
+                    uid=24_131 strong
+                      uid=23_75 StaticText " Complaints"
+                    uid=23_76 StaticText " |"
+                  uid=23_77 StaticText " "
+                  uid=24_132 strong
+                    uid=23_78 StaticText "Version 1.237.4"
+              uid=24_133 ignored
+                uid=23_79 link "" url="https://www.facebook.com/loansbymal"
+                  uid=24_134 generic
+                    uid=24_135 ignored
+                      uid=23_10 StaticText ""
+                uid=23_80 link "" url="https://twitter.com/loansbymal"
+                  uid=24_136 generic
+                    uid=24_137 ignored
+                      uid=23_10 StaticText ""
+                uid=23_81 link "" url="https://www.instagram.com/loansbymal"
+                  uid=24_138 generic
+                    uid=24_139 ignored
+                      uid=23_10 StaticText ""
+                uid=23_82 link "" url="https://www.linkedin.com/company/loansbymal/"
+                  uid=24_140 generic
+                    uid=24_141 ignored
+                      uid=23_10 StaticText ""
