@@ -76,8 +76,7 @@ function toTurnEvidence(
           signalPrimaryIntent: trace.shadowSignalBundle.primaryIntent,
           signalRecommendedServingMode:
             trace.shadowSignalBundle.recommendedServingMode,
-          signalNegatedOrCorrected:
-            trace.shadowSignalBundle.negatedOrCorrected,
+          signalNegatedOrCorrected: trace.shadowSignalBundle.negatedOrCorrected,
         }
       : {}),
     ...(trace.shadowSignalComparison
@@ -85,6 +84,9 @@ function toTurnEvidence(
       : {}),
     ...(typeof trace.shadowSignalLatencyMs === "number"
       ? { signalLatencyMs: trace.shadowSignalLatencyMs }
+      : {}),
+    ...(typeof trace.plannerLatencyMs === "number"
+      ? { plannerLatencyMs: trace.plannerLatencyMs }
       : {}),
   };
 }

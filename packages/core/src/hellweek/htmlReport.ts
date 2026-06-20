@@ -25,7 +25,7 @@ export function renderHellWeekReportHtml(report: HellWeekReport): string {
     "</style>",
     "</head>",
     "<body>",
-    '<main>',
+    "<main>",
     header(report),
     keyFigures(report),
     safetyFloor(report),
@@ -68,7 +68,7 @@ function header(report: HellWeekReport): string {
   <dl class="meta">
     ${metaItem("Scenarios", String(report.totals.scenarios))}
     ${metaItem("Planner", `${report.planner.provider}/${report.planner.model}`)}
-    ${metaItem("Signals", report.signalExtractor.enabled ? report.signalExtractor.model ?? "on" : "off")}
+    ${metaItem("Signals", report.signalExtractor.enabled ? (report.signalExtractor.model ?? "on") : "off")}
     ${metaItem("Grading", grading)}
     ${metaItem("Policy", report.policyVersion)}
     ${metaItem("Generated", report.generatedAt.replace("T", " ").replace(/\..+/, " UTC"))}
@@ -110,6 +110,18 @@ function keyFigures(report: HellWeekReport): string {
       value: r.signalTurns === 0 ? "—" : pct(r.signalAgreementRate),
     },
     {
+      label: "Scenario p95",
+      value: runtimeStat(report, "scenarioWallTimeMs", "p95Ms"),
+    },
+    {
+      label: "Signal p50",
+      value: runtimeStat(report, "signalLatencyMs", "medianMs"),
+    },
+    {
+      label: "Planner p50",
+      value: runtimeStat(report, "plannerLatencyMs", "medianMs"),
+    },
+    {
       label: "Avg UX",
       value:
         report.uxQuality.averageScore === null
@@ -129,6 +141,16 @@ function keyFigures(report: HellWeekReport): string {
     )
     .join("")}
 </section>`;
+}
+
+function runtimeStat(
+  report: HellWeekReport,
+  key: keyof NonNullable<HellWeekReport["runtime"]>,
+  field: "medianMs" | "p95Ms",
+): string {
+  const value = report.runtime?.[key][field];
+
+  return typeof value === "number" ? formatDuration(value) : "—";
 }
 
 // ---------------------------------------------------------------------------
@@ -371,10 +393,14 @@ function expectationLine(scenario: HellWeekScenario): string {
   const e = scenario.expected;
   const parts: string[] = [];
   if (e.requiredFinalAction) parts.push(`action=${e.requiredFinalAction}`);
-  else if (e.allowedFinalActions) parts.push(`action in {${e.allowedFinalActions.join("|")}}`);
-  if (e.requiredServingModes?.length) parts.push(`route=${e.requiredServingModes.join(",")}`);
-  if (e.forbiddenServingModes?.length) parts.push(`not=${e.forbiddenServingModes.join(",")}`);
-  if (e.contentChecks?.length) parts.push(`checks=${e.contentChecks.join(",")}`);
+  else if (e.allowedFinalActions)
+    parts.push(`action in {${e.allowedFinalActions.join("|")}}`);
+  if (e.requiredServingModes?.length)
+    parts.push(`route=${e.requiredServingModes.join(",")}`);
+  if (e.forbiddenServingModes?.length)
+    parts.push(`not=${e.forbiddenServingModes.join(",")}`);
+  if (e.contentChecks?.length)
+    parts.push(`checks=${e.contentChecks.join(",")}`);
   return parts.length
     ? `<p class="line"><span class="k">expected</span>${escapeHtml(parts.join(" · "))}</p>`
     : "";

@@ -31,6 +31,7 @@ was present in this checkout.
 historical_high_baseline:
   run: hell-week-full-2026-06-16T07-47-56-459Z
   original_deterministic: 95/122
+  current_source_regrade: 96/122
   demo_killers: 0
   dents: 27
   duration_ms: 207407
@@ -64,14 +65,17 @@ signal extractor, policy version, and judged state match.
 comparison:
   baseline: hell-week-full-2026-06-16T07-47-56-459Z
   candidate: hell-week-full-2026-06-20T14-28-24-564Z
-  pass_delta: -2
-  pass_rate_delta_points: -1.6
-  dents_delta: +2
+  pass_delta: -3
+  pass_rate_delta_points: -2.5
+  dents_delta: +3
   demo_killers_delta: 0
-  safety_floor_pass_delta: -1
+  safety_floor_pass_delta: -2
   deflection_delta_points: 0.0
   routing_precision_delta_points: +3.0
   signal_agreement_delta_points: +3.3
+  scenario_wall_p50: 5.2s -> 4.5s
+  signal_latency_p50: 1.9s -> 1.6s
+  planner_latency_p50: unavailable in pre-change captures
   recommendation: mixed
 ```
 

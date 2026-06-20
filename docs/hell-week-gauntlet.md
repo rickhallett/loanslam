@@ -23,6 +23,11 @@ Each run writes a folder under `artifacts/phase0/hell-week-<profile>-<stamp>/`:
 - `evidence.json` — every captured turn (transcript + trace).
 - `scenarios/<id>.json` — per-scenario packets for the LLM judge.
 
+`report.json` separates total run duration from scenario wall time, signal
+extractor latency, and planner latency. Older captured evidence may lack
+planner-latency samples; compare output warns when timing data is missing or
+partial.
+
 Compare two completed runs after a fix slice:
 
 ```bash

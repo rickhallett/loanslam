@@ -296,6 +296,7 @@ export const turnTraceSchema = z.object({
   inboundMessageId: nonEmptyStringSchema,
   outboundMessageId: nonEmptyStringSchema,
   planner: plannerMetadataSchema,
+  plannerLatencyMs: z.number().nonnegative().optional(),
   policyVersion: nonEmptyStringSchema,
   retrievedMatches: z.array(retrievedMatchSchema),
   selectedServingMode: servingModeSchema.nullable(),

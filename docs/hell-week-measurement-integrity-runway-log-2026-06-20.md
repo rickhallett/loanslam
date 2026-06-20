@@ -220,3 +220,45 @@ npx vitest run packages/core/src/hellweek/grade.test.ts
 
 Result: initial run failed the paraphrased settlement amount check; after
 tightening account-value detection, `1` test file passed, `16` tests passed.
+
+## Section 7: Runtime Measurement Split
+
+### Finding
+
+Hell Week already captured scenario wall time and signal latency in evidence,
+but planner latency was not recorded separately. Compare output therefore had
+to rely on total run duration, which mixes scenario scheduling, API jitter,
+signal extraction, planner time, and report writing.
+
+### Conclusion
+
+New turn traces include `plannerLatencyMs`, Hell Week turn evidence persists it,
+and aggregate reports roll up:
+
+- scenario wall time;
+- signal extractor latency;
+- planner latency.
+
+Compare output now prints median movement for all three and emits runtime
+warnings when samples are missing, partial, or too sparse to support a timing
+regression claim.
+
+### Hypothesis
+
+Future live captures can distinguish planner slowness from signal-extractor
+slowness and scenario-level variance. Existing captures remain useful for
+scenario wall time and signal latency after rerender, but planner latency is
+unavailable because it was not recorded at capture time.
+
+### Verification
+
+```text
+npx vitest run packages/contracts/src/schemas.test.ts packages/core/src/engine.test.ts packages/core/src/hellweek/runner.test.ts packages/core/src/hellweek/aggregate.test.ts packages/core/src/hellweek/compare.test.ts packages/core/src/hellweek/stability.test.ts
+npm run --silent core:hell-week -- --from artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/baselines/hell-week-full-2026-06-16T07-47-56-459Z --json
+npm run --silent core:hell-week -- --from artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-28-24-564Z --json
+npm run --silent core:hell-week-compare -- artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/baselines/hell-week-full-2026-06-16T07-47-56-459Z artifacts/phase0/hell-week-3x-2026-06-20-post-malformed-recovery/hell-week-full-2026-06-20T14-28-24-564Z
+```
+
+Result: focused tests passed (`6` files, `49` tests). Rerendered comparison
+separated scenario wall p50 (`5.2s -> 4.5s`) and signal p50 (`1.9s -> 1.6s`);
+planner p50 correctly warned as unavailable for pre-change captures.

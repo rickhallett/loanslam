@@ -1,7 +1,11 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
-import type { Severity } from "./types";
+import type {
+  HellWeekRuntimeStat,
+  HellWeekRuntimeSummary,
+  Severity,
+} from "./types";
 
 const severityRank: Record<Severity, number> = {
   fine: 0,
@@ -48,6 +52,8 @@ interface CompareReport {
   };
   policyVersion: string;
   judged: boolean;
+  durationMs: number;
+  runtime: HellWeekRuntimeSummary;
   verdict: HellWeekVerdict;
   totals: ReportTotals;
   safetyFloor: {
@@ -104,6 +110,11 @@ interface LoadedReport {
   report: CompareReport;
 }
 
+interface ReportInput {
+  path: string;
+  report: unknown;
+}
+
 export interface ScenarioChange {
   scenarioId: string;
   title: string;
@@ -134,6 +145,10 @@ export interface HellWeekComparison {
     routingPrecisionPoints: number;
     signalAgreementPoints: number;
     uxAverage: number | null;
+    durationMs: number;
+    scenarioMedianMs: number | null;
+    signalMedianMs: number | null;
+    plannerMedianMs: number | null;
   };
   scenarioChanges: {
     resolvedFailures: ScenarioChange[];
@@ -166,6 +181,8 @@ interface ReportSummary {
   signalExtractor: CompareReport["signalExtractor"];
   policyVersion: string;
   judged: boolean;
+  durationMs: number;
+  runtime: HellWeekRuntimeSummary;
   verdict: HellWeekVerdict;
   totals: ReportTotals;
   safetyFloor: CompareReport["safetyFloor"];
@@ -185,9 +202,12 @@ export function compareHellWeekReportsFromPaths(
 }
 
 export function compareHellWeekReports(
-  baseline: LoadedReport,
-  candidate: LoadedReport,
+  baselineInput: ReportInput,
+  candidateInput: ReportInput,
 ): HellWeekComparison {
+  const baseline = normalizeLoadedReport(baselineInput);
+  const candidate = normalizeLoadedReport(candidateInput);
+
   const baselineGrades = new Map(
     baseline.report.grades.map((grade) => [grade.scenarioId, grade]),
   );
@@ -271,6 +291,13 @@ export function compareHellWeekReports(
   return comparison;
 }
 
+function normalizeLoadedReport(item: ReportInput): LoadedReport {
+  return {
+    path: item.path,
+    report: normalizeReport(item.report, item.path),
+  };
+}
+
 export function toHellWeekComparisonJson(
   comparison: HellWeekComparison,
 ): HellWeekComparisonJson {
@@ -293,6 +320,7 @@ export function formatHellWeekComparison(
   const comparabilityWarnings = formatComparabilityWarnings(
     comparison.comparability.warnings,
   );
+  const runtimeWarnings = formatRuntimeWarnings(comparison);
 
   return [
     `Hell Week compare: ${label(baseline)} -> ${label(candidate)}`,
@@ -305,8 +333,13 @@ export function formatHellWeekComparison(
     `Deflection: ${rateOrNa(baseline.report.deflection.rate, baseline.report.deflection.total)} -> ${rateOrNa(candidate.report.deflection.rate, candidate.report.deflection.total)} (${signedPoints(deltas.deflectionRatePoints)})`,
     `Routing precision: ${rateOrNa(baseline.report.routingPrecision.rate, baseline.report.routingPrecision.inScopeScenarios)} -> ${rateOrNa(candidate.report.routingPrecision.rate, candidate.report.routingPrecision.inScopeScenarios)} (${signedPoints(deltas.routingPrecisionPoints)})`,
     `Signal agreement: ${rateOrNa(baseline.report.routingPrecision.signalAgreementRate, baseline.report.routingPrecision.signalTurns)} -> ${rateOrNa(candidate.report.routingPrecision.signalAgreementRate, candidate.report.routingPrecision.signalTurns)} (${signedPoints(deltas.signalAgreementPoints)})`,
+    `Duration: ${formatMs(baseline.report.durationMs)} -> ${formatMs(candidate.report.durationMs)} (${signedMs(deltas.durationMs)})`,
+    `Scenario wall p50: ${statMedian(baseline.report.runtime.scenarioWallTimeMs)} -> ${statMedian(candidate.report.runtime.scenarioWallTimeMs)} (${nullableSignedMs(deltas.scenarioMedianMs)})`,
+    `Signal latency p50: ${statMedian(baseline.report.runtime.signalLatencyMs)} -> ${statMedian(candidate.report.runtime.signalLatencyMs)} (${nullableSignedMs(deltas.signalMedianMs)})`,
+    `Planner latency p50: ${statMedian(baseline.report.runtime.plannerLatencyMs)} -> ${statMedian(candidate.report.runtime.plannerLatencyMs)} (${nullableSignedMs(deltas.plannerMedianMs)})`,
     `Scenario movement: ${scenarioChanges.resolvedFailures.length} resolved, ${scenarioChanges.newFailures.length} new failures, ${scenarioChanges.worsenedSeverity.length} worsened severity, ${scenarioChanges.improvedSeverity.length} improved severity.`,
     ...comparabilityWarnings,
+    ...runtimeWarnings,
     "",
     `Recommendation: ${recommendation.status} - ${recommendation.summary}`,
     changeBlock("Top new failures", scenarioChanges.newFailures),
@@ -327,6 +360,8 @@ function summarizeReport(item: LoadedReport): ReportSummary {
     signalExtractor: item.report.signalExtractor,
     policyVersion: item.report.policyVersion,
     judged: item.report.judged,
+    durationMs: item.report.durationMs,
+    runtime: item.report.runtime,
     verdict: item.report.verdict,
     totals: item.report.totals,
     safetyFloor: item.report.safetyFloor,
@@ -382,6 +417,8 @@ function normalizeReport(raw: unknown, path: string): CompareReport {
     signalExtractor: signalExtractorValue(report.signalExtractor),
     policyVersion: stringValue(report.policyVersion, "unknown"),
     judged: report.judged === true,
+    durationMs: numberValue(report.durationMs),
+    runtime: runtimeSummaryValue(report.runtime),
     verdict: verdictValue(report.verdict),
     totals: totalsValue(report.totals),
     safetyFloor: {
@@ -548,6 +585,53 @@ function formatComparabilityWarnings(
   ];
 }
 
+function formatRuntimeWarnings(comparison: HellWeekComparison): string[] {
+  const warnings = [
+    runtimeWarning(
+      "scenario wall time",
+      comparison.baseline.report.runtime.scenarioWallTimeMs,
+      comparison.candidate.report.runtime.scenarioWallTimeMs,
+    ),
+    runtimeWarning(
+      "signal latency",
+      comparison.baseline.report.runtime.signalLatencyMs,
+      comparison.candidate.report.runtime.signalLatencyMs,
+    ),
+    runtimeWarning(
+      "planner latency",
+      comparison.baseline.report.runtime.plannerLatencyMs,
+      comparison.candidate.report.runtime.plannerLatencyMs,
+    ),
+  ].filter((warning): warning is string => Boolean(warning));
+
+  return warnings.length === 0 ? [] : ["", "Runtime warnings:", ...warnings];
+}
+
+function runtimeWarning(
+  labelText: string,
+  baseline: HellWeekRuntimeStat,
+  candidate: HellWeekRuntimeStat,
+): string | null {
+  if (baseline.count === 0 || candidate.count === 0) {
+    return `- ${labelText}: missing samples; do not infer a timing regression from total run duration alone.`;
+  }
+
+  if (baseline.missing > 0 || candidate.missing > 0) {
+    return `- ${labelText}: partial samples (${baseline.count}/${baseline.count + baseline.missing} -> ${candidate.count}/${candidate.count + candidate.missing}); compare medians cautiously.`;
+  }
+
+  if (
+    baseline.medianMs !== null &&
+    candidate.medianMs !== null &&
+    baseline.medianMs > 0 &&
+    candidate.medianMs / baseline.medianMs >= 1.5
+  ) {
+    return `- ${labelText}: median increased by ${Math.round((candidate.medianMs / baseline.medianMs) * 10) / 10}x; inspect repeated runs before calling it a regression.`;
+  }
+
+  return null;
+}
+
 function totalsValue(raw: unknown): ReportTotals {
   const totals = raw as Partial<ReportTotals>;
   return {
@@ -572,9 +656,7 @@ function plannerValue(raw: unknown): CompareReport["planner"] {
   };
 }
 
-function signalExtractorValue(
-  raw: unknown,
-): CompareReport["signalExtractor"] {
+function signalExtractorValue(raw: unknown): CompareReport["signalExtractor"] {
   const signal = raw as Partial<CompareReport["signalExtractor"]> | undefined;
 
   return {
@@ -583,6 +665,42 @@ function signalExtractorValue(
     ...(typeof signal?.promptVersion === "string"
       ? { promptVersion: signal.promptVersion }
       : {}),
+  };
+}
+
+function runtimeSummaryValue(raw: unknown): HellWeekRuntimeSummary {
+  const runtime = raw as Partial<HellWeekRuntimeSummary> | undefined;
+
+  return {
+    scenarioWallTimeMs: runtimeStatValue(runtime?.scenarioWallTimeMs),
+    signalLatencyMs: runtimeStatValue(runtime?.signalLatencyMs),
+    plannerLatencyMs: runtimeStatValue(runtime?.plannerLatencyMs),
+  };
+}
+
+function runtimeStatValue(raw: unknown): HellWeekRuntimeStat {
+  const stat = raw as Partial<HellWeekRuntimeStat> | undefined;
+
+  return {
+    count: numberValue(stat?.count),
+    missing: numberValue(stat?.missing),
+    totalMs: numberValue(stat?.totalMs),
+    averageMs:
+      typeof stat?.averageMs === "number" && Number.isFinite(stat.averageMs)
+        ? stat.averageMs
+        : null,
+    medianMs:
+      typeof stat?.medianMs === "number" && Number.isFinite(stat.medianMs)
+        ? stat.medianMs
+        : null,
+    p95Ms:
+      typeof stat?.p95Ms === "number" && Number.isFinite(stat.p95Ms)
+        ? stat.p95Ms
+        : null,
+    maxMs:
+      typeof stat?.maxMs === "number" && Number.isFinite(stat.maxMs)
+        ? stat.maxMs
+        : null,
   };
 }
 
@@ -618,6 +736,19 @@ function buildDeltas(
         : round1(
             candidate.uxQuality.averageScore - baseline.uxQuality.averageScore,
           ),
+    durationMs: candidate.durationMs - baseline.durationMs,
+    scenarioMedianMs: nullableDelta(
+      baseline.runtime.scenarioWallTimeMs.medianMs,
+      candidate.runtime.scenarioWallTimeMs.medianMs,
+    ),
+    signalMedianMs: nullableDelta(
+      baseline.runtime.signalLatencyMs.medianMs,
+      candidate.runtime.signalLatencyMs.medianMs,
+    ),
+    plannerMedianMs: nullableDelta(
+      baseline.runtime.plannerLatencyMs.medianMs,
+      candidate.runtime.plannerLatencyMs.medianMs,
+    ),
   };
 }
 
@@ -751,8 +882,41 @@ function signedInt(value: number): string {
   return `${value >= 0 ? "+" : ""}${value}`;
 }
 
+function signedMs(value: number): string {
+  return `${value >= 0 ? "+" : "-"}${formatMs(Math.abs(value))}`;
+}
+
+function nullableSignedMs(value: number | null): string {
+  return value === null ? "n/a" : signedMs(value);
+}
+
+function statMedian(stat: HellWeekRuntimeStat): string {
+  return stat.medianMs === null ? "n/a" : formatMs(stat.medianMs);
+}
+
+function formatMs(value: number): string {
+  if (value < 1000) {
+    return `${Math.round(value)}ms`;
+  }
+
+  const seconds = value / 1000;
+  if (seconds < 90) {
+    return `${seconds.toFixed(1)}s`;
+  }
+
+  const rounded = Math.round(seconds);
+  return `${Math.floor(rounded / 60)}m ${rounded % 60}s`;
+}
+
 function points(value: number): number {
   return round1(value * 100);
+}
+
+function nullableDelta(
+  baseline: number | null,
+  candidate: number | null,
+): number | null {
+  return baseline === null || candidate === null ? null : candidate - baseline;
 }
 
 function round1(value: number): number {

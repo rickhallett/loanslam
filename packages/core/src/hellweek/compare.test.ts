@@ -32,17 +32,18 @@ describe("Hell Week comparison comparability", () => {
     );
 
     expect(comparison.comparability.compatible).toBe(false);
-    expect(comparison.comparability.warnings.map((warning) => warning.field))
-      .toEqual([
-        "profile",
-        "scenario_set",
-        "planner_model",
-        "planner_prompt",
-        "signal_model",
-        "signal_prompt",
-        "policy_version",
-        "judged_state",
-      ]);
+    expect(
+      comparison.comparability.warnings.map((warning) => warning.field),
+    ).toEqual([
+      "profile",
+      "scenario_set",
+      "planner_model",
+      "planner_prompt",
+      "signal_model",
+      "signal_prompt",
+      "policy_version",
+      "judged_state",
+    ]);
 
     const text = formatHellWeekComparison(comparison);
     expect(text.indexOf("Comparability warnings:")).toBeGreaterThan(-1);
@@ -114,6 +115,12 @@ function report(
       },
       policyVersion: options.policyVersion,
       judged: options.judged,
+      durationMs: 1000,
+      runtime: {
+        scenarioWallTimeMs: runtimeStat(1000),
+        signalLatencyMs: runtimeStat(50),
+        plannerLatencyMs: runtimeStat(75),
+      },
       verdict: "ship_ready" as const,
       totals: {
         scenarios: grades.length,
@@ -149,5 +156,17 @@ function report(
       },
       grades,
     },
+  };
+}
+
+function runtimeStat(value: number) {
+  return {
+    count: 1,
+    missing: 0,
+    totalMs: value,
+    averageMs: value,
+    medianMs: value,
+    p95Ms: value,
+    maxMs: value,
   };
 }

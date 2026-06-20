@@ -5,6 +5,8 @@ import type {
   HellWeekReport,
   HellWeekScenario,
   HellWeekScenarioEvidence,
+  HellWeekRuntimeStat,
+  HellWeekRuntimeSummary,
   HellWeekVerdict,
   RiskItem,
   Severity,
@@ -26,7 +28,10 @@ export interface BuildReportInput {
   grades: readonly HellWeekGrade[];
 }
 
-function indexBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T> {
+function indexBy<T>(
+  items: readonly T[],
+  key: (item: T) => string,
+): Map<string, T> {
   const map = new Map<string, T>();
   for (const item of items) {
     map.set(key(item), item);
@@ -65,9 +70,7 @@ function categoryOrder(category: string): number {
   return category.charCodeAt(0);
 }
 
-function buildCategoryStats(
-  grades: readonly HellWeekGrade[],
-): CategoryStat[] {
+function buildCategoryStats(grades: readonly HellWeekGrade[]): CategoryStat[] {
   const byCategory = new Map<string, HellWeekGrade[]>();
   for (const grade of grades) {
     const list = byCategory.get(grade.category) ?? [];
@@ -152,9 +155,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
   const faqGrades = grades.filter((g) => g.dimension === "faq_deflection");
   const answered = faqGrades.filter((g) => {
     const turn = lastTurn(evidenceById.get(g.scenarioId));
-    return (
-      turn?.finalAction === "answer" && turn?.routeForScoring === "answer"
-    );
+    return turn?.finalAction === "answer" && turn?.routeForScoring === "answer";
   });
   const leaked = faqGrades
     .filter((g) => !answered.includes(g))
@@ -248,6 +249,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     policyVersion: input.policyVersion,
     judged: input.judged,
     durationMs: input.durationMs,
+    runtime: buildRuntimeSummary(evidence),
     verdict,
     headline,
     totals: {
@@ -277,9 +279,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
       inScopeScenarios: routingGrades.length,
       misroutes,
       rate:
-        routingGrades.length === 0
-          ? 1
-          : 1 - misroutes / routingGrades.length,
+        routingGrades.length === 0 ? 1 : 1 - misroutes / routingGrades.length,
       signalTurns,
       signalAgreements,
       signalAgreementRate:
@@ -298,6 +298,73 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     evidence: orderedEvidence,
     scenarios: orderedScenarios,
   };
+}
+
+function buildRuntimeSummary(
+  evidence: readonly HellWeekScenarioEvidence[],
+): HellWeekRuntimeSummary {
+  const turnCount = evidence.reduce((sum, item) => sum + item.turns.length, 0);
+
+  return {
+    scenarioWallTimeMs: runtimeStat(
+      evidence.map((item) => item.durationMs),
+      evidence.length,
+    ),
+    signalLatencyMs: runtimeStat(
+      evidence.flatMap((item) =>
+        item.turns.flatMap((turn) =>
+          typeof turn.signalLatencyMs === "number"
+            ? [turn.signalLatencyMs]
+            : [],
+        ),
+      ),
+      turnCount,
+    ),
+    plannerLatencyMs: runtimeStat(
+      evidence.flatMap((item) =>
+        item.turns.flatMap((turn) =>
+          typeof turn.plannerLatencyMs === "number"
+            ? [turn.plannerLatencyMs]
+            : [],
+        ),
+      ),
+      turnCount,
+    ),
+  };
+}
+
+function runtimeStat(
+  values: readonly number[],
+  expectedCount: number,
+): HellWeekRuntimeStat {
+  const sorted = values
+    .filter((value) => Number.isFinite(value) && value >= 0)
+    .sort((a, b) => a - b);
+  const totalMs = sorted.reduce((sum, value) => sum + value, 0);
+
+  return {
+    count: sorted.length,
+    missing: Math.max(0, expectedCount - sorted.length),
+    totalMs,
+    averageMs: sorted.length === 0 ? null : totalMs / sorted.length,
+    medianMs: percentile(sorted, 0.5),
+    p95Ms: percentile(sorted, 0.95),
+    maxMs: sorted.at(-1) ?? null,
+  };
+}
+
+function percentile(
+  sortedValues: readonly number[],
+  point: number,
+): number | null {
+  if (sortedValues.length === 0) {
+    return null;
+  }
+
+  const index = Math.ceil(sortedValues.length * point) - 1;
+  return (
+    sortedValues[Math.max(0, Math.min(index, sortedValues.length - 1))] ?? null
+  );
 }
 
 function buildHeadline({

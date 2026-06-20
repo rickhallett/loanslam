@@ -84,7 +84,11 @@ export async function processTurn({
     policyVersion,
   };
 
-  const { plan, validated: policyValidated } = await planAndValidateTurn({
+  const {
+    plan,
+    validated: policyValidated,
+    plannerLatencyMs,
+  } = await planAndValidateTurn({
     planner,
     plannerInput,
     retrievedMatches,
@@ -126,6 +130,7 @@ export async function processTurn({
     inboundMessageId,
     outboundMessageId,
     planner: planner.metadata ?? defaultPlannerMetadata,
+    plannerLatencyMs,
     policyVersion,
     retrievedMatches,
     shadowSignalStatus: shadowSignal.status,
@@ -831,12 +836,18 @@ async function planAndValidateTurn({
   retrievedMatches: ReturnType<typeof retrieveMatches>;
   userMessage: string;
   signalBundle: SignalBundle | undefined;
-}): Promise<{ plan: TurnPlan; validated: ValidatedPlanFragment }> {
+}): Promise<{
+  plan: TurnPlan;
+  validated: ValidatedPlanFragment;
+  plannerLatencyMs: number;
+}> {
   let plan: TurnPlan;
+  const plannerStartedAt = Date.now();
 
   try {
     plan = await planner.planTurn(plannerInput);
   } catch (error) {
+    const plannerLatencyMs = Date.now() - plannerStartedAt;
     const reason = "I could not safely choose the next step from this message.";
     const traceReason = plannerFailureReason(error);
     const fallback = buildFallbackCopy(reason);
@@ -862,6 +873,7 @@ async function planAndValidateTurn({
 
       return {
         plan,
+        plannerLatencyMs,
         validated: {
           ...recovered,
           validatorOverrides: [
@@ -878,6 +890,7 @@ async function planAndValidateTurn({
 
     return {
       plan,
+      plannerLatencyMs,
       validated: {
         plan,
         finalAction: fallback.action,
@@ -901,6 +914,7 @@ async function planAndValidateTurn({
 
   return {
     plan,
+    plannerLatencyMs: Date.now() - plannerStartedAt,
     validated: validateTurnPlan(plan, retrievedMatches, {
       userMessage,
       ...(signalBundle ? { signalBundle } : {}),
