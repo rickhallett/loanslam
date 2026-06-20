@@ -129,6 +129,7 @@ just vercel-build
 - `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine.
 - `just review` starts the MAL review demo around the same engine.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
+- `just site-dev`, `just site-build`, and `just site-preview` operate the separate Astro site surface.
 
 ## Repository map
 
@@ -245,6 +246,13 @@ decision log: project-local TypeScript imports stay extensionless, while
 third-party package export paths remain allowed to use their published names.
 `just build` includes the same guard before the workspace build; its stdout and
 stderr are part of the verification evidence.
+
+The Astro site lives in `site/` outside the root npm workspaces. For site changes,
+run:
+
+```bash
+just site-build
+```
 
 ## Source-of-truth docs
 

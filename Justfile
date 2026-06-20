@@ -166,6 +166,30 @@ mcp-lab-api:
     @npm --silent run mcp:lab-api
 
 # =============================================================================
+# Site
+# =============================================================================
+
+# Start the Astro site dev server; pass Astro flags after -- when needed.
+site-dev *astro_args:
+    @set -- {{ astro_args }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm --prefix site run dev -- "$@"
+
+# Build the Astro site surface.
+site-build:
+    @npm --prefix site run build
+
+# Preview the built Astro site; pass Astro flags after -- when needed.
+site-preview *astro_args:
+    @set -- {{ astro_args }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm --prefix site run preview -- "$@"
+
+# =============================================================================
 # Local Apps
 # =============================================================================
 
