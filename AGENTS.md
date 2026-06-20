@@ -16,6 +16,13 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Markdown context cleanup is tracked in `docs/prds/2026-06-15-markdown-context-pruning-spec.md`; handle it before trusting old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
+## Evidence And Test Discipline
+
+- Treat full integration evidence as the proof surface for behavior claims.
+- Unit, mocked, fixture, static, and runner-only tests are support scaffolding; without an endpoint/live-flow integration run, they may not prove what they claim.
+- For route, planner, signal, validator, lab API, demo, or stakeholder behavior, verify with the full integration path. Extend the Hell Week battery when the current battery does not cover the claim.
+- Do not present unsupported tests as proof. A test that gives false confidence is a net negative contribution to this project.
+
 ## Git Branch Discipline
 
 - Check `git status --short --branch`, `git branch -vv`, and relevant upstream refs before moving branch pointers.

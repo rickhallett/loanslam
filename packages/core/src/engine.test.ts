@@ -105,6 +105,18 @@ const answerSignalBundle: SignalBundle = {
   parserNotes: [],
 };
 
+const accountSignalBundle: SignalBundle = {
+  primaryIntent: "account_specific",
+  secondaryIntents: [],
+  recommendedServingMode: "handoff_account_specific",
+  safetySignals: ["account_specific_request"],
+  retrievalQueries: ["balance account"],
+  routeHints: ["account balance"],
+  uncertainty: 0.1,
+  negatedOrCorrected: false,
+  parserNotes: [],
+};
+
 const signalMetadata = {
   provider: "inline",
   model: "signal-test-model",
@@ -1138,6 +1150,111 @@ describe("processTurn", () => {
         role: "assistant",
         content: result.customerMessage,
       }),
+    ]);
+  });
+
+  it("recovers account-specific handoff when malformed planner output follows assistant history", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("Too big: expected array to have <=6 items");
+      },
+    };
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals() {
+        return accountSignalBundle;
+      },
+    };
+    const conversationState: ConversationState = {
+      ...state(),
+      history: [
+        {
+          id: "prior-customer",
+          role: "customer",
+          content: "How do I apply online?",
+          createdAt: "2026-06-13T12:09:00.000Z",
+        },
+        {
+          id: "prior-assistant",
+          role: "assistant",
+          content: "You can apply online.",
+          createdAt: "2026-06-13T12:09:05.000Z",
+        },
+      ],
+      lastAction: "answer",
+    };
+
+    const result = await processTurn({
+      state: conversationState,
+      userMessage: "Actually what is my balance?",
+      planner,
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:10:00.000Z"),
+      idFactory: idFactory(),
+      journeyId: "switch-answer-to-account",
+      turnIndex: 1,
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.ui.primitive).toBe("intake_form");
+    expect(result.trace.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
+    expect(result.trace.safetyFlags).toContain("account_specific_request");
+    expect(result.validatorOverrides.map((override) => override.code)).toEqual([
+      "malformed_plan",
+      "non_answer_citation_blocked",
+    ]);
+  });
+
+  it("recovers account-specific credential handoff when a single-turn planner result is malformed", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("Invalid enum value");
+      },
+    };
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals() {
+        return {
+          ...accountSignalBundle,
+          safetySignals: [
+            "account_specific_request",
+            "forbidden_credentials",
+            "sensitive_overshare",
+          ],
+          retrievalQueries: ["bank details account"],
+          routeHints: ["bank details account"],
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "My sort code is 12-34-56 and account number is 12345678.",
+      planner,
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:10:00.000Z"),
+      idFactory: idFactory(),
+      journeyId: "cred-sort-code",
+      turnIndex: 0,
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.ui.primitive).toBe("intake_form");
+    expect(result.trace.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining([
+        "account_specific_request",
+        "forbidden_credentials",
+        "sensitive_overshare",
+      ]),
+    );
+    expect(result.validatorOverrides.map((override) => override.code)).toEqual([
+      "malformed_plan",
+      "non_answer_citation_blocked",
     ]);
   });
 

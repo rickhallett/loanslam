@@ -852,6 +852,30 @@ async function planAndValidateTurn({
       traceSummary: traceReason,
     };
 
+    if (
+      canRecoverMalformedPlanFromRouteEvidence(signalBundle, retrievedMatches)
+    ) {
+      const recovered = validateTurnPlan(plan, retrievedMatches, {
+        userMessage,
+        ...(signalBundle ? { signalBundle } : {}),
+      });
+
+      return {
+        plan,
+        validated: {
+          ...recovered,
+          validatorOverrides: [
+            {
+              code: "malformed_plan",
+              reason: traceReason,
+              toAction: recovered.finalAction,
+            },
+            ...recovered.validatorOverrides,
+          ],
+        },
+      };
+    }
+
     return {
       plan,
       validated: {
@@ -882,6 +906,19 @@ async function planAndValidateTurn({
       ...(signalBundle ? { signalBundle } : {}),
     }),
   };
+}
+
+function canRecoverMalformedPlanFromRouteEvidence(
+  signalBundle: SignalBundle | undefined,
+  retrievedMatches: ReturnType<typeof retrieveMatches>,
+): boolean {
+  const recommendedMode = signalBundle?.recommendedServingMode;
+
+  if (!recommendedMode || recommendedMode === "answer") {
+    return false;
+  }
+
+  return retrievedMatches[0]?.servingMode === recommendedMode;
 }
 
 function plannerFailureReason(error: unknown): string {
