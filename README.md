@@ -242,13 +242,13 @@ docs-only change.
 ## Source-of-truth docs
 
 - [Product brief](./docs/product-brief.md)
-- [Architecture and technical decisions](./docs/architecture.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
-- [Phase 0 human validation guide](./docs/phase-0-human-validation-guide.md)
+- [Stakeholder demo safe display boundary](./docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
 - [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
 - [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)
-- [Markdown context pruning spec](./docs/prds/2026-06-15-markdown-context-pruning-spec.md)
+- [Hell Week evidence index](./artifacts/evidence-index/hell-week-runs.md)
+- [Documentation audit recommendation matrix](./docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md)
 
 ## Not built in Phase 0
 

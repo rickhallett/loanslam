@@ -215,10 +215,16 @@ Workers: one coding worker per disjoint owner, one verifier if needed.
 Human gate: required before changing corpus policy meaning or scenario rubric.
 ```
 
-Starting baseline from the current artifact set:
+Choose the baseline from a fresh run folder or from the imported run index:
 
 ```text
-artifacts/phase0/hell-week-full-2026-06-15T17-17-45-655Z/report.json
+artifacts/evidence-index/hell-week-runs.md
+```
+
+For an imported database-backed run, regenerate a report artifact first:
+
+```bash
+just hell-week -- --from-db <run-id>
 ```
 
 Expected first clusters to inspect:
@@ -233,7 +239,7 @@ Run the comparison after each candidate:
 
 ```bash
 just hell-week-compare -- \
-  artifacts/phase0/hell-week-full-2026-06-15T17-17-45-655Z \
+  <baseline-run-dir-or-report.json> \
   <candidate-run-dir>
 ```
 
