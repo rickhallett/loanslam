@@ -19,9 +19,10 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Git Branch Discipline
 
 - Check `git status --short --branch`, `git branch -vv`, and relevant upstream refs before moving branch pointers.
-- Treat `main` as canonical unless the user explicitly names another base.
-- For deploy branches such as `dev` and `staging`, prefer fast-forward-only updates from `main`; use non-force pushes and stop on ancestry surprises.
-- Inside worktrees, normal `feature/*` and `fix/*` branch conventions apply; merge completed branches back into the owning worktree branch.
+- Promotion path is `feature/*` / `fix/*` / worktree branches -> `dev` -> `staging` -> `main`.
+- `main` accepts only promotions from `staging`; `staging` accepts only `dev`; `dev` accepts completed branches or worktrees.
+- Use fast-forward, non-squash promotions when ancestry permits; stop on divergence or surprises.
+- Inside worktrees, normal `feature/*`, `fix/*`, and `chore/*` branch conventions apply; merge completed branches back into the owning branch.
 - Make atomic commits. Preserve the commit history when merging; never squash.
 - Do not delete, reset, rebase, or force-push branches unless explicitly requested.
 
