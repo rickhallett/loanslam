@@ -3,6 +3,7 @@ import '@fontsource-variable/bricolage-grotesque';
 import '@fontsource-variable/plus-jakarta-sans';
 
 import ApplicationJourney from '../components/ApplicationJourney.vue';
+import { applyCopy } from '../lib/site-copy.ts';
 import '../styles/global.css';
 ---
 
@@ -11,11 +12,8 @@ import '../styles/global.css';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Apply for a Loans by MAL loan</title>
-    <meta
-      name="description"
-      content="Apply for a Loans by MAL instalment loan through the rebuilt application journey."
-    />
+    <title>{applyCopy.title}</title>
+    <meta name="description" content={applyCopy.description} />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
