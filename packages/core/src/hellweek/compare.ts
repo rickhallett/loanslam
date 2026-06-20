@@ -52,6 +52,7 @@ interface CompareReport {
   };
   policyVersion: string;
   judged: boolean;
+  judge?: CompareJudgeMetadata;
   durationMs: number;
   runtime: HellWeekRuntimeSummary;
   verdict: HellWeekVerdict;
@@ -81,6 +82,19 @@ interface CompareReport {
   grades: CompareGrade[];
 }
 
+interface CompareJudgeMetadata {
+  generatedAt?: string;
+  provider?: string;
+  model?: string;
+  tool?: string;
+  promptVersion?: string;
+  sourceRunId?: string;
+  sourceRunPath?: string;
+  scenarioCount?: number;
+  verdictCount: number;
+  artifactSchemaVersion?: number;
+}
+
 export type HellWeekComparabilityField =
   | "profile"
   | "scenario_set"
@@ -91,7 +105,14 @@ export type HellWeekComparabilityField =
   | "signal_model"
   | "signal_prompt"
   | "policy_version"
-  | "judged_state";
+  | "judged_state"
+  | "judge_artifact_schema"
+  | "judge_provider"
+  | "judge_model"
+  | "judge_tool"
+  | "judge_prompt"
+  | "judge_scenario_count"
+  | "judge_verdict_count";
 
 export interface HellWeekComparabilityWarning {
   field: HellWeekComparabilityField;
@@ -181,6 +202,7 @@ interface ReportSummary {
   signalExtractor: CompareReport["signalExtractor"];
   policyVersion: string;
   judged: boolean;
+  judge?: CompareReport["judge"];
   durationMs: number;
   runtime: HellWeekRuntimeSummary;
   verdict: HellWeekVerdict;
@@ -360,6 +382,7 @@ function summarizeReport(item: LoadedReport): ReportSummary {
     signalExtractor: item.report.signalExtractor,
     policyVersion: item.report.policyVersion,
     judged: item.report.judged,
+    ...(item.report.judge ? { judge: item.report.judge } : {}),
     durationMs: item.report.durationMs,
     runtime: item.report.runtime,
     verdict: item.report.verdict,
@@ -406,6 +429,7 @@ function normalizeReport(raw: unknown, path: string): CompareReport {
       `Invalid Hell Week report JSON: ${path} is missing totals or grades.`,
     );
   }
+  const judge = judgeMetadataValue(report.judge);
 
   return {
     runId: stringValue(report.runId, basename(path)),
@@ -417,6 +441,7 @@ function normalizeReport(raw: unknown, path: string): CompareReport {
     signalExtractor: signalExtractorValue(report.signalExtractor),
     policyVersion: stringValue(report.policyVersion, "unknown"),
     judged: report.judged === true,
+    ...(judge ? { judge } : {}),
     durationMs: numberValue(report.durationMs),
     runtime: runtimeSummaryValue(report.runtime),
     verdict: verdictValue(report.verdict),
@@ -549,6 +574,48 @@ function buildComparabilityWarnings({
     candidate: after.judged ? "judged" : "deterministic_only",
     message: "Judged state differs.",
   });
+  addOptionalWarning(warnings, {
+    field: "judge_artifact_schema",
+    baseline: optionalString(before.judge?.artifactSchemaVersion),
+    candidate: optionalString(after.judge?.artifactSchemaVersion),
+    message: "Judge artifact schema versions differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_provider",
+    baseline: before.judge?.provider,
+    candidate: after.judge?.provider,
+    message: "Judge providers differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_model",
+    baseline: before.judge?.model,
+    candidate: after.judge?.model,
+    message: "Judge models differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_tool",
+    baseline: before.judge?.tool,
+    candidate: after.judge?.tool,
+    message: "Judge tools differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_prompt",
+    baseline: before.judge?.promptVersion,
+    candidate: after.judge?.promptVersion,
+    message: "Judge prompt versions differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_scenario_count",
+    baseline: optionalString(before.judge?.scenarioCount),
+    candidate: optionalString(after.judge?.scenarioCount),
+    message: "Judge scenario counts differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_verdict_count",
+    baseline: optionalString(before.judge?.verdictCount),
+    candidate: optionalString(after.judge?.verdictCount),
+    message: "Judge verdict counts differ.",
+  });
 
   return warnings;
 }
@@ -562,6 +629,27 @@ function addWarning(
   }
 
   warnings.push(warning);
+}
+
+function addOptionalWarning(
+  warnings: HellWeekComparabilityWarning[],
+  warning: {
+    field: HellWeekComparabilityField;
+    baseline: string | undefined;
+    candidate: string | undefined;
+    message: string;
+  },
+): void {
+  if (warning.baseline === undefined || warning.candidate === undefined) {
+    return;
+  }
+
+  addWarning(warnings, {
+    field: warning.field,
+    baseline: warning.baseline,
+    candidate: warning.candidate,
+    message: warning.message,
+  });
 }
 
 function scenarioIds(report: CompareReport): string[] {
@@ -665,6 +753,42 @@ function signalExtractorValue(raw: unknown): CompareReport["signalExtractor"] {
     ...(typeof signal?.promptVersion === "string"
       ? { promptVersion: signal.promptVersion }
       : {}),
+  };
+}
+
+function judgeMetadataValue(raw: unknown): CompareJudgeMetadata | undefined {
+  if (!raw || typeof raw !== "object") {
+    return undefined;
+  }
+
+  const judge = raw as Partial<CompareJudgeMetadata>;
+  const verdictCount = numberOrUndefined(judge.verdictCount);
+  const scenarioCount = numberOrUndefined(judge.scenarioCount);
+  const artifactSchemaVersion = numberOrUndefined(judge.artifactSchemaVersion);
+
+  if (verdictCount === undefined) {
+    return undefined;
+  }
+
+  return {
+    verdictCount,
+    ...(typeof judge.generatedAt === "string"
+      ? { generatedAt: judge.generatedAt }
+      : {}),
+    ...(typeof judge.provider === "string" ? { provider: judge.provider } : {}),
+    ...(typeof judge.model === "string" ? { model: judge.model } : {}),
+    ...(typeof judge.tool === "string" ? { tool: judge.tool } : {}),
+    ...(typeof judge.promptVersion === "string"
+      ? { promptVersion: judge.promptVersion }
+      : {}),
+    ...(typeof judge.sourceRunId === "string"
+      ? { sourceRunId: judge.sourceRunId }
+      : {}),
+    ...(typeof judge.sourceRunPath === "string"
+      ? { sourceRunPath: judge.sourceRunPath }
+      : {}),
+    ...(scenarioCount !== undefined ? { scenarioCount } : {}),
+    ...(artifactSchemaVersion !== undefined ? { artifactSchemaVersion } : {}),
   };
 }
 
@@ -925,6 +1049,18 @@ function round1(value: number): number {
 
 function numberValue(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+
+function optionalString(
+  value: string | number | undefined,
+): string | undefined {
+  return value === undefined ? undefined : String(value);
 }
 
 function stringValue(value: unknown, fallback: string): string {

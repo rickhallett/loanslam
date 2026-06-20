@@ -30,6 +30,7 @@ export interface HellWeekStabilityRunSummary {
   signalExtractor: HellWeekReport["signalExtractor"];
   policyVersion: string;
   judged: boolean;
+  judge?: HellWeekReport["judge"];
   verdict: HellWeekReport["verdict"];
   totals: HellWeekReport["totals"];
 }
@@ -151,6 +152,7 @@ export function buildHellWeekStabilityReport({
       signalExtractor: run.signalExtractor,
       policyVersion: run.policyVersion,
       judged: run.judged,
+      ...(run.judge ? { judge: run.judge } : {}),
       verdict: run.verdict,
       totals: run.totals,
     })),

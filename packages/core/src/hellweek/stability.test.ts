@@ -71,12 +71,59 @@ describe("Hell Week stability report", () => {
     });
 
     expect(report.comparability.compatible).toBe(false);
-    expect(report.comparability.warnings.map((warning) => warning.field))
-      .toEqual(["planner_model", "policy_version", "judged_state"]);
+    expect(
+      report.comparability.warnings.map((warning) => warning.field),
+    ).toEqual(["planner_model", "policy_version", "judged_state"]);
     expect(report.runs[0]).toMatchObject({
       planner: { model: "planner-a" },
       policyVersion: "policy-a",
       judged: false,
+    });
+  });
+
+  it("preserves judge metadata warnings across repeated runs", () => {
+    const report = buildHellWeekStabilityReport({
+      setId: "mixed-judge-metadata",
+      runs: [
+        run("run-1", [grade("stable-pass", true, "fine")], {
+          judged: true,
+          judge: {
+            generatedAt: "2026-06-20T10:00:00.000Z",
+            tool: "workflow-a",
+            model: "judge-a",
+            promptVersion: "judge-v1",
+            verdictCount: 1,
+            artifactSchemaVersion: 1,
+          },
+        }),
+        run("run-2", [grade("stable-pass", true, "fine")], {
+          judged: true,
+          judge: {
+            generatedAt: "2026-06-20T10:05:00.000Z",
+            tool: "workflow-b",
+            model: "judge-b",
+            promptVersion: "judge-v2",
+            verdictCount: 2,
+            artifactSchemaVersion: 1,
+          },
+        }),
+      ],
+      now: () => new Date("2026-06-20T10:30:00.000Z"),
+    });
+
+    expect(report.comparability.compatible).toBe(false);
+    expect(
+      report.comparability.warnings.map((warning) => warning.field),
+    ).toEqual([
+      "judge_model",
+      "judge_tool",
+      "judge_prompt",
+      "judge_verdict_count",
+    ]);
+    expect(report.runs[0]?.judge).toMatchObject({
+      model: "judge-a",
+      promptVersion: "judge-v1",
+      verdictCount: 1,
     });
   });
 });
@@ -145,6 +192,7 @@ function run(
     plannerPrompt?: string;
     policyVersion?: string;
     judged?: boolean;
+    judge?: HellWeekReport["judge"];
   } = {},
 ): HellWeekReport {
   const passed = grades.filter((item) => item.pass).length;
@@ -164,6 +212,7 @@ function run(
     signalExtractor: { enabled: false },
     policyVersion: overrides.policyVersion ?? "test",
     judged: overrides.judged ?? false,
+    ...(overrides.judge ? { judge: overrides.judge } : {}),
     durationMs: 1,
     verdict: failed > 0 ? "needs_work" : "ship_ready",
     headline: "test",

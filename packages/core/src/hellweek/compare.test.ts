@@ -72,6 +72,108 @@ describe("Hell Week comparison comparability", () => {
       },
     });
   });
+
+  it("warns when judged runs use different judge metadata", () => {
+    const comparison = compareHellWeekReports(
+      report("baseline", {
+        profile: "full",
+        plannerModel: "planner-a",
+        plannerPrompt: "planner-prompt-a",
+        signalModel: "signal-a",
+        signalPrompt: "signal-prompt-a",
+        policyVersion: "policy-a",
+        judged: true,
+        judge: {
+          artifactSchemaVersion: 1,
+          provider: "workflow",
+          model: "judge-a",
+          tool: "tool-a",
+          promptVersion: "judge-prompt-a",
+          scenarioCount: 2,
+          verdictCount: 2,
+        },
+        scenarioIds: ["one", "two"],
+      }),
+      report("candidate", {
+        profile: "full",
+        plannerModel: "planner-a",
+        plannerPrompt: "planner-prompt-a",
+        signalModel: "signal-a",
+        signalPrompt: "signal-prompt-a",
+        policyVersion: "policy-a",
+        judged: true,
+        judge: {
+          artifactSchemaVersion: 2,
+          provider: "workflow-v2",
+          model: "judge-b",
+          tool: "tool-b",
+          promptVersion: "judge-prompt-b",
+          scenarioCount: 1,
+          verdictCount: 1,
+        },
+        scenarioIds: ["one", "two"],
+      }),
+    );
+
+    expect(
+      comparison.comparability.warnings.map((warning) => warning.field),
+    ).toEqual([
+      "judge_artifact_schema",
+      "judge_provider",
+      "judge_model",
+      "judge_tool",
+      "judge_prompt",
+      "judge_scenario_count",
+      "judge_verdict_count",
+    ]);
+
+    expect(toHellWeekComparisonJson(comparison)).toMatchObject({
+      baseline: {
+        judge: {
+          artifactSchemaVersion: 1,
+          model: "judge-a",
+          promptVersion: "judge-prompt-a",
+          verdictCount: 2,
+        },
+      },
+      candidate: {
+        judge: {
+          artifactSchemaVersion: 2,
+          model: "judge-b",
+          promptVersion: "judge-prompt-b",
+          verdictCount: 1,
+        },
+      },
+    });
+  });
+
+  it("keeps old judged reports without judge metadata comparable", () => {
+    const comparison = compareHellWeekReports(
+      report("baseline", {
+        profile: "full",
+        plannerModel: "planner-a",
+        plannerPrompt: "planner-prompt-a",
+        signalModel: "signal-a",
+        signalPrompt: "signal-prompt-a",
+        policyVersion: "policy-a",
+        judged: true,
+        scenarioIds: ["one"],
+      }),
+      report("candidate", {
+        profile: "full",
+        plannerModel: "planner-a",
+        plannerPrompt: "planner-prompt-a",
+        signalModel: "signal-a",
+        signalPrompt: "signal-prompt-a",
+        policyVersion: "policy-a",
+        judged: true,
+        scenarioIds: ["one"],
+      }),
+    );
+
+    expect(comparison.comparability.compatible).toBe(true);
+    expect(comparison.comparability.warnings).toEqual([]);
+  });
 });
 
 function report(
@@ -84,6 +186,15 @@ function report(
     signalPrompt: string;
     policyVersion: string;
     judged: boolean;
+    judge?: {
+      artifactSchemaVersion?: number;
+      provider?: string;
+      model?: string;
+      tool?: string;
+      promptVersion?: string;
+      scenarioCount?: number;
+      verdictCount: number;
+    };
     scenarioIds: string[];
   },
 ) {
@@ -115,6 +226,7 @@ function report(
       },
       policyVersion: options.policyVersion,
       judged: options.judged,
+      ...(options.judge ? { judge: options.judge } : {}),
       durationMs: 1000,
       runtime: {
         scenarioWallTimeMs: runtimeStat(1000),
