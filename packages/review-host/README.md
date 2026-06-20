@@ -43,7 +43,8 @@ npm run review-widget:dev                     # widget on http://127.0.0.1:5175 
 npm run review-host:dev             # host page on http://127.0.0.1:5181
 ```
 
-Or all three at once: `just review`.
+Or all three at once: `just review`. For throwaway local UI checks without
+Postgres owner logging, use `just review-local`.
 
 Open **http://127.0.0.1:5181** and use the launcher in the bottom-right corner.
 Append `?demo=true` to the host URL for manual context-reveal buttons.

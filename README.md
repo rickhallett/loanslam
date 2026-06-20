@@ -126,8 +126,8 @@ just vercel-build
 - `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
 - `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
 - `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
-- `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine.
-- `just review` starts the MAL review demo around the same engine.
+- `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine; use `just demo-local` for a no-Postgres local UI check.
+- `just review` starts the MAL review demo around the same engine; use `just review-local` for a no-Postgres local UI check.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
 - `just site-dev`, `just site-build`, and `just site-preview` operate the separate Astro site surface.
 

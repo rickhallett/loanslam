@@ -226,9 +226,13 @@ lab:
       ui_pid=$!; \
       wait "$ui_pid"
 
-# Start engine (8788), customer widget (5174) and host page (5180) together.
-demo:
+# Start engine (8788), customer widget (5174) and host page (5180) together; pass core:serve flags after --.
+demo *server_flags:
     @set -e; \
+      set -- {{ server_flags }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
       server_pid=""; \
       widget_pid=""; \
       host_pid=""; \
@@ -248,7 +252,7 @@ demo:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 --demo-only & \
+      npm --silent run core:serve -- --port 8788 --demo-only "$@" & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -262,11 +266,19 @@ demo:
       echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, demo API 8788)"; \
       wait "$host_pid"
 
+# Start the Loanslam demo locally without Postgres owner logging.
+demo-local:
+    @just demo -- --no-demo-log
+
 # Start engine (8788), MAL review widget (5175) and MAL contact page (5181).
 
-# This is the original mock Sam saw, driven by the loanslam engine.
-review:
+# This is the original mock Sam saw, driven by the loanslam engine; pass core:serve flags after --.
+review *server_flags:
     @set -e; \
+      set -- {{ server_flags }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
       server_pid=""; \
       widget_pid=""; \
       host_pid=""; \
@@ -286,7 +298,7 @@ review:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 --demo-only & \
+      npm --silent run core:serve -- --port 8788 --demo-only "$@" & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -299,6 +311,10 @@ review:
       host_pid=$!; \
       echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, demo API 8788)"; \
       wait "$host_pid"
+
+# Start the legacy review demo locally without Postgres owner logging.
+review-local:
+    @just review -- --no-demo-log
 
 # Start the local Vue lab console; pass Vite flags after -- when needed.
 lab-ui *vite_args:
