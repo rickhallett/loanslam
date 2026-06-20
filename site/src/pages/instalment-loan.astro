@@ -1,0 +1,140 @@
+---
+import FaqList from '../components/FaqList.astro';
+import instalmentQa from '../data/instalment-qa.json';
+import Base from '../layouts/Base.astro';
+import { page, rewriteLinks } from '../lib/content.ts';
+
+const APPLY_URL = 'https://applyloansbymal.co.uk';
+const record = page('instalment-loan');
+const items = instalmentQa.map((item) => ({ ...item, a: rewriteLinks(item.a) }));
+
+const steps = [
+  'Click ‘Start your application’ and tell us your loan amount, repayment term and some personal details.',
+  'Using the details you supply, we run checks to see if we can accept your application.',
+  'Sign, verify your online banking, and we’ll be in touch for a quick 5–10 minute call to discuss monthly repayments.',
+];
+---
+
+<Base title={record.seo_title ?? record.title} description={record.seo_description ?? undefined}>
+  <div class="page-head">
+    <div class="ripples"></div>
+    <div class="container" style="position: relative;">
+      <p class="crumb"><a href="/">Home</a> / Loans</p>
+      <h1>Affordable instalment loans</h1>
+      <p>
+        Borrow £1,000 to £5,000 and choose your repayments over a period of up to 36 months, to
+        suit your circumstances.
+      </p>
+    </div>
+  </div>
+
+  <div class="container section">
+    <div class="grid grid--2">
+      <div class="card reveal">
+        <h3>How much can I borrow?</h3>
+        <p>
+          We base the amount you can borrow on your monthly income, plus any other regular monthly
+          income, with a minimum loan of £1,000 up to a maximum loan of £5,000. We can lend up to
+          2× your income — including salary, self-employed income and pensions.
+        </p>
+      </div>
+      <div class="card reveal">
+        <h3>Fixed, predictable repayments</h3>
+        <p>
+          Your repayments are fixed throughout the term of the loan, so you know at the outset
+          exactly what you’ll pay each month. Before you sign the agreement you will always know
+          what you will repay and the terms.
+        </p>
+      </div>
+    </div>
+
+    <section class="apply-band reveal">
+      <div class="ripples"></div>
+      <div class="band-inner">
+        <h2>Apply today — easy as one, two, funded.</h2>
+        <ol class="steps">
+          {
+            steps.map((step, i) => (
+              <li>
+                <span class="step-num">{i + 1}</span>
+                <p>{step}</p>
+              </li>
+            ))
+          }
+        </ol>
+        <a class="btn btn--apply" href={APPLY_URL}>Start your application</a>
+      </div>
+    </section>
+
+    <h2>Loan FAQs</h2>
+    <FaqList items={items} />
+    <p>
+      For our full list of FAQs, <a href="/faq/">see our help &amp; support page</a>.
+    </p>
+
+    <div class="notice" style="margin-top: 2.5rem;">
+      <strong>Important note:</strong> late repayments can lead to serious money problems. For
+      debt counselling advice please visit
+      <a href="https://www.moneyhelper.org.uk">moneyhelper.org.uk</a>.
+    </div>
+  </div>
+</Base>
+
+<style>
+  .apply-band {
+    position: relative;
+    background: var(--ink-900);
+    color: var(--on-dark);
+    border-radius: var(--radius-lg);
+    padding: clamp(1.8rem, 4.5vw, 3.2rem);
+    margin-block: 2.6rem 3rem;
+    overflow: hidden;
+  }
+
+  .band-inner {
+    position: relative;
+  }
+
+  .apply-band h2 {
+    color: #fff;
+    font-size: clamp(1.6rem, 3vw, 2.3rem);
+  }
+
+  .steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.6rem;
+    padding: 0;
+    margin: 1.8rem 0 2rem;
+  }
+
+  .steps p {
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  .step-num {
+    display: inline-grid;
+    place-items: center;
+    width: 2.7rem;
+    height: 2.7rem;
+    border-radius: 50%;
+    background: var(--amber-400);
+    color: var(--ink-950);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin-bottom: 0.7rem;
+  }
+
+  h2 {
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 720px) {
+    .steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

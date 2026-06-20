@@ -1,5 +1,5 @@
 {
-  "name": "loanslam-site",
+  "name": "loansbymal-site",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.10",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.5",
     "astro": "^5.7.0"
   }
 }

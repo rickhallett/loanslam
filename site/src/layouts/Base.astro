@@ -1,4 +1,7 @@
 ---
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/plus-jakarta-sans';
+
 import '../styles/global.css';
 
 import Footer from '../components/Footer.astro';
@@ -21,7 +24,7 @@ const { title, description } = Astro.props;
     {description && <meta name="description" content={description} />}
     <!-- Prototype: keep out of search indexes until launch -->
     <meta name="robots" content="noindex, nofollow" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
