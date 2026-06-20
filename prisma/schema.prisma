@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../packages/core/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model DemoInteractionEvent {
+  id                           BigInt   @id @default(autoincrement())
+  createdAt                    DateTime @map("created_at") @db.Timestamptz
+  eventType                    String   @map("event_type") @db.Text
+  method                       String   @db.Text
+  path                         String   @db.Text
+  httpStatus                   Int      @map("http_status")
+  durationMs                   Int      @map("duration_ms")
+  conversationRef              String?  @map("conversation_ref") @db.Text
+  turn                         Int?
+  requestRef                   String?  @map("request_ref") @db.Text
+  traceId                      String?  @map("trace_id") @db.Text
+  customerMessage              String?  @map("customer_message") @db.Text
+  assistantMessage             String?  @map("assistant_message") @db.Text
+  hostContext                  String?  @map("host_context") @db.Text
+  proposedAction               String?  @map("proposed_action") @db.Text
+  finalAction                  String?  @map("final_action") @db.Text
+  actionChanged                Boolean? @map("action_changed")
+  servingMode                  String?  @map("serving_mode") @db.Text
+  safetyFlags                  Json     @default("[]") @map("safety_flags_json")
+  overrideCodes                Json     @default("[]") @map("override_codes_json")
+  retrievalCount               Int?     @map("retrieval_count")
+  retrievalTopScore            Float?   @map("retrieval_top_score")
+  retrievedItemIds             Json     @default("[]") @map("retrieved_item_ids_json")
+  signalStatus                 String?  @map("signal_status") @db.Text
+  signalPrimaryIntent          String?  @map("signal_primary_intent") @db.Text
+  signalRecommendedServingMode String?  @map("signal_recommended_serving_mode") @db.Text
+  signalComparison             String?  @map("signal_comparison") @db.Text
+  uiPrimitive                  String?  @map("ui_primitive") @db.Text
+  terminalSession              Boolean? @map("terminal_session")
+  requestedFields              Json     @default("[]") @map("requested_fields_json")
+  collectedFields              Json     @default("[]") @map("collected_fields_json")
+  displayResponseJson          Json?    @map("display_response_json")
+  internalJson                 Json?    @map("internal_json")
+  errorCode                    String?  @map("error_code") @db.Text
+  errorMessage                 String?  @map("error_message") @db.Text
+
+  @@index([conversationRef, id], map: "demo_interaction_events_conversation_idx")
+  @@index([createdAt], map: "demo_interaction_events_created_idx")
+  @@index([conversationRef, turn], map: "demo_interaction_events_turn_idx")
+  @@map("demo_interaction_events")
+}
+
+model HellWeekRun {
+  id               BigInt   @id @default(autoincrement())
+  runId            String   @unique @map("run_id") @db.Text
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  generatedAt      DateTime @map("generated_at") @db.Timestamptz
+  profile          String   @db.Text
+  planner          Json     @map("planner_json")
+  signalExtractor  Json     @map("signal_extractor_json")
+  policyVersion    String   @map("policy_version") @db.Text
+  judged           Boolean
+  durationMs       Int      @map("duration_ms")
+  verdict          String   @db.Text
+  headline         String   @db.Text
+  totals           Json     @map("totals_json")
+  safetyFloor      Json     @map("safety_floor_json")
+  deflection       Json     @map("deflection_json")
+  routingPrecision Json     @map("routing_precision_json")
+  uxQuality        Json     @map("ux_quality_json")
+  categories       Json     @map("categories_json")
+  dimensions       Json     @map("dimensions_json")
+  severityCounts   Json     @map("severity_counts_json")
+  triageCounts     Json     @map("triage_counts_json")
+  topRisks         Json     @map("top_risks_json")
+
+  scenarios            HellWeekScenario[]
+  turns                HellWeekTurn[]
+  grades               HellWeekGrade[]
+  runSets              HellWeekRunSetMember[]
+  baselineComparisons  HellWeekRunSetPairwiseComparison[] @relation("HellWeekRunSetPairwiseBaseline")
+  candidateComparisons HellWeekRunSetPairwiseComparison[] @relation("HellWeekRunSetPairwiseCandidate")
+
+  @@index([generatedAt], map: "hell_week_runs_generated_idx")
+  @@index([profile, generatedAt], map: "hell_week_runs_profile_generated_idx")
+  @@map("hell_week_runs")
+}
+
+model HellWeekScenario {
+  id              BigInt  @id @default(autoincrement())
+  runId           BigInt  @map("hell_week_run_id")
+  scenarioId      String  @map("scenario_id") @db.Text
+  position        Int
+  conversationRef String  @map("conversation_ref") @db.Text
+  durationMs      Int     @map("duration_ms")
+  error           String? @db.Text
+  category        String  @db.Text
+  categoryTitle   String  @map("category_title") @db.Text
+  title           String  @db.Text
+  dimension       String  @db.Text
+  customerTurns   Json    @map("customer_turns_json")
+  expected        Json    @map("expected_json")
+  failureMarkers  String  @map("failure_markers") @db.Text
+  watch           String? @db.Text
+  severityFloor   String  @map("severity_floor") @db.Text
+  scenarioJson    Json    @map("scenario_json")
+
+  run    HellWeekRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  turns  HellWeekTurn[]
+  grades HellWeekGrade[]
+
+  @@unique([runId, scenarioId], map: "hell_week_scenarios_run_scenario_key")
+  @@index([runId], map: "hell_week_scenarios_run_idx")
+  @@index([scenarioId], map: "hell_week_scenarios_scenario_idx")
+  @@map("hell_week_scenarios")
+}
+
+model HellWeekTurn {
+  id                       BigInt   @id @default(autoincrement())
+  runId                    BigInt   @map("hell_week_run_id")
+  scenarioId               BigInt   @map("hell_week_scenario_id")
+  turnIndex                Int      @map("turn_index")
+  userMessage              String   @map("user_message") @db.Text
+  botMessage               String   @map("bot_message") @db.Text
+  finalAction              String   @map("final_action") @db.Text
+  proposedAction           String   @map("proposed_action") @db.Text
+  selectedServingMode      String?  @map("selected_serving_mode") @db.Text
+  effectiveServingMode     String?  @map("effective_serving_mode") @db.Text
+  routeForScoring          String?  @map("route_for_scoring") @db.Text
+  selectedRouteReason      String?  @map("selected_route_reason") @db.Text
+  safetyFlags              Json     @map("safety_flags_json")
+  validatorOverrideCodes   Json     @map("validator_override_codes_json")
+  retrieved                Json     @map("retrieved_json")
+  uiPrimitive              String   @map("ui_primitive") @db.Text
+  signalStatus             String?  @map("signal_status") @db.Text
+  signalPrimaryIntent      String?  @map("signal_primary_intent") @db.Text
+  signalRecommendedMode    String?  @map("signal_recommended_mode") @db.Text
+  signalNegatedOrCorrected Boolean? @map("signal_negated_or_corrected")
+  signalComparisonStatus   String?  @map("signal_comparison_status") @db.Text
+  signalLatencyMs          Int?     @map("signal_latency_ms")
+  turnJson                 Json     @map("turn_json")
+
+  run      HellWeekRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  scenario HellWeekScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([scenarioId, turnIndex], map: "hell_week_turns_scenario_turn_key")
+  @@index([runId], map: "hell_week_turns_run_idx")
+  @@index([scenarioId], map: "hell_week_turns_scenario_idx")
+  @@map("hell_week_turns")
+}
+
+model HellWeekGrade {
+  id                 BigInt  @id @default(autoincrement())
+  runId              BigInt  @map("hell_week_run_id")
+  scenarioId         BigInt  @map("hell_week_scenario_id")
+  scenarioKey        String  @map("scenario_id") @db.Text
+  pass               Boolean
+  severity           String  @db.Text
+  graderSource       String  @map("grader_source") @db.Text
+  hardFloorTriggered Boolean @map("hard_floor_triggered")
+  uxScore            Float?  @map("ux_score")
+  rationale          String  @db.Text
+  triageLabels       Json    @map("triage_labels_json")
+  deterministic      Json    @map("deterministic_json")
+  judge              Json?   @map("judge_json")
+  gradeJson          Json    @map("grade_json")
+
+  run      HellWeekRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  scenario HellWeekScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, scenarioKey], map: "hell_week_grades_run_scenario_key")
+  @@index([runId], map: "hell_week_grades_run_idx")
+  @@index([scenarioId], map: "hell_week_grades_scenario_idx")
+  @@index([pass, severity], map: "hell_week_grades_pass_severity_idx")
+  @@map("hell_week_grades")
+}
+
+model HellWeekRunSet {
+  id                    BigInt   @id @default(autoincrement())
+  setId                 String   @unique @map("set_id") @db.Text
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  generatedAt           DateTime @map("generated_at") @db.Timestamptz
+  reportType            String   @default("stability") @map("report_type") @db.Text
+  profile               String   @db.Text
+  label                 String   @db.Text
+  runCount              Int      @map("run_count")
+  scenarioCount         Int      @map("scenario_count")
+  scenarioSetChanged    Boolean  @map("scenario_set_changed")
+  stablePassCount       Int      @map("stable_pass_count")
+  stableFailureCount    Int      @map("stable_failure_count")
+  recurringFailureCount Int      @map("recurring_failure_count")
+  oneOffFailureCount    Int      @map("one_off_failure_count")
+  mixedCount            Int      @map("mixed_count")
+  summary               Json     @map("summary_json")
+  reportJson            Json     @map("report_json")
+
+  members             HellWeekRunSetMember[]
+  scenarios           HellWeekRunSetScenario[]
+  pairwiseComparisons HellWeekRunSetPairwiseComparison[]
+
+  @@index([generatedAt], map: "hell_week_run_sets_generated_idx")
+  @@index([profile, generatedAt], map: "hell_week_run_sets_profile_generated_idx")
+  @@map("hell_week_run_sets")
+}
+
+model HellWeekRunSetMember {
+  id       BigInt @id @default(autoincrement())
+  runSetId BigInt @map("hell_week_run_set_id")
+  runId    BigInt @map("hell_week_run_id")
+  position Int
+  role     String @db.Text
+
+  runSet HellWeekRunSet @relation(fields: [runSetId], references: [id], onDelete: Cascade)
+  run    HellWeekRun    @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runSetId, position], map: "hell_week_run_set_members_position_key")
+  @@unique([runSetId, runId], map: "hell_week_run_set_members_run_key")
+  @@index([runSetId], map: "hell_week_run_set_members_set_idx")
+  @@index([runId], map: "hell_week_run_set_members_run_idx")
+  @@map("hell_week_run_set_members")
+}
+
+model HellWeekRunSetScenario {
+  id             BigInt @id @default(autoincrement())
+  runSetId       BigInt @map("hell_week_run_set_id")
+  scenarioId     String @map("scenario_id") @db.Text
+  title          String @db.Text
+  category       String @db.Text
+  dimension      String @db.Text
+  passCount      Int    @map("pass_count")
+  failCount      Int    @map("fail_count")
+  missingCount   Int    @map("missing_count")
+  worstSeverity  String @map("worst_severity") @db.Text
+  classification String @db.Text
+  severityCounts Json   @map("severity_counts_json")
+  triageLabels   Json   @map("triage_labels_json")
+  outcomes       Json   @map("outcomes_json")
+  scenarioJson   Json   @map("scenario_json")
+
+  runSet HellWeekRunSet @relation(fields: [runSetId], references: [id], onDelete: Cascade)
+
+  @@unique([runSetId, scenarioId], map: "hell_week_run_set_scenarios_key")
+  @@index([runSetId], map: "hell_week_run_set_scenarios_set_idx")
+  @@index([classification], map: "hell_week_run_set_scenarios_class_idx")
+  @@index([scenarioId], map: "hell_week_run_set_scenarios_scenario_idx")
+  @@map("hell_week_run_set_scenarios")
+}
+
+model HellWeekRunSetPairwiseComparison {
+  id                BigInt @id @default(autoincrement())
+  runSetId          BigInt @map("hell_week_run_set_id")
+  baselineRunId     BigInt @map("baseline_hell_week_run_id")
+  candidateRunId    BigInt @map("candidate_hell_week_run_id")
+  baselinePosition  Int    @map("baseline_position")
+  candidatePosition Int    @map("candidate_position")
+  comparisonJson    Json   @map("comparison_json")
+
+  runSet       HellWeekRunSet @relation(fields: [runSetId], references: [id], onDelete: Cascade)
+  baselineRun  HellWeekRun    @relation("HellWeekRunSetPairwiseBaseline", fields: [baselineRunId], references: [id], onDelete: Cascade)
+  candidateRun HellWeekRun    @relation("HellWeekRunSetPairwiseCandidate", fields: [candidateRunId], references: [id], onDelete: Cascade)
+
+  @@unique([runSetId, baselinePosition, candidatePosition], map: "hell_week_run_set_pairwise_position_key")
+  @@index([runSetId], map: "hell_week_run_set_pairwise_set_idx")
+  @@index([baselineRunId], map: "hell_week_run_set_pairwise_baseline_idx")
+  @@index([candidateRunId], map: "hell_week_run_set_pairwise_candidate_idx")
+  @@map("hell_week_run_set_pairwise_comparisons")
+}

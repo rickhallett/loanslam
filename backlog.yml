@@ -1,4 +1,35 @@
 items:
+  - id: stakeholder-demo-safe-display-boundary
+    title: Add stakeholder demo safe display boundary
+    status: todo
+    labels:
+      - needs-triage
+    priority: high
+    description: >
+      Map full engine results into a compact server-side display model for the
+      stakeholder demo, so the browser receives customer-facing UI and
+      content-free decision telemetry instead of full traces, state, planner
+      proposals, or retrieved evidence.
+    acceptance:
+      - A PRD exists at
+        docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md.
+      - The demo/review widget consumes a demo response contract, not a full
+        ValidatedTurnResult.
+      - Demo responses omit raw state, trace, plan, validator reason text,
+        selected route reason, matched terms, collected fact values, signal
+        notes, route hints, retrieval queries, prompt text, and raw JSON dumps.
+      - The local lab route still returns full internal evidence for trusted
+        development and review.
+      - The stakeholder demo can run in demo-only mode without trusted lab
+        routes mounted.
+      - Demo continuity uses an opaque, tamper-resistant continuation token or
+        an explicitly server-owned equivalent.
+      - Demo access control and source-map suppression are verified before the
+        URL is shared.
+      - Demo endpoints write owner-only Postgres interaction receipts that can be
+        queried by summary, conversation, or turn without exposing them to the
+        browser.
+      - Focused mapper/API/widget tests, typecheck, and build checks pass.
   - id: lab-api-mcp-session-simulator
     title: Build a Lab API MCP session simulator
     status: todo

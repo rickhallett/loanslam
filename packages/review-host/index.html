@@ -184,10 +184,13 @@
       (function () {
         var mode =
           new URLSearchParams(location.search).get("widget") || "local";
+        var isLocal =
+          location.hostname === "127.0.0.1" ||
+          location.hostname === "localhost";
         window.malChatConfig = {
           widgetUrl:
-            mode === "remote"
-              ? "https://REPLACE_WITH_DEPLOYED_WIDGET"
+            mode === "remote" || !isLocal
+              ? location.origin + "/widget/"
               : "http://127.0.0.1:5175",
         };
       })();

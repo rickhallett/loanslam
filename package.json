@@ -9,7 +9,10 @@
     "test": "vitest run",
     "typecheck": "npm --workspaces --if-present run typecheck",
     "build": "npm --workspaces --if-present run build",
-    "format:check": "prettier --check \"package.json\" \"package-lock.json\" \"tsconfig*.json\" \"vitest.config.ts\" \"packages/**/*.{ts,vue,css,html}\" \"packages/**/package.json\" \"packages/**/tsconfig.json\"",
+    "start": "tsx packages/core/src/cli.ts serve --demo-only --host 0.0.0.0 --demo-static-host-root packages/review-host/dist --demo-static-widget-root packages/review-widget/dist",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate deploy && npm run review-widget:build && npm run review-host:build",
+    "format:check": "prettier --check \"package.json\" \"package-lock.json\" \"prisma.config.ts\" \"tsconfig*.json\" \"vitest.config.ts\" \"api/**/*.ts\" \"packages/**/*.{ts,vue,css,html}\" \"packages/**/package.json\" \"packages/**/tsconfig.json\"",
     "core:turn": "tsx packages/core/src/cli.ts turn",
     "core:simulate": "tsx packages/core/src/cli.ts simulate",
     "core:compare": "tsx packages/core/src/cli.ts compare",
@@ -17,8 +20,11 @@
     "core:stochastic": "tsx packages/core/src/cli.ts stochastic",
     "core:route-audit": "tsx packages/core/src/cli.ts route-audit",
     "core:hell-week": "tsx packages/core/src/cli.ts hell-week",
+    "core:hell-week-compare": "tsx packages/core/src/cli.ts hell-week-compare",
+    "core:hell-week-stability": "tsx packages/core/src/cli.ts hell-week-stability",
     "core:chat": "tsx packages/core/src/cli.ts chat",
     "core:serve": "tsx packages/core/src/cli.ts serve",
+    "core:demo-log": "tsx packages/core/src/cli.ts demo-log",
     "mcp:lab-api": "tsx packages/mcp-server/src/server.ts",
     "lab-ui:dev": "sh -c 'npm --prefix packages/lab-ui run dev -- \"$@\"' --",
     "lab-ui:build": "npm --workspace @loanslam/lab-ui run build",
@@ -32,17 +38,28 @@
     "review-host:build": "npm --workspace @loanslam/review-host run build"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "openai": "^6.9.1",
+    "pg": "^8.22.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "prettier": "^3.7.4",
+    "prisma": "^7.8.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
   },
   "engines": {
     "node": ">=24"
+  },
+  "overrides": {
+    "prisma": {
+      "@prisma/dev": "0.24.9"
+    }
   }
 }

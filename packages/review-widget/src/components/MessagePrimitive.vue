@@ -9,7 +9,7 @@ import IntakeForm from "./IntakeForm.vue";
 
 // ── Intake form ────────────────────────────────────────────────────────────
 // The structured form is the primary intake path: it submits exact field values
-// to POST /sessions/:ref/intake (no free-text extraction), which removes the
+// to POST /demo/sessions/:ref/intake (no free-text extraction), which removes the
 // extraction loop that the conversational path was prone to. The customer can
 // still cancel back into the chat. Submit/cancel are handled by the parent.
 const SHOW_INTAKE_FORM = true as boolean;

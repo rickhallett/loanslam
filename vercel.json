@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run vercel-build",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": [
+        "data/public-info/**",
+        "packages/review-host/dist/**",
+        "packages/review-widget/dist/**"
+      ]
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
+}

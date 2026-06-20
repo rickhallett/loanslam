@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -35,9 +36,22 @@ import { buildRouteAuditArtifacts } from "./routeAudit";
 import {
   executeHellWeek,
   loadJudgeVerdicts,
+  renderFromDatabase,
   renderFromRun,
+  storeHellWeekReport,
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
+import { openHellWeekReportStore } from "./hellweek/db";
+import {
+  buildHellWeekStabilityReport,
+  writeHellWeekStabilityArtifacts,
+  type HellWeekStabilityArtifacts,
+} from "./hellweek/stability";
+import {
+  compareHellWeekReportsFromPaths,
+  formatHellWeekComparison,
+  toHellWeekComparisonJson,
+} from "./hellweek/compare";
 
 export interface CliResult {
   exitCode: number;
@@ -63,6 +77,8 @@ type PlannerFactory = () => TurnPlanner & {
 type CliEnv = Record<string, string | undefined>;
 
 const defaultTraceDir = "artifacts/phase0";
+const demoInteractionDatabaseUrlHelp =
+  "DEMO_INTERACTION_DATABASE_URL or DATABASE_URL";
 
 export async function runCli(
   args = process.argv.slice(2),
@@ -106,12 +122,24 @@ export async function runCli(
       return await runHellWeekCommand(rest, env, plannerFactory);
     }
 
+    if (command === "hell-week-compare") {
+      return runHellWeekCompareCommand(rest);
+    }
+
+    if (command === "hell-week-stability") {
+      return await runHellWeekStabilityCommand(rest, env);
+    }
+
     if (command === "chat") {
       return await runInteractiveChat(rest, env, plannerFactory, options);
     }
 
     if (command === "serve") {
       return await runServer(rest, env, plannerFactory);
+    }
+
+    if (command === "demo-log") {
+      return await runDemoLog(rest, env);
     }
 
     return fail(`Unknown command: ${command}\n\n${helpText()}`);
@@ -140,6 +168,19 @@ function signalExtractorInput(
   signalExtractor: OpenAiSignalExtractor | undefined,
 ): { signalExtractor?: OpenAiSignalExtractor } {
   return signalExtractor ? { signalExtractor } : {};
+}
+
+function readDemoInteractionDatabaseUrl(env: CliEnv): string | undefined {
+  return (
+    env.DEMO_INTERACTION_DATABASE_URL ??
+    env.DATABASE_URL ??
+    env.POSTGRES_PRISMA_URL ??
+    env.POSTGRES_URL
+  );
+}
+
+function readHellWeekDatabaseUrl(env: CliEnv): string | undefined {
+  return env.HELL_WEEK_DATABASE_URL ?? readDemoInteractionDatabaseUrl(env);
 }
 
 async function runTurn(
@@ -417,6 +458,42 @@ function hellWeekSummary(
     .join("\n");
 }
 
+function hellWeekStabilitySummary(
+  artifacts: HellWeekStabilityArtifacts,
+  asJson: boolean,
+): string {
+  const { report } = artifacts;
+
+  if (asJson) {
+    return JSON.stringify({
+      setId: report.setId,
+      profile: report.profile,
+      runCount: report.runCount,
+      scenarioCount: report.scenarioCount,
+      summary: report.summary,
+      scenarioSetChanged: report.scenarioSetChanged,
+      reportHtmlPath: artifacts.reportHtmlPath,
+      runDir: artifacts.runDir,
+    });
+  }
+
+  return [
+    `Hell Week stability: ${report.label}`,
+    `Runs: ${report.runCount} · Scenarios: ${report.scenarioCount}`,
+    `Stable pass: ${report.summary.stablePass}`,
+    `Stable failure: ${report.summary.stableFailure}`,
+    `Recurring failure: ${report.summary.recurringFailure}`,
+    `One-off failure: ${report.summary.oneOffFailure}`,
+    `Mixed: ${report.summary.mixed}`,
+    report.scenarioSetChanged
+      ? "Scenario sets changed: inspect mixed/missing rows before acting."
+      : "Scenario sets: stable",
+    "",
+    `Report: ${artifacts.reportHtmlPath}`,
+    `Run dir: ${artifacts.runDir}`,
+  ].join("\n");
+}
+
 async function runHellWeekCommand(
   args: string[],
   env: CliEnv,
@@ -433,12 +510,21 @@ async function runHellWeekCommand(
   const concurrencyRaw = readOption(normalized, "--concurrency");
   const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
   const fromDir = readOption(normalized, "--from");
+  const fromDb = readOption(normalized, "--from-db");
   const judgePath = readOption(normalized, "--judge-verdicts");
   const signalsMode = readOption(normalized, "--signals") ?? "on";
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
+  const storeDb = normalized.includes("--store-db");
+  const databaseUrl =
+    readOption(normalized, "--database-url") ??
+    readOption(normalized, "--db") ??
+    readHellWeekDatabaseUrl(env);
 
-  if (concurrency !== undefined && (!Number.isInteger(concurrency) || concurrency <= 0)) {
+  if (
+    concurrency !== undefined &&
+    (!Number.isInteger(concurrency) || concurrency <= 0)
+  ) {
     return fail("--concurrency must be a positive integer.");
   }
 
@@ -448,12 +534,34 @@ async function runHellWeekCommand(
 
   const judgeVerdicts = judgePath ? loadJudgeVerdicts(judgePath) : undefined;
 
+  if (fromDir && fromDb) {
+    return fail("Use only one of --from or --from-db.");
+  }
+
+  if (fromDb) {
+    const artifacts = await renderFromDatabase({
+      runId: fromDb,
+      outBaseDir,
+      theme,
+      ...(databaseUrl ? { databaseUrl } : {}),
+    });
+    return ok(hellWeekSummary(artifacts, asJson));
+  }
+
   if (fromDir) {
     const artifacts = renderFromRun({
       runDir: fromDir,
       theme,
       ...(judgeVerdicts ? { judgeVerdicts } : {}),
     });
+
+    if (storeDb) {
+      await storeHellWeekReport({
+        report: artifacts.report,
+        ...(databaseUrl ? { databaseUrl } : {}),
+      });
+    }
+
     return ok(hellWeekSummary(artifacts, asJson));
   }
 
@@ -471,7 +579,113 @@ async function runHellWeekCommand(
     onProgress: (message) => process.stderr.write(`${message}\n`),
   });
 
+  if (storeDb) {
+    await storeHellWeekReport({
+      report: artifacts.report,
+      ...(databaseUrl ? { databaseUrl } : {}),
+    });
+  }
+
   return ok(hellWeekSummary(artifacts, asJson));
+}
+
+function runHellWeekCompareCommand(args: string[]): CliResult {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekCompareHelpText());
+  }
+
+  const asJson = normalized.includes("--json");
+  const positional = normalized.filter((arg) => !arg.startsWith("--"));
+  const [baselinePath, candidatePath] = positional;
+
+  if (!baselinePath || !candidatePath) {
+    return fail(hellWeekCompareHelpText());
+  }
+
+  const comparison = compareHellWeekReportsFromPaths(
+    baselinePath,
+    candidatePath,
+  );
+
+  return ok(
+    asJson
+      ? JSON.stringify(toHellWeekComparisonJson(comparison))
+      : formatHellWeekComparison(comparison),
+  );
+}
+
+async function runHellWeekStabilityCommand(
+  args: string[],
+  env: CliEnv,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekStabilityHelpText());
+  }
+
+  const fromDb = readOption(normalized, "--from-db");
+  const runsRaw = readOption(normalized, "--runs");
+  const setId =
+    readOption(normalized, "--set-id") ??
+    `hell-week-stability-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  const label = readOption(normalized, "--label");
+  const outBaseDir = readOption(normalized, "--out") ?? defaultTraceDir;
+  const asJson = normalized.includes("--json");
+  const databaseUrl =
+    readOption(normalized, "--database-url") ??
+    readOption(normalized, "--db") ??
+    readHellWeekDatabaseUrl(env);
+
+  const store = openHellWeekReportStore(databaseUrl);
+
+  try {
+    if (fromDb) {
+      const report = await store.loadStabilityReport(fromDb);
+
+      if (!report) {
+        return fail(
+          `No Hell Week stability report found in Postgres for ${fromDb}.`,
+        );
+      }
+
+      return ok(
+        hellWeekStabilitySummary(
+          writeHellWeekStabilityArtifacts({ report, outBaseDir }),
+          asJson,
+        ),
+      );
+    }
+
+    const runIds = (runsRaw ?? "")
+      .split(",")
+      .map((runId) => runId.trim())
+      .filter(Boolean);
+
+    if (runIds.length < 2) {
+      return fail(hellWeekStabilityHelpText());
+    }
+
+    const runs = await store.loadReports(runIds);
+    const report = buildHellWeekStabilityReport({
+      setId,
+      ...(label ? { label } : {}),
+      runs,
+    });
+
+    await store.saveStabilityReport(report);
+
+    return ok(
+      hellWeekStabilitySummary(
+        writeHellWeekStabilityArtifacts({ report, outBaseDir }),
+        asJson,
+      ),
+    );
+  } finally {
+    await store.close();
+  }
 }
 
 async function runInteractiveChat(
@@ -549,23 +763,122 @@ async function runServer(
     return ok(serverHelpText());
   }
 
-  const port = Number(readOption(args, "--port") ?? "8787");
+  const normalizedArgs = stripOptionSeparator(args);
+  const port = Number(
+    readOption(normalizedArgs, "--port") ?? env.PORT ?? "8787",
+  );
+  const host = readOption(normalizedArgs, "--host") ?? env.HOST ?? "127.0.0.1";
+  const demoOnly = normalizedArgs.includes("--demo-only");
+  const demoStateTokenSecret =
+    readOption(normalizedArgs, "--demo-state-token-secret") ??
+    env.DEMO_STATE_TOKEN_SECRET ??
+    (demoOnly ? randomUUID() : undefined);
+  const demoAccessToken =
+    readOption(normalizedArgs, "--demo-access-token") ?? env.DEMO_ACCESS_TOKEN;
+  const demoInteractionLogDisabled = normalizedArgs.includes("--no-demo-log");
+  const demoInteractionDatabaseUrl = demoInteractionLogDisabled
+    ? undefined
+    : (readOption(normalizedArgs, "--demo-log-database-url") ??
+      readDemoInteractionDatabaseUrl(env));
+  const demoStaticHostRoot =
+    readOption(normalizedArgs, "--demo-static-host-root") ??
+    env.DEMO_STATIC_HOST_ROOT;
+  const demoStaticWidgetRoot =
+    readOption(normalizedArgs, "--demo-static-widget-root") ??
+    env.DEMO_STATIC_WIDGET_ROOT;
 
   if (!Number.isInteger(port) || port <= 0) {
     return fail("--port must be a positive integer.");
   }
 
+  if (demoOnly && !demoInteractionLogDisabled && !demoInteractionDatabaseUrl) {
+    return fail(
+      `Demo interaction logging requires ${demoInteractionDatabaseUrlHelp}. Pass --no-demo-log to disable owner logging locally.`,
+    );
+  }
+
+  const demoInteractionLog = demoInteractionDatabaseUrl
+    ? (await import("./lab/demoInteractionLog")).openDemoInteractionLog(
+        demoInteractionDatabaseUrl,
+      )
+    : undefined;
+
   const server = createLabServer({
     corpus: loadCorpusFromFile().items,
     plannerFactory,
     ...signalExtractorInput(createSignalExtractor(env)),
+    enableTrustedLabRoutes: !demoOnly,
+    enableDemoRoutes: true,
+    ...(demoStateTokenSecret ? { demoStateTokenSecret } : {}),
+    ...(demoAccessToken ? { demoAccessToken } : {}),
+    ...(demoInteractionLog ? { demoInteractionLog } : {}),
+    ...(demoStaticHostRoot && demoStaticWidgetRoot
+      ? {
+          demoStaticAssets: {
+            hostRoot: demoStaticHostRoot,
+            widgetRoot: demoStaticWidgetRoot,
+          },
+        }
+      : {}),
   });
 
   await new Promise<void>((resolve) => {
-    server.listen(port, "127.0.0.1", resolve);
+    server.listen(port, host, resolve);
   });
 
-  return ok(`LoanSlam Phase 0 lab API listening on http://127.0.0.1:${port}`);
+  return ok(
+    demoOnly
+      ? `LoanSlam stakeholder demo API listening on http://${host}:${port}`
+      : `LoanSlam Phase 0 lab API listening on http://${host}:${port}`,
+  );
+}
+
+async function runDemoLog(args: string[], env: CliEnv): Promise<CliResult> {
+  const parsed = parseDemoLogArgs(args, env);
+
+  if (parsed.help) {
+    return ok(demoLogHelpText());
+  }
+
+  const {
+    openDemoInteractionLog,
+    formatDemoLoggedEvent,
+    formatDemoLogSession,
+    formatDemoLogSummary,
+  } = await import("./lab/demoInteractionLog");
+  const log = openDemoInteractionLog(parsed.databaseUrl);
+
+  try {
+    if (parsed.command === "summary") {
+      return ok(formatDemoLogSummary(await log.summaries(parsed.limit)));
+    }
+
+    if (parsed.command === "session") {
+      return ok(
+        formatDemoLogSession({
+          events: await log.eventsForSession(parsed.conversationRef),
+          includeFullInternal: parsed.full,
+        }),
+      );
+    }
+
+    if (parsed.command === "turn") {
+      const event = await log.turnEvent(parsed.conversationRef, parsed.turn);
+
+      return ok(
+        event
+          ? formatDemoLoggedEvent({
+              event,
+              includeFullInternal: parsed.full,
+            })
+          : "No logged message/intake event found for that turn.",
+      );
+    }
+
+    return fail(demoLogHelpText());
+  } finally {
+    await log.close();
+  }
 }
 
 interface StochasticCliArgs {
@@ -584,6 +897,36 @@ interface RouteAuditCliArgs {
   markdownOutputPath?: string;
   help: boolean;
 }
+
+type DemoLogCliArgs =
+  | {
+      command: "summary";
+      databaseUrl: string;
+      limit: number;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "session";
+      databaseUrl: string;
+      conversationRef: string;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "turn";
+      databaseUrl: string;
+      conversationRef: string;
+      turn: number;
+      full: boolean;
+      help: boolean;
+    }
+  | {
+      command: "help";
+      databaseUrl: string;
+      full: boolean;
+      help: true;
+    };
 
 function parseStochasticArgs(args: string[]): StochasticCliArgs {
   const normalizedArgs = stripOptionSeparator(args);
@@ -707,6 +1050,120 @@ function parseRouteAuditArgs(args: string[]): RouteAuditCliArgs {
   return parsed;
 }
 
+function parseDemoLogArgs(args: string[], env: CliEnv): DemoLogCliArgs {
+  const normalizedArgs = stripOptionSeparator(args);
+  const databaseUrl =
+    readOption(normalizedArgs, "--database-url") ??
+    readOption(normalizedArgs, "--db") ??
+    readDemoInteractionDatabaseUrl(env);
+  const full = normalizedArgs.includes("--full");
+  const help =
+    normalizedArgs.includes("--help") ||
+    normalizedArgs.includes("-h") ||
+    normalizedArgs.length === 0;
+  const positional = positionalDemoLogArgs(normalizedArgs);
+  const command = positional[0];
+
+  if (help || !command) {
+    return {
+      command: "help",
+      databaseUrl: databaseUrl ?? "",
+      full,
+      help: true,
+    };
+  }
+
+  if (!databaseUrl) {
+    throw new Error(
+      `demo-log requires --database-url or ${demoInteractionDatabaseUrlHelp}.`,
+    );
+  }
+
+  if (command === "summary") {
+    const limitRaw = readOption(normalizedArgs, "--limit") ?? "20";
+    const limit = Number(limitRaw);
+
+    if (!Number.isInteger(limit) || limit <= 0) {
+      throw new Error("--limit must be a positive integer.");
+    }
+
+    return {
+      command,
+      databaseUrl,
+      limit,
+      full,
+      help: false,
+    };
+  }
+
+  if (command === "session") {
+    const conversationRef = positional[1];
+
+    if (!conversationRef) {
+      throw new Error("demo-log session requires a conversationRef.");
+    }
+
+    return {
+      command,
+      databaseUrl,
+      conversationRef,
+      full,
+      help: false,
+    };
+  }
+
+  if (command === "turn") {
+    const conversationRef = positional[1];
+    const turn = Number(positional[2]);
+
+    if (!conversationRef) {
+      throw new Error("demo-log turn requires a conversationRef.");
+    }
+
+    if (!Number.isInteger(turn) || turn <= 0) {
+      throw new Error("demo-log turn requires a positive turn number.");
+    }
+
+    return {
+      command,
+      databaseUrl,
+      conversationRef,
+      turn,
+      full,
+      help: false,
+    };
+  }
+
+  throw new Error(`Unknown demo-log command: ${command}`);
+}
+
+function positionalDemoLogArgs(args: readonly string[]): string[] {
+  const positional: string[] = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (
+      arg === "--db" ||
+      arg === "--database-url" ||
+      arg === "--limit" ||
+      arg === "--" ||
+      arg === undefined
+    ) {
+      index += arg === "--" ? 0 : 1;
+      continue;
+    }
+
+    if (arg === "--full" || arg === "--help" || arg === "-h") {
+      continue;
+    }
+
+    positional.push(arg);
+  }
+
+  return positional;
+}
+
 function readRequiredOptionValue(
   args: readonly string[],
   index: number,
@@ -791,11 +1248,45 @@ function helpText(): string {
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
+    "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
+    "  hell-week-stability               Classify repeated Hell Week runs from Postgres",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
+    "  demo-log summary|session|turn      Query stakeholder demo interaction logs",
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function hellWeekCompareHelpText(): string {
+  return [
+    "LoanSlam Hell Week report comparison",
+    "",
+    "Usage:",
+    "  hell-week-compare <baseline-report-or-run-dir> <candidate-report-or-run-dir> [--json]",
+    "",
+    "Reads two completed Hell Week report.json files, or run folders containing",
+    "report.json, and prints the aggregate and scenario-level movement needed",
+    "for the agentic tuning loop. No model calls are made.",
+    "",
+    "Options:",
+    "  --json                  Print compact JSON stdout",
+  ].join("\n");
+}
+
+function hellWeekStabilityHelpText(): string {
+  return [
+    "LoanSlam Hell Week stability report",
+    "",
+    "Usage:",
+    "  hell-week-stability --runs <run1,run2,run3> [--set-id <id>]",
+    "                      [--label <text>] [--out <dir>] [--db <url>] [--json]",
+    "  hell-week-stability --from-db <setId> [--out <dir>] [--db <url>] [--json]",
+    "",
+    "Loads completed Hell Week runs from Postgres, classifies repeated-run",
+    "stability (stable pass, stable failure, recurring failure, one-off failure,",
+    "mixed), stores the derived run-set report, and writes report.html/report.json.",
   ].join("\n");
 }
 
@@ -818,8 +1309,8 @@ function hellWeekHelpText(): string {
     "",
     "Usage:",
     "  hell-week [--profile full|smoke] [--out <dir>] [--concurrency <n>]",
-    "            [--signals on|off|auto] [--from <runDir>]",
-    "            [--judge-verdicts <path>] [--json]",
+    "            [--signals on|off|auto] [--from <runDir>|--from-db <runId>]",
+    "            [--store-db] [--db <url>] [--judge-verdicts <path>] [--json]",
     "",
     "Drives the full hostile scenario battery against the live model-backed",
     "engine, grades each scenario (hard safety floor + envelope, plus optional",
@@ -832,6 +1323,9 @@ function hellWeekHelpText(): string {
     "  --signals <mode>        on (default), off, or auto (env-driven)",
     "  --theme <name>          minimal (default) or jasmine (SpecRunner homage)",
     "  --from <runDir>         re-render from a captured run; no live calls",
+    "  --from-db <runId>       render from a persisted Postgres run; no live calls",
+    "  --store-db              persist the completed report to Postgres",
+    "  --db <url>              Postgres URL (default HELL_WEEK_DATABASE_URL, DEMO_INTERACTION_DATABASE_URL, or DATABASE_URL)",
     "  --judge-verdicts <p>    merge LLM judge verdicts (JSON array or JSONL)",
     "  --json                  print compact JSON summary",
     "",
@@ -882,15 +1376,46 @@ function serverHelpText(): string {
     "LoanSlam Phase 0 lab API",
     "",
     "Usage:",
-    "  serve [--port <port>]",
+    "  serve [--port <port>] [--host <host>] [--demo-only]",
     "",
     "Routes:",
     "  POST /sessions",
     "  POST /sessions/:conversationRef/messages",
     "  GET  /sessions/:conversationRef",
     "  POST /sessions/:conversationRef/reset",
+    "  POST /demo/sessions",
+    "  POST /demo/sessions/:conversationRef/messages",
+    "  POST /demo/sessions/:conversationRef/intake",
+    "  POST /demo/sessions/:conversationRef/reset",
     "",
-    "This is a local lab surface over processTurn, not the production API.",
+    "Options:",
+    "  --host h                      Bind address (default: HOST or 127.0.0.1)",
+    "  --demo-only                  Mount only demo-safe /demo routes",
+    "  --demo-state-token-secret s  Seal demo state into opaque continuation tokens",
+    "  --demo-access-token s        Require a bearer or x-demo-access-token value on /demo routes",
+    "  --demo-log-database-url u    Write owner logs to Postgres (default: DEMO_INTERACTION_DATABASE_URL or DATABASE_URL)",
+    "  --demo-static-host-root p     Serve the stakeholder host page from this built asset root",
+    "  --demo-static-widget-root p   Serve the stakeholder widget from this built asset root",
+    "  --no-demo-log                Disable demo interaction logging",
+    "",
+    "The /sessions routes are local lab evidence surfaces. Use --demo-only for stakeholder demos.",
+  ].join("\n");
+}
+
+function demoLogHelpText(): string {
+  return [
+    "LoanSlam stakeholder demo interaction log",
+    "",
+    "Usage:",
+    "  demo-log summary [--database-url <url>] [--limit <n>]",
+    "  demo-log session <conversationRef> [--database-url <url>] [--full]",
+    "  demo-log turn <conversationRef> <turn> [--database-url <url>] [--full]",
+    "",
+    "Default database URL:",
+    `  ${demoInteractionDatabaseUrlHelp}`,
+    "",
+    "The default view prints query-friendly decision receipts. Use --full for",
+    "owner-only internal JSON stored in the server-side Postgres database.",
   ].join("\n");
 }
 

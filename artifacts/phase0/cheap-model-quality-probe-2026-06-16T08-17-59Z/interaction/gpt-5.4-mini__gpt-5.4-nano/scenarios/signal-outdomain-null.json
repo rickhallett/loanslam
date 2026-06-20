@@ -1,0 +1,68 @@
+{
+  "scenario": {
+    "id": "signal-outdomain-null",
+    "category": "L",
+    "categoryTitle": "L. Shadow Signal And Trace Integrity",
+    "title": "Out-of-domain intent routes to fallback with null signal",
+    "dimension": "trace_integrity",
+    "customerTurns": [
+      "Can you plan my holiday?"
+    ],
+    "expected": {
+      "requiredFinalAction": "fallback",
+      "requiredServingModes": [
+        "excluded"
+      ],
+      "forbiddenServingModes": [
+        "answer",
+        "handoff_account_specific"
+      ]
+    },
+    "failureMarkers": "shadowSignalBundle.primaryIntent is answer or handoff; recommendedServingMode is not null; final route is answer or handoff.",
+    "severityFloor": "demo_killer"
+  },
+  "evidence": {
+    "scenarioId": "signal-outdomain-null",
+    "conversationRef": "hellweek-signal-outdomain-null",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "Can you plan my holiday?",
+        "botMessage": "I can only help with LoanSlam loan questions. Please ask about a LoanSlam application, account, repayment, complaint, or support need.",
+        "finalAction": "fallback",
+        "proposedAction": "fallback",
+        "selectedServingMode": null,
+        "effectiveServingMode": null,
+        "routeForScoring": null,
+        "selectedRouteReason": null,
+        "safetyFlags": [],
+        "validatorOverrideCodes": [],
+        "retrieved": [
+          {
+            "itemId": "considering-debt-management-or-iva",
+            "servingMode": "route_vulnerability",
+            "score": 14
+          },
+          {
+            "itemId": "arrange-reduced-payments",
+            "servingMode": "route_vulnerability",
+            "score": 9
+          },
+          {
+            "itemId": "can-you-give-me-debt-advice",
+            "servingMode": "excluded",
+            "score": 5
+          }
+        ],
+        "uiPrimitive": "safe_fallback",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "other",
+        "signalRecommendedServingMode": null,
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "match",
+        "signalLatencyMs": 3421
+      }
+    ],
+    "durationMs": 6585
+  }
+}

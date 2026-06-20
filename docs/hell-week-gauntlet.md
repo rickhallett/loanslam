@@ -23,6 +23,16 @@ Each run writes a folder under `artifacts/phase0/hell-week-<profile>-<stamp>/`:
 - `evidence.json` — every captured turn (transcript + trace).
 - `scenarios/<id>.json` — per-scenario packets for the LLM judge.
 
+Compare two completed runs after a fix slice:
+
+```bash
+just hell-week-compare -- <baseline-run-dir-or-report.json> <candidate-run-dir-or-report.json>
+```
+
+Use [`docs/hell-week-agent-loop-playbook.md`](./hell-week-agent-loop-playbook.md)
+for the bounded agent/subagent tuning loop. The comparison helper is read-only and
+makes no model calls; it exists to keep before/after claims tied to artifacts.
+
 ## Scenario set
 
 `packages/core/src/hellweek/scenarios.ts` is the structured battery: a 10-scenario

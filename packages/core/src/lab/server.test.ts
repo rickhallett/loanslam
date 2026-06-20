@@ -4,8 +4,12 @@ import type {
   TurnPlan,
   TurnPlanner,
 } from "@loanslam/contracts";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { openInMemoryDemoInteractionLog } from "./demoInteractionLog";
 import { createLabServer } from "./server";
 
 const corpus: CorpusItem[] = [
@@ -48,6 +52,7 @@ const answerPlan: TurnPlan = {
 
 const openServers: Array<{ close(callback?: (error?: Error) => void): void }> =
   [];
+const tempDirs: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
@@ -65,6 +70,9 @@ afterEach(async () => {
         }),
     ),
   );
+  for (const dir of tempDirs.splice(0)) {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 describe("lab server", () => {
@@ -117,6 +125,160 @@ describe("lab server", () => {
     });
   });
 
+  it("serves demo-safe responses without trusted lab routes in demo-only mode", async () => {
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+    });
+
+    const rawSession = await postJson(`${baseUrl}/sessions`, {});
+
+    expect(rawSession.status).toBe(404);
+
+    const created = await postJson(`${baseUrl}/demo/sessions`, {});
+
+    expect(created.status).toBe(201);
+    expect(created.body).toEqual({
+      conversationRef: "id-1",
+      continuationToken: expect.any(String),
+    });
+    expect(created.body.continuationToken).not.toContain("id-1");
+
+    const turn = await postJson(`${baseUrl}/demo/sessions/id-1/messages`, {
+      message: "Can I apply online?",
+      continuationToken: created.body.continuationToken,
+    });
+
+    expect(turn.status).toBe(200);
+    expect(turn.body).toMatchObject({
+      conversationRef: "id-1",
+      requestRef: "id-2",
+      customerMessage: "You can apply online.",
+      ui: {
+        primitive: "message",
+        message: "You can apply online.",
+      },
+      terminalSession: false,
+      hostContext: "general",
+      continuationToken: expect.any(String),
+      telemetry: {
+        type: "turn-telemetry",
+        turn: 1,
+        proposedAction: "answer",
+        finalAction: "answer",
+        servingMode: "answer",
+        retrieval: {
+          count: 1,
+          matches: [
+            {
+              itemId: "how-do-i-apply",
+              servingMode: "answer",
+            },
+          ],
+        },
+        source: "turn",
+      },
+    });
+    expect(turn.body).not.toHaveProperty("state");
+    expect(turn.body).not.toHaveProperty("trace");
+    expect(turn.body).not.toHaveProperty("plan");
+    expect(JSON.stringify(turn.body)).not.toContain("retrievedMatches");
+
+    const inspect = await getJson(`${baseUrl}/sessions/id-1`);
+
+    expect(inspect.status).toBe(404);
+  });
+
+  it("can require an access token for demo routes", async () => {
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+      demoAccessToken: "stakeholder-token",
+    });
+
+    const rejected = await postJson(`${baseUrl}/demo/sessions`, {});
+
+    expect(rejected.status).toBe(401);
+    expect(rejected.body).toEqual({
+      error: "demo_access_required",
+      message: "A valid demo access token is required.",
+    });
+
+    const accepted = await postJson(
+      `${baseUrl}/demo/sessions`,
+      {},
+      { "x-demo-access-token": "stakeholder-token" },
+    );
+
+    expect(accepted.status).toBe(201);
+    expect(accepted.body).toEqual({
+      conversationRef: "id-1",
+      continuationToken: expect.any(String),
+    });
+  });
+
+  it("logs demo endpoint decision receipts for owner queries", async () => {
+    const log = openInMemoryDemoInteractionLog();
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStateTokenSecret: "test-demo-secret",
+      demoInteractionLog: log,
+    });
+    const created = await postJson(`${baseUrl}/demo/sessions`, {});
+    const turn = await postJson(`${baseUrl}/demo/sessions/id-1/messages`, {
+      message: "Can I apply online?",
+      continuationToken: created.body.continuationToken,
+    });
+    const event = await log.turnEvent("id-1", 1);
+
+    expect(turn.status).toBe(200);
+    expect(event).toMatchObject({
+      eventType: "message",
+      conversationRef: "id-1",
+      turn: 1,
+      customerMessage: "Can I apply online?",
+      assistantMessage: "You can apply online.",
+      proposedAction: "answer",
+      finalAction: "answer",
+      servingMode: "answer",
+      retrievalCount: 1,
+      retrievedItemIds: ["how-do-i-apply"],
+    });
+    expect(JSON.stringify(event?.displayResponseJson)).not.toContain(
+      created.body.continuationToken,
+    );
+    expect(JSON.stringify(event?.internalJson)).toContain("retrievedMatches");
+  });
+
+  it("serves same-origin stakeholder static assets in demo-only mode", async () => {
+    const demoStaticAssets = tempStaticAssets();
+    const baseUrl = await startTestServer({
+      enableTrustedLabRoutes: false,
+      demoStaticAssets,
+    });
+
+    const host = await fetch(`${baseUrl}/`);
+    const widget = await fetch(`${baseUrl}/widget/`);
+    const widgetAsset = await fetch(`${baseUrl}/assets/app.js`);
+    const reportsIndex = await fetch(`${baseUrl}/reports/`);
+    const report = await fetch(`${baseUrl}/reports/hell-week-full.html`);
+    const inspect = await getJson(`${baseUrl}/sessions/id-1`);
+
+    expect(host.status).toBe(200);
+    expect(host.headers.get("content-type")).toContain("text/html");
+    expect(await host.text()).toContain("Review host");
+    expect(widget.status).toBe(200);
+    expect(await widget.text()).toContain("Widget shell");
+    expect(widgetAsset.status).toBe(200);
+    expect(widgetAsset.headers.get("cache-control")).toContain("immutable");
+    expect(await widgetAsset.text()).toContain("window.widgetLoaded");
+    expect(reportsIndex.status).toBe(200);
+    expect(await reportsIndex.text()).toContain("Evidence index");
+    expect(report.status).toBe(200);
+    expect(await report.text()).toContain("Hell Week report");
+    expect(inspect.status).toBe(404);
+  });
+
   it("returns safe JSON errors for unknown sessions and malformed JSON", async () => {
     const baseUrl = await startTestServer();
 
@@ -144,12 +306,15 @@ describe("lab server", () => {
   });
 });
 
-async function startTestServer(): Promise<string> {
+async function startTestServer(
+  options: Partial<Parameters<typeof createLabServer>[0]> = {},
+): Promise<string> {
   const server = createLabServer({
     corpus,
     plannerFactory: plannerFactory(),
     idFactory: sequenceIds(),
     now: () => new Date("2026-06-13T12:00:00.000Z"),
+    ...options,
   });
 
   openServers.push(server);
@@ -182,10 +347,40 @@ function sequenceIds(): () => string {
   return () => `id-${++next}`;
 }
 
-async function postJson(url: string, body: unknown) {
+function tempStaticAssets(): { hostRoot: string; widgetRoot: string } {
+  const dir = mkdtempSync(join(tmpdir(), "loanslam-demo-static-"));
+  tempDirs.push(dir);
+  const hostRoot = join(dir, "host");
+  const widgetRoot = join(dir, "widget");
+  mkdirSync(join(widgetRoot, "assets"), { recursive: true });
+  mkdirSync(hostRoot, { recursive: true });
+  writeFileSync(join(hostRoot, "index.html"), "<h1>Review host</h1>");
+  writeFileSync(join(hostRoot, "styles.css"), "body { color: black; }");
+  writeFileSync(join(hostRoot, "loader.js"), "window.hostLoaded = true;");
+  writeFileSync(join(hostRoot, "devtools.js"), "window.devtoolsLoaded = true;");
+  mkdirSync(join(hostRoot, "reports"), { recursive: true });
+  writeFileSync(join(hostRoot, "reports", "index.html"), "Evidence index");
+  writeFileSync(
+    join(hostRoot, "reports", "hell-week-full.html"),
+    "Hell Week report",
+  );
+  writeFileSync(join(widgetRoot, "index.html"), "<h1>Widget shell</h1>");
+  writeFileSync(
+    join(widgetRoot, "assets", "app.js"),
+    "window.widgetLoaded = true;",
+  );
+
+  return { hostRoot, widgetRoot };
+}
+
+async function postJson(
+  url: string,
+  body: unknown,
+  headers: Record<string, string> = {},
+) {
   const response = await fetch(url, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
 

@@ -20,6 +20,18 @@ build:
 format-check:
     npm run format:check
 
+# Generate the Prisma client from the committed Postgres schema.
+prisma-generate:
+    npx prisma generate
+
+# Apply committed Prisma migrations to the configured Postgres database.
+prisma-migrate-deploy:
+    npx prisma migrate deploy
+
+# Run the Vercel build locally against the configured Neon/Postgres database.
+vercel-build:
+    npm run vercel-build
+
 # Probe one planner-backed turn, e.g. -- --message "How do I apply?"
 core-turn *turn_flags:
     @npm --silent run core:turn -- {{turn_flags}}
@@ -48,6 +60,14 @@ route-audit *audit_flags:
 hell-week *hell_flags:
     @npm --silent run core:hell-week -- {{hell_flags}}
 
+# Compare two Hell Week report.json files or run folders.
+hell-week-compare *compare_flags:
+    @npm --silent run core:hell-week-compare -- {{compare_flags}}
+
+# Classify repeated Hell Week runs already persisted in Postgres.
+hell-week-stability *stability_flags:
+    @npm --silent run core:hell-week-stability -- {{stability_flags}}
+
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{chat_flags}}
@@ -59,6 +79,18 @@ core-serve *server_flags:
 # Start the local stdio MCP server for the lab API simulator.
 mcp-lab-api:
     @npm --silent run mcp:lab-api
+
+# Summarize stakeholder demo interactions from Postgres.
+demo-log-summary *log_flags:
+    @npm --silent run core:demo-log -- summary {{log_flags}}
+
+# Show a stakeholder demo conversation, e.g. just demo-log-session -- conv-ref --full
+demo-log-session *log_flags:
+    @npm --silent run core:demo-log -- session {{log_flags}}
+
+# Show one logged stakeholder demo turn, e.g. just demo-log-turn -- conv-ref 2 --full
+demo-log-turn *log_flags:
+    @npm --silent run core:demo-log -- turn {{log_flags}}
 
 # Start the lab API on 8787 and Vue console on 5173 together.
 lab:
@@ -115,7 +147,7 @@ demo:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 & \
+      npm --silent run core:serve -- --port 8788 --demo-only & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -126,7 +158,7 @@ demo:
       widget_pid=$!; \
       npm --silent run demo-host:dev & \
       host_pid=$!; \
-      echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, engine 8788)"; \
+      echo "LoanSlam demo -> open http://127.0.0.1:5180 (widget 5174, demo API 8788)"; \
       wait "$host_pid"
 
 # Start engine (8788), MAL review widget (5175) and MAL contact page (5181).
@@ -152,7 +184,7 @@ review:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 & \
+      npm --silent run core:serve -- --port 8788 --demo-only & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -163,7 +195,7 @@ review:
       widget_pid=$!; \
       npm --silent run review-host:dev & \
       host_pid=$!; \
-      echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, engine 8788)"; \
+      echo "MAL review demo -> open http://127.0.0.1:5181 (widget 5175, demo API 8788)"; \
       wait "$host_pid"
 
 # Start the local Vue lab console; pass Vite flags after -- when needed.
