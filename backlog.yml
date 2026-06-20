@@ -1,4 +1,26 @@
 items:
+  - id: stakeholder-demo-safe-display-boundary
+    title: Add a stakeholder-demo safe display boundary
+    status: todo
+    labels:
+      - needs-triage
+    priority: high
+    description: >
+      Return customer-facing UI plus compact decision telemetry from the demo API
+      without exposing full engine state, planner output, traces, validator
+      reasons, retrieval terms, or raw JSON to the browser.
+    acceptance:
+      - The demo response contains only customer-facing message, UI, terminal
+        status, host context, display telemetry, and any opaque state token needed
+        by the deployment shape.
+      - The review state-machine console still animates from compact telemetry
+        without requiring full ValidatedTurnResult data in the browser.
+      - Browser-visible responses omit plan, full trace, full state history,
+        collected fact values, validator reason text, route reason text, matched
+        terms, shadow-signal notes/queries, and raw JSON dumps.
+      - The local lab API remains available for trusted full-evidence development
+        use but is not exposed by the stakeholder deployment route.
+      - Typecheck, focused mapper/API tests, and a production build pass.
   - id: lab-api-mcp-session-simulator
     title: Build a Lab API MCP session simulator
     status: todo
