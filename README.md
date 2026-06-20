@@ -124,7 +124,8 @@ just vercel-build
 - `just core-simulate` runs the fixed journey suite and writes JSONL traces.
 - `just core-persona-simulate` runs persona scenarios and writes transcript/report artifacts.
 - `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
-- `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard.
+- `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
+- `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
 - `just demo` starts the Loanslam customer-facing iframe demo around the Phase 0 engine.
 - `just review` starts the MAL review demo around the same engine.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
@@ -148,7 +149,7 @@ packages/
   review-widget/                    MAL review widget demo
   review-host/                      Host page for the review widget
 prisma/
-  schema.prisma                     Postgres schema for owner-only demo interaction receipts
+  schema.prisma                     Postgres schema for owner-only demo interaction receipts and Hell Week evidence
 api/
   index.ts                          Vercel Function entrypoint for demo deployment
 data/
@@ -195,8 +196,19 @@ Use Hell Week for broad model-backed safety and routing evidence:
 
 ```bash
 just hell-week -- --profile smoke
+just hell-week -- --profile smoke --store-db --db "$DATABASE_URL"
 just hell-week-compare -- <baseline-run-dir> <candidate-run-dir>
+just hell-week-stability -- --runs <run1,run2,run3> --set-id <iteration-id> --db "$DATABASE_URL"
 ```
+
+Postgres-backed Hell Week reports are the durable source for replayable evidence.
+Single runs live in `hell_week_runs`, `hell_week_scenarios`,
+`hell_week_turns`, and `hell_week_grades`. Repeated-run stability reports live in
+`hell_week_run_sets`, `hell_week_run_set_members`,
+`hell_week_run_set_scenarios`, and `hell_week_run_set_pairwise_comparisons`.
+Use `core:hell-week -- --from-db <runId>` or
+`core:hell-week-stability -- --from-db <setId>` to regenerate report artifacts
+from Postgres.
 
 ```mermaid
 flowchart TD

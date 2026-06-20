@@ -155,6 +155,33 @@ Evidence is consumed by:
 Live lab API simulations are the strongest Phase 0 evidence for user-visible
 routing behaviour. Static tests are supporting guardrails.
 
+## Hell Week evidence persistence
+
+Hell Week evidence is persisted as test-run provenance, not product audit data.
+
+Single-run reports are stored in Postgres across:
+
+- `hell_week_runs`
+- `hell_week_scenarios`
+- `hell_week_turns`
+- `hell_week_grades`
+
+Repeated-run stability reports sit above those raw runs:
+
+- `hell_week_run_sets`
+- `hell_week_run_set_members`
+- `hell_week_run_set_scenarios`
+- `hell_week_run_set_pairwise_comparisons`
+
+The run-set layer is for questions like "which dents are stable, recurring, or
+one-off across three runs of the same iteration?" It links existing
+`hell_week_runs`; it must not duplicate raw turn evidence. Use
+`core:hell-week -- --store-db` to persist single runs,
+`core:hell-week -- --from-db <runId>` to replay one run from Postgres, and
+`core:hell-week-stability -- --runs <run1,run2,run3>` to store a repeated-run
+stability report. Use `core:hell-week-stability -- --from-db <setId>` to replay
+that derived report.
+
 ## Eventual productisation target
 
 After the Phase 0 exit gate, the product can wrap the proven engine with the
@@ -162,7 +189,7 @@ production stack:
 
 - Node 24 TypeScript API with route-local Zod contracts and safe middleware
 - thin Vue iframe widget that renders backend-decided UI primitives
-- durable transcript and audit persistence behind explicit ports
+- durable transcript, audit, and evidence persistence behind explicit ports
 - handoff intake and ticket webhook side effects
 - iframe/session/cookie hardening
 - AWS deployment and observability
@@ -198,7 +225,7 @@ around an accidental mismatch.
 
 ## Non-goals in the current architecture
 
-- No production audit database yet.
+- No production audit/customer database yet; current Postgres persistence is demo receipts and Phase 0 evidence provenance.
 - No real customer-account reads or writes.
 - No production ticket webhook side effects.
 - No autonomous self-learning.

@@ -10,6 +10,7 @@ import type {
 
 import { policyVersion } from "../policy";
 import { buildHellWeekReport } from "./aggregate";
+import { openHellWeekReportStore } from "./db";
 import { gradeScenario } from "./grade";
 import { renderHellWeekReportHtml } from "./htmlReport";
 import { renderHellWeekJasmineHtml } from "./jasmineReport";
@@ -27,7 +28,10 @@ type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
 export type HellWeekTheme = "minimal" | "jasmine";
 
-function renderReportHtml(report: HellWeekReport, theme: HellWeekTheme): string {
+function renderReportHtml(
+  report: HellWeekReport,
+  theme: HellWeekTheme,
+): string {
   return theme === "jasmine"
     ? renderHellWeekJasmineHtml(report)
     : renderHellWeekReportHtml(report);
@@ -89,7 +93,9 @@ function signalMeta(signalExtractor?: SignalExtractor): {
   return {
     enabled: true,
     ...(metadata?.model ? { model: metadata.model } : {}),
-    ...(metadata?.promptVersion ? { promptVersion: metadata.promptVersion } : {}),
+    ...(metadata?.promptVersion
+      ? { promptVersion: metadata.promptVersion }
+      : {}),
   };
 }
 
@@ -98,9 +104,7 @@ function grade(
   evidence: readonly HellWeekScenarioEvidence[],
   judgeVerdicts?: Map<string, JudgeVerdict>,
 ): HellWeekGrade[] {
-  const evidenceById = new Map(
-    evidence.map((item) => [item.scenarioId, item]),
-  );
+  const evidenceById = new Map(evidence.map((item) => [item.scenarioId, item]));
 
   return scenarios.map((scenario) => {
     const scenarioEvidence = evidenceById.get(scenario.id) ?? {
@@ -203,7 +207,9 @@ export async function executeHellWeek(
     scenarios,
     corpus: input.corpus,
     planner: input.planner,
-    ...(input.signalExtractor ? { signalExtractor: input.signalExtractor } : {}),
+    ...(input.signalExtractor
+      ? { signalExtractor: input.signalExtractor }
+      : {}),
     ...(input.concurrency ? { concurrency: input.concurrency } : {}),
     onScenarioComplete: (item, completed, total) => {
       const flag = item.error ? " [error]" : "";
@@ -282,6 +288,55 @@ export function renderFromRun({
     evidence,
     theme,
   });
+}
+
+export async function storeHellWeekReport({
+  report,
+  databaseUrl,
+}: {
+  report: HellWeekReport;
+  databaseUrl?: string;
+}): Promise<void> {
+  const store = openHellWeekReportStore(databaseUrl);
+
+  try {
+    await store.saveReport(report);
+  } finally {
+    await store.close();
+  }
+}
+
+export async function renderFromDatabase({
+  runId,
+  databaseUrl,
+  outBaseDir,
+  theme = "minimal",
+}: {
+  runId: string;
+  databaseUrl?: string;
+  outBaseDir: string;
+  theme?: HellWeekTheme;
+}): Promise<HellWeekRunArtifacts> {
+  const store = openHellWeekReportStore(databaseUrl);
+
+  try {
+    const report = await store.loadReport(runId);
+
+    if (!report) {
+      throw new Error(`No Hell Week run found in Postgres for ${runId}.`);
+    }
+
+    return writeRunArtifacts({
+      runDir: join(outBaseDir, report.runId),
+      runId: report.runId,
+      report,
+      scenarios: report.scenarios,
+      evidence: report.evidence,
+      theme,
+    });
+  } finally {
+    await store.close();
+  }
 }
 
 export function loadJudgeVerdicts(path: string): Map<string, JudgeVerdict> {

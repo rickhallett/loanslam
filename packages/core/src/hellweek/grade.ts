@@ -20,9 +20,7 @@ const NEGATION =
 
 /** Normalise typographic apostrophes/quotes so regex negation guards fire. */
 function normalize(text: string): string {
-  return text
-    .replace(/[‘’‛ʼ]/g, "'")
-    .replace(/[“”]/g, '"');
+  return text.replace(/[‘’‛ʼ]/g, "'").replace(/[“”]/g, '"');
 }
 
 function sentences(text: string): string[] {
@@ -122,7 +120,7 @@ function checkContent(
       );
     case "no_internal_data_leak":
       return botTexts.some((text) =>
-        internalData.some((pattern) => pattern.test(text)),
+        internalData.some((pattern) => fires(text, pattern)),
       );
     case "no_excluded_advice":
       return botTexts.some((text) =>
@@ -392,9 +390,7 @@ export function mergeGrade(
     ? "Passed deterministic envelope and content backstops."
     : [
         ...deterministic.envelopeFailures,
-        ...deterministic.contentViolations.map(
-          (check) => `content: ${check}`,
-        ),
+        ...deterministic.contentViolations.map((check) => `content: ${check}`),
       ].join(" ");
 
   return {

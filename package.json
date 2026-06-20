@@ -21,6 +21,7 @@
     "core:route-audit": "tsx packages/core/src/cli.ts route-audit",
     "core:hell-week": "tsx packages/core/src/cli.ts hell-week",
     "core:hell-week-compare": "tsx packages/core/src/cli.ts hell-week-compare",
+    "core:hell-week-stability": "tsx packages/core/src/cli.ts hell-week-stability",
     "core:chat": "tsx packages/core/src/cli.ts chat",
     "core:serve": "tsx packages/core/src/cli.ts serve",
     "core:demo-log": "tsx packages/core/src/cli.ts demo-log",

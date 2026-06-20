@@ -36,9 +36,17 @@ import { buildRouteAuditArtifacts } from "./routeAudit";
 import {
   executeHellWeek,
   loadJudgeVerdicts,
+  renderFromDatabase,
   renderFromRun,
+  storeHellWeekReport,
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
+import { openHellWeekReportStore } from "./hellweek/db";
+import {
+  buildHellWeekStabilityReport,
+  writeHellWeekStabilityArtifacts,
+  type HellWeekStabilityArtifacts,
+} from "./hellweek/stability";
 import {
   compareHellWeekReportsFromPaths,
   formatHellWeekComparison,
@@ -118,6 +126,10 @@ export async function runCli(
       return runHellWeekCompareCommand(rest);
     }
 
+    if (command === "hell-week-stability") {
+      return await runHellWeekStabilityCommand(rest, env);
+    }
+
     if (command === "chat") {
       return await runInteractiveChat(rest, env, plannerFactory, options);
     }
@@ -165,6 +177,10 @@ function readDemoInteractionDatabaseUrl(env: CliEnv): string | undefined {
     env.POSTGRES_PRISMA_URL ??
     env.POSTGRES_URL
   );
+}
+
+function readHellWeekDatabaseUrl(env: CliEnv): string | undefined {
+  return env.HELL_WEEK_DATABASE_URL ?? readDemoInteractionDatabaseUrl(env);
 }
 
 async function runTurn(
@@ -442,6 +458,42 @@ function hellWeekSummary(
     .join("\n");
 }
 
+function hellWeekStabilitySummary(
+  artifacts: HellWeekStabilityArtifacts,
+  asJson: boolean,
+): string {
+  const { report } = artifacts;
+
+  if (asJson) {
+    return JSON.stringify({
+      setId: report.setId,
+      profile: report.profile,
+      runCount: report.runCount,
+      scenarioCount: report.scenarioCount,
+      summary: report.summary,
+      scenarioSetChanged: report.scenarioSetChanged,
+      reportHtmlPath: artifacts.reportHtmlPath,
+      runDir: artifacts.runDir,
+    });
+  }
+
+  return [
+    `Hell Week stability: ${report.label}`,
+    `Runs: ${report.runCount} · Scenarios: ${report.scenarioCount}`,
+    `Stable pass: ${report.summary.stablePass}`,
+    `Stable failure: ${report.summary.stableFailure}`,
+    `Recurring failure: ${report.summary.recurringFailure}`,
+    `One-off failure: ${report.summary.oneOffFailure}`,
+    `Mixed: ${report.summary.mixed}`,
+    report.scenarioSetChanged
+      ? "Scenario sets changed: inspect mixed/missing rows before acting."
+      : "Scenario sets: stable",
+    "",
+    `Report: ${artifacts.reportHtmlPath}`,
+    `Run dir: ${artifacts.runDir}`,
+  ].join("\n");
+}
+
 async function runHellWeekCommand(
   args: string[],
   env: CliEnv,
@@ -458,10 +510,16 @@ async function runHellWeekCommand(
   const concurrencyRaw = readOption(normalized, "--concurrency");
   const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
   const fromDir = readOption(normalized, "--from");
+  const fromDb = readOption(normalized, "--from-db");
   const judgePath = readOption(normalized, "--judge-verdicts");
   const signalsMode = readOption(normalized, "--signals") ?? "on";
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
+  const storeDb = normalized.includes("--store-db");
+  const databaseUrl =
+    readOption(normalized, "--database-url") ??
+    readOption(normalized, "--db") ??
+    readHellWeekDatabaseUrl(env);
 
   if (
     concurrency !== undefined &&
@@ -476,12 +534,34 @@ async function runHellWeekCommand(
 
   const judgeVerdicts = judgePath ? loadJudgeVerdicts(judgePath) : undefined;
 
+  if (fromDir && fromDb) {
+    return fail("Use only one of --from or --from-db.");
+  }
+
+  if (fromDb) {
+    const artifacts = await renderFromDatabase({
+      runId: fromDb,
+      outBaseDir,
+      theme,
+      ...(databaseUrl ? { databaseUrl } : {}),
+    });
+    return ok(hellWeekSummary(artifacts, asJson));
+  }
+
   if (fromDir) {
     const artifacts = renderFromRun({
       runDir: fromDir,
       theme,
       ...(judgeVerdicts ? { judgeVerdicts } : {}),
     });
+
+    if (storeDb) {
+      await storeHellWeekReport({
+        report: artifacts.report,
+        ...(databaseUrl ? { databaseUrl } : {}),
+      });
+    }
+
     return ok(hellWeekSummary(artifacts, asJson));
   }
 
@@ -498,6 +578,13 @@ async function runHellWeekCommand(
     ...(judgeVerdicts ? { judgeVerdicts } : {}),
     onProgress: (message) => process.stderr.write(`${message}\n`),
   });
+
+  if (storeDb) {
+    await storeHellWeekReport({
+      report: artifacts.report,
+      ...(databaseUrl ? { databaseUrl } : {}),
+    });
+  }
 
   return ok(hellWeekSummary(artifacts, asJson));
 }
@@ -527,6 +614,78 @@ function runHellWeekCompareCommand(args: string[]): CliResult {
       ? JSON.stringify(toHellWeekComparisonJson(comparison))
       : formatHellWeekComparison(comparison),
   );
+}
+
+async function runHellWeekStabilityCommand(
+  args: string[],
+  env: CliEnv,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekStabilityHelpText());
+  }
+
+  const fromDb = readOption(normalized, "--from-db");
+  const runsRaw = readOption(normalized, "--runs");
+  const setId =
+    readOption(normalized, "--set-id") ??
+    `hell-week-stability-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+  const label = readOption(normalized, "--label");
+  const outBaseDir = readOption(normalized, "--out") ?? defaultTraceDir;
+  const asJson = normalized.includes("--json");
+  const databaseUrl =
+    readOption(normalized, "--database-url") ??
+    readOption(normalized, "--db") ??
+    readHellWeekDatabaseUrl(env);
+
+  const store = openHellWeekReportStore(databaseUrl);
+
+  try {
+    if (fromDb) {
+      const report = await store.loadStabilityReport(fromDb);
+
+      if (!report) {
+        return fail(
+          `No Hell Week stability report found in Postgres for ${fromDb}.`,
+        );
+      }
+
+      return ok(
+        hellWeekStabilitySummary(
+          writeHellWeekStabilityArtifacts({ report, outBaseDir }),
+          asJson,
+        ),
+      );
+    }
+
+    const runIds = (runsRaw ?? "")
+      .split(",")
+      .map((runId) => runId.trim())
+      .filter(Boolean);
+
+    if (runIds.length < 2) {
+      return fail(hellWeekStabilityHelpText());
+    }
+
+    const runs = await store.loadReports(runIds);
+    const report = buildHellWeekStabilityReport({
+      setId,
+      ...(label ? { label } : {}),
+      runs,
+    });
+
+    await store.saveStabilityReport(report);
+
+    return ok(
+      hellWeekStabilitySummary(
+        writeHellWeekStabilityArtifacts({ report, outBaseDir }),
+        asJson,
+      ),
+    );
+  } finally {
+    await store.close();
+  }
 }
 
 async function runInteractiveChat(
@@ -1090,6 +1249,7 @@ function helpText(): string {
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
     "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
+    "  hell-week-stability               Classify repeated Hell Week runs from Postgres",
     "  chat [--trace]                    Drive the engine turn by turn",
     "  serve [--port <port>]             Start the dev-only lab API",
     "  demo-log summary|session|turn      Query stakeholder demo interaction logs",
@@ -1115,6 +1275,21 @@ function hellWeekCompareHelpText(): string {
   ].join("\n");
 }
 
+function hellWeekStabilityHelpText(): string {
+  return [
+    "LoanSlam Hell Week stability report",
+    "",
+    "Usage:",
+    "  hell-week-stability --runs <run1,run2,run3> [--set-id <id>]",
+    "                      [--label <text>] [--out <dir>] [--db <url>] [--json]",
+    "  hell-week-stability --from-db <setId> [--out <dir>] [--db <url>] [--json]",
+    "",
+    "Loads completed Hell Week runs from Postgres, classifies repeated-run",
+    "stability (stable pass, stable failure, recurring failure, one-off failure,",
+    "mixed), stores the derived run-set report, and writes report.html/report.json.",
+  ].join("\n");
+}
+
 function routeAuditHelpText(): string {
   return [
     "LoanSlam Phase 0 route audit",
@@ -1134,8 +1309,8 @@ function hellWeekHelpText(): string {
     "",
     "Usage:",
     "  hell-week [--profile full|smoke] [--out <dir>] [--concurrency <n>]",
-    "            [--signals on|off|auto] [--from <runDir>]",
-    "            [--judge-verdicts <path>] [--json]",
+    "            [--signals on|off|auto] [--from <runDir>|--from-db <runId>]",
+    "            [--store-db] [--db <url>] [--judge-verdicts <path>] [--json]",
     "",
     "Drives the full hostile scenario battery against the live model-backed",
     "engine, grades each scenario (hard safety floor + envelope, plus optional",
@@ -1148,6 +1323,9 @@ function hellWeekHelpText(): string {
     "  --signals <mode>        on (default), off, or auto (env-driven)",
     "  --theme <name>          minimal (default) or jasmine (SpecRunner homage)",
     "  --from <runDir>         re-render from a captured run; no live calls",
+    "  --from-db <runId>       render from a persisted Postgres run; no live calls",
+    "  --store-db              persist the completed report to Postgres",
+    "  --db <url>              Postgres URL (default HELL_WEEK_DATABASE_URL, DEMO_INTERACTION_DATABASE_URL, or DATABASE_URL)",
     "  --judge-verdicts <p>    merge LLM judge verdicts (JSON array or JSONL)",
     "  --json                  print compact JSON summary",
     "",

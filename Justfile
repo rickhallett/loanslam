@@ -64,6 +64,10 @@ hell-week *hell_flags:
 hell-week-compare *compare_flags:
     @npm --silent run core:hell-week-compare -- {{compare_flags}}
 
+# Classify repeated Hell Week runs already persisted in Postgres.
+hell-week-stability *stability_flags:
+    @npm --silent run core:hell-week-stability -- {{stability_flags}}
+
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{chat_flags}}

@@ -1710,6 +1710,8 @@ every agent on the machine sees the same situation.
 | Start the full lab | `just lab` |
 | Start the lab API | `just core-serve -- --port 8787` |
 | Start the lab UI | `just lab-ui` |
+| Persist Hell Week evidence | `just hell-week -- --profile smoke --store-db --db "$DATABASE_URL"` |
+| Build Hell Week stability report | `just hell-week-stability -- --runs <run1,run2,run3> --set-id <id> --db "$DATABASE_URL"` |
 
 ## Commit Attribution
 AI commits MUST include:
@@ -1721,3 +1723,4 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Keep handoff docs concise; link to source docs rather than duplicating them.
 - Markdown context cleanup is tracked in `docs/prds/2026-06-15-markdown-context-pruning-spec.md`; handle it before trusting old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
+- Hell Week evidence is Postgres-backed: single runs use `hell_week_runs`/`hell_week_scenarios`/`hell_week_turns`/`hell_week_grades`; repeated-run stability reports use `hell_week_run_sets` and related run-set tables.
