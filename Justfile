@@ -49,7 +49,7 @@ prisma-generate:
 prisma-migrate-deploy:
     npx prisma migrate deploy
 
-# Run the Vercel build locally against the configured Neon/Postgres database.
+# Run the Vercel build path locally; applies committed Prisma migrations to the configured database.
 vercel-build:
     npm run vercel-build
 

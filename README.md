@@ -114,6 +114,11 @@ just prisma-migrate-deploy
 just vercel-build
 ```
 
+`just prisma-migrate-deploy` and `just vercel-build` are database/deployment
+commands, not routine local checks. `just vercel-build` runs `prisma migrate
+deploy` against the configured migration database before building the deployed
+review assets.
+
 ## Which surface should I use?
 
 - `just core-turn` is for one message and one `ValidatedTurnResult`.
@@ -246,6 +251,9 @@ decision log: project-local TypeScript imports stay extensionless, while
 third-party package export paths remain allowed to use their published names.
 `just build` includes the same guard before the workspace build; its stdout and
 stderr are part of the verification evidence.
+
+Do not use `just vercel-build` as a substitute for these local gates. It follows
+the deployment build path and can apply committed Prisma migrations.
 
 The Astro site lives in `site/` outside the root npm workspaces. For site changes,
 run:
