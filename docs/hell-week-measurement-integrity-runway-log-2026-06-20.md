@@ -50,3 +50,37 @@ npx vitest run packages/core/src/hellweek/grade.test.ts
 ```
 
 Result: `1` test file passed, `14` tests passed.
+
+## Section 2: Persisted Safety-Flag State Leak
+
+### Finding
+
+`mergeTraceSafetyFlags` already cleared stale handoff-route flags when a turn
+resolved to a safe public `answer` with selected serving mode `answer`. The leak
+was one boundary later: `mergeState` always merged the previous
+`state.safetyFlags` back into persisted conversation state.
+
+### Conclusion
+
+Trace behavior and persisted-state behavior need to diverge intentionally:
+
+- trace safety flags continue to describe the current turn and scoring context;
+- persisted state only carries previous safety flags forward when the handoff
+  path remains active through `request_handoff_intake`, `escalate`, or
+  `create_ticket`;
+- a clean answer turn clears stale handoff fields, handoff-pending state, and
+  handoff-route safety flags.
+
+### Hypothesis
+
+This removes the sticky-state route/action carryover that can cause a public FAQ
+after a handoff attempt to keep looking like account-specific or human-support
+state in later turns.
+
+### Verification
+
+```text
+npx vitest run packages/core/src/engine.test.ts
+```
+
+Result: `1` test file passed, `23` tests passed.

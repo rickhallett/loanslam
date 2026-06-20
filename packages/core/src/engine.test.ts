@@ -558,6 +558,33 @@ describe("processTurn", () => {
     expect(result.state.requestedFields).toEqual([]);
   });
 
+  it("clears stale handoff-route state after a safe answer turn", async () => {
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request", "change_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "Where can I apply online?",
+      planner: answerPlanner(),
+      corpus,
+      now: new Date("2026-06-13T12:06:50.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.trace).toMatchObject({
+      selectedServingMode: "answer",
+      effectiveServingMode: "answer",
+      safetyFlags: [],
+    });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.safetyFlags).toEqual([]);
+    expect(result.state.handoffPending).toBe(false);
+  });
+
   it("confirms handoff when all standard intake fields are already present", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

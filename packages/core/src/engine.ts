@@ -956,6 +956,8 @@ function mergeState({
   safetyFlags: ConversationState["safetyFlags"];
   finalAction: ConversationState["lastAction"];
 }): ConversationState {
+  const handoffPending = nextHandoffPending(state, finalAction);
+
   return {
     ...state,
     history: [
@@ -978,10 +980,38 @@ function mergeState({
       ...collectedFacts,
     },
     requestedFields: [...new Set(requestedFields)],
-    safetyFlags: [...new Set([...state.safetyFlags, ...safetyFlags])],
+    safetyFlags: nextStateSafetyFlags({
+      state,
+      safetyFlags,
+      finalAction,
+      handoffPending,
+    }),
     lastAction: finalAction,
-    handoffPending: nextHandoffPending(state, finalAction),
+    handoffPending,
   };
+}
+
+function nextStateSafetyFlags({
+  state,
+  safetyFlags,
+  finalAction,
+  handoffPending,
+}: {
+  state: ConversationState;
+  safetyFlags: ConversationState["safetyFlags"];
+  finalAction: ConversationState["lastAction"];
+  handoffPending: boolean;
+}): ConversationState["safetyFlags"] {
+  if (
+    handoffPending &&
+    (finalAction === "request_handoff_intake" ||
+      finalAction === "escalate" ||
+      finalAction === "create_ticket")
+  ) {
+    return mergeSafetyFlags(state.safetyFlags, safetyFlags);
+  }
+
+  return mergeSafetyFlags(safetyFlags);
 }
 
 function nextHandoffPending(
