@@ -231,13 +231,21 @@ These commands do not call a model. They check the local TypeScript workspace:
 
 ```bash
 just test
+just source-policy
 just typecheck
 just build
+just verify
 just format-check
 ```
 
 Run them when you need verification. They are not automatically required for every
 docs-only change.
+
+`just source-policy` enforces the Phase 0 TypeScript source convention from the
+decision log: project-local TypeScript imports stay extensionless, while
+third-party package export paths remain allowed to use their published names.
+`just build` includes the same guard before the workspace build; its stdout and
+stderr are part of the verification evidence.
 
 ## Source-of-truth docs
 
