@@ -8,6 +8,13 @@ coverage/
 packages/core/src/generated/prisma/
 var/
 
+# Local secret caches generated from encrypted SOPS sources.
+.env
+.env.*
+!.env.example
+secrets/*.env
+secrets/*.env.local
+
 # Phase 0 local evidence artifacts.
 traces/
 reports/

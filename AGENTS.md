@@ -3,19 +3,49 @@
 PROTOCOL OVERRIDE: BLUE - ignore the protocol for this repository.
 
 ## Commit Attribution
+
 AI commits MUST include:
+
 ```text
 Co-Authored-By: (the agent's name and attribution byline)
 ```
 
 ## Working Notes
+
 - Keep handoff docs concise; link to source docs rather than duplicating them.
 - Markdown context cleanup is tracked in `docs/prds/2026-06-15-markdown-context-pruning-spec.md`; handle it before trusting old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
+## Git Branch Discipline
+
+- Check `git status --short --branch`, `git branch -vv`, and relevant upstream refs before moving branch pointers.
+- Treat `main` as canonical unless the user explicitly names another base.
+- For deploy branches such as `dev` and `staging`, prefer fast-forward-only updates from `main`; use non-force pushes and stop on ancestry surprises.
+- Inside worktrees, normal `feature/*` and `fix/*` branch conventions apply; merge completed branches back into the owning worktree branch.
+- Make atomic commits. Preserve the commit history when merging; never squash.
+- Do not delete, reset, rebase, or force-push branches unless explicitly requested.
+
+## Worktree Discipline
+
+- Start worktree-sensitive tasks with `git worktree list --porcelain`.
+- Work in the checkout the user named; do not assume sibling worktrees have the same files, env, or ignored context.
+- When creating worktrees, copy required ignored local context such as `.claude/`, `.fallow/`, and `.env.example`; Git does not copy ignored files.
+- Do not copy stale `.env` or `.env.local` between worktrees. Render fresh local caches from encrypted secrets instead.
+- Do not move a branch that is checked out in another worktree; operate from that worktree or choose a non-destructive path.
+- Preserve old branch state before reparenting or cleanup, usually with an archive branch rather than destructive history edits.
+
+## Secret Discipline
+
+- Canonical secret values live in encrypted `secrets/*.env.sops`; `.env.local`, `.env.staging`, and `.env.production` are ignored generated caches.
+- Use `just secrets-status` before secret-dependent work; use `just secrets-render <env>` for normal local runs and `just secrets-run <env> -- <command>` for no-file execution.
+- Treat legacy `.env` as deprecated local state; do not create or update it unless the user explicitly asks.
+- Treat Vercel envs and Railway variables as deployment sinks, not source of truth; sync with `just secrets-sync-* <env> -- --dry-run` first, then `--apply` only when asked.
+- Never print, commit, or paste decrypted secret values.
+
 ## Miscellaneous
 
 ### Small zsh footgun
+
 Using path as a loop variable clobbered zsh’s $path/$PATH. No repo state changed; I’m rerunning the status scan with a safer variable name.
 
 ```zsh
@@ -24,4 +54,3 @@ while IFS= read -r wt_path; do
   git -C "$wt_path" status --short --branch
 done < <(git worktree list --porcelain | awk '/^worktree / {print $2}')
 ```
-
