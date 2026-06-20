@@ -8,10 +8,21 @@
   // The only change from the original is the default widget URL (the review
   // widget serves the WidgetApp at its root, on port 5175).
 
+  var config = window.malChatConfig || {};
   var widgetUrl =
     window.malChatConfig && window.malChatConfig.widgetUrl
       ? window.malChatConfig.widgetUrl
       : "http://127.0.0.1:5175";
+  var brandName = config.brandName || "LoanSlam";
+  var launcherOpenLabel = config.launcherOpenLabel || "Open " + brandName + " chat";
+  var launcherCloseLabel =
+    config.launcherCloseLabel || "Close " + brandName + " chat";
+  var panelLabel = config.panelLabel || brandName + " Chat Widget";
+  var launcherColor = config.launcherColor || "#1a8787";
+  var launcherFocusColor = config.launcherFocusColor || "#f0a040";
+  var frostBackground = config.frostBackground || "rgba(244,247,246,.35)";
+  var panelRadius = config.panelRadius || "16px";
+  var autoOpenOnReady = config.autoOpenOnReady !== false;
 
   var widgetOrigin;
   try {
@@ -36,19 +47,25 @@
       "#mal-launcher{" +
       "position:fixed;bottom:24px;right:24px;" +
       "width:60px;height:60px;border-radius:50%;" +
-      "background:#1a8787;border:none;cursor:pointer;" +
+      "background:" +
+      launcherColor +
+      ";border:none;cursor:pointer;" +
       "box-shadow:0 4px 20px rgba(0,0,0,.28);" +
       "z-index:9999;display:none;" +
       "align-items:center;justify-content:center;" +
       "transition:transform .18s,opacity .18s;" +
       "}" +
       "#mal-launcher:hover{transform:scale(1.08);}" +
-      "#mal-launcher:focus-visible{outline:3px solid #f0a040;outline-offset:3px;}" +
+      "#mal-launcher:focus-visible{outline:3px solid " +
+      launcherFocusColor +
+      ";outline-offset:3px;}" +
       "#mal-panel{" +
       "position:fixed;bottom:96px;right:24px;" +
       "width:500px;height:700px;" +
       "max-width:calc(100vw - 32px);max-height:calc(100vh - 120px);" +
-      "border-radius:16px;overflow:hidden;" +
+      "border-radius:" +
+      panelRadius +
+      ";overflow:hidden;" +
       "box-shadow:0 8px 40px rgba(0,0,0,.22);" +
       "z-index:9998;display:none;" +
       "transition:opacity .15s;" +
@@ -59,7 +76,9 @@
       // numbers; clicking it closes the panel.
       "#mal-frost{" +
       "position:fixed;inset:0;z-index:9997;" +
-      "background:rgba(244,247,246,.35);" +
+      "background:" +
+      frostBackground +
+      ";" +
       "backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);" +
       "opacity:0;pointer-events:none;" +
       "transition:opacity .18s ease;" +
@@ -78,7 +97,7 @@
   function createLauncher() {
     launcher = document.createElement("button");
     launcher.id = "mal-launcher";
-    launcher.setAttribute("aria-label", "Open LoanSlam chat");
+    launcher.setAttribute("aria-label", launcherOpenLabel);
     launcher.setAttribute("aria-expanded", "false");
     launcher.innerHTML = CHAT_ICON;
     launcher.addEventListener("click", togglePanel);
@@ -89,11 +108,11 @@
     panel = document.createElement("div");
     panel.id = "mal-panel";
     panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "LoanSlam Chat Widget");
+    panel.setAttribute("aria-label", panelLabel);
 
     iframe = document.createElement("iframe");
     iframe.src = widgetUrl;
-    iframe.title = "LoanSlam Chat Widget";
+    iframe.title = panelLabel;
     iframe.setAttribute(
       "sandbox",
       "allow-scripts allow-same-origin allow-forms",
@@ -113,7 +132,7 @@
     var openSection = document.getElementById("contact-section");
     if (openSection) openSection.removeAttribute("data-revealed");
     updateDemoState();
-    launcher.setAttribute("aria-label", "Close LoanSlam chat");
+    launcher.setAttribute("aria-label", launcherCloseLabel);
     launcher.setAttribute("aria-expanded", "true");
     launcher.innerHTML = CLOSE_ICON;
     iframe.contentWindow.postMessage({ type: "open" }, widgetOrigin);
@@ -124,7 +143,7 @@
     panel.style.display = "none";
     document.body.classList.remove("mal-open");
     if (frost) frost.classList.remove("is-visible");
-    launcher.setAttribute("aria-label", "Open LoanSlam chat");
+    launcher.setAttribute("aria-label", launcherOpenLabel);
     launcher.setAttribute("aria-expanded", "false");
     launcher.innerHTML = CHAT_ICON;
     iframe.contentWindow.postMessage({ type: "close" }, widgetOrigin);
@@ -183,7 +202,7 @@
 
     if (msg.type === "ready") {
       launcher.style.display = "flex";
-      openPanel();
+      if (autoOpenOnReady) openPanel();
     } else if (msg.type === "close-requested") {
       closePanel();
     } else if (msg.type === "skip-to-contacts") {

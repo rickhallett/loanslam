@@ -6,6 +6,8 @@
   },
   "channels": [
     {
+      "type": "new-loan",
+      "eyebrow": "New loan support",
       "title": "Taking out a new loan?",
       "phone": "01202 122699",
       "sms": "07984 393896",
@@ -13,6 +15,8 @@
       "note": "Please include your full name when emailing."
     },
     {
+      "type": "vulnerability",
+      "eyebrow": "Repayment support",
       "title": "Struggling with repayments?",
       "phone": "01202 138850",
       "sms": "07984 352847",
@@ -20,6 +24,8 @@
       "note": "If you’re in difficulty, reach out — ignoring the problem only makes it worse."
     },
     {
+      "type": "update-settle",
+      "eyebrow": "Existing loan support",
       "title": "Update details or settle your loan?",
       "phone": "01202 138850",
       "sms": "07984 352847",
@@ -32,5 +38,8 @@
     "sms": "Text",
     "email": "Email"
   },
-  "debtAdviceHtml": "You can always seek free, independent and impartial debt advice from <a href=\"https://www.stepchange.org\">StepChange</a> (0800 138 1111) or <a href=\"https://www.moneyhelper.org.uk/debt-advice-locator\">MoneyHelper</a> (0800 138 7777)."
+  "debtAdvice": {
+    "title": "Independent debt advice",
+    "bodyHtml": "Free, impartial help is available from <a href=\"https://www.stepchange.org\">StepChange</a> on 0800 138 1111 and <a href=\"https://www.moneyhelper.org.uk/debt-advice-locator\">MoneyHelper</a> on 0800 138 7777."
+  }
 }

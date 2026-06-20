@@ -135,6 +135,8 @@ export interface HomeCopy {
 export interface ContactCopy {
   head: PageHead;
   channels: {
+    type: string;
+    eyebrow: string;
     title: string;
     phone: string;
     sms: string;
@@ -146,7 +148,10 @@ export interface ContactCopy {
     sms: string;
     email: string;
   };
-  debtAdviceHtml: string;
+  debtAdvice: {
+    title: string;
+    bodyHtml: string;
+  };
 }
 
 export interface FaqPageCopy {
@@ -579,11 +584,14 @@ function validateHome(raw: unknown): HomeCopy {
 function validateContact(raw: unknown): ContactCopy {
   const root = objectAt(raw, 'contact');
   const channelLabels = objectAt(root.channelLabels, 'contact.channelLabels');
+  const debtAdvice = objectAt(root.debtAdvice, 'contact.debtAdvice');
   return {
     head: pageHeadAt(root.head, 'contact.head'),
     channels: arrayAt(root.channels, 'contact.channels').map((item, index) => {
       const channel = objectAt(item, `contact.channels[${index}]`);
       return {
+        type: stringAt(channel.type, `contact.channels[${index}].type`),
+        eyebrow: stringAt(channel.eyebrow, `contact.channels[${index}].eyebrow`),
         title: stringAt(channel.title, `contact.channels[${index}].title`),
         phone: stringAt(channel.phone, `contact.channels[${index}].phone`),
         sms: stringAt(channel.sms, `contact.channels[${index}].sms`),
@@ -596,7 +604,10 @@ function validateContact(raw: unknown): ContactCopy {
       sms: stringAt(channelLabels.sms, 'contact.channelLabels.sms'),
       email: stringAt(channelLabels.email, 'contact.channelLabels.email'),
     },
-    debtAdviceHtml: stringAt(root.debtAdviceHtml, 'contact.debtAdviceHtml'),
+    debtAdvice: {
+      title: stringAt(debtAdvice.title, 'contact.debtAdvice.title'),
+      bodyHtml: stringAt(debtAdvice.bodyHtml, 'contact.debtAdvice.bodyHtml'),
+    },
   };
 }
 
