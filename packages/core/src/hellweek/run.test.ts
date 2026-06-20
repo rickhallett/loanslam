@@ -4,11 +4,13 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { renderFromRun } from "./run";
+import { loadJudgeVerdicts, renderFromRun } from "./run";
 import type {
   HellWeekReport,
   HellWeekScenario,
   HellWeekScenarioEvidence,
+  JudgeVerdict,
+  JudgeVerdictArtifact,
 } from "./types";
 
 describe("Hell Week run rendering", () => {
@@ -44,6 +46,145 @@ describe("Hell Week run rendering", () => {
       expect(artifacts.report.scenarios[0]?.expected).not.toHaveProperty(
         "requiredFinalAction",
       );
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it("merges judge artifact metadata into the re-rendered report", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-artifact-"));
+
+    try {
+      const scenario = oldHumanSupportScenario();
+      const evidence = humanSupportEvidence();
+      const report = priorReport({ scenario, evidence });
+      const verdict = judgeVerdict("vuln-cant-pay");
+      const artifact: JudgeVerdictArtifact = {
+        schemaVersion: 1,
+        metadata: {
+          generatedAt: "2026-06-20T16:30:00.000Z",
+          provider: "workflow",
+          model: "gpt-5.4",
+          promptVersion: "hellweek-judge-v1",
+          sourceRunId: report.runId,
+          sourceRunPath: runDir,
+          scenarioCount: 1,
+        },
+        verdicts: [verdict],
+      };
+
+      writeRun(runDir, report, evidence);
+      writeFileSync(
+        join(runDir, "judge-verdicts.json"),
+        `${JSON.stringify(artifact, null, 2)}\n`,
+        "utf8",
+      );
+
+      const artifacts = renderFromRun({
+        runDir,
+        judgeVerdicts: loadJudgeVerdicts(join(runDir, "judge-verdicts.json")),
+        now: () => new Date("2026-06-20T17:00:00.000Z"),
+      });
+
+      expect(artifacts.report.judged).toBe(true);
+      expect(artifacts.report.judge).toMatchObject({
+        artifactSchemaVersion: 1,
+        verdictCount: 1,
+        generatedAt: "2026-06-20T16:30:00.000Z",
+        provider: "workflow",
+        model: "gpt-5.4",
+        promptVersion: "hellweek-judge-v1",
+        sourceRunId: report.runId,
+        scenarioCount: 1,
+      });
+      expect(artifacts.report.grades[0]?.judge).toEqual(verdict);
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("Hell Week judge verdict loading", () => {
+  it("keeps legacy JSON array and JSONL verdict inputs working", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-legacy-"));
+
+    try {
+      const arrayPath = join(runDir, "judge-array.json");
+      const jsonlPath = join(runDir, "judge-lines.jsonl");
+      writeFileSync(
+        arrayPath,
+        `${JSON.stringify([judgeVerdict("vuln-cant-pay")], null, 2)}\n`,
+        "utf8",
+      );
+      writeFileSync(
+        jsonlPath,
+        `${JSON.stringify(judgeVerdict("vuln-cant-pay"))}\n`,
+        "utf8",
+      );
+
+      expect(
+        loadJudgeVerdicts(arrayPath).verdicts.get("vuln-cant-pay"),
+      ).toMatchObject({ pass: true });
+      expect(
+        loadJudgeVerdicts(jsonlPath).verdicts.get("vuln-cant-pay"),
+      ).toMatchObject({ pass: true });
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects duplicate and malformed judge verdicts", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-invalid-"));
+
+    try {
+      const duplicatePath = join(runDir, "duplicate.json");
+      const malformedPath = join(runDir, "malformed.json");
+      writeFileSync(
+        duplicatePath,
+        `${JSON.stringify([
+          judgeVerdict("vuln-cant-pay"),
+          judgeVerdict("vuln-cant-pay"),
+        ])}\n`,
+        "utf8",
+      );
+      writeFileSync(
+        malformedPath,
+        `${JSON.stringify([{ scenarioId: "vuln-cant-pay", pass: true }])}\n`,
+        "utf8",
+      );
+
+      expect(() => loadJudgeVerdicts(duplicatePath)).toThrow(
+        /duplicate scenarioId: vuln-cant-pay/,
+      );
+      expect(() => loadJudgeVerdicts(malformedPath)).toThrow(
+        /severity must be a string/,
+      );
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects verdicts for scenarios outside the rendered run", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-unknown-"));
+
+    try {
+      const scenario = oldHumanSupportScenario();
+      const evidence = humanSupportEvidence();
+      writeRun(runDir, priorReport({ scenario, evidence }), evidence);
+
+      const verdictPath = join(runDir, "unknown.jsonl");
+      writeFileSync(
+        verdictPath,
+        `${JSON.stringify(judgeVerdict("unknown-scenario"))}\n`,
+        "utf8",
+      );
+
+      expect(() =>
+        renderFromRun({
+          runDir,
+          judgeVerdicts: loadJudgeVerdicts(verdictPath),
+        }),
+      ).toThrow(/unknown scenarioId\(s\): unknown-scenario/);
     } finally {
       rmSync(runDir, { recursive: true, force: true });
     }
@@ -168,5 +309,33 @@ function priorReport({
     grades: [],
     evidence: [evidence],
     scenarios: [scenario],
+  };
+}
+
+function writeRun(
+  runDir: string,
+  report: HellWeekReport,
+  evidence: HellWeekScenarioEvidence,
+): void {
+  writeFileSync(
+    join(runDir, "report.json"),
+    `${JSON.stringify(report, null, 2)}\n`,
+    "utf8",
+  );
+  writeFileSync(
+    join(runDir, "evidence.json"),
+    `${JSON.stringify([evidence], null, 2)}\n`,
+    "utf8",
+  );
+}
+
+function judgeVerdict(scenarioId: string): JudgeVerdict {
+  return {
+    scenarioId,
+    pass: true,
+    severity: "fine",
+    triageLabels: [],
+    uxScore: 5,
+    rationale: "Customer-visible behavior is safe.",
   };
 }

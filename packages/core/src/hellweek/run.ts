@@ -18,13 +18,19 @@ import { runHellWeek } from "./runner";
 import { assertUniqueScenarioIds, selectScenarios } from "./scenarios";
 import type {
   HellWeekGrade,
+  HellWeekJudgeReportMetadata,
   HellWeekReport,
   HellWeekScenario,
   HellWeekScenarioEvidence,
+  JudgeMetadata,
   JudgeVerdict,
+  JudgeVerdictArtifact,
+  LoadedJudgeVerdicts,
+  Severity,
 } from "./types";
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
+type JudgeVerdictSource = Map<string, JudgeVerdict> | LoadedJudgeVerdicts;
 
 export type HellWeekTheme = "minimal" | "jasmine";
 
@@ -45,7 +51,7 @@ export interface ExecuteHellWeekInput {
   outBaseDir: string;
   runId?: string;
   concurrency?: number;
-  judgeVerdicts?: Map<string, JudgeVerdict>;
+  judgeVerdicts?: JudgeVerdictSource;
   theme?: HellWeekTheme;
   now?: () => Date;
   onProgress?: (message: string) => void;
@@ -198,6 +204,11 @@ export async function executeHellWeek(
   const runId = input.runId ?? defaultRunId(now(), input.profile);
   const runDir = join(input.outBaseDir, runId);
   const startedAt = Date.now();
+  const judgeVerdicts = validateJudgeVerdictsForScenarios(
+    scenarios,
+    input.judgeVerdicts,
+  );
+  const judge = judgeReportMetadata(input.judgeVerdicts);
 
   input.onProgress?.(
     `Running ${scenarios.length} scenarios (${input.profile}) against ${plannerMeta(input.planner).model}...`,
@@ -217,7 +228,7 @@ export async function executeHellWeek(
     },
   });
 
-  const grades = grade(scenarios, evidence, input.judgeVerdicts);
+  const grades = grade(scenarios, evidence, judgeVerdicts);
   const report = buildHellWeekReport({
     runId,
     generatedAt: now().toISOString(),
@@ -225,7 +236,8 @@ export async function executeHellWeek(
     planner: plannerMeta(input.planner),
     signalExtractor: signalMeta(input.signalExtractor),
     policyVersion,
-    judged: Boolean(input.judgeVerdicts && input.judgeVerdicts.size > 0),
+    judged: Boolean(judgeVerdicts && judgeVerdicts.size > 0),
+    ...(judge ? { judge } : {}),
     durationMs: Date.now() - startedAt,
     scenarios,
     evidence,
@@ -253,7 +265,7 @@ export function renderFromRun({
   now = () => new Date(),
 }: {
   runDir: string;
-  judgeVerdicts?: Map<string, JudgeVerdict>;
+  judgeVerdicts?: JudgeVerdictSource;
   theme?: HellWeekTheme;
   now?: () => Date;
 }): HellWeekRunArtifacts {
@@ -265,7 +277,12 @@ export function renderFromRun({
   ) as HellWeekReport;
 
   const scenarios = currentScenariosForCapturedRun(priorReport);
-  const grades = grade(scenarios, evidence, judgeVerdicts);
+  const validatedJudgeVerdicts = validateJudgeVerdictsForScenarios(
+    scenarios,
+    judgeVerdicts,
+  );
+  const judge = judgeReportMetadata(judgeVerdicts);
+  const grades = grade(scenarios, evidence, validatedJudgeVerdicts);
   const report = buildHellWeekReport({
     runId: priorReport.runId,
     generatedAt: now().toISOString(),
@@ -273,7 +290,8 @@ export function renderFromRun({
     planner: priorReport.planner,
     signalExtractor: priorReport.signalExtractor,
     policyVersion: priorReport.policyVersion,
-    judged: Boolean(judgeVerdicts && judgeVerdicts.size > 0),
+    judged: Boolean(validatedJudgeVerdicts && validatedJudgeVerdicts.size > 0),
+    ...(judge ? { judge } : {}),
     durationMs: priorReport.durationMs,
     scenarios,
     evidence,
@@ -354,26 +372,342 @@ export async function renderFromDatabase({
   }
 }
 
-export function loadJudgeVerdicts(path: string): Map<string, JudgeVerdict> {
+export function loadJudgeVerdicts(path: string): LoadedJudgeVerdicts {
   const raw = readFileSync(path, "utf8").trim();
-  const verdicts: JudgeVerdict[] = [];
+  return parseJudgeVerdicts(raw, path);
+}
+
+function validateJudgeVerdictsForScenarios(
+  scenarios: readonly HellWeekScenario[],
+  source?: JudgeVerdictSource,
+): Map<string, JudgeVerdict> | undefined {
+  const verdicts = judgeVerdictMap(source);
+
+  if (!verdicts) {
+    return undefined;
+  }
+
+  const scenarioIds = new Set(scenarios.map((scenario) => scenario.id));
+  const unknownScenarioIds = [...verdicts.keys()].filter(
+    (scenarioId) => !scenarioIds.has(scenarioId),
+  );
+
+  if (unknownScenarioIds.length > 0) {
+    throw new Error(
+      `Judge verdicts include unknown scenarioId(s): ${unknownScenarioIds.join(", ")}`,
+    );
+  }
+
+  return verdicts;
+}
+
+function judgeVerdictMap(
+  source?: JudgeVerdictSource,
+): Map<string, JudgeVerdict> | undefined {
+  if (!source) {
+    return undefined;
+  }
+
+  return source instanceof Map ? source : source.verdicts;
+}
+
+function judgeReportMetadata(
+  source?: JudgeVerdictSource,
+): HellWeekJudgeReportMetadata | undefined {
+  const verdicts = judgeVerdictMap(source);
+
+  if (!verdicts || verdicts.size === 0) {
+    return undefined;
+  }
+
+  const summary: HellWeekJudgeReportMetadata = {
+    verdictCount: verdicts.size,
+  };
+
+  if (!source || source instanceof Map) {
+    return summary;
+  }
+
+  if (source.artifact) {
+    summary.artifactSchemaVersion = source.artifact.schemaVersion;
+  }
+
+  const metadata = source.metadata;
+  if (!metadata) {
+    return summary;
+  }
+
+  summary.generatedAt = metadata.generatedAt;
+  if (metadata.provider !== undefined) {
+    summary.provider = metadata.provider;
+  }
+  if (metadata.model !== undefined) {
+    summary.model = metadata.model;
+  }
+  if (metadata.tool !== undefined) {
+    summary.tool = metadata.tool;
+  }
+  if (metadata.promptVersion !== undefined) {
+    summary.promptVersion = metadata.promptVersion;
+  }
+  if (metadata.sourceRunId !== undefined) {
+    summary.sourceRunId = metadata.sourceRunId;
+  }
+  if (metadata.sourceRunPath !== undefined) {
+    summary.sourceRunPath = metadata.sourceRunPath;
+  }
+
+  if (metadata.scenarioCount !== undefined) {
+    summary.scenarioCount = metadata.scenarioCount;
+  }
+
+  return summary;
+}
+
+function parseJudgeVerdicts(
+  raw: string,
+  sourceLabel: string,
+): LoadedJudgeVerdicts {
+  if (!raw) {
+    throw new Error(`Judge verdict file is empty: ${sourceLabel}`);
+  }
 
   if (raw.startsWith("[")) {
-    verdicts.push(...(JSON.parse(raw) as JudgeVerdict[]));
-  } else {
-    for (const line of raw.split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed) {
-        verdicts.push(JSON.parse(trimmed) as JudgeVerdict);
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) {
+      throw new Error(`Judge verdict JSON array expected in ${sourceLabel}.`);
+    }
+    const verdicts = validateJudgeVerdictList(parsed, sourceLabel);
+    return { verdicts: toJudgeVerdictMap(verdicts, sourceLabel) };
+  }
+
+  if (raw.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (isRecord(parsed) && "verdicts" in parsed) {
+        return validateJudgeVerdictArtifact(parsed, sourceLabel);
       }
+    } catch {
+      // Fall through to JSONL parsing so a multi-line JSONL file reports the
+      // precise bad line rather than a whole-file parse failure.
     }
   }
 
-  const map = new Map<string, JudgeVerdict>();
-  for (const verdict of verdicts) {
-    if (verdict && typeof verdict.scenarioId === "string") {
-      map.set(verdict.scenarioId, verdict);
+  const lines = raw.split("\n").filter((line) => line.trim().length > 0);
+  const verdicts = lines.map((line, index) => {
+    try {
+      return JSON.parse(line) as unknown;
+    } catch (error) {
+      throw new Error(
+        `Invalid judge verdict JSONL at ${sourceLabel}:${index + 1}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
+  });
+
+  return {
+    verdicts: toJudgeVerdictMap(
+      validateJudgeVerdictList(verdicts, sourceLabel),
+      sourceLabel,
+    ),
+  };
+}
+
+function validateJudgeVerdictArtifact(
+  value: Record<string, unknown>,
+  sourceLabel: string,
+): LoadedJudgeVerdicts {
+  if (value.schemaVersion !== 1) {
+    throw new Error(
+      `Judge verdict artifact ${sourceLabel} must use schemaVersion 1.`,
+    );
   }
+
+  if (!Array.isArray(value.verdicts)) {
+    throw new Error(`Judge verdict artifact ${sourceLabel} needs verdicts[].`);
+  }
+
+  const metadata = validateJudgeMetadata(value.metadata, sourceLabel);
+  const verdicts = validateJudgeVerdictList(value.verdicts, sourceLabel);
+
+  if (
+    metadata.scenarioCount !== undefined &&
+    metadata.scenarioCount !== verdicts.length
+  ) {
+    throw new Error(
+      `Judge verdict artifact ${sourceLabel} metadata scenarioCount ${metadata.scenarioCount} does not match ${verdicts.length} verdict(s).`,
+    );
+  }
+
+  const artifact: JudgeVerdictArtifact = {
+    schemaVersion: 1,
+    metadata,
+    verdicts,
+  };
+
+  return {
+    verdicts: toJudgeVerdictMap(verdicts, sourceLabel),
+    metadata,
+    artifact,
+  };
+}
+
+function validateJudgeMetadata(
+  value: unknown,
+  sourceLabel: string,
+): JudgeMetadata {
+  if (!isRecord(value)) {
+    throw new Error(`Judge verdict artifact ${sourceLabel} needs metadata.`);
+  }
+
+  const metadata: JudgeMetadata = {
+    generatedAt: requiredString(value, "generatedAt", sourceLabel),
+  };
+
+  assignOptionalString(metadata, value, "provider", sourceLabel);
+  assignOptionalString(metadata, value, "model", sourceLabel);
+  assignOptionalString(metadata, value, "tool", sourceLabel);
+  assignOptionalString(metadata, value, "promptVersion", sourceLabel);
+  assignOptionalString(metadata, value, "sourceRunId", sourceLabel);
+  assignOptionalString(metadata, value, "sourceRunPath", sourceLabel);
+
+  if (value.scenarioCount !== undefined) {
+    if (
+      typeof value.scenarioCount !== "number" ||
+      !Number.isInteger(value.scenarioCount) ||
+      value.scenarioCount < 0
+    ) {
+      throw new Error(
+        `Judge verdict artifact ${sourceLabel} metadata scenarioCount must be a non-negative integer.`,
+      );
+    }
+    metadata.scenarioCount = value.scenarioCount;
+  }
+
+  return metadata;
+}
+
+function validateJudgeVerdictList(
+  values: readonly unknown[],
+  sourceLabel: string,
+): JudgeVerdict[] {
+  return values.map((value, index) =>
+    validateJudgeVerdict(value, `${sourceLabel}[${index}]`),
+  );
+}
+
+function validateJudgeVerdict(
+  value: unknown,
+  sourceLabel: string,
+): JudgeVerdict {
+  if (!isRecord(value)) {
+    throw new Error(`Judge verdict ${sourceLabel} must be an object.`);
+  }
+
+  const severity = requiredString(value, "severity", sourceLabel);
+  if (!isSeverity(severity)) {
+    throw new Error(
+      `Judge verdict ${sourceLabel} has invalid severity: ${severity}.`,
+    );
+  }
+
+  const triageLabels = value.triageLabels;
+  if (
+    !Array.isArray(triageLabels) ||
+    !triageLabels.every((label) => typeof label === "string")
+  ) {
+    throw new Error(
+      `Judge verdict ${sourceLabel} triageLabels must be string[].`,
+    );
+  }
+
+  const pass = value.pass;
+  if (typeof pass !== "boolean") {
+    throw new Error(`Judge verdict ${sourceLabel} pass must be boolean.`);
+  }
+
+  const uxScore = value.uxScore;
+  if (typeof uxScore !== "number" || !Number.isFinite(uxScore)) {
+    throw new Error(`Judge verdict ${sourceLabel} uxScore must be a number.`);
+  }
+
+  const verdict: JudgeVerdict = {
+    scenarioId: requiredString(value, "scenarioId", sourceLabel),
+    pass,
+    severity,
+    triageLabels,
+    uxScore,
+    rationale: requiredString(value, "rationale", sourceLabel),
+  };
+
+  if (value.confidence !== undefined) {
+    if (
+      typeof value.confidence !== "number" ||
+      !Number.isFinite(value.confidence)
+    ) {
+      throw new Error(
+        `Judge verdict ${sourceLabel} confidence must be a number.`,
+      );
+    }
+    verdict.confidence = value.confidence;
+  }
+
+  return verdict;
+}
+
+function toJudgeVerdictMap(
+  verdicts: readonly JudgeVerdict[],
+  sourceLabel: string,
+): Map<string, JudgeVerdict> {
+  const map = new Map<string, JudgeVerdict>();
+
+  for (const verdict of verdicts) {
+    if (map.has(verdict.scenarioId)) {
+      throw new Error(
+        `Judge verdicts include duplicate scenarioId: ${verdict.scenarioId} (${sourceLabel})`,
+      );
+    }
+    map.set(verdict.scenarioId, verdict);
+  }
+
   return map;
+}
+
+function requiredString(
+  value: Record<string, unknown>,
+  key: string,
+  sourceLabel: string,
+): string {
+  const field = value[key];
+  if (typeof field !== "string" || field.trim().length === 0) {
+    throw new Error(`Judge verdict ${sourceLabel} ${key} must be a string.`);
+  }
+  return field;
+}
+
+function assignOptionalString(
+  target: JudgeMetadata,
+  value: Record<string, unknown>,
+  key: keyof JudgeMetadata,
+  sourceLabel: string,
+): void {
+  const field = value[key];
+  if (field === undefined) {
+    return;
+  }
+  if (typeof field !== "string" || field.trim().length === 0) {
+    throw new Error(
+      `Judge verdict artifact ${sourceLabel} metadata ${String(key)} must be a string.`,
+    );
+  }
+  target[key] = field as never;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSeverity(value: string): value is Severity {
+  return value === "demo_killer" || value === "dent" || value === "fine";
 }

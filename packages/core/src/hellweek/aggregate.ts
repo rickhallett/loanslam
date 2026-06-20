@@ -22,6 +22,7 @@ export interface BuildReportInput {
   signalExtractor: { enabled: boolean; model?: string; promptVersion?: string };
   policyVersion: string;
   judged: boolean;
+  judge?: HellWeekReport["judge"];
   durationMs: number;
   scenarios: readonly HellWeekScenario[];
   evidence: readonly HellWeekScenarioEvidence[];
@@ -248,6 +249,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     signalExtractor: input.signalExtractor,
     policyVersion: input.policyVersion,
     judged: input.judged,
+    ...(input.judge ? { judge: input.judge } : {}),
     durationMs: input.durationMs,
     runtime: buildRuntimeSummary(evidence),
     verdict,

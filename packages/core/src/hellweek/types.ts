@@ -192,6 +192,34 @@ export interface JudgeVerdict {
   confidence?: number;
 }
 
+export interface JudgeMetadata {
+  generatedAt: string;
+  provider?: string;
+  model?: string;
+  tool?: string;
+  promptVersion?: string;
+  sourceRunId?: string;
+  sourceRunPath?: string;
+  scenarioCount?: number;
+}
+
+export interface JudgeVerdictArtifact {
+  schemaVersion: 1;
+  metadata: JudgeMetadata;
+  verdicts: JudgeVerdict[];
+}
+
+export interface LoadedJudgeVerdicts {
+  verdicts: Map<string, JudgeVerdict>;
+  metadata?: JudgeMetadata;
+  artifact?: JudgeVerdictArtifact;
+}
+
+export interface HellWeekJudgeReportMetadata extends Partial<JudgeMetadata> {
+  verdictCount: number;
+  artifactSchemaVersion?: 1;
+}
+
 export interface HellWeekGrade {
   scenarioId: string;
   category: string;
@@ -260,6 +288,7 @@ export interface HellWeekReport {
   };
   policyVersion: string;
   judged: boolean;
+  judge?: HellWeekJudgeReportMetadata;
   durationMs: number;
   runtime?: HellWeekRuntimeSummary;
 

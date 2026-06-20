@@ -1326,7 +1326,7 @@ function hellWeekHelpText(): string {
     "  --from-db <runId>       render from a persisted Postgres run; no live calls",
     "  --store-db              persist the completed report to Postgres",
     "  --db <url>              Postgres URL (default HELL_WEEK_DATABASE_URL, DEMO_INTERACTION_DATABASE_URL, or DATABASE_URL)",
-    "  --judge-verdicts <p>    merge LLM judge verdicts (JSON array or JSONL)",
+    "  --judge-verdicts <p>    merge LLM judge verdicts (artifact, JSON array, or JSONL)",
     "  --json                  print compact JSON summary",
     "",
     "Planner-backed; requires OPENAI_API_KEY. Use OPENAI_MODEL to override the model.",
