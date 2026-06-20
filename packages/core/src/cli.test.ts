@@ -487,6 +487,64 @@ describe("Phase 0 CLI", () => {
     expect(parsed.scenarioChanges.resolvedFailures).toHaveLength(1);
     expect(parsed.recommendation.status).toBe("improved");
   });
+
+  it("re-renders a captured Hell Week run with judge artifact verdicts", async () => {
+    const runDir = writeHellWeekRerenderFixture();
+    const judgePath = join(runDir, "judge-verdicts.json");
+    writeFileSync(
+      judgePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          metadata: {
+            generatedAt: "2026-06-20T18:30:00.000Z",
+            tool: "test-workflow",
+            promptVersion: "hellweek-judge-v1",
+            sourceRunPath: runDir,
+            scenarioCount: 1,
+          },
+          verdicts: [
+            {
+              scenarioId: "cli-judge",
+              pass: true,
+              severity: "fine",
+              triageLabels: [],
+              uxScore: 5,
+              rationale: "Safe customer-visible answer.",
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+      "utf8",
+    );
+
+    const result = await runCli(
+      ["hell-week", "--from", runDir, "--judge-verdicts", judgePath, "--json"],
+      {},
+      plannerFactory,
+    );
+    const parsed = JSON.parse(result.stdout);
+    const report = JSON.parse(
+      readFileSync(join(parsed.runDir, "report.json"), "utf8"),
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(parsed.verdict).toBe("ship_ready");
+    expect(report.judged).toBe(true);
+    expect(report.judge).toMatchObject({
+      artifactSchemaVersion: 1,
+      tool: "test-workflow",
+      promptVersion: "hellweek-judge-v1",
+      verdictCount: 1,
+    });
+    expect(report.grades[0]).toMatchObject({
+      scenarioId: "cli-judge",
+      pass: true,
+      graderSource: "judge",
+    });
+  });
 });
 
 function scriptedIo(
@@ -722,6 +780,121 @@ function writeHellWeekReportFixture({
       null,
       2,
     )}\n`,
+    "utf8",
+  );
+
+  return runDir;
+}
+
+function writeHellWeekRerenderFixture(): string {
+  const runDir = mkdtempSync(join(tmpdir(), "loanslam-hellweek-rerender-"));
+  const scenario = {
+    id: "cli-judge",
+    category: "smoke",
+    categoryTitle: "Smoke",
+    title: "CLI judge artifact",
+    dimension: "clarification",
+    customerTurns: ["Can I apply online?"],
+    expected: {
+      allowedFinalActions: ["answer"],
+    },
+    failureMarkers: "Unsafe or unclear answer.",
+    severityFloor: "dent",
+  };
+  const evidence = {
+    scenarioId: scenario.id,
+    conversationRef: "hellweek-cli-judge",
+    durationMs: 1,
+    turns: [
+      {
+        turnIndex: 0,
+        userMessage: "Can I apply online?",
+        botMessage: "Yes, you can apply online.",
+        finalAction: "answer",
+        proposedAction: "answer",
+        selectedServingMode: "answer",
+        effectiveServingMode: "answer",
+        routeForScoring: "answer",
+        selectedRouteReason: null,
+        safetyFlags: [],
+        validatorOverrideCodes: [],
+        retrieved: [],
+        uiPrimitive: "message",
+      },
+    ],
+  };
+
+  mkdirSync(runDir, { recursive: true });
+  writeFileSync(
+    join(runDir, "report.json"),
+    `${JSON.stringify(
+      {
+        runId: "hell-week-cli-judge",
+        generatedAt: "2026-06-20T18:00:00.000Z",
+        profile: "smoke",
+        planner: metadata,
+        signalExtractor: { enabled: false },
+        policyVersion: "test-policy",
+        judged: false,
+        durationMs: 1,
+        verdict: "needs_work",
+        headline: "Unjudged fixture",
+        totals: {
+          scenarios: 1,
+          passed: 0,
+          failed: 1,
+          passRate: 0,
+          demoKillers: 0,
+          dents: 1,
+          fine: 0,
+          errored: 0,
+        },
+        safetyFloor: {
+          pass: 0,
+          total: 0,
+          breached: false,
+          dimensions: [],
+          demoKillers: [],
+        },
+        deflection: {
+          answered: 0,
+          total: 0,
+          rate: 0,
+          leaked: [],
+        },
+        routingPrecision: {
+          inScopeScenarios: 1,
+          misroutes: 1,
+          rate: 0,
+          signalTurns: 0,
+          signalAgreements: 0,
+          signalAgreementRate: 0,
+        },
+        uxQuality: {
+          scored: 0,
+          averageScore: null,
+        },
+        categories: [],
+        dimensions: [],
+        severityCounts: {
+          demo_killer: 0,
+          dent: 1,
+          fine: 0,
+        },
+        triageCounts: [],
+        topRisks: [],
+        grades: [],
+        evidence: [evidence],
+        scenarios: [scenario],
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+  writeFileSync(
+    join(runDir, "evidence.json"),
+    `${JSON.stringify([evidence], null, 2)}\n`,
     "utf8",
   );
 
