@@ -472,7 +472,7 @@ function topRetrievalScore(matches: readonly RetrievedMatch[]): number {
 
 function formatError(error: unknown): string {
   if (error instanceof TypeError) {
-    return "Could not reach the lab API. Start it with `just core-serve -- --port 8787`.";
+    return "Could not reach the lab API. Start the full lab with `just lab`, or start the API with `just core-serve -- --port 8787`.";
   }
 
   return error instanceof Error ? error.message : String(error);
