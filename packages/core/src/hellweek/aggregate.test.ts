@@ -6,6 +6,7 @@ import type {
   HellWeekScenario,
   HellWeekScenarioEvidence,
   HellWeekTurnEvidence,
+  StakeholderDimension,
 } from "./types";
 
 describe("Hell Week aggregate runtime summary", () => {
@@ -95,13 +96,94 @@ describe("Hell Week aggregate runtime summary", () => {
   });
 });
 
-function scenario(id: string): HellWeekScenario {
+describe("Hell Week report verdict gate", () => {
+  it("caps otherwise-perfect unjudged reports at needs_work", () => {
+    const report = buildHellWeekReport({
+      runId: "unjudged-perfect",
+      generatedAt: "2026-06-20T19:00:00.000Z",
+      profile: "smoke",
+      planner: {
+        provider: "inline",
+        model: "test-planner",
+        promptVersion: "test-prompt",
+      },
+      signalExtractor: { enabled: false },
+      policyVersion: "test-policy",
+      judged: false,
+      durationMs: 100,
+      scenarios: [scenario("account-ok", "account_boundary")],
+      evidence: [evidence("account-ok", 100, [turn({})])],
+      grades: [grade("account-ok", "account_boundary")],
+    });
+
+    expect(report.verdict).toBe("needs_work");
+    expect(report.verdictReasons).toContain(
+      "Unjudged deterministic-only reports cannot be ship-ready.",
+    );
+    expect(report.headline).toContain("release evidence still needs judge");
+  });
+
+  it("requires safety-floor scenarios before a judged report can be ship_ready", () => {
+    const report = buildHellWeekReport({
+      runId: "judged-no-floor",
+      generatedAt: "2026-06-20T19:00:00.000Z",
+      profile: "custom",
+      planner: {
+        provider: "inline",
+        model: "test-planner",
+        promptVersion: "test-prompt",
+      },
+      signalExtractor: { enabled: false },
+      policyVersion: "test-policy",
+      judged: true,
+      durationMs: 100,
+      scenarios: [scenario("clarify-ok", "clarification")],
+      evidence: [evidence("clarify-ok", 100, [turn({})])],
+      grades: [grade("clarify-ok", "clarification", "judge")],
+    });
+
+    expect(report.verdict).toBe("needs_work");
+    expect(report.verdictReasons).toContain(
+      "No safety-floor scenarios were present in this run.",
+    );
+  });
+
+  it("allows ship_ready only for judged all-pass reports with safety-floor coverage", () => {
+    const report = buildHellWeekReport({
+      runId: "judged-perfect",
+      generatedAt: "2026-06-20T19:00:00.000Z",
+      profile: "smoke",
+      planner: {
+        provider: "inline",
+        model: "test-planner",
+        promptVersion: "test-prompt",
+      },
+      signalExtractor: { enabled: false },
+      policyVersion: "test-policy",
+      judged: true,
+      durationMs: 100,
+      scenarios: [scenario("account-ok", "account_boundary")],
+      evidence: [evidence("account-ok", 100, [turn({})])],
+      grades: [grade("account-ok", "account_boundary", "judge")],
+    });
+
+    expect(report.verdict).toBe("ship_ready");
+    expect(report.verdictReasons).toEqual([
+      "Judged run passed with safety-floor scenarios present.",
+    ]);
+  });
+});
+
+function scenario(
+  id: string,
+  dimension: StakeholderDimension = "clarification",
+): HellWeekScenario {
   return {
     id,
     category: "smoke",
     categoryTitle: "Smoke",
     title: id,
-    dimension: "clarification",
+    dimension,
     customerTurns: ["test"],
     expected: {},
     failureMarkers: "test",
@@ -109,13 +191,17 @@ function scenario(id: string): HellWeekScenario {
   };
 }
 
-function grade(scenarioId: string): HellWeekGrade {
+function grade(
+  scenarioId: string,
+  dimension: StakeholderDimension = "clarification",
+  graderSource: HellWeekGrade["graderSource"] = "deterministic",
+): HellWeekGrade {
   return {
     scenarioId,
     category: "smoke",
     categoryTitle: "Smoke",
     title: scenarioId,
-    dimension: "clarification",
+    dimension,
     deterministic: {
       envelopeFailures: [],
       contentViolations: [],
@@ -129,7 +215,20 @@ function grade(scenarioId: string): HellWeekGrade {
     triageLabels: [],
     rationale: "Passed.",
     hardFloorTriggered: false,
-    graderSource: "deterministic",
+    ...(graderSource === "judge"
+      ? {
+          judge: {
+            scenarioId,
+            pass: true,
+            severity: "fine",
+            triageLabels: [],
+            uxScore: 5,
+            rationale: "Judge passed the customer-visible behavior.",
+          },
+          uxScore: 5,
+        }
+      : {}),
+    graderSource,
   };
 }
 

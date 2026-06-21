@@ -13,6 +13,7 @@ import type {
 } from "./types";
 
 export interface HellWeekReportStore {
+  verifyConnection(): Promise<void>;
   saveReport(report: HellWeekReport): Promise<void>;
   loadReport(runId: string): Promise<HellWeekReport | undefined>;
   loadReports(runIds: readonly string[]): Promise<HellWeekReport[]>;
@@ -23,12 +24,15 @@ export interface HellWeekReportStore {
   close(): Promise<void>;
 }
 
+const hellWeekDatabaseRequirement =
+  "--db, HELL_WEEK_DATABASE_URL, DEMO_INTERACTION_DATABASE_URL, or DATABASE_URL";
+
 export function openHellWeekReportStore(
   databaseUrl = hellWeekDatabaseUrlFromEnv(process.env),
 ): HellWeekReportStore {
   if (!databaseUrl) {
     throw new Error(
-      "Hell Week DB reporting requires --db, DEMO_INTERACTION_DATABASE_URL, or DATABASE_URL.",
+      `Hell Week DB reporting requires ${hellWeekDatabaseRequirement}.`,
     );
   }
 
@@ -51,8 +55,37 @@ export function hellWeekDatabaseUrlFromEnv(
   );
 }
 
+export async function assertHellWeekDatabaseLive(
+  databaseUrl = hellWeekDatabaseUrlFromEnv(process.env),
+): Promise<void> {
+  const resolvedDatabaseUrl = databaseUrl?.trim();
+
+  if (!resolvedDatabaseUrl) {
+    throw new Error(
+      `Hell Week live runs require a live Postgres URL before model calls. Set ${hellWeekDatabaseRequirement}.`,
+    );
+  }
+
+  const store = openHellWeekReportStore(resolvedDatabaseUrl);
+
+  try {
+    await store.verifyConnection();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Hell Week DB preflight failed; the configured Postgres URL is not reachable: ${detail}`,
+    );
+  } finally {
+    await store.close();
+  }
+}
+
 class PrismaHellWeekReportStore implements HellWeekReportStore {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async verifyConnection(): Promise<void> {
+    await this.prisma.$queryRaw`SELECT 1`;
+  }
 
   async saveReport(report: HellWeekReport): Promise<void> {
     await this.prisma.$transaction(async (tx) => {

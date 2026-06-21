@@ -41,12 +41,21 @@ import {
   storeHellWeekReport,
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
-import { openHellWeekReportStore } from "./hellweek/db";
+import {
+  assertHellWeekDatabaseLive,
+  openHellWeekReportStore,
+} from "./hellweek/db";
 import {
   buildHellWeekStabilityReport,
   writeHellWeekStabilityArtifacts,
   type HellWeekStabilityArtifacts,
 } from "./hellweek/stability";
+import {
+  defaultOpenAiHellWeekJudgeModel,
+  defaultOpenAiHellWeekVerifierModel,
+  judgeHellWeekRun,
+  type JudgeHellWeekRunResult,
+} from "./hellweek/openaiJudge";
 import {
   compareHellWeekReportsFromPaths,
   formatHellWeekComparison,
@@ -126,6 +135,10 @@ export async function runCli(
       return runHellWeekCompareCommand(rest);
     }
 
+    if (command === "hell-week-judge") {
+      return await runHellWeekJudgeCommand(rest, env);
+    }
+
     if (command === "hell-week-stability") {
       return await runHellWeekStabilityCommand(rest, env);
     }
@@ -181,6 +194,19 @@ function readDemoInteractionDatabaseUrl(env: CliEnv): string | undefined {
 
 function readHellWeekDatabaseUrl(env: CliEnv): string | undefined {
   return env.HELL_WEEK_DATABASE_URL ?? readDemoInteractionDatabaseUrl(env);
+}
+
+function readHellWeekJudgeModel(env: CliEnv): string {
+  return (
+    env.OPENAI_HELL_WEEK_JUDGE_MODEL?.trim() || defaultOpenAiHellWeekJudgeModel
+  );
+}
+
+function readHellWeekJudgeVerifierModel(env: CliEnv): string {
+  return (
+    env.OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL?.trim() ||
+    defaultOpenAiHellWeekVerifierModel
+  );
 }
 
 async function runTurn(
@@ -430,6 +456,7 @@ function hellWeekSummary(
     return JSON.stringify({
       runId: artifacts.runId,
       verdict: report.verdict,
+      verdictReasons: report.verdictReasons ?? [],
       totals: report.totals,
       safetyFloorBreached: report.safetyFloor.breached,
       reportHtmlPath: artifacts.reportHtmlPath,
@@ -440,6 +467,9 @@ function hellWeekSummary(
   return [
     `Hell Week: ${report.verdict.toUpperCase()}`,
     report.headline,
+    ...(report.verdictReasons?.length
+      ? ["", "Verdict reasons:", ...report.verdictReasons.map((r) => `- ${r}`)]
+      : []),
     "",
     `Scenarios: ${report.totals.passed}/${report.totals.scenarios} pass (${Math.round(report.totals.passRate * 100)}%)`,
     `Demo-killers: ${report.totals.demoKillers} · Dents: ${report.totals.dents} · Errored: ${report.totals.errored}`,
@@ -491,6 +521,35 @@ function hellWeekStabilitySummary(
     "",
     `Report: ${artifacts.reportHtmlPath}`,
     `Run dir: ${artifacts.runDir}`,
+  ].join("\n");
+}
+
+function hellWeekJudgeSummary(
+  result: JudgeHellWeekRunResult,
+  asJson: boolean,
+): string {
+  const summary = {
+    outputPath: result.outputPath,
+    verdicts: result.artifact.verdicts.length,
+    model: result.model,
+    verifierModel: result.verifierModel,
+    initialDemoKillers: result.initialDemoKillers,
+    finalDemoKillers: result.finalDemoKillers,
+    dents: result.dents,
+    fine: result.fine,
+  };
+
+  if (asJson) {
+    return JSON.stringify(summary);
+  }
+
+  return [
+    `Judge verdicts: ${summary.verdicts}`,
+    `Models: ${summary.model} / ${summary.verifierModel}`,
+    `Demo-killers: ${summary.finalDemoKillers} (${summary.initialDemoKillers} before verification)`,
+    `Dents: ${summary.dents}`,
+    `Fine: ${summary.fine}`,
+    `Artifact: ${summary.outputPath}`,
   ].join("\n");
 }
 
@@ -549,6 +608,10 @@ async function runHellWeekCommand(
   }
 
   if (fromDir) {
+    if (storeDb) {
+      await assertHellWeekDatabaseLive(databaseUrl);
+    }
+
     const artifacts = renderFromRun({
       runDir: fromDir,
       theme,
@@ -564,6 +627,8 @@ async function runHellWeekCommand(
 
     return ok(hellWeekSummary(artifacts, asJson));
   }
+
+  await assertHellWeekDatabaseLive(databaseUrl);
 
   const signalExtractor = resolveHellWeekSignalExtractor(signalsMode, env);
   const planner = plannerFactory();
@@ -614,6 +679,48 @@ function runHellWeekCompareCommand(args: string[]): CliResult {
       ? JSON.stringify(toHellWeekComparisonJson(comparison))
       : formatHellWeekComparison(comparison),
   );
+}
+
+async function runHellWeekJudgeCommand(
+  args: string[],
+  env: CliEnv,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekJudgeHelpText());
+  }
+
+  const asJson = normalized.includes("--json");
+  const concurrencyRaw = readOption(normalized, "--concurrency");
+  const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
+  const runDir =
+    readOption(normalized, "--run-dir") ??
+    readOption(normalized, "--run") ??
+    normalized.find((arg) => !arg.startsWith("--"));
+  const outputPath = readOption(normalized, "--out");
+  const judgeModel =
+    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
+  const verifierModel =
+    readOption(normalized, "--verify-model") ??
+    readHellWeekJudgeVerifierModel(env);
+
+  if (!runDir) {
+    return fail(hellWeekJudgeHelpText());
+  }
+
+  const apiKey = env.OPENAI_API_KEY?.trim();
+  const result = await judgeHellWeekRun({
+    runDir,
+    judgeModel,
+    verifierModel,
+    ...(apiKey ? { apiKey } : {}),
+    ...(outputPath ? { outputPath } : {}),
+    ...(concurrency !== undefined ? { concurrency } : {}),
+    onProgress: (message) => process.stderr.write(`${message}\n`),
+  });
+
+  return ok(hellWeekJudgeSummary(result, asJson));
 }
 
 async function runHellWeekStabilityCommand(
@@ -1248,6 +1355,7 @@ function helpText(): string {
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
+    "  hell-week-judge <run-dir>          Judge a captured Hell Week run with OpenAI",
     "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
     "  hell-week-stability               Classify repeated Hell Week runs from Postgres",
     "  chat [--trace]                    Drive the engine turn by turn",
@@ -1256,6 +1364,29 @@ function helpText(): string {
     "",
     "Planner-backed commands require OPENAI_API_KEY. Use OPENAI_MODEL to override the default model.",
     `Policy version: ${policyVersion}`,
+  ].join("\n");
+}
+
+function hellWeekJudgeHelpText(): string {
+  return [
+    "LoanSlam Hell Week OpenAI judge",
+    "",
+    "Usage:",
+    "  hell-week-judge <runDir> [--out <path>] [--model <model>]",
+    "                  [--verify-model <model>] [--concurrency <n>] [--json]",
+    "",
+    "Reads <runDir>/scenarios/*.json, grades each captured scenario with the",
+    "OpenAI Responses API, adversarially re-checks demo-killer verdicts, and",
+    "writes judge-verdicts.json using the existing schemaVersion/metadata/verdicts contract.",
+    "",
+    "Options:",
+    "  --out <path>             verdict artifact path (default <runDir>/judge-verdicts.json)",
+    `  --model <model>          bulk judge model (default ${defaultOpenAiHellWeekJudgeModel})`,
+    `  --verify-model <model>   demo-killer verifier model (default ${defaultOpenAiHellWeekVerifierModel})`,
+    "  --concurrency <n>       parallel scenario judge calls (default 8)",
+    "  --json                  print compact JSON summary",
+    "",
+    "Requires OPENAI_API_KEY. Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL and OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL.",
   ].join("\n");
 }
 
@@ -1315,6 +1446,8 @@ function hellWeekHelpText(): string {
     "Drives the full hostile scenario battery against the live model-backed",
     "engine, grades each scenario (hard safety floor + envelope, plus optional",
     "LLM judge verdicts), and writes report.html / report.json to a run folder.",
+    "Deterministic-only reports are capped at needs_work; ship_ready requires",
+    "judge verdicts and safety-floor coverage.",
     "",
     "Options:",
     "  --profile <id>          full (default) or smoke",
@@ -1329,7 +1462,11 @@ function hellWeekHelpText(): string {
     "  --judge-verdicts <p>    merge LLM judge verdicts (artifact, JSON array, or JSONL)",
     "  --json                  print compact JSON summary",
     "",
-    "Planner-backed; requires OPENAI_API_KEY. Use OPENAI_MODEL to override the model.",
+    "Live capture runs verify a reachable Postgres URL before any model calls.",
+    "Use --store-db to persist the completed report after the preflight passes.",
+    "",
+    "Planner-backed; requires OPENAI_API_KEY. Use OPENAI_MODEL to override the runtime model.",
+    "Use hell-week-judge to create OpenAI judge-verdicts.json artifacts.",
   ].join("\n");
 }
 

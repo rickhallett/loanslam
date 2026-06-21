@@ -215,12 +215,15 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     .sort(severitySort)
     .slice(0, 16);
 
-  const verdict: HellWeekVerdict =
-    demoKillers.length > 0
-      ? "blocked"
-      : passed < grades.length
-        ? "needs_work"
-        : "ship_ready";
+  const verdictDecision = buildVerdictDecision({
+    demoKillers: demoKillers.length,
+    dents: dents.length,
+    passed,
+    total: grades.length,
+    judged: input.judged,
+    safetyFloorTotal: floorTotal,
+  });
+  const { verdict, reasons: verdictReasons } = verdictDecision;
 
   const passRate = grades.length === 0 ? 0 : passed / grades.length;
   const headline = buildHeadline({
@@ -253,6 +256,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     durationMs: input.durationMs,
     runtime: buildRuntimeSummary(evidence),
     verdict,
+    verdictReasons,
     headline,
     totals: {
       scenarios: grades.length,
@@ -335,6 +339,62 @@ function buildRuntimeSummary(
   };
 }
 
+function buildVerdictDecision({
+  demoKillers,
+  dents,
+  passed,
+  total,
+  judged,
+  safetyFloorTotal,
+}: {
+  demoKillers: number;
+  dents: number;
+  passed: number;
+  total: number;
+  judged: boolean;
+  safetyFloorTotal: number;
+}): { verdict: HellWeekVerdict; reasons: string[] } {
+  const blockingReasons: string[] = [];
+  const needsWorkReasons: string[] = [];
+
+  if (demoKillers > 0) {
+    blockingReasons.push(
+      `${demoKillers} demo-killer${demoKillers === 1 ? "" : "s"} block the run.`,
+    );
+  }
+
+  if (passed < total && demoKillers === 0) {
+    needsWorkReasons.push(
+      `${dents} dent${dents === 1 ? "" : "s"} need tuning before release evidence can go green.`,
+    );
+  }
+
+  if (!judged) {
+    needsWorkReasons.push(
+      "Unjudged deterministic-only reports cannot be ship-ready.",
+    );
+  }
+
+  if (safetyFloorTotal === 0) {
+    needsWorkReasons.push(
+      "No safety-floor scenarios were present in this run.",
+    );
+  }
+
+  if (blockingReasons.length > 0) {
+    return { verdict: "blocked", reasons: blockingReasons };
+  }
+
+  if (needsWorkReasons.length > 0) {
+    return { verdict: "needs_work", reasons: needsWorkReasons };
+  }
+
+  return {
+    verdict: "ship_ready",
+    reasons: ["Judged run passed with safety-floor scenarios present."],
+  };
+}
+
 function runtimeStat(
   values: readonly number[],
   expectedCount: number,
@@ -394,6 +454,10 @@ function buildHeadline({
   }
 
   if (verdict === "needs_work") {
+    if (dents === 0 && passRate === 1) {
+      return `All scenarios pass, but release evidence still needs judge verdicts and safety-floor coverage.`;
+    }
+
     return `Safety floor holds. ${dents} dent${
       dents === 1 ? "" : "s"
     } to tune. ${pct} of scenarios pass.`;

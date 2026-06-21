@@ -65,20 +65,26 @@ Three layers, deliberately ordered by how much we trust them:
 3. **LLM judge (authoritative).** An independent judge reads each transcript and
    trace and decides pass / severity / triage / UX from the actual
    customer-visible behaviour. Demo-killers it raises are adversarially
-   re-checked. Run it after a capture:
+   re-checked. A deterministic-only report can support local iteration, but it
+   is capped at `needs_work`; `ship_ready` requires judge verdicts and
+   safety-floor coverage. Run the judge after a capture:
 
    ```bash
    # 1. capture (writes the run folder)
-   just hell-week
-   # 2. judge it (Workflow tool): .claude/workflows/hellweek-judge.js with
-   #    args.runDir = the run folder; save the returned artifact envelope
-   #    as judge-verdicts.json
+   just hell-week -- --store-db
+   # 2. judge it with OpenAI Responses; writes judge-verdicts.json
+   just hell-week-judge -- <runDir>
    # 3. merge verdicts + re-render, no live model calls
-   just hell-week -- --from <runDir> --judge-verdicts <verdicts.json>
+   just hell-week -- --from <runDir> --judge-verdicts <runDir>/judge-verdicts.json
    ```
 
+   Live captures fail before any model calls unless `HELL_WEEK_DATABASE_URL`,
+   `DEMO_INTERACTION_DATABASE_URL`, or `DATABASE_URL` is set and answers a
+   Postgres liveness query.
+
 The dashboard labels each scenario's grader source (`hard_floor`, `judge`, or
-`deterministic`) so reviewers know which layer decided it.
+`deterministic`) and lists verdict reasons so reviewers know which layer decided
+each scenario and why the aggregate verdict is or is not release-green.
 
 ## Severity vocabulary
 

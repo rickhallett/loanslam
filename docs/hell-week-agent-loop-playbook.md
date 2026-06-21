@@ -17,27 +17,32 @@ model adaptation, or an agent changing customer behavior without review.
 Primary commands:
 
 ```bash
-just hell-week -- --profile smoke
-just hell-week
+just hell-week -- --profile smoke --store-db
+just hell-week -- --store-db
 just hell-week-compare -- <baseline-run-dir-or-report.json> <candidate-run-dir-or-report.json>
 ```
+
+Live Hell Week captures must have `HELL_WEEK_DATABASE_URL`,
+`DEMO_INTERACTION_DATABASE_URL`, or `DATABASE_URL` set and reachable; the CLI
+checks Postgres before any model calls start.
 
 Primary artifacts:
 
 - `report.json`: aggregate verdict, safety floor, pass rate, category/dimension
-  stats, top risks, grades, and evidence references.
+  stats, verdict reasons, top risks, grades, and evidence references.
 - `evidence.json`: captured turns and traces from the live model-backed engine.
 - `scenarios/<id>.json`: per-scenario packets for the LLM judge.
 - `judge-verdicts.json`: independent LLM scenario verdicts when available.
 - `report.html`: stakeholder dashboard.
 
-Judging still follows the existing Hell Week flow:
+Judging is the release-grade default. A deterministic-only run is still useful
+for fast local iteration, but it is capped at `needs_work`; `ship_ready` requires
+judge verdicts and safety-floor coverage. The flow is:
 
 ```bash
-just hell-week
-# Run .claude/workflows/hellweek-judge.js with args.runDir = the run folder,
-# then save the returned schemaVersion/metadata/verdicts envelope.
-just hell-week -- --from <run-dir> --judge-verdicts <verdicts.json>
+just hell-week -- --store-db
+just hell-week-judge -- <run-dir>
+just hell-week -- --from <run-dir> --judge-verdicts <run-dir>/judge-verdicts.json
 ```
 
 After a candidate slice:

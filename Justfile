@@ -133,6 +133,10 @@ route-audit *audit_flags:
 hell-week *hell_flags:
     @npm --silent run core:hell-week -- {{ hell_flags }}
 
+# Judge a captured Hell Week run with OpenAI and write judge-verdicts.json.
+hell-week-judge *judge_flags:
+    @npm --silent run core:hell-week-judge -- {{ judge_flags }}
+
 # Compare two Hell Week report.json files or run folders.
 hell-week-compare *compare_flags:
     @npm --silent run core:hell-week-compare -- {{ compare_flags }}

@@ -16,6 +16,13 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Documentation cleanup decisions are recorded in `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`; check it before reintroducing old docs/artifacts.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
+## Provider Mandate
+
+- Use OpenAI for all project LLM inference: runtime, simulations, judges, evals, probes, and agentic test workflows.
+- Do not call Anthropic APIs, Anthropic SDKs, `claude` CLI workflows, or Claude/Anthropic-backed judge agents for this repo.
+- If existing tooling depends on Anthropic, stop and replace it with an OpenAI Responses API path or report the work blocked; do not run the Anthropic path as a fallback.
+- Default replacement ladder: `gpt-5.4-nano` for cheap classifiers/signals, `gpt-5.4-mini` for bulk per-scenario judges, `gpt-5.4` for higher-quality spot checks, and `gpt-5.5` only for final adjudication or hard disputed cases.
+
 ## Evidence And Test Discipline
 
 - Treat full integration evidence as the proof surface for behavior claims.

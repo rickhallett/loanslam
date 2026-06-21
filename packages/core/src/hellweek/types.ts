@@ -293,6 +293,7 @@ export interface HellWeekReport {
   runtime?: HellWeekRuntimeSummary;
 
   verdict: HellWeekVerdict;
+  verdictReasons?: string[];
   headline: string;
 
   totals: {

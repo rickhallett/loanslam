@@ -28,6 +28,7 @@ export function renderHellWeekReportHtml(report: HellWeekReport): string {
     "<main>",
     header(report),
     keyFigures(report),
+    verdictReasons(report),
     safetyFloor(report),
     sectionTable(report),
     dimensionTable(report),
@@ -151,6 +152,22 @@ function runtimeStat(
   const value = report.runtime?.[key][field];
 
   return typeof value === "number" ? formatDuration(value) : "—";
+}
+
+// ---------------------------------------------------------------------------
+
+function verdictReasons(report: HellWeekReport): string {
+  const reasons = report.verdictReasons ?? [];
+
+  if (reasons.length === 0) {
+    return "";
+  }
+
+  return `
+<section>
+  <h2>Verdict reasons</h2>
+  <ul class="reason-list">${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>
+</section>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -531,6 +548,8 @@ p{margin:0 0 .6rem}
 .status.neg{color:var(--neg)}.status.pos{color:var(--pos)}.status.warn{color:var(--warn)}
 h2 .muted{font-weight:500;font-size:.85rem}
 .muted{color:var(--muted)}
+.reason-list{margin:.4rem 0 0;padding-left:1.1rem;color:var(--muted);max-width:72ch}
+.reason-list li{margin:.25rem 0}
 /* tables */
 table.grid{width:100%;border-collapse:collapse;font-size:.88rem}
 table.grid th{text-align:left;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--faint);padding:6px 10px;border-bottom:1px solid var(--line)}

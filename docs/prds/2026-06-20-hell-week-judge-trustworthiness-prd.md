@@ -2,7 +2,14 @@
 
 ## Status
 
-Draft for triage. Net-new body of work distinct from
+Draft for triage. Mechanism note: the original draft described the judge as a
+Claude Code workflow. That is superseded by the OpenAI Responses CLI path added
+in `worktree-hellweek-judge-default`; future implementation should build on
+`just hell-week-judge -- <run-dir>` and
+`packages/core/src/hellweek/openaiJudge.ts`, not
+`.claude/workflows/hellweek-judge.js`.
+
+Net-new body of work distinct from
 [`2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md`](./2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md),
 which owns the first judge run as an F/I rubric audit, comparability warnings,
 latency capture, and the hard-floor gate-versus-backstop policy. This PRD makes
@@ -20,8 +27,8 @@ the least trustworthy part of the stack:
   explicitly distrusts.
 - When it does run, nothing measures whether it is correct. There is no gold
   set, no inter-run agreement number, and no calibration.
-- Its adversarial re-check is asymmetric: `.claude/workflows/hellweek-judge.js`
-  only re-checks verdicts already marked `demo_killer` (a skeptic tries to refute
+- Its adversarial re-check is asymmetric: the current OpenAI judge path only
+  re-checks verdicts already marked `demo_killer` (a skeptic tries to refute
   them). A real breach the judge rated `fine` is never re-checked — the dangerous
   direction is unguarded.
 - The judge is anchored: the rubric is fed each scenario's own `expected`
@@ -41,11 +48,10 @@ them is known to be reliable.
 Convert the judge from an unmeasured, occasional step into a calibrated default,
 and add a proof that the grader fails when it should.
 
-The judge is an out-of-process Claude Code workflow
-(`.claude/workflows/hellweek-judge.js`), not an importable function. The pure-TS
-`executeHellWeek` cannot await it. "Default" therefore means enforcing the
-judge-then-regrade step in the CLI/orchestration pipeline (the regrade plumbing
-already exists via `--judge-verdicts`; `run.ts:249`, `cli.ts:535`), not a
+The judge is an out-of-process OpenAI Responses CLI flow, not part of the core
+engine turn loop. The pure-TS `executeHellWeek` should not make judge calls
+itself. "Default" therefore means enforcing the judge-then-regrade step in the
+CLI/orchestration pipeline via `hell-week-judge` and `--judge-verdicts`, not a
 synchronous call inside the engine.
 
 ## Work Items
@@ -73,8 +79,8 @@ synchronous call inside the engine.
 
 ### 3. Symmetric adversarial re-check
 
-- Extend `hellweek-judge.js` so the skeptical second pass also samples `fine`
-  verdicts on safety-floor dimensions, not only `demo_killer` verdicts. This
+- Extend the OpenAI judge verifier so the skeptical second pass also samples
+  `fine` verdicts on safety-floor dimensions, not only `demo_killer` verdicts. This
   guards the dangerous direction (a missed real breach), which the current
   refute-only pass cannot catch.
 

@@ -13,6 +13,7 @@ const fake = vi.hoisted(() => {
 
   return {
     clients: [] as FakePrismaClient[],
+    queryError: null as Error | null,
     JsonNull: new JsonNullMarker(),
     DbNull: new DbNullMarker(),
   };
@@ -49,6 +50,35 @@ describe("Hell Week report DB persistence", () => {
     childRows.length = 0;
     turnRows.length = 0;
     gradeRows.length = 0;
+    fake.queryError = null;
+  });
+
+  it("preflights Hell Week DB liveness with a real query", async () => {
+    const { assertHellWeekDatabaseLive } = await import("./db");
+
+    await assertHellWeekDatabaseLive("postgresql://example/test");
+
+    expect(fake.clients[0]?.queryCalls).toBe(1);
+    expect(fake.clients[0]?.disconnectCalls).toBe(1);
+  });
+
+  it("rejects Hell Week DB preflight when no URL is configured", async () => {
+    const { assertHellWeekDatabaseLive } = await import("./db");
+
+    await expect(assertHellWeekDatabaseLive("")).rejects.toThrow(
+      /live Postgres URL/,
+    );
+    expect(fake.clients).toHaveLength(0);
+  });
+
+  it("rejects Hell Week DB preflight when the URL is not reachable", async () => {
+    const { assertHellWeekDatabaseLive } = await import("./db");
+    fake.queryError = new Error("connect ECONNREFUSED");
+
+    await expect(
+      assertHellWeekDatabaseLive("postgresql://example/test"),
+    ).rejects.toThrow(/not reachable: connect ECONNREFUSED/);
+    expect(fake.clients[0]?.disconnectCalls).toBe(1);
   });
 
   it("round-trips report-level judge metadata through save/load", async () => {
@@ -114,12 +144,26 @@ class FakePrismaClient {
   readonly hellWeekRunSetMember = new FakeChildTable();
   readonly hellWeekRunSetScenario = new FakeChildTable();
   readonly hellWeekRunSetPairwiseComparison = new FakeChildTable();
+  queryCalls = 0;
+  disconnectCalls = 0;
 
   async $transaction<T>(callback: (tx: this) => Promise<T>): Promise<T> {
     return callback(this);
   }
 
-  async $disconnect(): Promise<void> {}
+  async $queryRaw(): Promise<{ ok: number }[]> {
+    this.queryCalls += 1;
+
+    if (fake.queryError) {
+      throw fake.queryError;
+    }
+
+    return [{ ok: 1 }];
+  }
+
+  async $disconnect(): Promise<void> {
+    this.disconnectCalls += 1;
+  }
 }
 
 class FakeHellWeekRunTable {

@@ -200,11 +200,19 @@ useful guardrails, but they are not enough to prove customer-visible flow.
 Use Hell Week for broad model-backed safety and routing evidence:
 
 ```bash
-just hell-week -- --profile smoke
-just hell-week -- --profile smoke --store-db --db "$DATABASE_URL"
+just hell-week -- --profile smoke --store-db
+just hell-week-judge -- <run-dir>
+just hell-week -- --from <run-dir> --judge-verdicts <verdicts.json>
 just hell-week-compare -- <baseline-run-dir> <candidate-run-dir>
 just hell-week-stability -- --runs <run1,run2,run3> --set-id <iteration-id> --db "$DATABASE_URL"
 ```
+
+Live Hell Week captures preflight `HELL_WEEK_DATABASE_URL`,
+`DEMO_INTERACTION_DATABASE_URL`, or `DATABASE_URL` with a real Postgres query
+before any model calls start.
+
+Deterministic-only reports are capped at `needs_work`; `ship_ready` requires
+merged judge verdicts and safety-floor coverage.
 
 Postgres-backed Hell Week reports are the durable source for replayable evidence.
 Single runs live in `hell_week_runs`, `hell_week_scenarios`,
