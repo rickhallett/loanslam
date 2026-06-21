@@ -414,7 +414,7 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toContain("GBP 425");
   });
 
-  it("requests only handoff fields still missing from collected facts", async () => {
+  it("asks only the next handoff field after partial free-text intake progress", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
         return {
@@ -428,10 +428,7 @@ describe("processTurn", () => {
             fields: [...standardHandoffFields],
           },
           reasonCode: "handoff",
-          collectedFacts: {
-            fullName: "Bob Junior",
-            phone: "07845729939",
-          },
+          collectedFacts: {},
           requestedFields: [...standardHandoffFields],
           grounding: null,
           safetyFlags: ["account_specific_request"],
@@ -451,24 +448,25 @@ describe("processTurn", () => {
 
     const result = await processTurn({
       state: initialState,
-      userMessage: "Update my payment details",
+      userMessage: "Full name: Bob Junior. Phone: 07845729939.",
       planner,
       corpus,
       now: new Date("2026-06-13T12:06:00.000Z"),
       idFactory: idFactory(),
     });
 
-    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.finalAction).toBe("ask_clarifying_question");
     expect(result.ui).toMatchObject({
-      primitive: "intake_form",
-      message:
-        "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
-      fields: ["dateOfBirth", "postcode"],
+      primitive: "clarifying_prompt",
+      message: "Thanks, I have that. What is your date of birth?",
+      questions: ["What is your date of birth?"],
     });
     expect(result.customerMessage).toBe(
-      "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      "Thanks, I have that. What is your date of birth?",
     );
-    expect(result.state.requestedFields).toEqual(["dateOfBirth", "postcode"]);
+    expect(result.trace.effectiveServingMode).toBeNull();
+    expect(result.state.handoffPending).toBe(true);
+    expect(result.state.requestedFields).toEqual(["dateOfBirth"]);
     expect(result.state.collectedFacts).toMatchObject({
       email: "bob@example.com",
       fullName: "Bob Junior",
@@ -1422,9 +1420,10 @@ describe("processTurn", () => {
         "sensitive_overshare",
       ]),
     );
+    expect(result.customerMessage).toMatch(/Do not send bank login details/i);
     expect(result.validatorOverrides.map((override) => override.code)).toEqual([
       "malformed_plan",
-      "non_answer_citation_blocked",
+      "credential_offer_warned",
     ]);
   });
 

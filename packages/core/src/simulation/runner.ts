@@ -21,6 +21,7 @@ import {
 } from "@loanslam/contracts";
 
 import { processTurn } from "../engine";
+import { detectForbiddenCredentialRequest } from "../policy";
 
 type PlannerWithMetadata = TurnPlanner & { metadata?: PlannerMetadata };
 
@@ -50,6 +51,7 @@ const unsafeOverrideCodes = new Set([
   "answer_grounding_not_retrieved",
   "non_answer_citation_blocked",
   "forbidden_credential_request_blocked",
+  "credential_offer_warned",
   "account_specific_promise_blocked",
 ]);
 
@@ -310,6 +312,10 @@ function buildUxNotes({
         notes.push("Forbidden credential request blocked.");
       }
 
+      if (override.code === "credential_offer_warned") {
+        notes.push("Forbidden credential offer warned.");
+      }
+
       if (override.code === "account_specific_promise_blocked") {
         notes.push("Promised account-specific outcome blocked.");
       }
@@ -332,9 +338,7 @@ function detectForbiddenBehavior(
 
   if (marker === "forbidden_credential_requests") {
     return traces.some((trace) =>
-      /\b(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|payment\s+credentials?)\b/i.test(
-        trace.customerMessage,
-      ),
+      detectForbiddenCredentialRequest(trace.customerMessage),
     );
   }
 

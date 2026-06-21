@@ -47,13 +47,13 @@ const uiPrimitivesByAction = {
 } as const satisfies Record<TurnAction, readonly UiPrimitive[]>;
 
 const forbiddenCredentialTermPattern =
-  /\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|payment\s+credentials?)\b/i;
+  /\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b/i;
 
 const credentialCollectionPattern =
-  /\b(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|payment\s+credentials?)\b/i;
+  /\b(send|share|provide|enter|give|confirm|tell|submit|type|write|upload|attach)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b/i;
 
 const credentialWarningPattern =
-  /\b(never|do\s+not|don't|dont|should\s+not|must\s+not)\s+(send|share|provide|enter|give|confirm|tell|submit|type|write)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|payment\s+credentials?)\b/i;
+  /\b(never|do\s+not|don't|dont|should\s+not|must\s+not)\s+(send|share|provide|enter|give|confirm|tell|submit|type|write|upload|attach)\b.{0,80}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b/i;
 
 const accountValueStatementPattern =
   /\b(your\s+)?(balance|settlement\s+figure|next\s+payment\s+date|repayment\s+date|interest\s+rate|apr|application\s+result)\s+(is|are|was|were|will\s+be|has\s+been|equals?)\b/i;
@@ -68,10 +68,19 @@ const approvalPromisePattern =
   /\b(your\s+)?(application|loan|request)\s+(is|was|has\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\byou\s+(are|were|have\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\b(approval|application\s+result)\s+(is|was|has\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\b(approved|accepted|guaranteed)\s+(today|now|already)\b|\b(will\s+be\s+paid|will\s+receive\s+funds)\b/i;
 
 const sensitiveOversharePattern =
-  /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide)|let\s+me\s+(send|share|give|provide))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|date\s+of\s+birth|dob)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*code|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
+  /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide|upload|attach)|let\s+me\s+(send|share|give|provide|upload|attach))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
 
 const internalDataExposurePattern =
   /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
+
+const secondaryBorrowingAdvicePattern =
+  /\bshould\s+i\b.{0,80}\bborrow\b.{0,80}\b(another|other|different)\s+lender\b|\bborrow\b.{0,80}\b(another|other|different)\s+lender\b.{0,80}\b(pay|repay|cover|clear)\b/i;
+
+const credentialBoundaryQuestionPattern =
+  /\b(?:should|can|could|do)\s+i\b.{0,100}\b(send|share|provide|give|upload|submit|tell|enter)\b.{0,100}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b|\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b.{0,100}\b(?:should|can|could|do)\s+i\b.{0,100}\b(send|share|provide|give|upload|submit|tell|enter)\b|\b(?:upload|send|share|attach)\b.{0,80}\b(screenshot|screen\s*shot)\b.{0,80}\b(bank|banking|app|online\s+banking)\b|\b(screenshot|screen\s*shot)\b.{0,80}\b(bank|banking|app|online\s+banking)\b.{0,80}\b(?:upload|send|share|attach)\b/i;
+
+const paymentLinkRequestPattern =
+  /\b(send|give|provide|get|need|want|create|generate)\b.{0,80}\bpayment\s+link\b|\bpayment\s+link\b.{0,80}\b(now|right\s+now|send|give|provide|get|need|want|create|generate)\b/i;
 
 export function allowedUiPrimitivesForAction(
   action: TurnAction,
@@ -122,6 +131,18 @@ export function detectSensitiveOvershare(text: string): boolean {
 
 export function detectInternalDataExposureRequest(text: string): boolean {
   return internalDataExposurePattern.test(text);
+}
+
+export function detectSecondaryBorrowingAdviceRequest(text: string): boolean {
+  return secondaryBorrowingAdvicePattern.test(text);
+}
+
+export function detectCredentialBoundaryRequest(text: string): boolean {
+  return credentialBoundaryQuestionPattern.test(text);
+}
+
+export function detectPaymentLinkRequest(text: string): boolean {
+  return paymentLinkRequestPattern.test(text);
 }
 
 export function buildFallbackCopy(reason: string): {
@@ -183,6 +204,48 @@ export function buildHandoffCopy(reason: string): {
   };
 }
 
+export function buildCredentialHandoffCopy(): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "Do not send bank login details, passwords, sort codes, account numbers, card details, security answers, one-time passcodes, or banking-app screenshots in this chat. I can collect standard contact details and pass this to the LoanSlam team.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
+export function buildPaymentLinkHandoffCopy(): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I can't create or send a payment link in this chat. I can collect standard contact details and pass this to the LoanSlam team.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
 export function buildVulnerabilityCopy(reason: string): {
   action: "request_handoff_intake";
   customerMessage: string;
@@ -221,6 +284,32 @@ export function buildExcludedCopy(
     ui: {
       primitive: "safe_fallback",
       message: `${customerMessage} ${reason}`,
+      links: [...links],
+    },
+  };
+}
+
+export function buildSecondaryBorrowingBoundaryCopy(): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const links = [
+    { label: "StepChange", href: "https://www.stepchange.org" },
+    {
+      label: "MoneyHelper",
+      href: "https://www.moneyhelper.org.uk/debt-advice-locator",
+    },
+  ] as const satisfies readonly ApprovedLink[];
+  const customerMessage =
+    "I can't advise you on whether to borrow from another lender. Free, impartial debt advice is available from StepChange or MoneyHelper, and the LoanSlam team can discuss your existing account.";
+
+  return {
+    action: "refuse",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: customerMessage,
       links: [...links],
     },
   };

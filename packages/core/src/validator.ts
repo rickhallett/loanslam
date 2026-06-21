@@ -12,14 +12,20 @@ import type {
 
 import {
   buildExcludedCopy,
+  buildCredentialHandoffCopy,
   buildFallbackCopy,
   buildHandoffCopy,
   buildInternalDataBoundaryCopy,
+  buildPaymentLinkHandoffCopy,
+  buildSecondaryBorrowingBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
+  detectCredentialBoundaryRequest,
   detectForbiddenCredentialRequest,
   detectInternalDataExposureRequest,
+  detectPaymentLinkRequest,
   detectPromisedAccountValueOrOutcome,
+  detectSecondaryBorrowingAdviceRequest,
   detectSensitiveOvershare,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
@@ -134,10 +140,66 @@ export function validateTurnPlan(
     );
   }
 
-  if (detectForbiddenCredentialRequest(planText(plan))) {
-    const handoff = buildHandoffCopy(
-      "Do not share bank, card, payment, or online banking credentials in chat.",
+  if (
+    detectCredentialBoundaryRequest(options.userMessage ?? "") ||
+    (detectSensitiveOvershare(options.userMessage ?? "") &&
+      containsForbiddenCredentialTerm(options.userMessage ?? ""))
+  ) {
+    const handoff = buildCredentialHandoffCopy();
+
+    return applyOverride(
+      base,
+      {
+        code: "credential_offer_warned",
+        reason:
+          "The customer offered bank, card, payment, online banking, or security credentials in chat.",
+        toAction: handoff.action,
+      },
+      {
+        finalAction: handoff.action,
+        customerMessage: handoff.customerMessage,
+        ui: handoff.ui,
+        requestedFields: handoff.requestedFields,
+        collectedFacts: {},
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "forbidden_credentials",
+          "sensitive_overshare",
+        ]),
+      },
     );
+  }
+
+  if (detectPaymentLinkRequest(options.userMessage ?? "")) {
+    const handoff = buildPaymentLinkHandoffCopy();
+
+    return applyOverride(
+      base,
+      {
+        code: "payment_link_handoff_required",
+        reason:
+          "Payment-link creation is account-specific and must not be invented in chat.",
+        toAction: handoff.action,
+      },
+      {
+        finalAction: handoff.action,
+        customerMessage: handoff.customerMessage,
+        ui: handoff.ui,
+        requestedFields: handoff.requestedFields,
+        collectedFacts: {},
+        selectedServingMode: "handoff_account_specific",
+        selectedRouteReason:
+          "Payment links are account-specific and require the LoanSlam team.",
+        safetyFlags: uniqueSafetyFlags([
+          ...base.safetyFlags,
+          "account_specific_request",
+        ]),
+      },
+    );
+  }
+
+  if (detectForbiddenCredentialRequest(planText(plan))) {
+    const handoff = buildCredentialHandoffCopy();
 
     return applyOverride(
       base,
@@ -162,9 +224,7 @@ export function validateTurnPlan(
   }
 
   if (collectedFactsContainForbiddenCredentials(plan.collectedFacts)) {
-    const handoff = buildHandoffCopy(
-      "Do not share bank, card, payment, or online banking credentials in chat.",
-    );
+    const handoff = buildCredentialHandoffCopy();
 
     return applyOverride(
       base,
@@ -184,6 +244,30 @@ export function validateTurnPlan(
           ...base.safetyFlags,
           "forbidden_credentials",
         ]),
+      },
+    );
+  }
+
+  if (detectSecondaryBorrowingAdviceRequest(options.userMessage ?? "")) {
+    const excluded = buildSecondaryBorrowingBoundaryCopy();
+
+    return applyOverride(
+      base,
+      {
+        code: "secondary_borrowing_advice_blocked",
+        reason:
+          "Advice on whether to borrow from another lender is regulated financial advice and must not be answered in chat.",
+        toAction: excluded.action,
+      },
+      {
+        finalAction: excluded.action,
+        customerMessage: excluded.customerMessage,
+        ui: excluded.ui,
+        requestedFields: [],
+        collectedFacts: {},
+        selectedServingMode: "excluded",
+        selectedRouteReason:
+          "Advice on whether to borrow from another lender is regulated financial advice.",
       },
     );
   }
@@ -370,7 +454,10 @@ function inferSafetyFlagsFromMatches(
 function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
   const flags: SafetyFlag[] = [];
 
-  if (detectSensitiveOvershare(message)) {
+  if (
+    detectCredentialBoundaryRequest(message) ||
+    detectSensitiveOvershare(message)
+  ) {
     flags.push("sensitive_overshare");
 
     if (containsForbiddenCredentialTerm(message)) {

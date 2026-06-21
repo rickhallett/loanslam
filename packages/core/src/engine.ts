@@ -423,11 +423,11 @@ function applyHandoffStateRules(
   }
 
   if (state.handoffPending && hasAnyStandardHandoffFact(extractedFacts)) {
-    return buildMissingHandoffFragment(
+    return buildNextHandoffQuestionFragment(
       currentValidated,
       missingStandardFields,
       "handoff_intake_progress_preserved",
-      "A pending handoff turn collected intake facts but still needs more standard fields.",
+      "A pending handoff turn collected intake facts and should ask only for the next missing standard field.",
     );
   }
 
@@ -460,10 +460,14 @@ function applyHandoffStateRules(
     );
   }
 
-  const customerMessage = buildHandoffIntroMessage({
-    servingMode: currentValidated.selectedServingMode,
-    safetyFlags: currentValidated.safetyFlags,
-  });
+  const customerMessage = currentValidated.safetyFlags.includes(
+    "forbidden_credentials",
+  )
+    ? currentValidated.customerMessage
+    : buildHandoffIntroMessage({
+        servingMode: currentValidated.selectedServingMode,
+        safetyFlags: currentValidated.safetyFlags,
+      });
 
   if (sameIntakeFields(currentValidated.ui.fields, missingStandardFields)) {
     return {
@@ -1136,6 +1140,7 @@ function nextStateSafetyFlags({
   if (
     handoffPending &&
     (finalAction === "request_handoff_intake" ||
+      finalAction === "ask_clarifying_question" ||
       finalAction === "escalate" ||
       finalAction === "create_ticket")
   ) {
@@ -1163,6 +1168,10 @@ function nextHandoffPending(
     finalAction === "fallback" ||
     finalAction === "ask_clarifying_question"
   ) {
+    if (finalAction === "ask_clarifying_question") {
+      return state.handoffPending;
+    }
+
     return state.lastAction === "create_ticket" && state.handoffPending;
   }
 

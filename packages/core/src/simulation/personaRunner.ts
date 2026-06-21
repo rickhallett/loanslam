@@ -47,6 +47,7 @@ const unsafeOverrideCodes = new Set([
   "answer_grounding_not_retrieved",
   "non_answer_citation_blocked",
   "forbidden_credential_request_blocked",
+  "credential_offer_warned",
   "account_specific_promise_blocked",
 ]);
 

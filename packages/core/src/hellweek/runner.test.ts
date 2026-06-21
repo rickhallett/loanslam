@@ -187,7 +187,7 @@ describe("hell week scenario runner", () => {
       routeForScoring: "handoff_account_specific",
       selectedServingMode: "handoff_account_specific",
       effectiveServingMode: "handoff_account_specific",
-      validatorOverrideCodes: ["malformed_plan", "non_answer_citation_blocked"],
+      validatorOverrideCodes: ["malformed_plan", "credential_offer_warned"],
     });
     expect(finalTurn?.safetyFlags).toEqual(
       expect.arrayContaining([

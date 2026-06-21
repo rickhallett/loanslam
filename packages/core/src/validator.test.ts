@@ -272,7 +272,8 @@ describe("validateTurnPlan", () => {
     );
 
     expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.customerMessage).not.toMatch(/sort code|account number|cvv/i);
+    expect(result.customerMessage).toMatch(/Do not send/i);
+    expect(result.customerMessage).not.toMatch(/Please send/i);
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       fields: standardHandoffFields,
@@ -491,6 +492,24 @@ describe("validateTurnPlan", () => {
     expect(result.validatorOverrides).toEqual([]);
   });
 
+  it("refuses secondary-borrowing advice even when retrieval selects an answer", () => {
+    const result = validateTurnPlan(plan(), [answerMatch], {
+      userMessage: "Should I borrow from another lender to pay you?",
+    });
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.selectedServingMode).toBe("excluded");
+    expect(result.customerMessage).toMatch(/can't advise/i);
+    expect(result.customerMessage).toMatch(/another lender/i);
+    expect(result.customerMessage).not.toMatch(/We wouldn.t advise/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "secondary_borrowing_advice_blocked",
+        toAction: "refuse",
+      }),
+    );
+  });
+
   it("routes vulnerability safety flags ahead of excluded refusal", () => {
     const result = validateTurnPlan(
       refusalPlan({
@@ -521,6 +540,94 @@ describe("validateTurnPlan", () => {
 
     expect(result.safetyFlags).toEqual(
       expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+  });
+
+  it("warns explicitly when the customer offers bank login credentials", () => {
+    const result = validateTurnPlan(handoffPlan(), [vulnerabilityMatch], {
+      userMessage: "I can send my bank login to prove it is my account.",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/Do not send bank login details/i);
+    expect(result.customerMessage).not.toMatch(/Please share a few contact/i);
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "credential_offer_warned",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
+  it("warns explicitly when the customer asks whether to give an OTP", () => {
+    const result = validateTurnPlan(handoffPlan(), [handoffMatch], {
+      userMessage:
+        "I have a one-time passcode from my bank, should I give it to you?",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/one-time passcodes/i);
+    expect(result.customerMessage).not.toMatch(/should give it|please give/i);
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "credential_offer_warned",
+        toAction: "request_handoff_intake",
+      }),
+    );
+  });
+
+  it("discourages banking app screenshots without asking for upload", () => {
+    const result = validateTurnPlan(handoffPlan(), [handoffMatch], {
+      userMessage: "Can I upload a screenshot of my banking app?",
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/banking-app screenshots/i);
+    expect(result.customerMessage).not.toMatch(/upload|attach/i);
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "credential_offer_warned",
+      }),
+    );
+  });
+
+  it("routes payment-link requests to handoff without inventing a link", () => {
+    const result = validateTurnPlan(
+      plan({
+        customerMessage: "Here is your payment link: https://pay.example/test",
+        ui: {
+          primitive: "message",
+          message: "Here is your payment link: https://pay.example/test",
+          links: [{ label: "Pay now", url: "https://pay.example/test" }],
+        },
+      }),
+      [answerMatch],
+      {
+        userMessage: "Send me a payment link right now.",
+      },
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.customerMessage).toMatch(
+      /can't create or send a payment link/i,
+    );
+    expect(result.customerMessage).not.toMatch(/https:\/\/pay\.example/i);
+    expect(result.safetyFlags).toContain("account_specific_request");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "payment_link_handoff_required",
+        toAction: "request_handoff_intake",
+      }),
     );
   });
 
