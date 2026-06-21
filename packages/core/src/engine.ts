@@ -499,10 +499,8 @@ function buildCompletedHandoffFragment(
     ...state.collectedFacts,
     ...validated.collectedFacts,
   };
-  const reference = buildSupportReference(state.conversationRef);
   const customerMessage = buildCompletedHandoffMessage({
     facts,
-    reference,
     safetyFlags: validated.safetyFlags,
   });
   const override: ValidatorOverride = {
@@ -519,7 +517,6 @@ function buildCompletedHandoffFragment(
     ui: {
       primitive: "handoff_confirmation",
       message: customerMessage,
-      reference,
     },
     requestedFields: [],
     validatorOverrides: [...validated.validatorOverrides, override],
@@ -641,25 +638,22 @@ function buildUrgentSafetyFragment(
 
 function buildCompletedHandoffMessage({
   facts,
-  reference,
   safetyFlags,
 }: {
   facts: Record<string, string>;
-  reference: string;
   safetyFlags: readonly ConversationState["safetyFlags"][number][];
 }): string {
   const contactText = buildContactText(facts);
-  const referenceText = `Your customer services support reference is ${reference}.`;
 
   if (safetyFlags.includes("complaint")) {
-    return `I've passed your complaint to the LoanSlam team. ${contactText}\n\n${referenceText}`;
+    return `I've passed your complaint to the LoanSlam team. ${contactText}`;
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return `I've passed this to the LoanSlam team so a person can help you carefully. ${contactText}\n\n${referenceText}`;
+    return `I've passed this to the LoanSlam team so a person can help you carefully. ${contactText}`;
   }
 
-  return `I've passed this to the LoanSlam team. ${contactText}\n\n${referenceText}`;
+  return `I've passed this to the LoanSlam team. ${contactText}`;
 }
 
 function buildContactText(facts: Record<string, string>): string {
@@ -667,18 +661,18 @@ function buildContactText(facts: Record<string, string>): string {
   const phone = facts.phone?.trim();
 
   if (email && phone) {
-    return `They will contact you on ${email} or ${phone} within the next 48 hours.`;
+    return "The team can use the contact details you provided to follow up.";
   }
 
   if (email) {
-    return `They will contact you on ${email} within the next 48 hours.`;
+    return "The team can use the email address you provided to follow up.";
   }
 
   if (phone) {
-    return `They will contact you on ${phone} within the next 48 hours.`;
+    return "The team can use the phone number you provided to follow up.";
   }
 
-  return "They will contact you using the details you provided within the next 48 hours.";
+  return "The team can use the details you provided to follow up.";
 }
 
 function buildSupportReference(conversationRef: string): string {
@@ -722,13 +716,11 @@ export function completeStructuredHandoff({
   const reference = buildSupportReference(state.conversationRef);
   const customerMessage = buildCompletedHandoffMessage({
     facts: collectedFacts,
-    reference,
     safetyFlags: state.safetyFlags,
   });
   const ui: UiPlan = {
     primitive: "handoff_confirmation",
     message: customerMessage,
-    reference,
   };
   const createdAt = now.toISOString();
 

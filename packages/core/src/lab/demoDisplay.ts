@@ -68,7 +68,6 @@ export function mapStructuredIntakeToDemoResponse({
   finalAction,
   ui,
   customerMessage,
-  reference,
   turn,
   continuationToken,
 }: {
@@ -84,12 +83,10 @@ export function mapStructuredIntakeToDemoResponse({
   const safeMessage = buildSafeHandoffConfirmation({
     state,
     customerMessage,
-    reference,
   });
   const safeUi: UiPlan = {
     primitive: "handoff_confirmation",
     message: safeMessage,
-    reference,
   };
 
   return {
@@ -295,11 +292,9 @@ function sanitizeCustomerMessageForDemo({
 function buildSafeHandoffConfirmation({
   state,
   customerMessage,
-  reference,
 }: {
   state: ConversationState;
   customerMessage: string;
-  reference: string;
 }): string {
   const redacted = sanitizeCustomerMessageForDemo({
     message: customerMessage,
@@ -308,10 +303,10 @@ function buildSafeHandoffConfirmation({
 
   if (redacted !== customerMessage) {
     if (state.safetyFlags.some((flag) => VULNERABLE_FLAGS.has(flag))) {
-      return `I've passed this to the LoanSlam team so a person can help you carefully using the contact details you provided.\n\nYour reference is ${reference}.`;
+      return "I've passed this to the LoanSlam team so a person can help you carefully using the contact details you provided.";
     }
 
-    return `I've passed this to the LoanSlam team using the contact details you provided.\n\nYour reference is ${reference}.`;
+    return "I've passed this to the LoanSlam team using the contact details you provided.";
   }
 
   return redacted;

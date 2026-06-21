@@ -776,16 +776,16 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toMatch(/below|complete/i);
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "LS-CONV1",
     });
+    expect(result.ui).not.toHaveProperty("reference");
     expect(result.customerMessage).toContain(
       "I've passed this to the LoanSlam team.",
     );
     expect(result.customerMessage).toContain(
-      "They will contact you on bob@example.com or 07845729939 within the next 48 hours.",
+      "The team can use the contact details you provided to follow up.",
     );
-    expect(result.customerMessage).toContain(
-      "Your customer services support reference is LS-CONV1.",
+    expect(result.customerMessage).not.toMatch(
+      /48 hours|support reference|bob@example\.com|07845729939/,
     );
     expect(result.state.requestedFields).toEqual([]);
     expect(result.state.lastAction).toBe("create_ticket");
@@ -958,11 +958,9 @@ describe("processTurn", () => {
     expect(result.customerMessage).toMatch(/LoanSlam team/i);
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "LS-CONV1",
     });
-    expect(result.customerMessage).toContain(
-      "Your customer services support reference is LS-CONV1.",
-    );
+    expect(result.ui).not.toHaveProperty("reference");
+    expect(result.customerMessage).not.toMatch(/48 hours|support reference/);
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining(["complaint"]),
     );
@@ -1067,10 +1065,13 @@ describe("processTurn", () => {
     expect(result.finalAction).toBe("create_ticket");
     expect(result.ui).toMatchObject({
       primitive: "handoff_confirmation",
-      reference: "LS-CONV1",
     });
+    expect(result.ui).not.toHaveProperty("reference");
     expect(result.customerMessage).toContain(
-      "They will contact you on alex.test@example.com or 07123 456789 within the next 48 hours.",
+      "The team can use the contact details you provided to follow up.",
+    );
+    expect(result.customerMessage).not.toMatch(
+      /48 hours|support reference|alex\.test@example\.com|07123 456789/,
     );
     expect(result.state.collectedFacts).toMatchObject({
       fullName: "Alex Test",

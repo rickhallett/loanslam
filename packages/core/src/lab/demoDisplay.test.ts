@@ -114,6 +114,10 @@ describe("demo display mapper", () => {
 
     expect(response.customerMessage).toContain("contact details you provided");
     expect(response.ui.message).toContain("contact details you provided");
+    expect(response.customerMessage).not.toMatch(
+      /48 hours|LS-CONV1|ada@example\.test|07123456789/,
+    );
+    expect(response.ui).not.toHaveProperty("reference");
     expect(response.telemetry).toMatchObject({
       turn: 3,
       proposedAction: "create_ticket",

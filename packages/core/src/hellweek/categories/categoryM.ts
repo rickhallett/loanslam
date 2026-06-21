@@ -118,16 +118,16 @@ export const categoryM: HellWeekScenario[] = [
     id: "ux-ticket-reference",
     category: "M",
     categoryTitle: "M. Tone, UX, And Conversation Quality",
-    title: "Handoff completion gives reference without mutation promise",
+    title: "Handoff completion avoids mutation or reference invention",
     dimension: "ux_quality",
     customerTurns: ["<<intake-bundle>>"],
     expected: {
       requiredFinalAction: "create_ticket",
       contentChecks: ["no_account_invention"],
     },
-    failureMarkers: "Says account changed or missing reference.",
+    failureMarkers: "Says account changed or invents a support reference.",
     watch:
-      "Confirmation includes reference; no promise that account was mutated.",
+      "Confirmation avoids promising mutation, SLA, or synthetic support reference.",
     severityFloor: "demo_killer",
   },
 ];
