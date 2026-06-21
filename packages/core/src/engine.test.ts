@@ -93,6 +93,32 @@ function answerPlanner(planOverrides: Partial<TurnPlan> = {}): TurnPlanner {
   };
 }
 
+function vulnerabilityHandoffPlanner(
+  planOverrides: Partial<TurnPlan> = {},
+): TurnPlanner {
+  return {
+    async planTurn() {
+      return {
+        action: "request_handoff_intake",
+        customerMessage:
+          "I can pass this to the LoanSlam team so a person can help.",
+        ui: {
+          primitive: "intake_form",
+          message: "I can pass this to the LoanSlam team so a person can help.",
+          fields: [...standardHandoffFields],
+        },
+        reasonCode: "vulnerability_handoff",
+        collectedFacts: {},
+        requestedFields: [...standardHandoffFields],
+        grounding: null,
+        safetyFlags: ["vulnerability", "distress"],
+        traceSummary: "Customer may need careful support.",
+        ...planOverrides,
+      };
+    },
+  };
+}
+
 const answerSignalBundle: SignalBundle = {
   primaryIntent: "answer",
   secondaryIntents: [],
@@ -519,27 +545,9 @@ describe("processTurn", () => {
   });
 
   it("escalates explicit self-harm risk without standard intake copy", async () => {
-    const planner: TurnPlanner = {
-      async planTurn() {
-        return {
-          action: "request_handoff_intake",
-          customerMessage:
-            "I can pass this to the LoanSlam team so a person can help.",
-          ui: {
-            primitive: "intake_form",
-            message:
-              "I can pass this to the LoanSlam team so a person can help.",
-            fields: [...standardHandoffFields],
-          },
-          reasonCode: "vulnerability_handoff",
-          collectedFacts: {},
-          requestedFields: [...standardHandoffFields],
-          grounding: null,
-          safetyFlags: ["vulnerability", "distress"],
-          traceSummary: "Customer may harm themselves.",
-        };
-      },
-    };
+    const planner = vulnerabilityHandoffPlanner({
+      traceSummary: "Customer may harm themselves.",
+    });
 
     const result = await processTurn({
       state: state(),
@@ -562,6 +570,66 @@ describe("processTurn", () => {
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining(["vulnerability", "distress"]),
     );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "urgent_safety_escalation_copy",
+        toAction: "escalate",
+      }),
+    );
+  });
+
+  it("does not force emergency escalation for negated suicidal reassurance", async () => {
+    const planner = vulnerabilityHandoffPlanner({
+      traceSummary: "Customer is distressed but negates self-harm.",
+    });
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I am not suicidal but I am stressed.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:32.500Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("person who can help");
+    expect(result.customerMessage).not.toContain("emergency services");
+    expect(result.customerMessage).not.toContain("urgent help");
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      fields: standardHandoffFields,
+    });
+    expect(result.validatorOverrides).not.toContainEqual(
+      expect.objectContaining({
+        code: "urgent_safety_escalation_copy",
+      }),
+    );
+  });
+
+  it("still escalates when reassurance is followed by a separate self-harm risk", async () => {
+    const planner = vulnerabilityHandoffPlanner({
+      traceSummary: "Customer negates suicide but raises self-harm risk.",
+    });
+
+    const result = await processTurn({
+      state: state(),
+      userMessage:
+        "I am not suicidal, but if collections call again I might hurt myself.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:32.750Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("escalate");
+    expect(result.customerMessage).toContain("immediate danger");
+    expect(result.customerMessage).toContain("urgent help");
+    expect(result.customerMessage).not.toContain("contact details below");
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      message: result.customerMessage,
+    });
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
         code: "urgent_safety_escalation_copy",

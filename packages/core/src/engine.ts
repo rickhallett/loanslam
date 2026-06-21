@@ -610,6 +610,19 @@ function handoffFieldQuestion(field: IntakeField): string {
 
 type UrgentRiskKind = "medical" | "self_harm";
 
+const selfHarmRiskPattern =
+  /\b(kill|harm|hurt)\s+myself\b|\bself[-\s]?harm\b|\bsuicid(?:e|al)\b/i;
+
+const negatedSelfHarmPatterns = [
+  /\b(?:not|never)\s+(?:suicidal|self[-\s]?harm(?:ing)?)\b/gi,
+  /\b(?:not|never)\s+(?:going\s+to|gonna|planning\s+to|trying\s+to|intending\s+to|about\s+to|want(?:ing)?\s+to)?\s*(?:kill|harm|hurt)\s+myself\b/gi,
+  /\b(?:not|never)\s+(?:going\s+to|gonna|planning\s+to|trying\s+to|intending\s+to|about\s+to)\s+(?:self[-\s]?harm|end\s+it)\b/gi,
+  /\b(?:don't|do\s+not|dont)\s+(?:want|plan|intend|mean|expect)\s+to\s+(?:kill|harm|hurt)\s+myself\b/gi,
+  /\b(?:don't|do\s+not|dont)\s+(?:want|plan|intend|mean|expect)\s+to\s+(?:self[-\s]?harm|end\s+it)\b/gi,
+  /\b(?:won't|will\s+not)\s+(?:kill|harm|hurt)\s+myself\b/gi,
+  /\b(?:won't|will\s+not)\s+(?:self[-\s]?harm|end\s+it|be\s+suicidal)\b/gi,
+];
+
 function buildUrgentSafetyFragment(
   validated: ValidatedPlanFragment,
   kind: UrgentRiskKind,
@@ -800,12 +813,7 @@ function buildHandoffIntroMessage({
 }
 
 function detectUrgentRisk(message: string): UrgentRiskKind | null {
-  if (
-    !negatesSelfHarm(message) &&
-    (/\b(kill|harm|hurt)\s+myself\b/i.test(message) ||
-      /\bself[-\s]?harm\b/i.test(message) ||
-      /\bsuicid(?:e|al)\b/i.test(message))
-  ) {
+  if (selfHarmRiskPattern.test(message) && !negatesSelfHarm(message)) {
     return "self_harm";
   }
 
@@ -822,14 +830,14 @@ function detectUrgentRisk(message: string): UrgentRiskKind | null {
 }
 
 function negatesSelfHarm(message: string): boolean {
+  const withoutNegatedPhrases = negatedSelfHarmPatterns.reduce(
+    (text, pattern) => text.replace(pattern, " "),
+    message,
+  );
+
   return (
-    /\b(?:not|never)\s+(?:going\s+to|gonna|planning\s+to|trying\s+to|intending\s+to|about\s+to|want(?:ing)?\s+to)?\s*(?:kill|harm|hurt)\s+myself\b/i.test(
-      message,
-    ) ||
-    /\b(?:don't|do\s+not|dont)\s+(?:want|plan|intend|mean|expect)\s+to\s+(?:kill|harm|hurt)\s+myself\b/i.test(
-      message,
-    ) ||
-    /\b(?:won't|will\s+not)\s+(?:kill|harm|hurt)\s+myself\b/i.test(message)
+    withoutNegatedPhrases !== message &&
+    !selfHarmRiskPattern.test(withoutNegatedPhrases)
   );
 }
 
