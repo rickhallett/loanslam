@@ -520,6 +520,148 @@ describe("processTurn", () => {
     });
   });
 
+  it("escalates explicit self-harm risk without standard intake copy", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can pass this to the LoanSlam team so a person can help.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can pass this to the LoanSlam team so a person can help.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "vulnerability_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["vulnerability", "distress"],
+          traceSummary: "Customer may harm themselves.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "If collections call me again I might hurt myself.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:32.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("escalate");
+    expect(result.customerMessage).toContain("immediate danger");
+    expect(result.customerMessage).toContain("urgent help");
+    expect(result.customerMessage).not.toContain("contact details below");
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      message: result.customerMessage,
+    });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["vulnerability", "distress"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "urgent_safety_escalation_copy",
+        toAction: "escalate",
+      }),
+    );
+  });
+
+  it("escalates urgent medical risk without Loanslam intake copy", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can pass this to the LoanSlam team so a person can help.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can pass this to the LoanSlam team so a person can help.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "medical_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "Customer asks about chest pain.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I have chest pain, should I go to hospital?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:33.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("escalate");
+    expect(result.customerMessage).toContain("urgent medical help");
+    expect(result.customerMessage).toContain("emergency services");
+    expect(result.customerMessage).not.toContain(
+      "LoanSlam team will be in touch",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      message: result.customerMessage,
+    });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["vulnerability"]),
+    );
+  });
+
+  it("escalates mixed self-harm threat even when don't modifies another verb", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "escalate",
+          customerMessage:
+            "I should get a person involved because of the safety risk.",
+          ui: {
+            primitive: "safe_fallback",
+            message:
+              "I should get a person involved because of the safety risk.",
+            links: [],
+          },
+          reasonCode: "self_harm_threat",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: ["vulnerability", "distress"],
+          traceSummary: "Customer threatens self-harm if train is not booked.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "If you don't book my train I might hurt myself.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:34.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("escalate");
+    expect(result.customerMessage).toContain("immediate danger");
+    expect(result.customerMessage).not.toContain("contact details below");
+    expect(result.ui).toMatchObject({
+      primitive: "handoff_confirmation",
+      message: result.customerMessage,
+    });
+    expect(result.state.requestedFields).toEqual([]);
+  });
+
   it("does not preserve planner-requested intake fields on answer turns", async () => {
     const planner: TurnPlanner = {
       async planTurn() {

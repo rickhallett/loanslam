@@ -382,6 +382,13 @@ function applyHandoffStateRules(
             ...validated.collectedFacts,
           },
         };
+
+  const urgentRisk = detectUrgentRisk(userMessage);
+
+  if (urgentRisk) {
+    return buildUrgentSafetyFragment(currentValidated, urgentRisk);
+  }
+
   const facts = {
     ...state.collectedFacts,
     ...currentValidated.collectedFacts,
@@ -548,6 +555,90 @@ function buildMissingHandoffFragment(
   };
 }
 
+function buildNextHandoffQuestionFragment(
+  validated: ValidatedPlanFragment,
+  missingFields: readonly IntakeField[],
+  code: string,
+  reason: string,
+): ValidatedPlanFragment {
+  const nextField = missingFields[0];
+
+  if (!nextField) {
+    return validated;
+  }
+
+  const question = handoffFieldQuestion(nextField);
+  const customerMessage = `Thanks, I have that. ${question}`;
+  const override: ValidatorOverride = {
+    code,
+    reason,
+    fromAction: validated.finalAction,
+    toAction: "ask_clarifying_question",
+  };
+
+  return {
+    ...validated,
+    finalAction: "ask_clarifying_question",
+    customerMessage,
+    ui: {
+      primitive: "clarifying_prompt",
+      message: customerMessage,
+      questions: [question],
+    },
+    requestedFields: [nextField],
+    selectedServingMode: null,
+    selectedRouteReason: null,
+    validatorOverrides: [...validated.validatorOverrides, override],
+  };
+}
+
+function handoffFieldQuestion(field: IntakeField): string {
+  switch (field) {
+    case "fullName":
+      return "What is your full name?";
+    case "dateOfBirth":
+      return "What is your date of birth?";
+    case "postcode":
+      return "What is your postcode?";
+    case "email":
+      return "What email address should the LoanSlam team use?";
+    case "phone":
+      return "What phone number should the LoanSlam team use?";
+  }
+}
+
+type UrgentRiskKind = "medical" | "self_harm";
+
+function buildUrgentSafetyFragment(
+  validated: ValidatedPlanFragment,
+  kind: UrgentRiskKind,
+): ValidatedPlanFragment {
+  const customerMessage =
+    kind === "medical"
+      ? "This could need urgent medical help. Please contact emergency services now if you may be in danger. I can't give medical advice in this chat; the LoanSlam team can review any loan issue separately, but urgent help comes first."
+      : "I'm sorry you're feeling this way. If you might hurt yourself or are in immediate danger, please contact emergency services or a crisis support service now. I can't provide crisis support in this chat; the LoanSlam team can review any loan issue separately, but urgent help comes first.";
+  const override: ValidatorOverride = {
+    code: "urgent_safety_escalation_copy",
+    reason:
+      "Immediate self-harm or medical-emergency language must get urgent safety signposting before LoanSlam intake.",
+    fromAction: validated.finalAction,
+    toAction: "escalate",
+  };
+
+  return {
+    ...validated,
+    finalAction: "escalate",
+    customerMessage,
+    ui: {
+      primitive: "handoff_confirmation",
+      message: customerMessage,
+    },
+    requestedFields: [],
+    safetyFlags: mergeSafetyFlags(validated.safetyFlags, ["vulnerability"]),
+    validatorOverrides: [...validated.validatorOverrides, override],
+  };
+}
+
 function buildCompletedHandoffMessage({
   facts,
   reference,
@@ -710,6 +801,40 @@ function buildHandoffIntroMessage({
   }
 
   return "I'll pass this to the LoanSlam team so a person can help. Please share a few contact details below so they can get back to you.";
+}
+
+function detectUrgentRisk(message: string): UrgentRiskKind | null {
+  if (
+    !negatesSelfHarm(message) &&
+    (/\b(kill|harm|hurt)\s+myself\b/i.test(message) ||
+      /\bself[-\s]?harm\b/i.test(message) ||
+      /\bsuicid(?:e|al)\b/i.test(message))
+  ) {
+    return "self_harm";
+  }
+
+  if (
+    /\b(chest\s+pain|can't\s+breathe|cannot\s+breathe|stroke|heart\s+attack)\b/i.test(
+      message,
+    ) ||
+    /\b(go|going)\s+to\s+hospital\b/i.test(message)
+  ) {
+    return "medical";
+  }
+
+  return null;
+}
+
+function negatesSelfHarm(message: string): boolean {
+  return (
+    /\b(?:not|never)\s+(?:going\s+to|gonna|planning\s+to|trying\s+to|intending\s+to|about\s+to|want(?:ing)?\s+to)?\s*(?:kill|harm|hurt)\s+myself\b/i.test(
+      message,
+    ) ||
+    /\b(?:don't|do\s+not|dont)\s+(?:want|plan|intend|mean|expect)\s+to\s+(?:kill|harm|hurt)\s+myself\b/i.test(
+      message,
+    ) ||
+    /\b(?:won't|will\s+not)\s+(?:kill|harm|hurt)\s+myself\b/i.test(message)
+  );
 }
 
 function shouldApplyExtractedHandoffFacts(
