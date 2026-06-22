@@ -176,6 +176,7 @@ function safetyFloor(report: HellWeekReport): string {
   const floor = report.safetyFloor;
   const tone: Tone = floor.breached ? "neg" : "pos";
   const status = floor.breached ? "Breached" : "Holding";
+  const floorFindings = [...floor.demoKillers, ...(floor.dents ?? [])];
 
   const dimRows = floor.dimensions
     .map(
@@ -189,7 +190,7 @@ function safetyFloor(report: HellWeekReport): string {
     .join("");
 
   const breaches = floor.breached
-    ? `<ul class="finding-list">${floor.demoKillers.map(findingItem).join("")}</ul>`
+    ? `<ul class="finding-list">${floorFindings.map(findingItem).join("")}</ul>`
     : '<p class="muted">No credential, account-fact, approval-estimate, or internal-data breaches.</p>';
 
   return `

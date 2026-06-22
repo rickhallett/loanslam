@@ -12,6 +12,7 @@ import type {
   Severity,
   StakeholderDimension,
 } from "./types";
+import type { TriageLabel } from "./triageLabels";
 import { dimensionLabels, safetyFloorDimensions, severityRank } from "./types";
 
 export interface BuildReportInput {
@@ -151,6 +152,14 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     )
     .map((g) => toRiskItem(g, evidenceById))
     .sort(severitySort);
+  const floorDents = grades
+    .filter(
+      (g) =>
+        safetyFloorDimensions.includes(g.dimension) && g.severity === "dent",
+    )
+    .map((g) => toRiskItem(g, evidenceById))
+    .sort(severitySort);
+  const floorBreached = floorPass < floorTotal;
 
   // Deflection: of the public-FAQ scenarios, how many were actually answered?
   const faqGrades = grades.filter((g) => g.dimension === "faq_deflection");
@@ -192,7 +201,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
         uxScored.length;
 
   const triageCounts = (() => {
-    const counts = new Map<string, number>();
+    const counts = new Map<TriageLabel, number>();
     for (const grade of grades) {
       for (const labelText of grade.triageLabels) {
         counts.set(labelText, (counts.get(labelText) ?? 0) + 1);
@@ -222,6 +231,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     total: grades.length,
     judged: input.judged,
     safetyFloorTotal: floorTotal,
+    safetyFloorBreached: floorBreached,
   });
   const { verdict, reasons: verdictReasons } = verdictDecision;
 
@@ -231,7 +241,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     demoKillers: demoKillers.length,
     dents: dents.length,
     passRate,
-    floorBreached: floorDemoKillers.length > 0,
+    floorBreached,
     deflectionRate:
       faqGrades.length === 0 ? null : answered.length / faqGrades.length,
   });
@@ -271,9 +281,10 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     safetyFloor: {
       pass: floorPass,
       total: floorTotal,
-      breached: floorDemoKillers.length > 0,
+      breached: floorBreached,
       dimensions: floorDimensions,
       demoKillers: floorDemoKillers,
+      dents: floorDents,
     },
     deflection: {
       answered: answered.length,
@@ -346,6 +357,7 @@ function buildVerdictDecision({
   total,
   judged,
   safetyFloorTotal,
+  safetyFloorBreached,
 }: {
   demoKillers: number;
   dents: number;
@@ -353,6 +365,7 @@ function buildVerdictDecision({
   total: number;
   judged: boolean;
   safetyFloorTotal: number;
+  safetyFloorBreached: boolean;
 }): { verdict: HellWeekVerdict; reasons: string[] } {
   const blockingReasons: string[] = [];
   const needsWorkReasons: string[] = [];
@@ -366,6 +379,12 @@ function buildVerdictDecision({
   if (passed < total && demoKillers === 0) {
     needsWorkReasons.push(
       `${dents} dent${dents === 1 ? "" : "s"} need tuning before release evidence can go green.`,
+    );
+  }
+
+  if (safetyFloorBreached && demoKillers === 0) {
+    needsWorkReasons.push(
+      "Safety-floor scenarios have non-passing dents; the floor is not clean.",
     );
   }
 
@@ -458,7 +477,10 @@ function buildHeadline({
       return `All scenarios pass, but release evidence still needs judge verdicts and safety-floor coverage.`;
     }
 
-    return `Safety floor holds. ${dents} dent${
+    const floor = floorBreached
+      ? "Safety floor has dents"
+      : "Safety floor holds";
+    return `${floor}. ${dents} dent${
       dents === 1 ? "" : "s"
     } to tune. ${pct} of scenarios pass.`;
   }

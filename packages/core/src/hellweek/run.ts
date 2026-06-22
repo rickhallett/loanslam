@@ -16,6 +16,7 @@ import { renderHellWeekReportHtml } from "./htmlReport";
 import { renderHellWeekJasmineHtml } from "./jasmineReport";
 import { runHellWeek } from "./runner";
 import { assertUniqueScenarioIds, selectScenarios } from "./scenarios";
+import { isJudgeTriageLabel, type JudgeTriageLabel } from "./triageLabels";
 import type {
   HellWeekGrade,
   HellWeekJudgeReportMetadata,
@@ -63,7 +64,6 @@ export interface HellWeekRunArtifacts {
   reportJsonPath: string;
   reportHtmlPath: string;
   evidenceJsonPath: string;
-  judgeQueuePath: string;
   scenariosDir: string;
   report: HellWeekReport;
 }
@@ -150,7 +150,6 @@ function writeRunArtifacts({
   const reportJsonPath = join(runDir, "report.json");
   const reportHtmlPath = join(runDir, "report.html");
   const evidenceJsonPath = join(runDir, "evidence.json");
-  const judgeQueuePath = join(runDir, "judge-queue.jsonl");
 
   writeFileSync(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
   writeFileSync(reportHtmlPath, renderReportHtml(report, theme), "utf8");
@@ -160,11 +159,9 @@ function writeRunArtifacts({
     "utf8",
   );
 
-  const scenarioById = new Map(scenarios.map((s) => [s.id, s]));
   const evidenceById = new Map(evidence.map((e) => [e.scenarioId, e]));
 
-  // Per-scenario packets the LLM judge reads, plus a single queue file.
-  const queueLines: string[] = [];
+  // Per-scenario packets the LLM judge reads.
   for (const scenario of scenarios) {
     const packet = {
       scenario,
@@ -175,11 +172,7 @@ function writeRunArtifacts({
       `${JSON.stringify(packet, null, 2)}\n`,
       "utf8",
     );
-    queueLines.push(JSON.stringify({ scenarioId: scenario.id }));
   }
-  // scenarioById is intentionally unused beyond validation of membership.
-  void scenarioById;
-  writeFileSync(judgeQueuePath, `${queueLines.join("\n")}\n`, "utf8");
 
   return {
     runId,
@@ -187,7 +180,6 @@ function writeRunArtifacts({
     reportJsonPath,
     reportHtmlPath,
     evidenceJsonPath,
-    judgeQueuePath,
     scenariosDir,
     report,
   };
@@ -450,6 +442,9 @@ function judgeReportMetadata(
   if (metadata.promptVersion !== undefined) {
     summary.promptVersion = metadata.promptVersion;
   }
+  if (metadata.rubricHash !== undefined) {
+    summary.rubricHash = metadata.rubricHash;
+  }
   if (metadata.sourceRunId !== undefined) {
     summary.sourceRunId = metadata.sourceRunId;
   }
@@ -571,6 +566,7 @@ function validateJudgeMetadata(
   assignOptionalString(metadata, value, "model", sourceLabel);
   assignOptionalString(metadata, value, "tool", sourceLabel);
   assignOptionalString(metadata, value, "promptVersion", sourceLabel);
+  assignOptionalString(metadata, value, "rubricHash", sourceLabel);
   assignOptionalString(metadata, value, "sourceRunId", sourceLabel);
   assignOptionalString(metadata, value, "sourceRunPath", sourceLabel);
 
@@ -617,10 +613,13 @@ function validateJudgeVerdict(
   const triageLabels = value.triageLabels;
   if (
     !Array.isArray(triageLabels) ||
-    !triageLabels.every((label) => typeof label === "string")
+    !triageLabels.every(
+      (label): label is JudgeTriageLabel =>
+        typeof label === "string" && isJudgeTriageLabel(label),
+    )
   ) {
     throw new Error(
-      `Judge verdict ${sourceLabel} triageLabels must be string[].`,
+      `Judge verdict ${sourceLabel} triageLabels must use the judge triage enum.`,
     );
   }
 

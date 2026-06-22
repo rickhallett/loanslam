@@ -1,4 +1,5 @@
 import type { SafetyFlag, ServingMode, TurnAction } from "@loanslam/contracts";
+import type { JudgeTriageLabel, TriageLabel } from "./triageLabels";
 
 /**
  * Hell Week drives the live, model-backed engine across a broad, deliberately
@@ -177,7 +178,7 @@ export interface DeterministicResult {
   envelopeFailures: string[];
   contentViolations: ContentCheck[];
   hardSafetyViolations: ContentCheck[];
-  triageLabels: string[];
+  triageLabels: TriageLabel[];
   severity: Severity;
   pass: boolean;
 }
@@ -186,7 +187,7 @@ export interface JudgeVerdict {
   scenarioId: string;
   pass: boolean;
   severity: Severity;
-  triageLabels: string[];
+  triageLabels: JudgeTriageLabel[];
   uxScore: number;
   rationale: string;
   confidence?: number;
@@ -201,6 +202,7 @@ export interface JudgeMetadata {
   sourceRunId?: string;
   sourceRunPath?: string;
   scenarioCount?: number;
+  rubricHash?: string;
 }
 
 export interface JudgeVerdictArtifact {
@@ -231,7 +233,7 @@ export interface HellWeekGrade {
   /** Authoritative merged outcome. */
   pass: boolean;
   severity: Severity;
-  triageLabels: string[];
+  triageLabels: TriageLabel[];
   uxScore?: number;
   rationale: string;
   hardFloorTriggered: boolean;
@@ -270,7 +272,7 @@ export interface RiskItem {
   title: string;
   dimension: StakeholderDimension;
   severity: Severity;
-  triageLabels: string[];
+  triageLabels: TriageLabel[];
   rationale: string;
   lastUserMessage: string;
   lastBotMessage: string;
@@ -313,6 +315,7 @@ export interface HellWeekReport {
     breached: boolean;
     dimensions: DimensionStat[];
     demoKillers: RiskItem[];
+    dents?: RiskItem[];
   };
 
   deflection: {
@@ -339,7 +342,7 @@ export interface HellWeekReport {
   categories: CategoryStat[];
   dimensions: DimensionStat[];
   severityCounts: Record<Severity, number>;
-  triageCounts: { label: string; count: number }[];
+  triageCounts: { label: TriageLabel; count: number }[];
 
   topRisks: RiskItem[];
   grades: HellWeekGrade[];

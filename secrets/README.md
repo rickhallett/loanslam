@@ -20,3 +20,10 @@ just secrets-sync-railway staging -- --dry-run
 ```
 
 Use `--apply` on sync commands only when intentionally mutating cloud environment variables.
+
+## Local Required Keys
+
+`local` must contain `OPENAI_API_KEY`, `DATABASE_URL`,
+`DATABASE_URL_UNPOOLED`, `DEMO_INTERACTION_DATABASE_URL`, and `WAFER_API_KEY`.
+The DB URLs should point at the local Postgres instance used by Hell Week and
+demo-log evidence runs.

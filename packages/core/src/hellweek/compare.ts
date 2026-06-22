@@ -88,6 +88,7 @@ interface CompareJudgeMetadata {
   model?: string;
   tool?: string;
   promptVersion?: string;
+  rubricHash?: string;
   sourceRunId?: string;
   sourceRunPath?: string;
   scenarioCount?: number;
@@ -111,6 +112,7 @@ export type HellWeekComparabilityField =
   | "judge_model"
   | "judge_tool"
   | "judge_prompt"
+  | "judge_rubric_hash"
   | "judge_scenario_count"
   | "judge_verdict_count";
 
@@ -605,6 +607,12 @@ function buildComparabilityWarnings({
     message: "Judge prompt versions differ.",
   });
   addOptionalWarning(warnings, {
+    field: "judge_rubric_hash",
+    baseline: before.judge?.rubricHash,
+    candidate: after.judge?.rubricHash,
+    message: "Judge rubric hashes differ.",
+  });
+  addOptionalWarning(warnings, {
     field: "judge_scenario_count",
     baseline: optionalString(before.judge?.scenarioCount),
     candidate: optionalString(after.judge?.scenarioCount),
@@ -780,6 +788,9 @@ function judgeMetadataValue(raw: unknown): CompareJudgeMetadata | undefined {
     ...(typeof judge.tool === "string" ? { tool: judge.tool } : {}),
     ...(typeof judge.promptVersion === "string"
       ? { promptVersion: judge.promptVersion }
+      : {}),
+    ...(typeof judge.rubricHash === "string"
+      ? { rubricHash: judge.rubricHash }
       : {}),
     ...(typeof judge.sourceRunId === "string"
       ? { sourceRunId: judge.sourceRunId }

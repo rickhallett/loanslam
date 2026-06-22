@@ -66,6 +66,7 @@ describe("Hell Week run rendering", () => {
           provider: "workflow",
           model: "gpt-5.4",
           promptVersion: "hellweek-judge-v1",
+          rubricHash: "sha256:test-rubric",
           sourceRunId: report.runId,
           sourceRunPath: runDir,
           scenarioCount: 1,
@@ -94,6 +95,7 @@ describe("Hell Week run rendering", () => {
         provider: "workflow",
         model: "gpt-5.4",
         promptVersion: "hellweek-judge-v1",
+        rubricHash: "sha256:test-rubric",
         sourceRunId: report.runId,
         scenarioCount: 1,
       });

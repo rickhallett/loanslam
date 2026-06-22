@@ -7,6 +7,7 @@ import {
   type HellWeekComparabilityWarning,
   type HellWeekComparisonJson,
 } from "./compare";
+import type { TriageLabel } from "./triageLabels";
 import {
   severityRank,
   type HellWeekGrade,
@@ -40,7 +41,7 @@ export interface HellWeekStabilityOutcome {
   position: number;
   pass: boolean | null;
   severity: Severity | null;
-  triageLabels: string[];
+  triageLabels: TriageLabel[];
   rationale: string;
   missing: boolean;
 }
@@ -56,7 +57,7 @@ export interface HellWeekStabilityScenario {
   worstSeverity: Severity;
   classification: HellWeekStabilityClassification;
   severityCounts: Record<Severity, number>;
-  triageLabels: string[];
+  triageLabels: TriageLabel[];
   outcomes: HellWeekStabilityOutcome[];
 }
 

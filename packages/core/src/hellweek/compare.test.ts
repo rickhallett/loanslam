@@ -89,6 +89,7 @@ describe("Hell Week comparison comparability", () => {
           model: "judge-a",
           tool: "tool-a",
           promptVersion: "judge-prompt-a",
+          rubricHash: "sha256:rubric-a",
           scenarioCount: 2,
           verdictCount: 2,
         },
@@ -108,6 +109,7 @@ describe("Hell Week comparison comparability", () => {
           model: "judge-b",
           tool: "tool-b",
           promptVersion: "judge-prompt-b",
+          rubricHash: "sha256:rubric-b",
           scenarioCount: 1,
           verdictCount: 1,
         },
@@ -123,6 +125,7 @@ describe("Hell Week comparison comparability", () => {
       "judge_model",
       "judge_tool",
       "judge_prompt",
+      "judge_rubric_hash",
       "judge_scenario_count",
       "judge_verdict_count",
     ]);
@@ -133,6 +136,7 @@ describe("Hell Week comparison comparability", () => {
           artifactSchemaVersion: 1,
           model: "judge-a",
           promptVersion: "judge-prompt-a",
+          rubricHash: "sha256:rubric-a",
           verdictCount: 2,
         },
       },
@@ -141,6 +145,7 @@ describe("Hell Week comparison comparability", () => {
           artifactSchemaVersion: 2,
           model: "judge-b",
           promptVersion: "judge-prompt-b",
+          rubricHash: "sha256:rubric-b",
           verdictCount: 1,
         },
       },
@@ -192,6 +197,7 @@ function report(
       model?: string;
       tool?: string;
       promptVersion?: string;
+      rubricHash?: string;
       scenarioCount?: number;
       verdictCount: number;
     };
