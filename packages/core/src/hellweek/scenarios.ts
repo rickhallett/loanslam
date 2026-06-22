@@ -222,10 +222,16 @@ export const hellWeekProfiles: Record<string, HellWeekProfile> = {
   full: {
     id: "full",
     description:
-      "The entire Hell Week gauntlet (smoke gate plus sections A-M).",
+      "Review-tier Hell Week gauntlet (smoke gate plus sections A-M).",
     categories: [],
   },
 };
+
+export const hellWeekReviewTierProfile = "full";
+
+export function isHellWeekReviewTierProfile(profileId: string): boolean {
+  return profileId === hellWeekReviewTierProfile;
+}
 
 export function selectScenarios(profileId: string): HellWeekScenario[] {
   const profile = hellWeekProfiles[profileId];

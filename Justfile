@@ -133,6 +133,10 @@ route-audit *audit_flags:
 hell-week *hell_flags:
     @npm --silent run core:hell-week -- {{ hell_flags }}
 
+# Run the review-tier Hell Week pipeline: full battery -> ladder judge -> regrade.
+hell-week-review *review_flags:
+    @npm --silent run core:hell-week-review -- {{ review_flags }}
+
 # Judge a captured Hell Week run with OpenAI and write judge-verdicts.json.
 hell-week-judge *judge_flags:
     @npm --silent run core:hell-week-judge -- {{ judge_flags }}

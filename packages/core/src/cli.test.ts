@@ -387,6 +387,30 @@ describe("Phase 0 CLI", () => {
     expect(result.stdout).toContain("OPENAI_API_KEY");
   });
 
+  it("documents Hell Week review-tier orchestration without planner credentials", async () => {
+    const result = await runCli(["hell-week-review", "--help"], {});
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("hell-week-review");
+    expect(result.stdout).toContain("battery capture -> OpenAI ladder judge");
+  });
+
+  it("keeps smoke out of Hell Week review-tier orchestration", async () => {
+    let plannerCreated = false;
+    const result = await runCli(
+      ["hell-week-review", "--profile", "smoke", "--json"],
+      {},
+      () => {
+        plannerCreated = true;
+        return plannerFactory();
+      },
+    );
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain('review-tier profile "full"');
+    expect(plannerCreated).toBe(false);
+  });
+
   it("documents Hell Week judge calibration without requiring planner credentials", async () => {
     const result = await runCli(["hell-week-judge-calibrate", "--help"], {});
 

@@ -86,7 +86,10 @@ describe("Hell Week comparison comparability", () => {
         judge: {
           artifactSchemaVersion: 1,
           provider: "workflow",
+          mode: "single_model",
           model: "judge-a",
+          verifierModel: "verifier-a",
+          finalAdjudicatorModel: "final-a",
           tool: "tool-a",
           promptVersion: "judge-prompt-a",
           rubricHash: "sha256:rubric-a",
@@ -106,7 +109,10 @@ describe("Hell Week comparison comparability", () => {
         judge: {
           artifactSchemaVersion: 2,
           provider: "workflow-v2",
+          mode: "ladder",
           model: "judge-b",
+          verifierModel: "verifier-b",
+          finalAdjudicatorModel: "final-b",
           tool: "tool-b",
           promptVersion: "judge-prompt-b",
           rubricHash: "sha256:rubric-b",
@@ -122,7 +128,10 @@ describe("Hell Week comparison comparability", () => {
     ).toEqual([
       "judge_artifact_schema",
       "judge_provider",
+      "judge_mode",
       "judge_model",
+      "judge_verifier_model",
+      "judge_final_model",
       "judge_tool",
       "judge_prompt",
       "judge_rubric_hash",
@@ -134,7 +143,10 @@ describe("Hell Week comparison comparability", () => {
       baseline: {
         judge: {
           artifactSchemaVersion: 1,
+          mode: "single_model",
           model: "judge-a",
+          verifierModel: "verifier-a",
+          finalAdjudicatorModel: "final-a",
           promptVersion: "judge-prompt-a",
           rubricHash: "sha256:rubric-a",
           verdictCount: 2,
@@ -143,7 +155,10 @@ describe("Hell Week comparison comparability", () => {
       candidate: {
         judge: {
           artifactSchemaVersion: 2,
+          mode: "ladder",
           model: "judge-b",
+          verifierModel: "verifier-b",
+          finalAdjudicatorModel: "final-b",
           promptVersion: "judge-prompt-b",
           rubricHash: "sha256:rubric-b",
           verdictCount: 1,
@@ -194,7 +209,11 @@ function report(
     judge?: {
       artifactSchemaVersion?: number;
       provider?: string;
+      mode?: string;
       model?: string;
+      judgeModel?: string;
+      verifierModel?: string;
+      finalAdjudicatorModel?: string;
       tool?: string;
       promptVersion?: string;
       rubricHash?: string;

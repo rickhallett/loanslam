@@ -284,7 +284,11 @@ export async function judgeHellWeekRun(
     metadata: {
       generatedAt: now().toISOString(),
       provider: "openai",
+      mode: "ladder",
       model: modelSummary(judgeModel, verifierModel, finalAdjudicatorModel),
+      judgeModel,
+      verifierModel,
+      finalAdjudicatorModel,
       tool: openAiHellWeekJudgeTool,
       promptVersion,
       rubricHash: openAiHellWeekJudgeRubricHash,

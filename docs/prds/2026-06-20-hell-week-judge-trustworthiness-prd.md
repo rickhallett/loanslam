@@ -103,6 +103,10 @@ real breaches, not every disagreement with the current gold label.
 
 ### 2. Make judged-then-regrade the default for full/review runs
 
+- Hell Week has no separate stochastic-style `review` profile. The review tier
+  is the existing `full` profile: smoke gate plus sections A-M. `smoke` remains
+  deterministic-only fast local iteration unless the operator explicitly runs a
+  separate judge/regrade flow.
 - Enforce judge -> regrade in the orchestration/CLI for profiles at or above
   `review`. Store the judge verdicts and the merged grade in the run artifact.
 - Single deterministic-only runs remain available for fast local iteration but

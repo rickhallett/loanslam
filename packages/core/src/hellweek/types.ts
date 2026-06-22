@@ -196,7 +196,11 @@ export interface JudgeVerdict {
 export interface JudgeMetadata {
   generatedAt: string;
   provider?: string;
+  mode?: "single_model" | "ladder";
   model?: string;
+  judgeModel?: string;
+  verifierModel?: string;
+  finalAdjudicatorModel?: string;
   tool?: string;
   promptVersion?: string;
   sourceRunId?: string;

@@ -42,6 +42,10 @@ import {
   type HellWeekRunArtifacts,
 } from "./hellweek/run";
 import {
+  runHellWeekReviewOrchestration,
+  type HellWeekReviewArtifacts,
+} from "./hellweek/review";
+import {
   assertHellWeekDatabaseLive,
   openHellWeekReportStore,
 } from "./hellweek/db";
@@ -67,6 +71,10 @@ import {
   formatHellWeekComparison,
   toHellWeekComparisonJson,
 } from "./hellweek/compare";
+import {
+  hellWeekReviewTierProfile,
+  isHellWeekReviewTierProfile,
+} from "./hellweek/scenarios";
 
 export interface CliResult {
   exitCode: number;
@@ -144,6 +152,10 @@ export async function runCli(
 
     if (command === "hell-week") {
       return await runHellWeekCommand(rest, env, plannerFactory);
+    }
+
+    if (command === "hell-week-review") {
+      return await runHellWeekReviewCommand(rest, env, plannerFactory);
     }
 
     if (command === "hell-week-compare") {
@@ -514,6 +526,59 @@ function hellWeekSummary(
     .join("\n");
 }
 
+function hellWeekReviewSummary(
+  artifacts: HellWeekReviewArtifacts,
+  asJson: boolean,
+): string {
+  const { report } = artifacts;
+  const judgeMode = report.judge?.mode ?? "unknown";
+
+  if (asJson) {
+    return JSON.stringify({
+      runId: artifacts.runId,
+      profile: report.profile,
+      reviewTier: true,
+      verdict: report.verdict,
+      verdictReasons: report.verdictReasons ?? [],
+      judged: report.judged,
+      judge: report.judge,
+      judgeMode,
+      totals: report.totals,
+      safetyFloorBreached: report.safetyFloor.breached,
+      reportJsonPath: artifacts.reportJsonPath,
+      reportHtmlPath: artifacts.reportHtmlPath,
+      deterministicReportJsonPath: artifacts.deterministicReportJsonPath,
+      judgeVerdictsPath: artifacts.judgeVerdictsPath,
+      orchestrationJsonPath: artifacts.orchestrationJsonPath,
+      runDir: artifacts.runDir,
+    });
+  }
+
+  return [
+    `Hell Week review: ${report.verdict.toUpperCase()}`,
+    `Profile: ${report.profile} (review tier: full battery)`,
+    `Pipeline: deterministic capture -> ladder judge -> regrade`,
+    report.headline,
+    ...(report.verdictReasons?.length
+      ? ["", "Verdict reasons:", ...report.verdictReasons.map((r) => `- ${r}`)]
+      : []),
+    "",
+    `Judged: ${report.judged ? "yes" : "no"} (${judgeMode})`,
+    report.judge
+      ? `Judge: ${report.judge.model ?? "unknown"} · rubric ${report.judge.rubricHash ?? "unknown"}`
+      : "Judge: missing",
+    `Scenarios: ${report.totals.passed}/${report.totals.scenarios} pass (${Math.round(report.totals.passRate * 100)}%)`,
+    `Demo-killers: ${report.totals.demoKillers} · Dents: ${report.totals.dents} · Errored: ${report.totals.errored}`,
+    `Safety floor: ${report.safetyFloor.breached ? "BREACHED" : "holding"} (${report.safetyFloor.pass}/${report.safetyFloor.total})`,
+    "",
+    `Report: ${artifacts.reportHtmlPath}`,
+    `Deterministic snapshot: ${artifacts.deterministicReportJsonPath}`,
+    `Judge verdicts: ${artifacts.judgeVerdictsPath}`,
+    `Orchestration: ${artifacts.orchestrationJsonPath}`,
+    `Run dir: ${artifacts.runDir}`,
+  ].join("\n");
+}
+
 function hellWeekStabilitySummary(
   artifacts: HellWeekStabilityArtifacts,
   asJson: boolean,
@@ -739,6 +804,93 @@ async function runHellWeekCommand(
   }
 
   return ok(hellWeekSummary(artifacts, asJson));
+}
+
+async function runHellWeekReviewCommand(
+  args: string[],
+  env: CliEnv,
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekReviewHelpText());
+  }
+
+  const profile = readOption(normalized, "--profile") ?? "full";
+  const outBaseDir = readOption(normalized, "--out") ?? defaultTraceDir;
+  const concurrencyRaw = readOption(normalized, "--concurrency");
+  const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
+  const judgeConcurrencyRaw = readOption(normalized, "--judge-concurrency");
+  const judgeConcurrency = judgeConcurrencyRaw
+    ? Number(judgeConcurrencyRaw)
+    : undefined;
+  const signalsMode = readOption(normalized, "--signals") ?? "on";
+  const theme = readOption(normalized, "--theme") ?? "minimal";
+  const asJson = normalized.includes("--json");
+  const storeDb = normalized.includes("--store-db");
+  const databaseUrl =
+    readOption(normalized, "--database-url") ??
+    readOption(normalized, "--db") ??
+    readHellWeekDatabaseUrl(env);
+  const judgeModel =
+    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
+  const verifierModel =
+    readOption(normalized, "--verify-model") ??
+    readHellWeekJudgeVerifierModel(env);
+  const finalAdjudicatorModel =
+    readOption(normalized, "--final-model") ??
+    readHellWeekJudgeFinalAdjudicatorModel(env);
+
+  if (!isHellWeekReviewTierProfile(profile)) {
+    return fail(
+      `hell-week-review only supports review-tier profile "${hellWeekReviewTierProfile}". ` +
+        "Use hell-week for deterministic-only fast runs.",
+    );
+  }
+
+  if (
+    concurrency !== undefined &&
+    (!Number.isInteger(concurrency) || concurrency <= 0)
+  ) {
+    return fail("--concurrency must be a positive integer.");
+  }
+
+  if (
+    judgeConcurrency !== undefined &&
+    (!Number.isInteger(judgeConcurrency) || judgeConcurrency <= 0)
+  ) {
+    return fail("--judge-concurrency must be a positive integer.");
+  }
+
+  if (theme !== "minimal" && theme !== "jasmine") {
+    return fail("--theme must be minimal or jasmine.");
+  }
+
+  await assertHellWeekDatabaseLive(databaseUrl);
+
+  const signalExtractor = resolveHellWeekSignalExtractor(signalsMode, env);
+  const planner = plannerFactory();
+  const apiKey = env.OPENAI_API_KEY?.trim();
+  const artifacts = await runHellWeekReviewOrchestration({
+    profile,
+    corpus: loadCorpusFromFile().items,
+    planner,
+    ...(signalExtractor ? { signalExtractor } : {}),
+    outBaseDir,
+    theme,
+    judgeModel,
+    verifierModel,
+    finalAdjudicatorModel,
+    ...(apiKey ? { apiKey } : {}),
+    ...(concurrency ? { concurrency } : {}),
+    ...(judgeConcurrency ? { judgeConcurrency } : {}),
+    ...(storeDb ? { storeDb } : {}),
+    ...(databaseUrl ? { databaseUrl } : {}),
+    onProgress: (message) => process.stderr.write(`${message}\n`),
+  });
+
+  return ok(hellWeekReviewSummary(artifacts, asJson));
 }
 
 function runHellWeekCompareCommand(args: string[]): CliResult {
@@ -1489,6 +1641,7 @@ function helpText(): string {
     "  stochastic                        Run the StochasticTestSimulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
+    "  hell-week-review                  Run full battery -> ladder judge -> regrade",
     "  hell-week-judge <run-dir>          Judge a captured Hell Week run with OpenAI",
     "  hell-week-judge-calibrate          Run the frozen judge gold-set calibration",
     "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
@@ -1526,6 +1679,34 @@ function hellWeekJudgeHelpText(): string {
     "  --json                  print compact JSON summary",
     "",
     "Requires OPENAI_API_KEY. Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL, OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL, and OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL.",
+  ].join("\n");
+}
+
+function hellWeekReviewHelpText(): string {
+  return [
+    "LoanSlam Hell Week review-tier orchestration",
+    "",
+    "Usage:",
+    "  hell-week-review [--profile full] [--out <dir>] [--concurrency <n>]",
+    "                   [--judge-concurrency <n>] [--signals on|off|auto]",
+    "                   [--store-db] [--db <url>] [--model <model>]",
+    "                   [--verify-model <model>] [--final-model <model>]",
+    "                   [--theme minimal|jasmine] [--json]",
+    "",
+    "Runs the review-tier Hell Week pipeline as one operator command:",
+    "battery capture -> OpenAI ladder judge -> regrade with judge verdicts.",
+    "The Hell Week review tier is profile full. Use hell-week for deterministic",
+    "smoke or local iteration runs; deterministic-only reports remain capped at",
+    "needs_work and are not release verdicts.",
+    "",
+    "Artifacts:",
+    "  report.deterministic-only.json  Snapshot before judge regrade",
+    "  judge-verdicts.json             Ladder judge verdict artifact",
+    "  report.json / report.html       Final judged report",
+    "  review-orchestration.json       Pipeline manifest",
+    "",
+    "Requires OPENAI_API_KEY and a reachable Hell Week Postgres URL before model calls.",
+    "Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL, OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL, and OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL.",
   ].join("\n");
 }
 

@@ -85,7 +85,11 @@ interface CompareReport {
 interface CompareJudgeMetadata {
   generatedAt?: string;
   provider?: string;
+  mode?: string;
   model?: string;
+  judgeModel?: string;
+  verifierModel?: string;
+  finalAdjudicatorModel?: string;
   tool?: string;
   promptVersion?: string;
   rubricHash?: string;
@@ -109,7 +113,10 @@ export type HellWeekComparabilityField =
   | "judged_state"
   | "judge_artifact_schema"
   | "judge_provider"
+  | "judge_mode"
   | "judge_model"
+  | "judge_verifier_model"
+  | "judge_final_model"
   | "judge_tool"
   | "judge_prompt"
   | "judge_rubric_hash"
@@ -589,10 +596,28 @@ function buildComparabilityWarnings({
     message: "Judge providers differ.",
   });
   addOptionalWarning(warnings, {
+    field: "judge_mode",
+    baseline: before.judge?.mode,
+    candidate: after.judge?.mode,
+    message: "Judge modes differ.",
+  });
+  addOptionalWarning(warnings, {
     field: "judge_model",
     baseline: before.judge?.model,
     candidate: after.judge?.model,
     message: "Judge models differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_verifier_model",
+    baseline: before.judge?.verifierModel,
+    candidate: after.judge?.verifierModel,
+    message: "Judge verifier models differ.",
+  });
+  addOptionalWarning(warnings, {
+    field: "judge_final_model",
+    baseline: before.judge?.finalAdjudicatorModel,
+    candidate: after.judge?.finalAdjudicatorModel,
+    message: "Judge final-adjudicator models differ.",
   });
   addOptionalWarning(warnings, {
     field: "judge_tool",
@@ -784,7 +809,17 @@ function judgeMetadataValue(raw: unknown): CompareJudgeMetadata | undefined {
       ? { generatedAt: judge.generatedAt }
       : {}),
     ...(typeof judge.provider === "string" ? { provider: judge.provider } : {}),
+    ...(typeof judge.mode === "string" ? { mode: judge.mode } : {}),
     ...(typeof judge.model === "string" ? { model: judge.model } : {}),
+    ...(typeof judge.judgeModel === "string"
+      ? { judgeModel: judge.judgeModel }
+      : {}),
+    ...(typeof judge.verifierModel === "string"
+      ? { verifierModel: judge.verifierModel }
+      : {}),
+    ...(typeof judge.finalAdjudicatorModel === "string"
+      ? { finalAdjudicatorModel: judge.finalAdjudicatorModel }
+      : {}),
     ...(typeof judge.tool === "string" ? { tool: judge.tool } : {}),
     ...(typeof judge.promptVersion === "string"
       ? { promptVersion: judge.promptVersion }

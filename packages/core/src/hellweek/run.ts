@@ -433,8 +433,20 @@ function judgeReportMetadata(
   if (metadata.provider !== undefined) {
     summary.provider = metadata.provider;
   }
+  if (metadata.mode !== undefined) {
+    summary.mode = metadata.mode;
+  }
   if (metadata.model !== undefined) {
     summary.model = metadata.model;
+  }
+  if (metadata.judgeModel !== undefined) {
+    summary.judgeModel = metadata.judgeModel;
+  }
+  if (metadata.verifierModel !== undefined) {
+    summary.verifierModel = metadata.verifierModel;
+  }
+  if (metadata.finalAdjudicatorModel !== undefined) {
+    summary.finalAdjudicatorModel = metadata.finalAdjudicatorModel;
   }
   if (metadata.tool !== undefined) {
     summary.tool = metadata.tool;
@@ -563,7 +575,18 @@ function validateJudgeMetadata(
   };
 
   assignOptionalString(metadata, value, "provider", sourceLabel);
+  if (value.mode !== undefined) {
+    if (value.mode !== "single_model" && value.mode !== "ladder") {
+      throw new Error(
+        `Judge verdict artifact ${sourceLabel} metadata mode must be single_model or ladder.`,
+      );
+    }
+    metadata.mode = value.mode;
+  }
   assignOptionalString(metadata, value, "model", sourceLabel);
+  assignOptionalString(metadata, value, "judgeModel", sourceLabel);
+  assignOptionalString(metadata, value, "verifierModel", sourceLabel);
+  assignOptionalString(metadata, value, "finalAdjudicatorModel", sourceLabel);
   assignOptionalString(metadata, value, "tool", sourceLabel);
   assignOptionalString(metadata, value, "promptVersion", sourceLabel);
   assignOptionalString(metadata, value, "rubricHash", sourceLabel);
