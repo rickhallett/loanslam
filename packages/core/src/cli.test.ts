@@ -387,6 +387,14 @@ describe("Phase 0 CLI", () => {
     expect(result.stdout).toContain("OPENAI_API_KEY");
   });
 
+  it("documents Hell Week judge calibration without requiring planner credentials", async () => {
+    const result = await runCli(["hell-week-judge-calibrate", "--help"], {});
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("hell-week-judge-calibrate");
+    expect(result.stdout).toContain("gold set");
+  });
+
   it("fails live Hell Week before planner/model calls when DB liveness is not configured", async () => {
     let plannerCreated = false;
     const result = await runCli(
@@ -524,6 +532,7 @@ describe("Phase 0 CLI", () => {
             generatedAt: "2026-06-20T18:30:00.000Z",
             tool: "test-workflow",
             promptVersion: "hellweek-judge-v1",
+            rubricHash: "sha256:test-rubric",
             sourceRunPath: runDir,
             scenarioCount: 1,
           },
@@ -561,6 +570,7 @@ describe("Phase 0 CLI", () => {
       artifactSchemaVersion: 1,
       tool: "test-workflow",
       promptVersion: "hellweek-judge-v1",
+      rubricHash: "sha256:test-rubric",
       verdictCount: 1,
     });
     expect(report.grades[0]).toMatchObject({

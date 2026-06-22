@@ -137,6 +137,10 @@ hell-week *hell_flags:
 hell-week-judge *judge_flags:
     @npm --silent run core:hell-week-judge -- {{ judge_flags }}
 
+# Run the frozen Hell Week judge gold-set calibration with OpenAI.
+hell-week-judge-calibrate *calibration_flags:
+    @npm --silent run core:hell-week-judge-calibrate -- {{ calibration_flags }}
+
 # Compare two Hell Week report.json files or run folders.
 hell-week-compare *compare_flags:
     @npm --silent run core:hell-week-compare -- {{ compare_flags }}

@@ -51,11 +51,17 @@ import {
   type HellWeekStabilityArtifacts,
 } from "./hellweek/stability";
 import {
+  defaultOpenAiHellWeekFinalAdjudicatorModel,
   defaultOpenAiHellWeekJudgeModel,
   defaultOpenAiHellWeekVerifierModel,
   judgeHellWeekRun,
   type JudgeHellWeekRunResult,
 } from "./hellweek/openaiJudge";
+import {
+  runHellWeekJudgeCalibration,
+  type CountRate,
+  type HellWeekJudgeCalibrationResult,
+} from "./hellweek/calibration";
 import {
   compareHellWeekReportsFromPaths,
   formatHellWeekComparison,
@@ -88,6 +94,15 @@ type CliEnv = Record<string, string | undefined>;
 const defaultTraceDir = "artifacts/phase0";
 const demoInteractionDatabaseUrlHelp =
   "DEMO_INTERACTION_DATABASE_URL or DATABASE_URL";
+
+function defaultCalibrationPath(): string {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return join(
+    defaultTraceDir,
+    `hell-week-judge-calibration-${stamp}`,
+    "calibration-report.json",
+  );
+}
 
 export async function runCli(
   args = process.argv.slice(2),
@@ -137,6 +152,10 @@ export async function runCli(
 
     if (command === "hell-week-judge") {
       return await runHellWeekJudgeCommand(rest, env);
+    }
+
+    if (command === "hell-week-judge-calibrate") {
+      return await runHellWeekJudgeCalibrationCommand(rest, env);
     }
 
     if (command === "hell-week-stability") {
@@ -206,6 +225,13 @@ function readHellWeekJudgeVerifierModel(env: CliEnv): string {
   return (
     env.OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL?.trim() ||
     defaultOpenAiHellWeekVerifierModel
+  );
+}
+
+function readHellWeekJudgeFinalAdjudicatorModel(env: CliEnv): string {
+  return (
+    env.OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL?.trim() ||
+    defaultOpenAiHellWeekFinalAdjudicatorModel
   );
 }
 
@@ -533,8 +559,12 @@ function hellWeekJudgeSummary(
     verdicts: result.artifact.verdicts.length,
     model: result.model,
     verifierModel: result.verifierModel,
+    finalAdjudicatorModel: result.finalAdjudicatorModel,
     initialDemoKillers: result.initialDemoKillers,
     finalDemoKillers: result.finalDemoKillers,
+    safetyFloorEscalations: result.safetyFloorEscalations,
+    demoKillerVerifications: result.demoKillerVerifications,
+    hardDisputeAdjudications: result.hardDisputeAdjudications,
     dents: result.dents,
     fine: result.fine,
   };
@@ -545,12 +575,69 @@ function hellWeekJudgeSummary(
 
   return [
     `Judge verdicts: ${summary.verdicts}`,
-    `Models: ${summary.model} / ${summary.verifierModel}`,
+    `Models: ${summary.model} / ${summary.verifierModel} / ${summary.finalAdjudicatorModel}`,
     `Demo-killers: ${summary.finalDemoKillers} (${summary.initialDemoKillers} before verification)`,
+    `Safety-floor safe-call escalations: ${summary.safetyFloorEscalations}`,
+    `Non-floor demo-killer verifications: ${summary.demoKillerVerifications}`,
+    `Hard-dispute final adjudications: ${summary.hardDisputeAdjudications}`,
     `Dents: ${summary.dents}`,
     `Fine: ${summary.fine}`,
     `Artifact: ${summary.outputPath}`,
   ].join("\n");
+}
+
+function hellWeekJudgeCalibrationSummary(
+  result: HellWeekJudgeCalibrationResult,
+  asJson: boolean,
+): string {
+  const labelAgreement = result.report.metrics.labelAgreement;
+  const selfAgreement = result.report.metrics.interRunSelfAgreement;
+  const summary = {
+    outputPath: result.outputPath,
+    goldSetVersion: result.report.goldSetVersion,
+    mode: result.report.judge.mode,
+    itemCount: result.report.judge.itemCount,
+    passesPerItem: result.report.judge.passesPerItem,
+    verdictCount: result.report.judge.verdictCount,
+    model: result.report.judge.model,
+    verifierModel: result.report.judge.verifierModel,
+    finalAdjudicatorModel: result.report.judge.finalAdjudicatorModel,
+    severityAgreementRate: labelAgreement.severity.rate,
+    passAgreementRate: labelAgreement.pass.rate,
+    safetyFloorSeverityAgreementRate: labelAgreement.safetyFloorSeverity.rate,
+    missedBreachCount: labelAgreement.missedBreach.count,
+    missedSafetyFloorBreachCount: labelAgreement.missedSafetyFloorBreach.count,
+    missedDemoKillerBreachCount: labelAgreement.missedDemoKillerBreach.count,
+    harshCallCount: labelAgreement.harshCall.count,
+    severitySelfAgreementRate: selfAgreement.severityPairwise.rate,
+  };
+
+  if (asJson) {
+    return JSON.stringify(summary);
+  }
+
+  return [
+    `Judge calibration: ${summary.itemCount} gold items x ${summary.passesPerItem} passes`,
+    `Mode: ${summary.mode}`,
+    summary.verifierModel && summary.finalAdjudicatorModel
+      ? `Models: ${summary.model} / ${summary.verifierModel} / ${summary.finalAdjudicatorModel}`
+      : `Model: ${summary.model}`,
+    `Severity agreement: ${formatRate(labelAgreement.severity)}`,
+    `Pass agreement: ${formatRate(labelAgreement.pass)}`,
+    `Safety-floor severity agreement: ${formatRate(labelAgreement.safetyFloorSeverity)}`,
+    `Missed breaches: ${summary.missedBreachCount}`,
+    `Missed safety-floor breaches: ${summary.missedSafetyFloorBreachCount}`,
+    `Missed demo-killer breaches: ${summary.missedDemoKillerBreachCount}`,
+    `Harsher-than-gold calls: ${summary.harshCallCount}`,
+    `Severity self-agreement: ${formatRate(selfAgreement.severityPairwise)}`,
+    `Report: ${summary.outputPath ?? "(not written)"}`,
+  ].join("\n");
+}
+
+function formatRate(value: CountRate): string {
+  return value.rate === null
+    ? `${value.count}/${value.total} (n/a)`
+    : `${value.count}/${value.total} (${(value.rate * 100).toFixed(1)}%)`;
 }
 
 async function runHellWeekCommand(
@@ -704,6 +791,9 @@ async function runHellWeekJudgeCommand(
   const verifierModel =
     readOption(normalized, "--verify-model") ??
     readHellWeekJudgeVerifierModel(env);
+  const finalAdjudicatorModel =
+    readOption(normalized, "--final-model") ??
+    readHellWeekJudgeFinalAdjudicatorModel(env);
 
   if (!runDir) {
     return fail(hellWeekJudgeHelpText());
@@ -714,6 +804,7 @@ async function runHellWeekJudgeCommand(
     runDir,
     judgeModel,
     verifierModel,
+    finalAdjudicatorModel,
     ...(apiKey ? { apiKey } : {}),
     ...(outputPath ? { outputPath } : {}),
     ...(concurrency !== undefined ? { concurrency } : {}),
@@ -721,6 +812,49 @@ async function runHellWeekJudgeCommand(
   });
 
   return ok(hellWeekJudgeSummary(result, asJson));
+}
+
+async function runHellWeekJudgeCalibrationCommand(
+  args: string[],
+  env: CliEnv,
+): Promise<CliResult> {
+  const normalized = stripOptionSeparator(args);
+
+  if (normalized.includes("--help") || normalized.includes("-h")) {
+    return ok(hellWeekJudgeCalibrationHelpText());
+  }
+
+  const asJson = normalized.includes("--json");
+  const passesRaw = readOption(normalized, "--passes");
+  const passes = passesRaw ? Number(passesRaw) : undefined;
+  const concurrencyRaw = readOption(normalized, "--concurrency");
+  const concurrency = concurrencyRaw ? Number(concurrencyRaw) : undefined;
+  const outputPath =
+    readOption(normalized, "--out") ?? defaultCalibrationPath();
+  const mode = normalized.includes("--ladder") ? "ladder" : "single_model";
+  const model =
+    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
+  const verifierModel =
+    readOption(normalized, "--verify-model") ??
+    readHellWeekJudgeVerifierModel(env);
+  const finalAdjudicatorModel =
+    readOption(normalized, "--final-model") ??
+    readHellWeekJudgeFinalAdjudicatorModel(env);
+  const apiKey = env.OPENAI_API_KEY?.trim();
+
+  const result = await runHellWeekJudgeCalibration({
+    mode,
+    model,
+    verifierModel,
+    finalAdjudicatorModel,
+    ...(apiKey ? { apiKey } : {}),
+    outputPath,
+    ...(passes !== undefined ? { passes } : {}),
+    ...(concurrency !== undefined ? { concurrency } : {}),
+    onProgress: (message) => process.stderr.write(`${message}\n`),
+  });
+
+  return ok(hellWeekJudgeCalibrationSummary(result, asJson));
 }
 
 async function runHellWeekStabilityCommand(
@@ -1356,6 +1490,7 @@ function helpText(): string {
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
     "  hell-week-judge <run-dir>          Judge a captured Hell Week run with OpenAI",
+    "  hell-week-judge-calibrate          Run the frozen judge gold-set calibration",
     "  hell-week-compare <a> <b>         Compare two Hell Week reports or run dirs",
     "  hell-week-stability               Classify repeated Hell Week runs from Postgres",
     "  chat [--trace]                    Drive the engine turn by turn",
@@ -1373,20 +1508,52 @@ function hellWeekJudgeHelpText(): string {
     "",
     "Usage:",
     "  hell-week-judge <runDir> [--out <path>] [--model <model>]",
-    "                  [--verify-model <model>] [--concurrency <n>] [--json]",
+    "                  [--verify-model <model>] [--final-model <model>]",
+    "                  [--concurrency <n>] [--json]",
     "",
     "Reads <runDir>/scenarios/*.json, grades each captured scenario with the",
-    "OpenAI Responses API, adversarially re-checks demo-killer verdicts, and",
+    "OpenAI Responses API, escalates safety-floor fine/dent calls plus",
+    "non-floor demo-killers to a stronger adjudicator, resolves hard",
+    "disputes with a final model, and",
     "writes judge-verdicts.json using the existing schemaVersion/metadata/verdicts contract.",
     "",
     "Options:",
     "  --out <path>             verdict artifact path (default <runDir>/judge-verdicts.json)",
     `  --model <model>          bulk judge model (default ${defaultOpenAiHellWeekJudgeModel})`,
-    `  --verify-model <model>   demo-killer verifier model (default ${defaultOpenAiHellWeekVerifierModel})`,
+    `  --verify-model <model>   adjudicator/verifier model (default ${defaultOpenAiHellWeekVerifierModel})`,
+    `  --final-model <model>    hard-dispute final model (default ${defaultOpenAiHellWeekFinalAdjudicatorModel})`,
     "  --concurrency <n>       parallel scenario judge calls (default 8)",
     "  --json                  print compact JSON summary",
     "",
-    "Requires OPENAI_API_KEY. Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL and OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL.",
+    "Requires OPENAI_API_KEY. Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL, OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL, and OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL.",
+  ].join("\n");
+}
+
+function hellWeekJudgeCalibrationHelpText(): string {
+  return [
+    "LoanSlam Hell Week OpenAI judge calibration",
+    "",
+    "Usage:",
+    "  hell-week-judge-calibrate [--passes <n>] [--out <path>] [--model <model>]",
+    "                            [--ladder] [--verify-model <model>]",
+    "                            [--final-model <model>] [--concurrency <n>] [--json]",
+    "",
+    "Reads the frozen in-repo gold set, runs the OpenAI judge N times per item,",
+    "and writes agreement, self-agreement, confidence, confusion, missed-breach,",
+    "and escalation metrics. Default mode measures the cheap screener; --ladder",
+    "measures the mini -> verifier -> final adjudicator instrument.",
+    "",
+    "Options:",
+    "  --passes <n>            judge passes per gold item (default 3)",
+    "  --out <path>            report path (default artifacts/phase0/hell-week-judge-calibration-*/calibration-report.json)",
+    `  --model <model>         judge model (default ${defaultOpenAiHellWeekJudgeModel})`,
+    "  --ladder                measure the full escalation ladder",
+    `  --verify-model <model>  verifier model for --ladder (default ${defaultOpenAiHellWeekVerifierModel})`,
+    `  --final-model <model>   final dispute model for --ladder (default ${defaultOpenAiHellWeekFinalAdjudicatorModel})`,
+    "  --concurrency <n>      parallel judge calls (default 8)",
+    "  --json                 print compact JSON summary",
+    "",
+    "Requires OPENAI_API_KEY. Env overrides: OPENAI_HELL_WEEK_JUDGE_MODEL, OPENAI_HELL_WEEK_JUDGE_VERIFY_MODEL, and OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL.",
   ].join("\n");
 }
 
