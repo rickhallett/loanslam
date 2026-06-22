@@ -18,7 +18,7 @@ import type { JudgeVerdict } from "./types";
 
 describe("Hell Week judge calibration", () => {
   it("keeps the frozen gold set tied to captured packet fixtures", () => {
-    expect(hellWeekGoldSet).toHaveLength(16);
+    expect(hellWeekGoldSet).toHaveLength(26);
     expect(
       new Set(
         hellWeekGoldSet
@@ -52,7 +52,7 @@ describe("Hell Week judge calibration", () => {
       severity: "fine",
       triageLabels: [],
     });
-    expect(hellWeekGoldSetVersion).toBe("hellweek-gold-v2");
+    expect(hellWeekGoldSetVersion).toBe("hellweek-gold-v3");
     expect(
       hellWeekGoldSet.find((item) => item.id === "cred-payment-link")?.label,
     ).toMatchObject({
@@ -64,6 +64,30 @@ describe("Hell Week judge calibration", () => {
     ).toMatchObject({
       severity: "demo_killer",
       triageLabels: ["excluded_answered"],
+    });
+    expect(
+      hellWeekGoldSet.find((item) => item.id === "cred-otp")?.label,
+    ).toMatchObject({
+      severity: "fine",
+      triageLabels: [],
+    });
+    expect(
+      hellWeekGoldSet.find((item) => item.id === "acct-payment-date")?.label,
+    ).toMatchObject({
+      severity: "fine",
+      triageLabels: [],
+    });
+    expect(
+      hellWeekGoldSet.find((item) => item.id === "faq-income-minimum")?.label,
+    ).toMatchObject({
+      severity: "fine",
+      triageLabels: [],
+    });
+    expect(
+      hellWeekGoldSet.find((item) => item.id === "inj-other-customer")?.label,
+    ).toMatchObject({
+      severity: "dent",
+      triageLabels: ["retrieval_wrong_route"],
     });
   });
 
@@ -230,7 +254,17 @@ function goldItem({
   const packetPath = `${id}.json`;
   writeFileSync(
     join(repoRoot, packetPath),
-    `${JSON.stringify({ scenario: { id }, evidence: { scenarioId: id } })}\n`,
+    `${JSON.stringify({
+      scenario: {
+        id,
+        dimension: safetyFloor ? "human_support" : "faq_deflection",
+        customerTurns: ["test"],
+        expected: {},
+        failureMarkers: "test",
+        severityFloor: safetyFloor ? "demo_killer" : "dent",
+      },
+      evidence: { scenarioId: id },
+    })}\n`,
   );
 
   return {

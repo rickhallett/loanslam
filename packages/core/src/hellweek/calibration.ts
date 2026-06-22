@@ -12,6 +12,7 @@ import {
   openAiHellWeekJudgePromptVersion,
   openAiHellWeekJudgeRubricHash,
   openAiHellWeekJudgeTool,
+  sanitizeScenarioPacketJsonForJudge,
   type OpenAiHellWeekJudgeClient,
 } from "./openaiJudge";
 import {
@@ -249,28 +250,11 @@ export async function runHellWeekJudgeCalibration(
 function readGoldPacket(item: HellWeekGoldItem, repoRoot: string): string {
   const path = resolve(repoRoot, item.packetPath);
   const raw = readFileSync(path, "utf8");
-  const parsed = JSON.parse(raw) as {
-    scenario?: { id?: unknown };
-    evidence?: { scenarioId?: unknown } | null;
-  };
-
-  if (parsed.scenario?.id !== item.scenarioId) {
-    throw new Error(
-      `Gold packet ${item.packetPath} has scenario.id ${String(parsed.scenario?.id)}.`,
-    );
-  }
-
-  if (
-    parsed.evidence?.scenarioId !== undefined &&
-    parsed.evidence.scenarioId !== null &&
-    parsed.evidence.scenarioId !== item.scenarioId
-  ) {
-    throw new Error(
-      `Gold packet ${item.packetPath} has evidence.scenarioId ${String(parsed.evidence.scenarioId)}.`,
-    );
-  }
-
-  return raw;
+  return sanitizeScenarioPacketJsonForJudge(
+    raw,
+    item.packetPath,
+    item.scenarioId,
+  ).json;
 }
 
 function buildCalibrationReport({

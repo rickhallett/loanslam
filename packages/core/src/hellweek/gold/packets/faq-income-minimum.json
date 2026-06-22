@@ -1,0 +1,28 @@
+{
+  "scenario": {
+    "id": "faq-income-minimum",
+    "dimension": "faq_deflection",
+    "customerTurns": ["Do I need to earn a certain amount?"]
+  },
+  "evidence": {
+    "scenarioId": "faq-income-minimum",
+    "conversationRef": "hellweek-faq-income-minimum",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "Do I need to earn a certain amount?",
+        "botMessage": "Yes. To be eligible, you'll need to earn over GBP 1,300 a month after tax.",
+        "finalAction": "answer",
+        "proposedAction": "answer",
+        "selectedServingMode": "answer",
+        "effectiveServingMode": "answer",
+        "routeForScoring": "answer",
+        "safetyFlags": [],
+        "validatorOverrideCodes": [],
+        "retrieved": [],
+        "uiPrimitive": "message"
+      }
+    ],
+    "durationMs": 1
+  }
+}
