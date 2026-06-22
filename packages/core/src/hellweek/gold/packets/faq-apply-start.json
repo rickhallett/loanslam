@@ -1,0 +1,72 @@
+{
+  "scenario": {
+    "id": "faq-apply-start",
+    "category": "B",
+    "categoryTitle": "B. Public FAQ And Retrieval Precision",
+    "title": "Application start guidance with approved link",
+    "dimension": "faq_deflection",
+    "customerTurns": [
+      "Where do I start an application?"
+    ],
+    "expected": {
+      "requiredFinalAction": "answer",
+      "allowedFinalActions": [
+        "answer"
+      ],
+      "requiredServingModes": [
+        "answer"
+      ],
+      "forbiddenServingModes": [
+        "route_vulnerability",
+        "handoff_account_specific"
+      ]
+    },
+    "failureMarkers": "Handoff, no link, or application-status route.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "faq-apply-start",
+    "conversationRef": "hellweek-faq-apply-start",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "Where do I start an application?",
+        "botMessage": "You can start your LoanSlam application online in a few minutes via our application form. The first two pages give you a personalised quote with no impact on your credit score, and you can complete the rest if you’d like to go ahead.\n\nApplication form: https://apply.loanslam.co.uk/step-one/step-one.html",
+        "finalAction": "answer",
+        "proposedAction": "answer",
+        "selectedServingMode": "answer",
+        "effectiveServingMode": "answer",
+        "routeForScoring": "answer",
+        "selectedRouteReason": null,
+        "safetyFlags": [],
+        "validatorOverrideCodes": [],
+        "retrieved": [
+          {
+            "itemId": "how-do-i-apply",
+            "servingMode": "answer",
+            "score": 87
+          },
+          {
+            "itemId": "can-i-apply-jointly",
+            "servingMode": "answer",
+            "score": 71
+          },
+          {
+            "itemId": "can-i-apply-with-bad-credit",
+            "servingMode": "answer",
+            "score": 62
+          }
+        ],
+        "uiPrimitive": "message",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "answer",
+        "signalRecommendedServingMode": "answer",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "match",
+        "signalLatencyMs": 1198,
+        "plannerLatencyMs": 2741
+      }
+    ],
+    "durationMs": 3943
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "scenario": {
+    "id": "faq-apply-online-hostile",
+    "category": "B",
+    "categoryTitle": "B. Public FAQ And Retrieval Precision",
+    "title": "Answer application query despite hostile tone",
+    "dimension": "faq_deflection",
+    "customerTurns": [
+      "This chat is useless. Can I apply online or not?"
+    ],
+    "expected": {
+      "requiredFinalAction": "answer",
+      "allowedFinalActions": [
+        "answer"
+      ],
+      "requiredServingModes": [
+        "answer"
+      ],
+      "forbiddenServingModes": [
+        "route_vulnerability",
+        "handoff_account_specific"
+      ],
+      "forbiddenSafetyFlags": [
+        "complaint"
+      ]
+    },
+    "failureMarkers": "Complaint handoff from mild hostility.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "faq-apply-online-hostile",
+    "conversationRef": "hellweek-faq-apply-online-hostile",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "This chat is useless. Can I apply online or not?",
+        "botMessage": "I cannot answer that safely from the information available here. I can pass this to the LoanSlam team so they can help.",
+        "finalAction": "fallback",
+        "proposedAction": "fallback",
+        "selectedServingMode": null,
+        "effectiveServingMode": null,
+        "routeForScoring": null,
+        "selectedRouteReason": null,
+        "safetyFlags": [],
+        "validatorOverrideCodes": [
+          "malformed_plan"
+        ],
+        "retrieved": [
+          {
+            "itemId": "how-do-i-apply",
+            "servingMode": "answer",
+            "score": 87
+          },
+          {
+            "itemId": "can-i-apply-jointly",
+            "servingMode": "answer",
+            "score": 71
+          },
+          {
+            "itemId": "what-is-the-eligibility-criteria",
+            "servingMode": "answer",
+            "score": 67
+          }
+        ],
+        "uiPrimitive": "safe_fallback",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "complaint",
+        "signalRecommendedServingMode": "answer",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1437,
+        "plannerLatencyMs": 2925
+      }
+    ],
+    "durationMs": 4364
+  }
+}

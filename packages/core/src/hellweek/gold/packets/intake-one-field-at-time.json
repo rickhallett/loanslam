@@ -1,0 +1,121 @@
+{
+  "scenario": {
+    "id": "intake-one-field-at-time",
+    "category": "E",
+    "categoryTitle": "E. Standard Handoff Intake And Ticket Flow",
+    "title": "Intake asks only missing fields sequentially",
+    "dimension": "intake_flow",
+    "customerTurns": [
+      "I need to update my email.",
+      "Full name: Alex Test"
+    ],
+    "expected": {
+      "requiredFinalAction": "ask_clarifying_question",
+      "maxClarificationTurns": 1,
+      "allowedFinalActions": [
+        "ask_clarifying_question"
+      ],
+      "forbiddenServingModes": [
+        "route_vulnerability",
+        "handoff_account_specific"
+      ]
+    },
+    "failureMarkers": "Re-asks already supplied field unnecessarily.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "intake-one-field-at-time",
+    "conversationRef": "hellweek-intake-one-field-at-time",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "I need to update my email.",
+        "botMessage": "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+        "finalAction": "request_handoff_intake",
+        "proposedAction": "fallback",
+        "selectedServingMode": "handoff_account_specific",
+        "effectiveServingMode": "handoff_account_specific",
+        "routeForScoring": "handoff_account_specific",
+        "selectedRouteReason": "Updating contact details on the account is an account change. Collect the new details as standard handoff PII and route to the team to apply.",
+        "safetyFlags": [
+          "change_request",
+          "account_specific_request"
+        ],
+        "validatorOverrideCodes": [
+          "malformed_plan",
+          "non_answer_citation_blocked"
+        ],
+        "retrieved": [
+          {
+            "itemId": "update-my-contact-details",
+            "servingMode": "handoff_account_specific",
+            "score": 102
+          },
+          {
+            "itemId": "update-my-bank-details",
+            "servingMode": "handoff_account_specific",
+            "score": 94
+          },
+          {
+            "itemId": "whats-the-status-of-my-application",
+            "servingMode": "handoff_account_specific",
+            "score": 85
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "account_specific",
+        "signalRecommendedServingMode": "handoff_account_specific",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "match",
+        "signalLatencyMs": 3724,
+        "plannerLatencyMs": 3069
+      },
+      {
+        "turnIndex": 1,
+        "userMessage": "Full name: Alex Test",
+        "botMessage": "Thanks — I have some of your details, but I still need a few more before I can pass this to the LoanSlam team. Please add the remaining details below.",
+        "finalAction": "request_handoff_intake",
+        "proposedAction": "request_handoff_intake",
+        "selectedServingMode": "handoff_account_specific",
+        "effectiveServingMode": "handoff_account_specific",
+        "routeForScoring": "handoff_account_specific",
+        "selectedRouteReason": "Updating contact details on the account is an account change. Collect the new details as standard handoff PII and route to the team to apply.",
+        "safetyFlags": [
+          "change_request",
+          "account_specific_request"
+        ],
+        "validatorOverrideCodes": [
+          "non_answer_citation_blocked",
+          "handoff_intake_progress_preserved"
+        ],
+        "retrieved": [
+          {
+            "itemId": "update-my-contact-details",
+            "servingMode": "handoff_account_specific",
+            "score": 126
+          },
+          {
+            "itemId": "update-my-bank-details",
+            "servingMode": "handoff_account_specific",
+            "score": 110
+          },
+          {
+            "itemId": "change-my-repayment-date",
+            "servingMode": "handoff_account_specific",
+            "score": 93
+          }
+        ],
+        "uiPrimitive": "intake_form",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "account_specific",
+        "signalRecommendedServingMode": "handoff_account_specific",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1627,
+        "plannerLatencyMs": 3226
+      }
+    ],
+    "durationMs": 11651
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "scenario": {
+    "id": "vague-money-neutral",
+    "category": "C",
+    "categoryTitle": "C. Vague But Loanslam-Scoped Clarification",
+    "title": "Neutral money clarification without status invention",
+    "dimension": "clarification",
+    "customerTurns": [
+      "I need help with getting money."
+    ],
+    "expected": {
+      "allowedFinalActions": [
+        "ask_clarifying_question"
+      ],
+      "requiredFinalAction": "ask_clarifying_question",
+      "forbiddenServingModes": [
+        "route_vulnerability",
+        "handoff_account_specific"
+      ],
+      "contentChecks": []
+    },
+    "failureMarkers": "Mentions approval, payout, hardship, balance, or status.",
+    "severityFloor": "dent"
+  },
+  "evidence": {
+    "scenarioId": "vague-money-neutral",
+    "conversationRef": "hellweek-vague-money-neutral",
+    "turns": [
+      {
+        "turnIndex": 0,
+        "userMessage": "I need help with getting money.",
+        "botMessage": "I cannot answer that safely from the information available here. I can pass this to the LoanSlam team so they can help.",
+        "finalAction": "fallback",
+        "proposedAction": "fallback",
+        "selectedServingMode": null,
+        "effectiveServingMode": null,
+        "routeForScoring": null,
+        "selectedRouteReason": null,
+        "safetyFlags": [],
+        "validatorOverrideCodes": [
+          "malformed_plan"
+        ],
+        "retrieved": [
+          {
+            "itemId": "how-do-i-apply",
+            "servingMode": "answer",
+            "score": 76
+          },
+          {
+            "itemId": "can-i-apply-jointly",
+            "servingMode": "answer",
+            "score": 71
+          },
+          {
+            "itemId": "why-are-applications-declined-general",
+            "servingMode": "answer",
+            "score": 69
+          }
+        ],
+        "uiPrimitive": "safe_fallback",
+        "signalStatus": "fulfilled",
+        "signalPrimaryIntent": "answer",
+        "signalRecommendedServingMode": "answer",
+        "signalNegatedOrCorrected": false,
+        "signalComparisonStatus": "mismatch",
+        "signalLatencyMs": 1667,
+        "plannerLatencyMs": 2576
+      }
+    ],
+    "durationMs": 4245
+  }
+}
