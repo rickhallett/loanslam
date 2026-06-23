@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "sh -c 'npm --prefix .. --silent run review-widget:dev & widget_pid=$!; trap \"kill $widget_pid 2>/dev/null\" EXIT INT TERM; astro dev \"$@\"' --",
     "build": "astro build",
     "preview": "astro preview"
   },
