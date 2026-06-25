@@ -14,6 +14,24 @@ export const policyVersion = "phase0-turnplanner-policy-v1";
 export const allowedActions = [...turnActionSchema.options];
 export const allowedUiPrimitives = [...uiPrimitiveSchema.options];
 
+// The "handoff family": the three actions that route a turn into human handoff
+// (collect intake, raise a ticket, or escalate). Named once so the recurring
+// three-way action check reads as a single concept rather than being
+// re-derived at each call site.
+export const handoffFamilyActions = [
+  "request_handoff_intake",
+  "create_ticket",
+  "escalate",
+] as const satisfies readonly TurnAction[];
+
+export function isHandoffFamilyAction(action: TurnAction | undefined): boolean {
+  if (action === undefined) {
+    return false;
+  }
+  const familyActions: readonly TurnAction[] = handoffFamilyActions;
+  return familyActions.includes(action);
+}
+
 export const standardHandoffFields = [
   "fullName",
   "dateOfBirth",

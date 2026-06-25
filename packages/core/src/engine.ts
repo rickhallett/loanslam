@@ -25,6 +25,7 @@ import {
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
   handoffSafetyFlags,
+  isHandoffFamilyAction,
   policyVersion,
   standardHandoffFields,
 } from "./policy";
@@ -339,11 +340,7 @@ function deriveEffectiveServingMode(
     return validated.selectedServingMode === "excluded" ? "excluded" : null;
   }
 
-  if (
-    validated.finalAction === "request_handoff_intake" ||
-    validated.finalAction === "create_ticket" ||
-    validated.finalAction === "escalate"
-  ) {
+  if (isHandoffFamilyAction(validated.finalAction)) {
     if (
       validated.selectedServingMode === "route_vulnerability" ||
       hasVulnerabilitySafetyFlag(safetyFlags)
@@ -849,12 +846,7 @@ function shouldApplyExtractedHandoffFacts(
   state: ConversationState,
   validated: ValidatedPlanFragment,
 ): boolean {
-  return (
-    state.handoffPending ||
-    validated.finalAction === "request_handoff_intake" ||
-    validated.finalAction === "create_ticket" ||
-    validated.finalAction === "escalate"
-  );
+  return state.handoffPending || isHandoffFamilyAction(validated.finalAction);
 }
 
 function shouldCompleteHandoffNow(
@@ -867,9 +859,7 @@ function shouldCompleteHandoffNow(
   }
 
   return (
-    validated.finalAction === "create_ticket" ||
-    validated.finalAction === "request_handoff_intake" ||
-    validated.finalAction === "escalate" ||
+    isHandoffFamilyAction(validated.finalAction) ||
     validated.finalAction === "fallback" ||
     hasAnyStandardHandoffFact(extractedFacts)
   );
@@ -1151,10 +1141,8 @@ function nextStateSafetyFlags({
 }): ConversationState["safetyFlags"] {
   if (
     handoffPending &&
-    (finalAction === "request_handoff_intake" ||
-      finalAction === "ask_clarifying_question" ||
-      finalAction === "escalate" ||
-      finalAction === "create_ticket")
+    (isHandoffFamilyAction(finalAction) ||
+      finalAction === "ask_clarifying_question")
   ) {
     return mergeSafetyFlags(state.safetyFlags, safetyFlags);
   }
@@ -1166,11 +1154,7 @@ function nextHandoffPending(
   state: ConversationState,
   finalAction: ConversationState["lastAction"],
 ): boolean {
-  if (
-    finalAction === "request_handoff_intake" ||
-    finalAction === "escalate" ||
-    finalAction === "create_ticket"
-  ) {
+  if (isHandoffFamilyAction(finalAction)) {
     return true;
   }
 
