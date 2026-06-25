@@ -6,7 +6,29 @@ import type {
 import { describe, expect, it } from "vitest";
 
 import { standardHandoffFields } from "./policy";
-import { validateTurnPlan } from "./validator";
+import { safetyGuardPipeline, validateTurnPlan } from "./validator";
+
+describe("safetyGuardPipeline", () => {
+  it("runs the safety guards in the locked order", () => {
+    // Order is a safety invariant: internal-data and credential guards must
+    // precede the vulnerability / serving-mode / grounding guards. A reorder
+    // (or accidental drop) of a guard fails here before it can ship.
+    expect(safetyGuardPipeline.map((guard) => guard.name)).toEqual([
+      "guardInternalDataExposure",
+      "guardCredentialBoundary",
+      "guardPaymentLink",
+      "guardForbiddenCredentialRequestInPlan",
+      "guardForbiddenCredentialsInFacts",
+      "guardSecondaryBorrowingAdvice",
+      "guardPromisedAccountValue",
+      "guardOutOfDomainFallback",
+      "guardVulnerabilityRoute",
+      "guardNonAnswerServingMode",
+      "guardAnswerGrounding",
+      "guardUiActionMatch",
+    ]);
+  });
+});
 
 const answerMatch: RetrievedMatch = {
   itemId: "answer-1",

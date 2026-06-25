@@ -60,11 +60,66 @@ interface OverrideInput {
   toAction: TurnAction;
 }
 
+// The validator is an ordered pipeline of safety guards. Each guard inspects the
+// turn and either rewrites it (returns a fragment) or declines (returns null) so
+// the next guard runs. validateTurnPlan runs them top to bottom and returns the
+// first rewrite, or the un-overridden base if every guard declines.
+interface GuardContext {
+  plan: TurnPlan;
+  retrievedMatches: readonly RetrievedMatch[];
+  options: ValidateTurnPlanOptions;
+  userMessage: string;
+  selectedMatch: RetrievedMatch | undefined;
+  vulnerabilityMatch: RetrievedMatch | undefined;
+  planSafetyFlags: SafetyFlag[];
+  allSafetyFlags: SafetyFlag[];
+  base: ValidatedPlanFragment;
+}
+
+type TurnGuard = (context: GuardContext) => ValidatedPlanFragment | null;
+
+// ORDER IS A SAFETY INVARIANT. The internal-data and credential guards MUST run
+// before the vulnerability / serving-mode / grounding guards, so an injected or
+// credential-bearing message can never be re-routed by a spurious retrieval
+// match. This array's order is the historical top-to-bottom clause order and is
+// pinned by a test in validator.test.ts; reordering it changes safety behaviour.
+export const safetyGuardPipeline: readonly TurnGuard[] = [
+  guardInternalDataExposure,
+  guardCredentialBoundary,
+  guardPaymentLink,
+  guardForbiddenCredentialRequestInPlan,
+  guardForbiddenCredentialsInFacts,
+  guardSecondaryBorrowingAdvice,
+  guardPromisedAccountValue,
+  guardOutOfDomainFallback,
+  guardVulnerabilityRoute,
+  guardNonAnswerServingMode,
+  guardAnswerGrounding,
+  guardUiActionMatch,
+];
+
 export function validateTurnPlan(
   plan: TurnPlan,
   retrievedMatches: readonly RetrievedMatch[],
   options: ValidateTurnPlanOptions = {},
 ): ValidatedPlanFragment {
+  const context = buildGuardContext(plan, retrievedMatches, options);
+
+  for (const guard of safetyGuardPipeline) {
+    const outcome = guard(context);
+    if (outcome) {
+      return outcome;
+    }
+  }
+
+  return context.base;
+}
+
+function buildGuardContext(
+  plan: TurnPlan,
+  retrievedMatches: readonly RetrievedMatch[],
+  options: ValidateTurnPlanOptions,
+): GuardContext {
   const selectedMatch = selectPolicyMatch(plan, retrievedMatches);
   const planSafetyFlags = alignPlanSafetyFlagsWithSignal(
     plan.safetyFlags,
@@ -97,310 +152,415 @@ export function validateTurnPlan(
       ? selectedMatch
       : undefined;
 
-  if (detectInternalDataExposureRequest(options.userMessage ?? "")) {
-    const boundaryReason =
-      "Requests for internal traces, hidden instructions, customer data, or policy bypass must not be served in chat.";
-    const boundary = buildInternalDataBoundaryCopy(boundaryReason);
+  return {
+    plan,
+    retrievedMatches,
+    options,
+    userMessage: options.userMessage ?? "",
+    selectedMatch,
+    vulnerabilityMatch,
+    planSafetyFlags,
+    allSafetyFlags,
+    base,
+  };
+}
 
-    if (
-      base.finalAction === "refuse" &&
-      base.ui.primitive === "safe_fallback"
-    ) {
-      return {
-        ...base,
-        selectedServingMode: null,
-        selectedRouteReason: boundaryReason,
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "unsupported_request",
-        ]),
-      };
-    }
-
-    return applyOverride(
-      base,
-      {
-        code: "internal_data_exposure_blocked",
-        reason: boundaryReason,
-        toAction: boundary.action,
-      },
-      {
-        finalAction: boundary.action,
-        customerMessage: boundary.customerMessage,
-        ui: boundary.ui,
-        requestedFields: [],
-        collectedFacts: {},
-        selectedServingMode: null,
-        selectedRouteReason: boundaryReason,
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "unsupported_request",
-        ]),
-      },
-    );
+function guardInternalDataExposure(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectInternalDataExposureRequest(context.userMessage)) {
+    return null;
   }
+
+  const { base } = context;
+  const boundaryReason =
+    "Requests for internal traces, hidden instructions, customer data, or policy bypass must not be served in chat.";
+  const boundary = buildInternalDataBoundaryCopy(boundaryReason);
+
+  if (base.finalAction === "refuse" && base.ui.primitive === "safe_fallback") {
+    return {
+      ...base,
+      selectedServingMode: null,
+      selectedRouteReason: boundaryReason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "unsupported_request",
+      ]),
+    };
+  }
+
+  return applyOverride(
+    base,
+    {
+      code: "internal_data_exposure_blocked",
+      reason: boundaryReason,
+      toAction: boundary.action,
+    },
+    {
+      finalAction: boundary.action,
+      customerMessage: boundary.customerMessage,
+      ui: boundary.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: null,
+      selectedRouteReason: boundaryReason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "unsupported_request",
+      ]),
+    },
+  );
+}
+
+function guardCredentialBoundary(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, userMessage } = context;
 
   if (
-    detectCredentialBoundaryRequest(options.userMessage ?? "") ||
-    (detectSensitiveOvershare(options.userMessage ?? "") &&
-      containsForbiddenCredentialTerm(options.userMessage ?? ""))
+    !(
+      detectCredentialBoundaryRequest(userMessage) ||
+      (detectSensitiveOvershare(userMessage) &&
+        containsForbiddenCredentialTerm(userMessage))
+    )
   ) {
-    const handoff = buildCredentialHandoffCopy();
-
-    return applyOverride(
-      base,
-      {
-        code: "credential_offer_warned",
-        reason:
-          "The customer offered bank, card, payment, online banking, or security credentials in chat.",
-        toAction: handoff.action,
-      },
-      {
-        finalAction: handoff.action,
-        customerMessage: handoff.customerMessage,
-        ui: handoff.ui,
-        requestedFields: handoff.requestedFields,
-        collectedFacts: {},
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "forbidden_credentials",
-          "sensitive_overshare",
-        ]),
-      },
-    );
+    return null;
   }
 
-  if (detectPaymentLinkRequest(options.userMessage ?? "")) {
-    const handoff = buildPaymentLinkHandoffCopy();
+  const handoff = buildCredentialHandoffCopy();
 
-    return applyOverride(
-      base,
-      {
-        code: "payment_link_handoff_required",
-        reason:
-          "Payment-link creation is account-specific and must not be invented in chat.",
-        toAction: handoff.action,
-      },
-      {
-        finalAction: handoff.action,
-        customerMessage: handoff.customerMessage,
-        ui: handoff.ui,
-        requestedFields: handoff.requestedFields,
-        collectedFacts: {},
-        selectedServingMode: "handoff_account_specific",
-        selectedRouteReason:
-          "Payment links are account-specific and require the LoanSlam team.",
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "account_specific_request",
-        ]),
-      },
-    );
+  return applyOverride(
+    base,
+    {
+      code: "credential_offer_warned",
+      reason:
+        "The customer offered bank, card, payment, online banking, or security credentials in chat.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "forbidden_credentials",
+        "sensitive_overshare",
+      ]),
+    },
+  );
+}
+
+function guardPaymentLink(context: GuardContext): ValidatedPlanFragment | null {
+  if (!detectPaymentLinkRequest(context.userMessage)) {
+    return null;
   }
 
-  if (detectForbiddenCredentialRequest(planText(plan))) {
-    const handoff = buildCredentialHandoffCopy();
+  const { base } = context;
+  const handoff = buildPaymentLinkHandoffCopy();
 
-    return applyOverride(
-      base,
-      {
-        code: "forbidden_credential_request_blocked",
-        reason:
-          "The plan asked for bank, card, payment, or online banking credentials.",
-        toAction: handoff.action,
-      },
-      {
-        finalAction: handoff.action,
-        customerMessage: handoff.customerMessage,
-        ui: handoff.ui,
-        requestedFields: handoff.requestedFields,
-        collectedFacts: {},
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "forbidden_credentials",
-        ]),
-      },
-    );
+  return applyOverride(
+    base,
+    {
+      code: "payment_link_handoff_required",
+      reason:
+        "Payment-link creation is account-specific and must not be invented in chat.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason:
+        "Payment links are account-specific and require the LoanSlam team.",
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
+    },
+  );
+}
+
+function guardForbiddenCredentialRequestInPlan(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, plan } = context;
+
+  if (!detectForbiddenCredentialRequest(planText(plan))) {
+    return null;
   }
 
-  if (collectedFactsContainForbiddenCredentials(plan.collectedFacts)) {
-    const handoff = buildCredentialHandoffCopy();
+  const handoff = buildCredentialHandoffCopy();
 
-    return applyOverride(
-      base,
-      {
-        code: "forbidden_credential_request_blocked",
-        reason:
-          "The plan attempted to preserve bank, card, payment, or online banking credentials.",
-        toAction: handoff.action,
-      },
-      {
-        finalAction: handoff.action,
-        customerMessage: handoff.customerMessage,
-        ui: handoff.ui,
-        requestedFields: handoff.requestedFields,
-        collectedFacts: {},
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "forbidden_credentials",
-        ]),
-      },
-    );
+  return applyOverride(
+    base,
+    {
+      code: "forbidden_credential_request_blocked",
+      reason:
+        "The plan asked for bank, card, payment, or online banking credentials.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "forbidden_credentials",
+      ]),
+    },
+  );
+}
+
+function guardForbiddenCredentialsInFacts(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, plan } = context;
+
+  if (!collectedFactsContainForbiddenCredentials(plan.collectedFacts)) {
+    return null;
   }
 
-  if (detectSecondaryBorrowingAdviceRequest(options.userMessage ?? "")) {
-    const excluded = buildSecondaryBorrowingBoundaryCopy();
+  const handoff = buildCredentialHandoffCopy();
 
-    return applyOverride(
-      base,
-      {
-        code: "secondary_borrowing_advice_blocked",
-        reason:
-          "Advice on whether to borrow from another lender is regulated financial advice and must not be answered in chat.",
-        toAction: excluded.action,
-      },
-      {
-        finalAction: excluded.action,
-        customerMessage: excluded.customerMessage,
-        ui: excluded.ui,
-        requestedFields: [],
-        collectedFacts: {},
-        selectedServingMode: "excluded",
-        selectedRouteReason:
-          "Advice on whether to borrow from another lender is regulated financial advice.",
-      },
-    );
+  return applyOverride(
+    base,
+    {
+      code: "forbidden_credential_request_blocked",
+      reason:
+        "The plan attempted to preserve bank, card, payment, or online banking credentials.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "forbidden_credentials",
+      ]),
+    },
+  );
+}
+
+function guardSecondaryBorrowingAdvice(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectSecondaryBorrowingAdviceRequest(context.userMessage)) {
+    return null;
   }
 
-  if (detectPromisedAccountValueOrOutcome(planText(plan))) {
-    const copy =
-      hasHandoffSafetyFlag(allSafetyFlags) ||
-      selectedMatch?.servingMode === "handoff_account_specific"
-        ? buildHandoffCopy(
-            selectedMatch?.item?.route_reason ??
-              "Account-specific values, dates, rates, approvals, or account changes must be handled by the LoanSlam team.",
-          )
-        : buildFallbackCopy(
-            "Account-specific values, dates, rates, approvals, or account changes must not be promised in chat.",
-          );
+  const { base } = context;
+  const excluded = buildSecondaryBorrowingBoundaryCopy();
 
-    return applyOverride(
-      base,
-      {
-        code: "account_specific_promise_blocked",
-        reason:
-          "The plan promised or invented an account-specific value, date, rate, approval, or payment change.",
-        toAction: copy.action,
-      },
-      {
-        finalAction: copy.action,
-        customerMessage: copy.customerMessage,
-        ui: copy.ui,
-        requestedFields: "requestedFields" in copy ? copy.requestedFields : [],
-        safetyFlags: uniqueSafetyFlags([
-          ...base.safetyFlags,
-          "account_specific_request",
-        ]),
-      },
-    );
+  return applyOverride(
+    base,
+    {
+      code: "secondary_borrowing_advice_blocked",
+      reason:
+        "Advice on whether to borrow from another lender is regulated financial advice and must not be answered in chat.",
+      toAction: excluded.action,
+    },
+    {
+      finalAction: excluded.action,
+      customerMessage: excluded.customerMessage,
+      ui: excluded.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "excluded",
+      selectedRouteReason:
+        "Advice on whether to borrow from another lender is regulated financial advice.",
+    },
+  );
+}
+
+function guardPromisedAccountValue(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, plan, selectedMatch, allSafetyFlags } = context;
+
+  if (!detectPromisedAccountValueOrOutcome(planText(plan))) {
+    return null;
   }
 
-  // Out-of-domain guard: when the planner fell back AND the signal independently
-  // judged the message out-of-domain, do not let a spurious top retrieval match
-  // (e.g. a route_vulnerability item matched against a poem) override the
-  // fallback. The genuine backstop below still fires when there is a real safety
-  // flag from the message, signal, or plan.
-  if (isOutOfDomainFallback(plan, options.signalBundle)) {
-    const genuineSafetyFlags = uniqueSafetyFlags([
-      ...(options.safetyFlags ?? []),
-      ...inferSafetyFlagsFromSignal(options.signalBundle),
-      ...planSafetyFlags,
-      ...inferSafetyFlagsFromMessage(options.userMessage ?? ""),
-    ]);
+  const copy =
+    hasHandoffSafetyFlag(allSafetyFlags) ||
+    selectedMatch?.servingMode === "handoff_account_specific"
+      ? buildHandoffCopy(
+          selectedMatch?.item?.route_reason ??
+            "Account-specific values, dates, rates, approvals, or account changes must be handled by the LoanSlam team.",
+        )
+      : buildFallbackCopy(
+          "Account-specific values, dates, rates, approvals, or account changes must not be promised in chat.",
+        );
 
-    if (genuineSafetyFlags.length === 0) {
-      return {
-        ...base,
-        finalAction: "fallback",
-        selectedServingMode: null,
-        selectedRouteReason: null,
-        safetyFlags: genuineSafetyFlags,
-      };
-    }
+  return applyOverride(
+    base,
+    {
+      code: "account_specific_promise_blocked",
+      reason:
+        "The plan promised or invented an account-specific value, date, rate, approval, or payment change.",
+      toAction: copy.action,
+    },
+    {
+      finalAction: copy.action,
+      customerMessage: copy.customerMessage,
+      ui: copy.ui,
+      requestedFields: "requestedFields" in copy ? copy.requestedFields : [],
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
+    },
+  );
+}
+
+// Out-of-domain guard: when the planner fell back AND the signal independently
+// judged the message out-of-domain, do not let a spurious top retrieval match
+// (e.g. a route_vulnerability item matched against a poem) override the
+// fallback. Declines (returns null, continuing the pipeline) when there is a
+// real safety flag from the message, signal, or plan, so the genuine backstop
+// guards below still fire.
+function guardOutOfDomainFallback(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, plan, options, planSafetyFlags, userMessage } = context;
+
+  if (!isOutOfDomainFallback(plan, options.signalBundle)) {
+    return null;
   }
 
-  if (vulnerabilityMatch || hasVulnerabilitySafetyFlag(allSafetyFlags)) {
-    if (isCompliantRoutePlan(base, "route_vulnerability")) {
-      return acceptPolicyRoute(base, vulnerabilityMatch, ["vulnerability"]);
-    }
+  const genuineSafetyFlags = uniqueSafetyFlags([
+    ...(options.safetyFlags ?? []),
+    ...inferSafetyFlagsFromSignal(options.signalBundle),
+    ...planSafetyFlags,
+    ...inferSafetyFlagsFromMessage(userMessage),
+  ]);
 
-    return applyVulnerabilityOverride(
-      base,
-      {
-        code: vulnerabilityMatch
-          ? "vulnerability_route_match"
-          : "safety_flag_route_to_handoff",
-        reason:
-          vulnerabilityMatch?.item?.route_reason ??
-          "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
-        toAction: "request_handoff_intake",
-      },
-      vulnerabilityMatch,
-    );
+  if (genuineSafetyFlags.length === 0) {
+    return {
+      ...base,
+      finalAction: "fallback",
+      selectedServingMode: null,
+      selectedRouteReason: null,
+      safetyFlags: genuineSafetyFlags,
+    };
   }
 
-  if (selectedMatch && selectedMatch.servingMode !== "answer") {
-    if (isCompliantRoutePlan(base, selectedMatch.servingMode)) {
-      return acceptPolicyRoute(base, selectedMatch);
-    }
+  return null;
+}
 
-    return applyServingModeOverride(base, selectedMatch);
+function guardVulnerabilityRoute(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, vulnerabilityMatch, allSafetyFlags } = context;
+
+  if (!(vulnerabilityMatch || hasVulnerabilitySafetyFlag(allSafetyFlags))) {
+    return null;
   }
 
-  if (plan.action === "answer") {
-    const answerFailure = answerGroundingFailure(plan, retrievedMatches);
-    if (answerFailure) {
-      const fallback = buildFallbackCopy(answerFailure.reason);
-
-      return applyOverride(
-        base,
-        {
-          code: answerFailure.code,
-          reason: answerFailure.reason,
-          toAction: fallback.action,
-        },
-        {
-          finalAction: fallback.action,
-          customerMessage: fallback.customerMessage,
-          ui: fallback.ui,
-          requestedFields: [],
-        },
-      );
-    }
+  if (isCompliantRoutePlan(base, "route_vulnerability")) {
+    return acceptPolicyRoute(base, vulnerabilityMatch, ["vulnerability"]);
   }
 
-  if (!uiMatchesAction(base.finalAction, base.ui)) {
-    const fallback = buildFallbackCopy(
-      "The proposed UI did not match the final action.",
-    );
+  return applyVulnerabilityOverride(
+    base,
+    {
+      code: vulnerabilityMatch
+        ? "vulnerability_route_match"
+        : "safety_flag_route_to_handoff",
+      reason:
+        vulnerabilityMatch?.item?.route_reason ??
+        "A vulnerability, distress, hardship, complaint, legal, or accessibility signal must be handled by a person.",
+      toAction: "request_handoff_intake",
+    },
+    vulnerabilityMatch,
+  );
+}
 
-    return applyOverride(
-      base,
-      {
-        code: "ui_action_mismatch",
-        reason: `UI primitive ${base.ui.primitive} is not allowed for action ${base.finalAction}.`,
-        toAction: fallback.action,
-      },
-      {
-        finalAction: fallback.action,
-        customerMessage: fallback.customerMessage,
-        ui: fallback.ui,
-        requestedFields: [],
-      },
-    );
+function guardNonAnswerServingMode(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, selectedMatch } = context;
+
+  if (!(selectedMatch && selectedMatch.servingMode !== "answer")) {
+    return null;
   }
 
-  return base;
+  if (isCompliantRoutePlan(base, selectedMatch.servingMode)) {
+    return acceptPolicyRoute(base, selectedMatch);
+  }
+
+  return dispatchNonAnswerServingMode(base, selectedMatch);
+}
+
+function guardAnswerGrounding(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, plan, retrievedMatches } = context;
+
+  if (plan.action !== "answer") {
+    return null;
+  }
+
+  const answerFailure = answerGroundingFailure(plan, retrievedMatches);
+  if (!answerFailure) {
+    return null;
+  }
+
+  const fallback = buildFallbackCopy(answerFailure.reason);
+
+  return applyOverride(
+    base,
+    {
+      code: answerFailure.code,
+      reason: answerFailure.reason,
+      toAction: fallback.action,
+    },
+    {
+      finalAction: fallback.action,
+      customerMessage: fallback.customerMessage,
+      ui: fallback.ui,
+      requestedFields: [],
+    },
+  );
+}
+
+function guardUiActionMatch(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base } = context;
+
+  if (uiMatchesAction(base.finalAction, base.ui)) {
+    return null;
+  }
+
+  const fallback = buildFallbackCopy(
+    "The proposed UI did not match the final action.",
+  );
+
+  return applyOverride(
+    base,
+    {
+      code: "ui_action_mismatch",
+      reason: `UI primitive ${base.ui.primitive} is not allowed for action ${base.finalAction}.`,
+      toAction: fallback.action,
+    },
+    {
+      finalAction: fallback.action,
+      customerMessage: fallback.customerMessage,
+      ui: fallback.ui,
+      requestedFields: [],
+    },
+  );
 }
 
 function selectPolicyMatch(
@@ -594,7 +754,7 @@ function normalizeRequestedFields(plan: TurnPlan): IntakeField[] {
   return [];
 }
 
-function applyServingModeOverride(
+function dispatchNonAnswerServingMode(
   base: ValidatedPlanFragment,
   match: RetrievedMatch,
 ): ValidatedPlanFragment {
