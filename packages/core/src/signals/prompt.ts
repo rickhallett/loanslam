@@ -1,6 +1,5 @@
 import {
   type ConversationState,
-  type SignalBundle,
   type SignalInput,
   servingModeSchema,
   safetyFlagSchema,
@@ -13,6 +12,8 @@ export interface SignalExtractorPrompt {
   user: string;
 }
 
+// Live on every serving turn via openaiSignalExtractor.extractSignals; static
+// dead-code analysis can misreport it as unused. Do not delete.
 export function buildSignalExtractorPrompt(
   input: SignalInput,
 ): SignalExtractorPrompt {
@@ -104,71 +105,4 @@ function formatHistory(state: ConversationState): string {
 
 function stableStringify(value: unknown): string {
   return JSON.stringify(value, null, 2);
-}
-
-export function normalizeOpenAiParsedSignalBundle(parsed: unknown): unknown {
-  if (!parsed || typeof parsed !== "object") {
-    return parsed;
-  }
-
-  const cast = parsed as {
-    primaryIntent?: string;
-    secondaryIntents?: unknown;
-    safetySignals?: unknown;
-    retrievalQueries?: unknown;
-    routeHints?: unknown;
-    uncertainty?: number;
-    recommendedServingMode?: unknown;
-    negatedOrCorrected?: boolean;
-    parserNotes?: unknown;
-  };
-
-  return {
-    ...cast,
-    secondaryIntents: normalizeStringArray(cast.secondaryIntents),
-    safetySignals: normalizeStringArray(cast.safetySignals),
-    retrievalQueries: normalizeStringArray(cast.retrievalQueries),
-    routeHints: normalizeStringArray(cast.routeHints),
-    parserNotes: normalizeStringArray(cast.parserNotes),
-    uncertainty: clampUncertainty(cast.uncertainty),
-    negatedOrCorrected: Boolean(cast.negatedOrCorrected),
-    recommendedServingMode:
-      cast.recommendedServingMode === "answer" ||
-      cast.recommendedServingMode === "handoff_account_specific" ||
-      cast.recommendedServingMode === "route_vulnerability" ||
-      cast.recommendedServingMode === "excluded"
-        ? cast.recommendedServingMode
-        : null,
-  };
-}
-
-function normalizeStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((item) => String(item ?? "").trim())
-    .filter((entry) => entry.length > 0);
-}
-
-function clampUncertainty(value: unknown): number {
-  if (typeof value !== "number" || Number.isNaN(value)) {
-    return 0.5;
-  }
-
-  if (value < 0) {
-    return 0;
-  }
-
-  if (value > 1) {
-    return 1;
-  }
-
-  return value;
-}
-
-export function parseSignalBundle(parsed: unknown): SignalBundle {
-  const normalized = normalizeOpenAiParsedSignalBundle(parsed);
-  return normalized as SignalBundle;
 }

@@ -14,7 +14,8 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 import type { OpenAiSignalExtractorConfig } from "./config";
-import { buildSignalExtractorPrompt, parseSignalBundle } from "./prompt";
+import { buildSignalExtractorPrompt } from "./prompt";
+import { parseSignalBundle } from "./normalize";
 
 export interface OpenAiSignalExtractorRequest {
   model: string;
