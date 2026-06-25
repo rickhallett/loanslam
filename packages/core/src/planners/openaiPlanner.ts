@@ -10,6 +10,7 @@ import {
   turnActionSchema,
   turnPlanSchema,
   uiPrimitiveSchema,
+  type UiPrimitive,
 } from "@loanslam/contracts";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
@@ -87,6 +88,17 @@ export class OpenAiTurnPlanner implements TurnPlanner {
   }
 }
 
+// --- OpenAI strict structured-output mirror --------------------------------
+// STRICT_MODE_INVARIANT: OpenAI strict structured output (zodTextFormat) forbids
+// the constructs the canonical turnPlanSchema relies on — optional fields,
+// string formats (.url()), min/max constraints, and discriminated unions. So we
+// hand the model a LENIENT MIRROR of the schema below: every field required,
+// plain strings, `nullable()` instead of `optional()`, and a single flat UI
+// object carrying every primitive's fields at once. normalizeOpenAiParsedTurnPlan
+// then reverses that padding (drops null link fields, picks the per-primitive UI
+// shape, folds collectedFacts back into a record) before turnPlanSchema.parse.
+// This layer is load-bearing: without it turnPlanSchema.parse throws on
+// essentially every live turn.
 const openAiStringSchema = z.string();
 
 const openAiApprovedLinkSchema = z.object({
@@ -171,69 +183,65 @@ function normalizeCollectedFacts(collectedFacts: unknown): unknown {
   return facts;
 }
 
+// One canonicalizer per UI primitive: each strips the strict-mode mirror down to
+// exactly the fields the canonical uiPlanSchema keeps for that primitive. Most
+// are plain field-keeps; clarifying_prompt and handoff_confirmation carry real
+// repair logic (questions fallback, null-reference omission) kept explicit here.
+const uiPlanCanonicalizers: Record<
+  UiPrimitive,
+  (ui: Record<string, unknown>) => unknown
+> = {
+  message: (ui) => ({
+    primitive: "message",
+    message: ui.message,
+    links: normalizeLinks(ui.links),
+  }),
+  clarifying_prompt: (ui) => ({
+    primitive: "clarifying_prompt",
+    message: ui.message,
+    questions:
+      Array.isArray(ui.questions) && ui.questions.length > 0
+        ? ui.questions
+        : [String(ui.message ?? "")],
+  }),
+  choice_list: (ui) => ({
+    primitive: "choice_list",
+    message: ui.message,
+    choices: Array.isArray(ui.choices) ? ui.choices.slice(0, 6) : ui.choices,
+  }),
+  intake_form: (ui) => ({
+    primitive: "intake_form",
+    message: ui.message,
+    fields: ui.fields,
+  }),
+  handoff_confirmation: (ui) => ({
+    primitive: "handoff_confirmation",
+    message: ui.message,
+    ...(ui.reference === null ? {} : { reference: ui.reference }),
+  }),
+  safe_fallback: (ui) => ({
+    primitive: "safe_fallback",
+    message: ui.message,
+    links: normalizeLinks(ui.links),
+  }),
+};
+
 function normalizeUiPlan(ui: unknown): unknown {
   if (!isRecord(ui)) {
     return ui;
   }
 
-  const links = Array.isArray(ui.links)
-    ? ui.links.map(normalizeLink)
-    : ui.links;
+  const primitive = ui.primitive;
+  const canonicalizer =
+    typeof primitive === "string" && primitive in uiPlanCanonicalizers
+      ? uiPlanCanonicalizers[primitive as UiPrimitive]
+      : undefined;
 
-  if (ui.primitive === "message") {
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      links,
-    };
-  }
+  return canonicalizer ? canonicalizer(ui) : ui;
+}
 
-  if (ui.primitive === "clarifying_prompt") {
-    const questions =
-      Array.isArray(ui.questions) && ui.questions.length > 0
-        ? ui.questions
-        : [String(ui.message ?? "")];
-
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      questions,
-    };
-  }
-
-  if (ui.primitive === "choice_list") {
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      choices: Array.isArray(ui.choices) ? ui.choices.slice(0, 6) : ui.choices,
-    };
-  }
-
-  if (ui.primitive === "intake_form") {
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      fields: ui.fields,
-    };
-  }
-
-  if (ui.primitive === "handoff_confirmation") {
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      ...(ui.reference === null ? {} : { reference: ui.reference }),
-    };
-  }
-
-  if (ui.primitive === "safe_fallback") {
-    return {
-      primitive: ui.primitive,
-      message: ui.message,
-      links,
-    };
-  }
-
-  return ui;
+function normalizeLinks(links: unknown): unknown {
+  return Array.isArray(links) ? links.map(normalizeLink) : links;
 }
 
 function normalizeGrounding(grounding: unknown): unknown {
