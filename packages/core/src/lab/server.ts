@@ -226,176 +226,40 @@ async function handleRequest({
     return;
   }
 
-  if (method === "POST" && pathname === "/sessions") {
-    const body = await readJsonBody(request, response);
+  const labRouteContext: LabRouteContext = {
+    request,
+    response,
+    sessions,
+    corpus,
+    plannerFactory,
+    signalExtractor,
+    idFactory,
+    now,
+    conversationRef: "",
+  };
 
-    if (body === undefined) {
+  for (const route of labRoutes) {
+    if (method !== route.method) {
+      continue;
+    }
+
+    if (typeof route.match === "string") {
+      if (pathname !== route.match) {
+        continue;
+      }
+
+      await route.handle(labRouteContext);
       return;
     }
 
-    const conversationRef = idFactory();
-    const state = emptyConversationState(conversationRef);
-    const session = { state, traces: [] };
-    sessions.set(conversationRef, session);
-    writeJson(response, 201, {
-      conversationRef,
-      state,
-    });
-    return;
-  }
-
-  const messageMatch = pathname.match(/^\/sessions\/([^/]+)\/messages$/);
-
-  if (method === "POST" && messageMatch) {
-    const conversationRef = decodeURIComponent(messageMatch[1] ?? "");
-    const session = sessions.get(conversationRef);
-
-    if (!session) {
-      writeSessionNotFound(response, conversationRef);
-      return;
+    const matched = pathname.match(route.match);
+    if (!matched) {
+      continue;
     }
 
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    if (typeof body.message !== "string" || body.message.trim() === "") {
-      writeJson(response, 400, {
-        error: "invalid_message",
-        message: "Request body must include a non-empty message string.",
-      });
-      return;
-    }
-
-    const result = await processTurn({
-      state: session.state,
-      userMessage: body.message,
-      planner: plannerFactory(),
-      ...(signalExtractor ? { signalExtractor } : {}),
-      corpus,
-      idFactory,
-      now: resolveNow(now),
-    });
-    session.state = result.state;
-    session.traces.push(result.trace);
-    writeJson(response, 200, result);
-    return;
-  }
-
-  const inspectMatch = pathname.match(/^\/sessions\/([^/]+)$/);
-
-  if (method === "GET" && inspectMatch) {
-    const conversationRef = decodeURIComponent(inspectMatch[1] ?? "");
-    const session = sessions.get(conversationRef);
-
-    if (!session) {
-      writeSessionNotFound(response, conversationRef);
-      return;
-    }
-
-    writeJson(response, 200, {
-      conversationRef,
-      state: session.state,
-      traces: session.traces,
-    });
-    return;
-  }
-
-  const resetMatch = pathname.match(/^\/sessions\/([^/]+)\/reset$/);
-
-  if (method === "POST" && resetMatch) {
-    const conversationRef = decodeURIComponent(resetMatch[1] ?? "");
-    const session = sessions.get(conversationRef);
-
-    if (!session) {
-      writeSessionNotFound(response, conversationRef);
-      return;
-    }
-
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    session.state = emptyConversationState(conversationRef);
-    session.traces = [];
-    writeJson(response, 200, {
-      conversationRef,
-      state: session.state,
-      traces: session.traces,
-    });
-    return;
-  }
-
-  const intakeMatch = pathname.match(/^\/sessions\/([^/]+)\/intake$/);
-
-  if (method === "POST" && intakeMatch) {
-    const conversationRef = decodeURIComponent(intakeMatch[1] ?? "");
-    const session = sessions.get(conversationRef);
-
-    if (!session) {
-      writeSessionNotFound(response, conversationRef);
-      return;
-    }
-
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    const validation = validateIntakeBody(body);
-
-    if (!validation.ok) {
-      writeJson(response, 400, {
-        error: "invalid_intake",
-        message: validation.message,
-      });
-      return;
-    }
-
-    const result = completeStructuredHandoff({
-      state: session.state,
-      fields: validation.fields,
-      idFactory,
-      now: resolveNow(now),
-    });
-    session.state = result.state;
-    writeJson(response, 200, {
-      conversationRef,
-      state: result.state,
-      finalAction: result.finalAction,
-      ui: result.ui,
-      customerMessage: result.customerMessage,
-      reference: result.reference,
-    });
-    return;
-  }
-
-  const cancelMatch = pathname.match(/^\/sessions\/([^/]+)\/cancel-handoff$/);
-
-  if (method === "POST" && cancelMatch) {
-    const conversationRef = decodeURIComponent(cancelMatch[1] ?? "");
-    const session = sessions.get(conversationRef);
-
-    if (!session) {
-      writeSessionNotFound(response, conversationRef);
-      return;
-    }
-
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    session.state = cancelHandoff(session.state);
-    writeJson(response, 200, {
-      conversationRef,
-      state: session.state,
+    await route.handle({
+      ...labRouteContext,
+      conversationRef: decodeURIComponent(matched[1] ?? ""),
     });
     return;
   }
@@ -436,287 +300,47 @@ async function handleDemoRequest({
   const startedAt = Date.now();
   const createdAt = resolveNow(now).toISOString();
 
-  if (method === "POST" && pathname === "/demo/sessions") {
-    const body = await readJsonBody(request, response);
+  const demoRouteContext: DemoRouteContext = {
+    request,
+    response,
+    sessions,
+    corpus,
+    plannerFactory,
+    signalExtractor,
+    idFactory,
+    now,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    conversationRef: "",
+    startedAt,
+    createdAt,
+  };
 
-    if (body === undefined) {
+  for (const route of demoRoutes) {
+    if (method !== route.method) {
+      continue;
+    }
+
+    if (typeof route.match === "string") {
+      if (pathname !== route.match) {
+        continue;
+      }
+
+      await route.handle(demoRouteContext);
       return;
     }
 
-    const conversationRef = idFactory();
-    const state = emptyConversationState(conversationRef);
-    const responsePayload = persistDemoState({
-      sessions,
-      conversationRef,
-      state,
-      traces: [],
-      demoStateTokenSecret,
-    });
-    await recordDemoSessionStarted({
-      log: demoInteractionLog,
-      createdAt,
-      method,
-      path: pathname,
-      durationMs: Date.now() - startedAt,
-      response: responsePayload,
-    });
-    writeJson(response, 201, responsePayload);
-    return;
-  }
-
-  const messageMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/messages$/);
-
-  if (method === "POST" && messageMatch) {
-    const conversationRef = decodeURIComponent(messageMatch[1] ?? "");
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
+    const matched = pathname.match(route.match);
+    if (!matched) {
+      continue;
     }
 
-    if (typeof body.message !== "string" || body.message.trim() === "") {
-      await recordDemoError({
-        log: demoInteractionLog,
-        createdAt,
-        method,
-        path: pathname,
-        httpStatus: 400,
-        durationMs: Date.now() - startedAt,
-        conversationRef,
-        errorCode: "invalid_message",
-        errorMessage: "Request body must include a non-empty message string.",
-      });
-      writeJson(response, 400, {
-        error: "invalid_message",
-        message: "Request body must include a non-empty message string.",
-      });
-      return;
-    }
-
-    const session = loadDemoState({
-      body,
-      response,
-      sessions,
-      conversationRef,
-      demoStateTokenSecret,
+    await route.handle({
+      ...demoRouteContext,
+      conversationRef: decodeURIComponent(matched[1] ?? ""),
     });
-
-    if (!session) {
-      return;
-    }
-
-    const turn = nextDisplayTurn(session.state);
-    const result = await processTurn({
-      state: session.state,
-      userMessage: body.message,
-      planner: plannerFactory(),
-      ...(signalExtractor ? { signalExtractor } : {}),
-      corpus,
-      idFactory,
-      now: resolveNow(now),
-    });
-    session.state = result.state;
-    session.traces.push(result.trace);
-    const persisted = persistDemoState({
-      sessions,
-      conversationRef,
-      state: result.state,
-      traces: session.traces,
-      demoStateTokenSecret,
-    });
-    const responsePayload = mapTurnResultToDemoResponse({
-      result,
-      turn,
-      continuationToken: persisted.continuationToken,
-    });
-    await recordDemoTurn({
-      log: demoInteractionLog,
-      createdAt,
-      method,
-      path: pathname,
-      durationMs: Date.now() - startedAt,
-      turn,
-      userMessage: body.message,
-      result,
-      response: responsePayload,
-    });
-    writeJson(response, 200, responsePayload);
-    return;
-  }
-
-  const resetMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/reset$/);
-
-  if (method === "POST" && resetMatch) {
-    const conversationRef = decodeURIComponent(resetMatch[1] ?? "");
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    const session = loadDemoState({
-      body,
-      response,
-      sessions,
-      conversationRef,
-      demoStateTokenSecret,
-    });
-
-    if (!session) {
-      return;
-    }
-
-    const state = emptyConversationState(conversationRef);
-    const responsePayload = persistDemoState({
-      sessions,
-      conversationRef,
-      state,
-      traces: [],
-      demoStateTokenSecret,
-    });
-    await recordDemoStateEvent({
-      log: demoInteractionLog,
-      createdAt,
-      eventType: "reset",
-      method,
-      path: pathname,
-      durationMs: Date.now() - startedAt,
-      conversationRef,
-      state,
-      response: responsePayload,
-    });
-    writeJson(response, 200, responsePayload);
-    return;
-  }
-
-  const intakeMatch = pathname.match(/^\/demo\/sessions\/([^/]+)\/intake$/);
-
-  if (method === "POST" && intakeMatch) {
-    const conversationRef = decodeURIComponent(intakeMatch[1] ?? "");
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    const session = loadDemoState({
-      body,
-      response,
-      sessions,
-      conversationRef,
-      demoStateTokenSecret,
-    });
-
-    if (!session) {
-      return;
-    }
-
-    const validation = validateIntakeBody(body);
-
-    if (!validation.ok) {
-      await recordDemoError({
-        log: demoInteractionLog,
-        createdAt,
-        method,
-        path: pathname,
-        httpStatus: 400,
-        durationMs: Date.now() - startedAt,
-        conversationRef,
-        errorCode: "invalid_intake",
-        errorMessage: validation.message,
-      });
-      writeJson(response, 400, {
-        error: "invalid_intake",
-        message: validation.message,
-      });
-      return;
-    }
-
-    const turn = nextDisplayTurn(session.state);
-    const result = completeStructuredHandoff({
-      state: session.state,
-      fields: validation.fields,
-      idFactory,
-      now: resolveNow(now),
-    });
-    session.state = result.state;
-    const persisted = persistDemoState({
-      sessions,
-      conversationRef,
-      state: result.state,
-      traces: session.traces,
-      demoStateTokenSecret,
-    });
-    const responsePayload = mapStructuredIntakeToDemoResponse({
-      conversationRef,
-      state: result.state,
-      finalAction: result.finalAction,
-      ui: result.ui,
-      customerMessage: result.customerMessage,
-      reference: result.reference,
-      turn,
-      continuationToken: persisted.continuationToken,
-    });
-    await recordDemoStructuredIntake({
-      log: demoInteractionLog,
-      createdAt,
-      method,
-      path: pathname,
-      durationMs: Date.now() - startedAt,
-      conversationRef,
-      turn,
-      submittedFields: validation.fields,
-      result,
-      response: responsePayload,
-    });
-    writeJson(response, 200, responsePayload);
-    return;
-  }
-
-  const cancelMatch = pathname.match(
-    /^\/demo\/sessions\/([^/]+)\/cancel-handoff$/,
-  );
-
-  if (method === "POST" && cancelMatch) {
-    const conversationRef = decodeURIComponent(cancelMatch[1] ?? "");
-    const body = await readJsonBody(request, response);
-
-    if (body === undefined) {
-      return;
-    }
-
-    const session = loadDemoState({
-      body,
-      response,
-      sessions,
-      conversationRef,
-      demoStateTokenSecret,
-    });
-
-    if (!session) {
-      return;
-    }
-
-    session.state = cancelHandoff(session.state);
-    const responsePayload = persistDemoState({
-      sessions,
-      conversationRef,
-      state: session.state,
-      traces: session.traces,
-      demoStateTokenSecret,
-    });
-    await recordDemoStateEvent({
-      log: demoInteractionLog,
-      createdAt,
-      eventType: "cancel_handoff",
-      method,
-      path: pathname,
-      durationMs: Date.now() - startedAt,
-      conversationRef,
-      state: session.state,
-      response: responsePayload,
-    });
-    writeJson(response, 200, responsePayload);
     return;
   }
 
@@ -724,6 +348,592 @@ async function handleDemoRequest({
     error: "not_found",
     message: `${method} ${pathname} is not a demo API route.`,
   });
+}
+
+// --- Route tables ----------------------------------------------------------
+// The lab and demo APIs are declarative tables: each row is (method, path
+// matcher, handler). handleRequest / handleDemoRequest walk their table in
+// order and dispatch the first match. A string matcher is an exact path; a
+// RegExp matcher captures the conversationRef in group 1. Intra-table order is
+// safe because the matchers are mutually exclusive; the top-level ordering in
+// handleRequest (demo + auth, then static assets, then lab) is the part that
+// must not move.
+
+interface LabRouteContext {
+  request: IncomingMessage;
+  response: ServerResponse;
+  sessions: Map<string, LabSession>;
+  corpus: readonly CorpusItem[];
+  plannerFactory: () => PlannerWithMetadata;
+  signalExtractor: SignalExtractor | undefined;
+  idFactory: () => string;
+  now: Date | (() => Date) | undefined;
+  conversationRef: string;
+}
+
+interface DemoRouteContext extends LabRouteContext {
+  demoStateTokenSecret: string | undefined;
+  demoInteractionLog: DemoInteractionLog | undefined;
+  method: string;
+  pathname: string;
+  startedAt: number;
+  createdAt: string;
+}
+
+interface Route<Context> {
+  method: string;
+  match: string | RegExp;
+  handle: (context: Context) => Promise<void>;
+}
+
+const labRoutes: readonly Route<LabRouteContext>[] = [
+  { method: "POST", match: "/sessions", handle: handleLabCreateSession },
+  {
+    method: "POST",
+    match: /^\/sessions\/([^/]+)\/messages$/,
+    handle: handleLabMessage,
+  },
+  { method: "GET", match: /^\/sessions\/([^/]+)$/, handle: handleLabInspect },
+  {
+    method: "POST",
+    match: /^\/sessions\/([^/]+)\/reset$/,
+    handle: handleLabReset,
+  },
+  {
+    method: "POST",
+    match: /^\/sessions\/([^/]+)\/intake$/,
+    handle: handleLabIntake,
+  },
+  {
+    method: "POST",
+    match: /^\/sessions\/([^/]+)\/cancel-handoff$/,
+    handle: handleLabCancel,
+  },
+];
+
+const demoRoutes: readonly Route<DemoRouteContext>[] = [
+  { method: "POST", match: "/demo/sessions", handle: handleDemoCreateSession },
+  {
+    method: "POST",
+    match: /^\/demo\/sessions\/([^/]+)\/messages$/,
+    handle: handleDemoMessage,
+  },
+  {
+    method: "POST",
+    match: /^\/demo\/sessions\/([^/]+)\/reset$/,
+    handle: handleDemoReset,
+  },
+  {
+    method: "POST",
+    match: /^\/demo\/sessions\/([^/]+)\/intake$/,
+    handle: handleDemoIntake,
+  },
+  {
+    method: "POST",
+    match: /^\/demo\/sessions\/([^/]+)\/cancel-handoff$/,
+    handle: handleDemoCancel,
+  },
+];
+
+async function handleLabCreateSession(ctx: LabRouteContext): Promise<void> {
+  const { request, response, sessions, idFactory } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const conversationRef = idFactory();
+  const state = emptyConversationState(conversationRef);
+  const session = { state, traces: [] };
+  sessions.set(conversationRef, session);
+  writeJson(response, 201, {
+    conversationRef,
+    state,
+  });
+}
+
+async function handleLabMessage(ctx: LabRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    conversationRef,
+    corpus,
+    plannerFactory,
+    signalExtractor,
+    idFactory,
+    now,
+  } = ctx;
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return;
+  }
+
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  if (typeof body.message !== "string" || body.message.trim() === "") {
+    writeJson(response, 400, {
+      error: "invalid_message",
+      message: "Request body must include a non-empty message string.",
+    });
+    return;
+  }
+
+  const result = await processTurn({
+    state: session.state,
+    userMessage: body.message,
+    planner: plannerFactory(),
+    ...(signalExtractor ? { signalExtractor } : {}),
+    corpus,
+    idFactory,
+    now: resolveNow(now),
+  });
+  session.state = result.state;
+  session.traces.push(result.trace);
+  writeJson(response, 200, result);
+}
+
+async function handleLabInspect(ctx: LabRouteContext): Promise<void> {
+  const { response, sessions, conversationRef } = ctx;
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return;
+  }
+
+  writeJson(response, 200, {
+    conversationRef,
+    state: session.state,
+    traces: session.traces,
+  });
+}
+
+async function handleLabReset(ctx: LabRouteContext): Promise<void> {
+  const { request, response, sessions, conversationRef } = ctx;
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return;
+  }
+
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  session.state = emptyConversationState(conversationRef);
+  session.traces = [];
+  writeJson(response, 200, {
+    conversationRef,
+    state: session.state,
+    traces: session.traces,
+  });
+}
+
+async function handleLabIntake(ctx: LabRouteContext): Promise<void> {
+  const { request, response, sessions, conversationRef, idFactory, now } = ctx;
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return;
+  }
+
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const validation = validateIntakeBody(body);
+
+  if (!validation.ok) {
+    writeJson(response, 400, {
+      error: "invalid_intake",
+      message: validation.message,
+    });
+    return;
+  }
+
+  const result = completeStructuredHandoff({
+    state: session.state,
+    fields: validation.fields,
+    idFactory,
+    now: resolveNow(now),
+  });
+  session.state = result.state;
+  writeJson(response, 200, {
+    conversationRef,
+    state: result.state,
+    finalAction: result.finalAction,
+    ui: result.ui,
+    customerMessage: result.customerMessage,
+    reference: result.reference,
+  });
+}
+
+async function handleLabCancel(ctx: LabRouteContext): Promise<void> {
+  const { request, response, sessions, conversationRef } = ctx;
+  const session = sessions.get(conversationRef);
+
+  if (!session) {
+    writeSessionNotFound(response, conversationRef);
+    return;
+  }
+
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  session.state = cancelHandoff(session.state);
+  writeJson(response, 200, {
+    conversationRef,
+    state: session.state,
+  });
+}
+
+async function handleDemoCreateSession(ctx: DemoRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    idFactory,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    createdAt,
+    startedAt,
+  } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const conversationRef = idFactory();
+  const state = emptyConversationState(conversationRef);
+  const responsePayload = persistDemoState({
+    sessions,
+    conversationRef,
+    state,
+    traces: [],
+    demoStateTokenSecret,
+  });
+  await recordDemoSessionStarted({
+    log: demoInteractionLog,
+    createdAt,
+    method,
+    path: pathname,
+    durationMs: Date.now() - startedAt,
+    response: responsePayload,
+  });
+  writeJson(response, 201, responsePayload);
+}
+
+async function handleDemoMessage(ctx: DemoRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    conversationRef,
+    corpus,
+    plannerFactory,
+    signalExtractor,
+    idFactory,
+    now,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    createdAt,
+    startedAt,
+  } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  if (typeof body.message !== "string" || body.message.trim() === "") {
+    await recordDemoError({
+      log: demoInteractionLog,
+      createdAt,
+      method,
+      path: pathname,
+      httpStatus: 400,
+      durationMs: Date.now() - startedAt,
+      conversationRef,
+      errorCode: "invalid_message",
+      errorMessage: "Request body must include a non-empty message string.",
+    });
+    writeJson(response, 400, {
+      error: "invalid_message",
+      message: "Request body must include a non-empty message string.",
+    });
+    return;
+  }
+
+  const session = loadDemoState({
+    body,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+  });
+
+  if (!session) {
+    return;
+  }
+
+  const turn = nextDisplayTurn(session.state);
+  const result = await processTurn({
+    state: session.state,
+    userMessage: body.message,
+    planner: plannerFactory(),
+    ...(signalExtractor ? { signalExtractor } : {}),
+    corpus,
+    idFactory,
+    now: resolveNow(now),
+  });
+  session.state = result.state;
+  session.traces.push(result.trace);
+  const persisted = persistDemoState({
+    sessions,
+    conversationRef,
+    state: result.state,
+    traces: session.traces,
+    demoStateTokenSecret,
+  });
+  const responsePayload = mapTurnResultToDemoResponse({
+    result,
+    turn,
+    continuationToken: persisted.continuationToken,
+  });
+  await recordDemoTurn({
+    log: demoInteractionLog,
+    createdAt,
+    method,
+    path: pathname,
+    durationMs: Date.now() - startedAt,
+    turn,
+    userMessage: body.message,
+    result,
+    response: responsePayload,
+  });
+  writeJson(response, 200, responsePayload);
+}
+
+async function handleDemoReset(ctx: DemoRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    createdAt,
+    startedAt,
+  } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const session = loadDemoState({
+    body,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+  });
+
+  if (!session) {
+    return;
+  }
+
+  const state = emptyConversationState(conversationRef);
+  const responsePayload = persistDemoState({
+    sessions,
+    conversationRef,
+    state,
+    traces: [],
+    demoStateTokenSecret,
+  });
+  await recordDemoStateEvent({
+    log: demoInteractionLog,
+    createdAt,
+    eventType: "reset",
+    method,
+    path: pathname,
+    durationMs: Date.now() - startedAt,
+    conversationRef,
+    state,
+    response: responsePayload,
+  });
+  writeJson(response, 200, responsePayload);
+}
+
+async function handleDemoIntake(ctx: DemoRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    conversationRef,
+    idFactory,
+    now,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    createdAt,
+    startedAt,
+  } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const session = loadDemoState({
+    body,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+  });
+
+  if (!session) {
+    return;
+  }
+
+  const validation = validateIntakeBody(body);
+
+  if (!validation.ok) {
+    await recordDemoError({
+      log: demoInteractionLog,
+      createdAt,
+      method,
+      path: pathname,
+      httpStatus: 400,
+      durationMs: Date.now() - startedAt,
+      conversationRef,
+      errorCode: "invalid_intake",
+      errorMessage: validation.message,
+    });
+    writeJson(response, 400, {
+      error: "invalid_intake",
+      message: validation.message,
+    });
+    return;
+  }
+
+  const turn = nextDisplayTurn(session.state);
+  const result = completeStructuredHandoff({
+    state: session.state,
+    fields: validation.fields,
+    idFactory,
+    now: resolveNow(now),
+  });
+  session.state = result.state;
+  const persisted = persistDemoState({
+    sessions,
+    conversationRef,
+    state: result.state,
+    traces: session.traces,
+    demoStateTokenSecret,
+  });
+  const responsePayload = mapStructuredIntakeToDemoResponse({
+    conversationRef,
+    state: result.state,
+    finalAction: result.finalAction,
+    ui: result.ui,
+    customerMessage: result.customerMessage,
+    reference: result.reference,
+    turn,
+    continuationToken: persisted.continuationToken,
+  });
+  await recordDemoStructuredIntake({
+    log: demoInteractionLog,
+    createdAt,
+    method,
+    path: pathname,
+    durationMs: Date.now() - startedAt,
+    conversationRef,
+    turn,
+    submittedFields: validation.fields,
+    result,
+    response: responsePayload,
+  });
+  writeJson(response, 200, responsePayload);
+}
+
+async function handleDemoCancel(ctx: DemoRouteContext): Promise<void> {
+  const {
+    request,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+    demoInteractionLog,
+    method,
+    pathname,
+    createdAt,
+    startedAt,
+  } = ctx;
+  const body = await readJsonBody(request, response);
+
+  if (body === undefined) {
+    return;
+  }
+
+  const session = loadDemoState({
+    body,
+    response,
+    sessions,
+    conversationRef,
+    demoStateTokenSecret,
+  });
+
+  if (!session) {
+    return;
+  }
+
+  session.state = cancelHandoff(session.state);
+  const responsePayload = persistDemoState({
+    sessions,
+    conversationRef,
+    state: session.state,
+    traces: session.traces,
+    demoStateTokenSecret,
+  });
+  await recordDemoStateEvent({
+    log: demoInteractionLog,
+    createdAt,
+    eventType: "cancel_handoff",
+    method,
+    path: pathname,
+    durationMs: Date.now() - startedAt,
+    conversationRef,
+    state: session.state,
+    response: responsePayload,
+  });
+  writeJson(response, 200, responsePayload);
 }
 
 async function serveDemoStaticAsset({
