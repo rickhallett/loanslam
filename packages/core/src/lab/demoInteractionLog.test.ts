@@ -9,6 +9,7 @@ import {
   formatDemoLogSession,
   formatDemoLogSummary,
   openInMemoryDemoInteractionLog,
+  recordDemoError,
   recordDemoSessionStarted,
   recordDemoTurn,
 } from "./demoInteractionLog";
@@ -88,6 +89,52 @@ describe("demo interaction log", () => {
         includeFullInternal: true,
       }),
     ).toContain("trace-secret");
+  });
+  it("formats a full message event byte-for-byte", async () => {
+    const log = openInMemoryDemoInteractionLog();
+    await recordDemoTurn({
+      log,
+      createdAt: "2026-06-16T12:00:03.000Z",
+      method: "POST",
+      path: "/demo/sessions/conv-1/messages",
+      durationMs: 123,
+      turn: 1,
+      userMessage: "Why did it do that?",
+      result: validatedTurnResultFixture(),
+      response: demoTurnResponseFixture(),
+    });
+    const turn = await log.turnEvent("conv-1", 1);
+
+    expect(formatDemoLoggedEvent({ event: turn!, includeFullInternal: false }))
+      .toBe(`#1 2026-06-16T12:00:03.000Z message 200 123ms
+conversation: conv-1 turn: 1
+customer: Why did it do that?
+assistant: I can pass that to the team.
+decision: proposed=answer final=request_handoff_intake changed=true context=handoff ui=intake_form
+why: serving=handoff_account_specific flags=account_specific_request overrides=account_specific_answer_blocked
+evidence: retrieval=1 top=42 ids=settlement-safe-id signal=account_specific -> handoff_account_specific (match)
+state: requested=fullName,email collected=email terminal=false`);
+  });
+
+  it("formats a minimal error event byte-for-byte", async () => {
+    const log = openInMemoryDemoInteractionLog();
+    await recordDemoError({
+      log,
+      createdAt: "2026-06-16T12:00:05.000Z",
+      method: "POST",
+      path: "/demo/sessions/conv-err/messages",
+      httpStatus: 400,
+      durationMs: 7,
+      conversationRef: "conv-err",
+      errorCode: "bad_request",
+      errorMessage: "Invalid continuation token.",
+    });
+    const [event] = await log.eventsForSession("conv-err");
+
+    expect(formatDemoLoggedEvent({ event: event!, includeFullInternal: true }))
+      .toBe(`#1 2026-06-16T12:00:05.000Z error 400 7ms
+conversation: conv-err turn: -
+error: bad_request Invalid continuation token.`);
   });
 });
 

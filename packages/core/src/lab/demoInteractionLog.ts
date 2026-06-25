@@ -123,6 +123,11 @@ export interface DemoInteractionLog {
   close(): Promise<void>;
 }
 
+// The write-only view of the log. The serving-path record helpers below only
+// ever append rows, so they take this narrowed type — they cannot read or
+// query events even by mistake.
+export type DemoInteractionWriter = Pick<DemoInteractionLog, "record">;
+
 export class PrismaDemoInteractionLog implements DemoInteractionLog {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -333,7 +338,7 @@ export async function recordDemoSessionStarted({
   durationMs,
   response,
 }: {
-  log: DemoInteractionLog | undefined;
+  log: DemoInteractionWriter | undefined;
   createdAt: string;
   method: string;
   path: string;
@@ -363,7 +368,7 @@ export async function recordDemoTurn({
   result,
   response,
 }: {
-  log: DemoInteractionLog | undefined;
+  log: DemoInteractionWriter | undefined;
   createdAt: string;
   method: string;
   path: string;
@@ -373,8 +378,6 @@ export async function recordDemoTurn({
   result: ValidatedTurnResult;
   response: DemoTurnResponse;
 }): Promise<void> {
-  const telemetry = response.telemetry;
-
   await log?.record({
     createdAt,
     eventType: "message",
@@ -387,26 +390,7 @@ export async function recordDemoTurn({
     requestRef: result.requestRef,
     traceId: result.trace.traceId,
     customerMessage: userMessage,
-    assistantMessage: response.customerMessage,
-    hostContext: response.hostContext,
-    proposedAction: telemetry.proposedAction,
-    finalAction: telemetry.finalAction,
-    actionChanged: telemetry.actionChanged,
-    servingMode: telemetry.servingMode,
-    safetyFlags: telemetry.safetyFlags,
-    overrideCodes: telemetry.overrides.map((override) => override.code),
-    retrievalCount: telemetry.retrieval.count,
-    retrievalTopScore: telemetry.retrieval.topScore,
-    retrievedItemIds: telemetry.retrieval.matches.map((match) => match.itemId),
-    signalStatus: telemetry.signal.status,
-    signalPrimaryIntent: telemetry.signal.primaryIntent,
-    signalRecommendedServingMode: telemetry.signal.recommendedServingMode,
-    signalComparison: telemetry.signal.comparison,
-    uiPrimitive: telemetry.uiPrimitive,
-    terminalSession: response.terminalSession,
-    requestedFields: telemetry.intake.requested,
-    collectedFields: telemetry.intake.collected,
-    displayResponseJson: stripContinuationToken(response),
+    ...projectTurnTelemetry(response),
     internalJson: { result },
   });
 }
@@ -423,7 +407,7 @@ export async function recordDemoStructuredIntake({
   result,
   response,
 }: {
-  log: DemoInteractionLog | undefined;
+  log: DemoInteractionWriter | undefined;
   createdAt: string;
   method: string;
   path: string;
@@ -440,8 +424,6 @@ export async function recordDemoStructuredIntake({
   };
   response: DemoTurnResponse;
 }): Promise<void> {
-  const telemetry = response.telemetry;
-
   await log?.record({
     createdAt,
     eventType: "intake",
@@ -452,26 +434,7 @@ export async function recordDemoStructuredIntake({
     conversationRef,
     turn,
     customerMessage: "Submitted structured intake.",
-    assistantMessage: response.customerMessage,
-    hostContext: response.hostContext,
-    proposedAction: telemetry.proposedAction,
-    finalAction: telemetry.finalAction,
-    actionChanged: telemetry.actionChanged,
-    servingMode: telemetry.servingMode,
-    safetyFlags: telemetry.safetyFlags,
-    overrideCodes: telemetry.overrides.map((override) => override.code),
-    retrievalCount: telemetry.retrieval.count,
-    retrievalTopScore: telemetry.retrieval.topScore,
-    retrievedItemIds: telemetry.retrieval.matches.map((match) => match.itemId),
-    signalStatus: telemetry.signal.status,
-    signalPrimaryIntent: telemetry.signal.primaryIntent,
-    signalRecommendedServingMode: telemetry.signal.recommendedServingMode,
-    signalComparison: telemetry.signal.comparison,
-    uiPrimitive: telemetry.uiPrimitive,
-    terminalSession: response.terminalSession,
-    requestedFields: telemetry.intake.requested,
-    collectedFields: telemetry.intake.collected,
-    displayResponseJson: stripContinuationToken(response),
+    ...projectTurnTelemetry(response),
     internalJson: { submittedFields, result },
   });
 }
@@ -487,7 +450,7 @@ export async function recordDemoStateEvent({
   state,
   response,
 }: {
-  log: DemoInteractionLog | undefined;
+  log: DemoInteractionWriter | undefined;
   createdAt: string;
   eventType: "reset" | "cancel_handoff";
   method: string;
@@ -522,7 +485,7 @@ export async function recordDemoError({
   errorMessage,
   internalJson,
 }: {
-  log: DemoInteractionLog | undefined;
+  log: DemoInteractionWriter | undefined;
   createdAt: string;
   method: string;
   path: string;
@@ -547,114 +510,49 @@ export async function recordDemoError({
   });
 }
 
-export function formatDemoLogSummary(
-  summaries: readonly DemoSessionSummary[],
-): string {
-  if (summaries.length === 0) {
-    return "No demo interactions logged.";
-  }
-
-  return summaries
-    .map((summary) =>
-      [
-        `${summary.conversationRef}`,
-        `  started: ${summary.startedAt}`,
-        `  last: ${summary.lastAt}`,
-        `  events: ${summary.eventCount}, turns: ${summary.messageTurns}, intake: ${summary.intakeEvents}, resets: ${summary.resetEvents}`,
-        `  max turn: ${summary.maxTurn ?? "-"}`,
-        `  contexts: ${summary.hostContexts.join(", ") || "-"}`,
-        `  final actions: ${summary.finalActions.join(", ") || "-"}`,
-        `  overrides: ${summary.overrideCount}, terminal: ${summary.terminalSession ? "yes" : "no"}`,
-      ].join("\n"),
-    )
-    .join("\n\n");
-}
-
-export function formatDemoLogSession({
-  events,
-  includeFullInternal,
-}: {
-  events: readonly DemoLoggedEvent[];
-  includeFullInternal: boolean;
-}): string {
-  if (events.length === 0) {
-    return "No events found for that conversation.";
-  }
-
-  return events
-    .map((event) => formatDemoLoggedEvent({ event, includeFullInternal }))
-    .join("\n\n");
-}
-
-export function formatDemoLoggedEvent({
-  event,
-  includeFullInternal,
-}: {
-  event: DemoLoggedEvent;
-  includeFullInternal: boolean;
-}): string {
-  const lines = [
-    `#${event.id} ${event.createdAt} ${event.eventType} ${event.httpStatus} ${event.durationMs}ms`,
-    `conversation: ${event.conversationRef ?? "-"} turn: ${event.turn ?? "-"}`,
-  ];
-
-  if (event.customerMessage) {
-    lines.push(`customer: ${event.customerMessage}`);
-  }
-
-  if (event.assistantMessage) {
-    lines.push(`assistant: ${event.assistantMessage}`);
-  }
-
-  if (event.finalAction || event.hostContext || event.uiPrimitive) {
-    lines.push(
-      `decision: proposed=${event.proposedAction ?? "-"} final=${event.finalAction ?? "-"} changed=${event.actionChanged ?? "-"} context=${event.hostContext ?? "-"} ui=${event.uiPrimitive ?? "-"}`,
-    );
-  }
-
-  if (
-    event.servingMode ||
-    event.safetyFlags.length > 0 ||
-    event.overrideCodes.length > 0
-  ) {
-    lines.push(
-      `why: serving=${event.servingMode ?? "-"} flags=${event.safetyFlags.join(",") || "-"} overrides=${event.overrideCodes.join(",") || "-"}`,
-    );
-  }
-
-  if (event.retrievalCount !== null || event.signalStatus) {
-    lines.push(
-      `evidence: retrieval=${event.retrievalCount ?? 0} top=${event.retrievalTopScore ?? 0} ids=${event.retrievedItemIds.join(",") || "-"} signal=${event.signalPrimaryIntent ?? "-"} -> ${event.signalRecommendedServingMode ?? "-"} (${event.signalComparison ?? event.signalStatus ?? "-"})`,
-    );
-  }
-
-  if (
-    event.requestedFields.length > 0 ||
-    event.collectedFields.length > 0 ||
-    event.terminalSession !== null
-  ) {
-    lines.push(
-      `state: requested=${event.requestedFields.join(",") || "-"} collected=${event.collectedFields.join(",") || "-"} terminal=${event.terminalSession ?? "-"}`,
-    );
-  }
-
-  if (event.errorCode || event.errorMessage) {
-    lines.push(`error: ${event.errorCode ?? "-"} ${event.errorMessage ?? ""}`);
-  }
-
-  if (includeFullInternal && event.internalJson !== null) {
-    lines.push("full internal:");
-    lines.push(JSON.stringify(event.internalJson, null, 2));
-  }
-
-  return lines.join("\n");
-}
+// Diagnostic formatters live in the query module (CLI demo-log path only).
+// Re-exported here so existing importers are unchanged.
+export {
+  formatDemoLoggedEvent,
+  formatDemoLogSession,
+  formatDemoLogSummary,
+} from "./demoInteractionLog.query";
 
 function stripContinuationToken<
   Response extends DemoSessionResponse | DemoTurnResponse,
 >(response: Response): Omit<Response, "continuationToken"> {
   const { continuationToken: _continuationToken, ...safeResponse } = response;
   return safeResponse;
+}
+
+// The decision/telemetry columns are projected identically for a chat turn and
+// a structured-intake submission; only the event type, identifiers, and
+// internal payload differ between the two writers above.
+function projectTurnTelemetry(response: DemoTurnResponse) {
+  const telemetry = response.telemetry;
+
+  return {
+    assistantMessage: response.customerMessage,
+    hostContext: response.hostContext,
+    proposedAction: telemetry.proposedAction,
+    finalAction: telemetry.finalAction,
+    actionChanged: telemetry.actionChanged,
+    servingMode: telemetry.servingMode,
+    safetyFlags: telemetry.safetyFlags,
+    overrideCodes: telemetry.overrides.map((override) => override.code),
+    retrievalCount: telemetry.retrieval.count,
+    retrievalTopScore: telemetry.retrieval.topScore,
+    retrievedItemIds: telemetry.retrieval.matches.map((match) => match.itemId),
+    signalStatus: telemetry.signal.status,
+    signalPrimaryIntent: telemetry.signal.primaryIntent,
+    signalRecommendedServingMode: telemetry.signal.recommendedServingMode,
+    signalComparison: telemetry.signal.comparison,
+    uiPrimitive: telemetry.uiPrimitive,
+    terminalSession: response.terminalSession,
+    requestedFields: telemetry.intake.requested,
+    collectedFields: telemetry.intake.collected,
+    displayResponseJson: stripContinuationToken(response),
+  } satisfies Partial<DemoInteractionRecord>;
 }
 
 function summaryFromRow(row: SummaryRow): DemoSessionSummary {
