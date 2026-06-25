@@ -64,14 +64,18 @@ export async function processTurn({
   const traceId = idFactory();
   const createdAt = now.toISOString();
 
-  const shadowSignal = await captureShadowSignals({
+  // Routing signal: load-bearing. Its bundle feeds retrieval filtering
+  // (retrieveMatches) and the validator's safety-flag inference
+  // (validateTurnPlan) on every turn. The `shadowSignal*` trace fields and
+  // `compareSignalToOutcome` below are observational telemetry only.
+  const routingSignal = await extractRoutingSignal({
     signalExtractor,
     state,
     userMessage,
     timeoutMs: signalExtractorTimeoutMs,
   });
   const signalBundle =
-    shadowSignal.status === "fulfilled" ? shadowSignal.bundle : undefined;
+    routingSignal.status === "fulfilled" ? routingSignal.bundle : undefined;
   const retrievedMatches = retrieveMatches(userMessage, corpus, {
     ...(signalBundle ? { signalBundle } : {}),
   });
@@ -103,10 +107,10 @@ export async function processTurn({
   );
   const shadowSignalComparison = compareSignalToOutcome({
     signalBundle:
-      shadowSignal.status === "fulfilled" ? shadowSignal.bundle : undefined,
+      routingSignal.status === "fulfilled" ? routingSignal.bundle : undefined,
     finalServingMode: effectiveServingMode,
     finalSafetyFlags: traceSafetyFlags,
-    signalStatus: shadowSignal.status,
+    signalStatus: routingSignal.status,
   });
   const nextState = mergeState({
     state,
@@ -133,8 +137,8 @@ export async function processTurn({
     plannerLatencyMs,
     policyVersion,
     retrievedMatches,
-    shadowSignalStatus: shadowSignal.status,
-    ...shadowSignalTraceFields(shadowSignal),
+    shadowSignalStatus: routingSignal.status,
+    ...shadowSignalTraceFields(routingSignal),
     shadowSignalComparison,
     selectedServingMode: validated.selectedServingMode,
     effectiveServingMode,
@@ -160,7 +164,7 @@ export async function processTurn({
   };
 }
 
-type ShadowSignalOutcome =
+type RoutingSignalOutcome =
   | {
       status: "disabled";
       latencyMs: number;
@@ -178,7 +182,7 @@ type ShadowSignalOutcome =
       errorMessage: string;
     };
 
-async function captureShadowSignals({
+async function extractRoutingSignal({
   signalExtractor,
   state,
   userMessage,
@@ -188,7 +192,7 @@ async function captureShadowSignals({
   state: ConversationState;
   userMessage: string;
   timeoutMs: number;
-}): Promise<ShadowSignalOutcome> {
+}): Promise<RoutingSignalOutcome> {
   if (!signalExtractor) {
     return { status: "disabled", latencyMs: 0 };
   }
@@ -197,7 +201,7 @@ async function captureShadowSignals({
   const abortController = new AbortController();
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const extractionPromise: Promise<ShadowSignalOutcome> = signalExtractor
+  const extractionPromise: Promise<RoutingSignalOutcome> = signalExtractor
     .extractSignals({
       conversationState: state,
       userMessage,
@@ -216,7 +220,7 @@ async function captureShadowSignals({
       errorMessage: error instanceof Error ? error.message : String(error),
     }));
 
-  const timeoutPromise = new Promise<ShadowSignalOutcome>((resolve) => {
+  const timeoutPromise = new Promise<RoutingSignalOutcome>((resolve) => {
     timeoutId = setTimeout(
       () => {
         abortController.abort();
@@ -244,7 +248,7 @@ function signalMetadataField(metadata: SignalExtractorMetadata | undefined): {
   return metadata ? { metadata } : {};
 }
 
-function shadowSignalTraceFields(outcome: ShadowSignalOutcome): {
+function shadowSignalTraceFields(outcome: RoutingSignalOutcome): {
   shadowSignalMetadata?: SignalExtractorMetadata;
   shadowSignalLatencyMs?: number;
   shadowSignalError?: string;
