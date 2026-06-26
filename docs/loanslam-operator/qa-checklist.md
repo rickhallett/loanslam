@@ -342,11 +342,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## K. checkpoint-packet
 
-- [ ] **K1 — packet composes orient + risk + evidence**
+- [x] **K1 — packet composes orient + risk + evidence**
   - Run: `just checkpoint-packet -- "$RUN"`
   - Pass if: stdout contains all of `## status snapshot`, `## branch risk`,
     `## evidence`, and `## Hell Week digest`.
-  - Observed: `___`
+  - Observed: `Printed ## status snapshot, ## branch risk, ## evidence, and ## Hell Week digest; exit 0.`
 
 ---
 
