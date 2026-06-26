@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   findTypeScriptSourcePolicyViolations,
+  isForbiddenAnthropicProviderSpecifier,
   isForbiddenProjectJavaScriptSpecifier,
 } from "./check-typescript-source-policy";
 
@@ -46,6 +47,46 @@ describe("TypeScript source policy", () => {
       "../b.mjs",
       "./c.cjs?raw",
       "@loanslam/core/d.js",
+    ]);
+  });
+
+  it("rejects Anthropic provider imports (OpenAI-only mandate)", () => {
+    expect(isForbiddenAnthropicProviderSpecifier("@anthropic-ai/sdk")).toBe(
+      true,
+    );
+    expect(
+      isForbiddenAnthropicProviderSpecifier("@anthropic-ai/sdk/resources"),
+    ).toBe(true);
+    expect(isForbiddenAnthropicProviderSpecifier("anthropic")).toBe(true);
+    expect(isForbiddenAnthropicProviderSpecifier("anthropic/client")).toBe(
+      true,
+    );
+  });
+
+  it("allows OpenAI and unrelated package names", () => {
+    expect(isForbiddenAnthropicProviderSpecifier("openai")).toBe(false);
+    expect(isForbiddenAnthropicProviderSpecifier("anthropic-tokenizer")).toBe(
+      false,
+    );
+    expect(isForbiddenAnthropicProviderSpecifier("./anthropic-notes")).toBe(
+      false,
+    );
+  });
+
+  it("flags an Anthropic import with the anthropic-provider kind", () => {
+    const violations = findTypeScriptSourcePolicyViolations(
+      "fixture.ts",
+      `import Anthropic from "@anthropic-ai/sdk";`,
+    );
+
+    expect(violations).toEqual([
+      {
+        kind: "anthropic-provider",
+        filePath: "fixture.ts",
+        line: 1,
+        column: 23,
+        specifier: "@anthropic-ai/sdk",
+      },
     ]);
   });
 });
