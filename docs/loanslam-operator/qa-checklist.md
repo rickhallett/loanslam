@@ -214,7 +214,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: prints `secret/cache file staged`; exit non-zero.
   - Observed: `Printed secret/cache file staged: scratch-qa/fake.env.local; exit:1; post-cleanup git status output empty.`
 
-- [ ] **F3 — blocks API-key-shaped content**
+- [x] **F3 — blocks API-key-shaped content**
   - Run (the key is built at runtime so no key-shaped literal lives in this doc —
     which would otherwise trip the very gate it tests):
     ```sh
@@ -224,7 +224,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged scratch-qa/leak.txt; rm -rf scratch-qa
     ```
   - Pass if: prints `possible API key`; exit non-zero.
-  - Observed: `___`
+  - Observed: `Printed possible API key (sk-...) in staged content: scratch-qa/leak.txt; exit:1; post-cleanup git status output empty.`
 
 - [ ] **F4 — blocks an engine change with no receipt**
   - Run:
