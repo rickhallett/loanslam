@@ -12,7 +12,8 @@ description: >-
 # loanslam operator
 
 This skill is a **dispatcher**, not a manual. It routes an intent to one
-reference and the deterministic tool that does the work. It defers to the
+reference and the deterministic tool that does the work. The human-facing user
+manual lives at `docs/loanslam-operator/README.md`. It defers to the
 `justfile` (the real control surface) and to `AGENTS.md` (the doctrine); it
 never restates them. The references are thin routers into `docs/`.
 
