@@ -149,10 +149,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 ## E. floor-delta (all four statuses)
 
-- [ ] **E1 — HOLDING against the anchor**
+- [x] **E1 — HOLDING against the anchor**
   - Run: `just floor-delta -- "$RUN" ; echo "exit:$?"`
   - Pass if: stdout contains `floor-delta: HOLDING` and `exit:0`.
-  - Observed: `___`
+  - Observed: `floor-delta: HOLDING; receipt artifacts/evidence-index/floor-delta-latest.json; exit:0.`
 
 - [ ] **E2 — REGRESSED on a dropped floor dimension**
   - Run:
