@@ -33,10 +33,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 ## A. Environment & preconditions
 
-- [ ] **A1 — tools present**
+- [x] **A1 — tools present**
   - Run: `node -v && just --version && npm -v`
   - Pass if: three version strings print; exit 0.
-  - Observed: `___`
+  - Observed: `node v25.8.2; just 1.47.1; npm 11.11.1; exit 0.`
 
 - [ ] **A2 — inside the repo on a branch**
   - Run: `git rev-parse --abbrev-ref HEAD`
