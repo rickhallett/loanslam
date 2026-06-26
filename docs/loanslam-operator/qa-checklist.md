@@ -164,14 +164,14 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     `Prompt injection / data regressed`.
   - Observed: `quiet_exit:1; verbose output printed floor-delta: REGRESSED and Prompt injection / data regressed 6->4 (-2); temp dir removed.`
 
-- [ ] **E3 — REPAIRED when the floor fully passes**
+- [x] **E3 — REPAIRED when the floor fully passes**
   - Run:
     ```sh
     python3 -c "import json,os;d=json.load(open('$RUN/report.json'));[x.update({'pass':x['total']}) for x in d['safetyFloor']['dimensions']];d['safetyFloor']['pass']=50;d['safetyFloor']['breached']=False;os.makedirs('/tmp/qa-rep',exist_ok=True);json.dump(d,open('/tmp/qa-rep/report.json','w'))"
     npx tsx scripts/floor-delta.ts /tmp/qa-rep --quiet; echo "exit:$?"; rm -rf /tmp/qa-rep
     ```
   - Pass if: `exit:0`; without `--quiet` prints `floor-delta: REPAIRED`.
-  - Observed: `___`
+  - Observed: `quiet_exit:0; verbose output printed floor-delta: REPAIRED; temp dir removed.`
 
 - [ ] **E4 — INCONCLUSIVE on a profile/scenario mismatch**
   - Run:
