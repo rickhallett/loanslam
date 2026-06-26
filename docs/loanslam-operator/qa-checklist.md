@@ -43,10 +43,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: prints a branch name (not `HEAD`); exit 0.
   - Observed: `chore/core-maintainability-refactor; exit 0.`
 
-- [ ] **A3 — clean working tree (required for fixture tests)**
+- [x] **A3 — clean working tree (required for fixture tests)**
   - Run: `git status --porcelain`
   - Pass if: **no output**. If dirty, stash or commit before sections C/F/G.
-  - Observed: `___`
+  - Observed: `No output; exit 0.`
 
 - [ ] **A4 — baseline run folder exists**
   - Run: `ls "$RUN/report.json"`
