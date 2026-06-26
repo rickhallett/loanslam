@@ -114,7 +114,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: stdout contains `Tests  7 passed`; exit 0.
   - Observed: `Test Files 1 passed; Tests 7 passed; exit 0.`
 
-- [ ] **C3 — a live Anthropic import is flagged (negative test)**
+- [x] **C3 — a live Anthropic import is flagged (negative test)**
   - Run:
     ```sh
     mkdir -p scratch-qa && printf 'import x from "@anthropic-ai/sdk";\nexport default x;\n' > scratch-qa/anthropic-fixture.ts
@@ -123,7 +123,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     ```
   - Pass if: stdout contains `forbidden Anthropic provider import` and `exit:1`.
     After cleanup, `git status --porcelain` is empty.
-  - Observed: `___`
+  - Observed: `Printed forbidden Anthropic provider import; exit:1; post-cleanup git status output empty.`
 
 ---
 
