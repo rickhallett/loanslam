@@ -76,7 +76,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: three files list; prints `promotionRequires REPAIRED ceiling 6`.
   - Observed: `Listed digest-and-ping.md, hell-week-tune.md, promote-hop.md; printed promotionRequires REPAIRED ceiling 6; exit 0.`
 
-- [ ] **B4 — all intra-bundle and manual links resolve**
+- [x] **B4 — all intra-bundle and manual links resolve**
   - Run:
     ```sh
     python3 - <<'PY'
@@ -92,7 +92,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     PY
     ```
   - Pass if: prints `OK`.
-  - Observed: `___`
+  - Observed: `OK; exit 0.`
 
 - [ ] **B5 — manual is complete (11 pages, diagrams present)**
   - Run: `ls -1 docs/loanslam-operator/*.md | wc -l && grep -rl '```mermaid' docs/loanslam-operator | wc -l`
