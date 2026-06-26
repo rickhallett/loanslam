@@ -174,6 +174,11 @@ gate-slice *gate_flags:
 digest *digest_flags:
     @npm --silent run digest -- {{ digest_flags }}
 
+# Prepare an isolated worktree for one disjoint-scope slice; refuses to touch
+# protected/checked-out branches. e.g. just slice-new -- validator --dry-run
+slice-new *slice_flags:
+    @bash scripts/slice-worktree.sh {{ slice_flags }}
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
