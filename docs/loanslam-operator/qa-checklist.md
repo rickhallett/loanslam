@@ -48,10 +48,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: **no output**. If dirty, stash or commit before sections C/F/G.
   - Observed: `No output; exit 0.`
 
-- [ ] **A4 — baseline run folder exists**
+- [x] **A4 — baseline run folder exists**
   - Run: `ls "$RUN/report.json"`
   - Pass if: the path prints; exit 0.
-  - Observed: `___`
+  - Observed: `artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25T19-02-48-532Z/report.json; exit 0.`
 
 ---
 
