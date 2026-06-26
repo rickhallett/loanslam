@@ -57,10 +57,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 ## B. Bundle & manual integrity
 
-- [ ] **B1 — dispatcher skill present with frontmatter**
+- [x] **B1 — dispatcher skill present with frontmatter**
   - Run: `head -5 .claude/skills/loanslam-operator/SKILL.md`
   - Pass if: output starts with `---` and contains `name: loanslam-operator`.
-  - Observed: `___`
+  - Observed: `Started with --- and contained name: loanslam-operator; exit 0.`
 
 - [ ] **B2 — nine references present**
   - Run: `ls -1 .claude/skills/loanslam-operator/references/*.md | wc -l`
