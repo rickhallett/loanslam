@@ -363,10 +363,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: stdout contains `is not a disjoint write-scope`; `exit:2`.
   - Observed: `slice-worktree: owner 'frontend' is not a disjoint write-scope; exit:2.`
 
-- [ ] **L3 — protected branch as start-point is allowed read-only (note printed)**
+- [x] **L3 — protected branch as start-point is allowed read-only (note printed)**
   - Run: `bash scripts/slice-worktree.sh planner --base dev --dry-run`
   - Pass if: stdout contains `read-only start-point; not moving it`.
-  - Observed: `___`
+  - Observed: `Printed basing new branch on 'dev' (read-only start-point; not moving it), slice/planner-20260626-101343, and dry-run: nothing created; exit 0.`
 
 ---
 
