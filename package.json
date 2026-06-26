@@ -15,7 +15,7 @@
     "gate-slice": "tsx scripts/gate-slice.ts",
     "digest": "tsx scripts/digest.ts",
     "branch-risk": "tsx scripts/branch-risk.ts",
-    "railway-build": "npm --prefix site ci && npx prisma generate && npm run review-widget:build && npm --prefix site run build",
+    "railway-build": "npm --prefix site ci && npx prisma generate && npm run review-widget:build && npm --prefix site run build && cp -R packages/review-host/public/reports site/dist/reports",
     "railway-start": "tsx packages/core/src/cli.ts serve --demo-only --host 0.0.0.0 --demo-static-host-root site/dist --demo-static-widget-root packages/review-widget/dist",
     "start": "tsx packages/core/src/cli.ts serve --demo-only --host 0.0.0.0 --demo-static-host-root packages/review-host/dist --demo-static-widget-root packages/review-widget/dist",
     "postinstall": "prisma generate",
