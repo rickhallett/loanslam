@@ -169,6 +169,11 @@ floor-delta *delta_flags:
 gate-slice *gate_flags:
     @npm --silent run gate-slice -- {{ gate_flags }}
 
+# Privacy-preserving Hell Week digest (typed numbers from report.json only,
+# never evidence.json transcripts). e.g. just digest -- <run-dir> [--json]
+digest *digest_flags:
+    @npm --silent run digest -- {{ digest_flags }}
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
