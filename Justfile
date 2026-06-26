@@ -169,6 +169,12 @@ floor-delta *delta_flags:
 gate-slice *gate_flags:
     @npm --silent run gate-slice -- {{ gate_flags }}
 
+# Cheap zero-token self-gate: the full verify chain plus a best-effort fallow
+# audit. Behaviour proof still requires Hell Week; this only proves wiring.
+self-gate:
+    @npm run --silent verify
+    @command -v fallow >/dev/null 2>&1 && fallow audit --format json || echo "self-gate: fallow not on PATH; ran verify only"
+
 # Privacy-preserving Hell Week digest (typed numbers from report.json only,
 # never evidence.json transcripts). e.g. just digest -- <run-dir> [--json]
 digest *digest_flags:
