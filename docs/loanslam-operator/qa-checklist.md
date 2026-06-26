@@ -283,7 +283,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     `exit:0`.
   - Observed: `Printed TypeScript source policy passed and gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
-- [ ] **G4 — hook blocks a forbidden staged file**
+- [x] **G4 — hook blocks a forbidden staged file**
   - Run:
     ```sh
     mkdir -p scratch-qa && echo 'X=1' > scratch-qa/fake.env.local && git add -f scratch-qa/fake.env.local
@@ -291,7 +291,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged scratch-qa/fake.env.local; rm -rf scratch-qa
     ```
   - Pass if: stdout contains `gate-slice failed`; exit non-zero.
-  - Observed: `___`
+  - Observed: `Printed gate-slice failed and secret/cache file staged: scratch-qa/fake.env.local; exit:1; fixture removed. Post-cleanup status also showed unrelated untracked docs/hell-week-convergence-to-100-roadmap.md.`
 
 ---
 
