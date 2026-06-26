@@ -247,7 +247,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: stdout contains `floor-delta receipt HOLDING` and `gate-slice passed`; `exit:0`.
   - Observed: `Printed floor-delta receipt HOLDING and gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
-- [ ] **F6 — blocks demo↔review widget cross-pollination**
+- [x] **F6 — blocks demo↔review widget cross-pollination**
   - Run:
     ```sh
     mkdir -p packages/demo-widget/src && printf 'import {T} from "@loanslam/review-widget";\nexport const x=T;\n' > packages/demo-widget/src/__qa_xp__.ts && git add -f packages/demo-widget/src/__qa_xp__.ts
@@ -256,7 +256,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     ```
   - Pass if: prints `widget cross-pollination`; exit non-zero. (Leaves the real
     demo-widget package untouched — confirm with `git status --porcelain`.)
-  - Observed: `___`
+  - Observed: `Printed widget cross-pollination for packages/demo-widget/src/__qa_xp__.ts; exit:1; post-cleanup git status output empty.`
 
 ---
 
