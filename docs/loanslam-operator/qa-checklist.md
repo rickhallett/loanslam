@@ -358,10 +358,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     `worktree: /Users/.../.claude/worktrees/slice-validator-`; `(dry-run: nothing created)`.
   - Observed: `Printed branch: slice/validator-20260626-101236, worktree: /Users/mrkai/code/loanslam/.claude/worktrees/slice-validator-20260626-101236, and dry-run: nothing created; exit 0.`
 
-- [ ] **L2 — invalid owner is rejected**
+- [x] **L2 — invalid owner is rejected**
   - Run: `bash scripts/slice-worktree.sh frontend --dry-run; echo "exit:$?"`
   - Pass if: stdout contains `is not a disjoint write-scope`; `exit:2`.
-  - Observed: `___`
+  - Observed: `slice-worktree: owner 'frontend' is not a disjoint write-scope; exit:2.`
 
 - [ ] **L3 — protected branch as start-point is allowed read-only (note printed)**
   - Run: `bash scripts/slice-worktree.sh planner --base dev --dry-run`
