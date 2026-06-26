@@ -204,7 +204,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: stdout contains `gate-slice passed`; `exit:0`.
   - Observed: `gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
-- [ ] **F2 — blocks a staged env cache**
+- [x] **F2 — blocks a staged env cache**
   - Run:
     ```sh
     mkdir -p scratch-qa && echo 'X=1' > scratch-qa/fake.env.local && git add -f scratch-qa/fake.env.local
@@ -212,7 +212,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged scratch-qa/fake.env.local; rm -rf scratch-qa
     ```
   - Pass if: prints `secret/cache file staged`; exit non-zero.
-  - Observed: `___`
+  - Observed: `Printed secret/cache file staged: scratch-qa/fake.env.local; exit:1; post-cleanup git status output empty.`
 
 - [ ] **F3 — blocks API-key-shaped content**
   - Run (the key is built at runtime so no key-shaped literal lives in this doc —
