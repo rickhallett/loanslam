@@ -103,11 +103,11 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 ## C. Provider mandate (OpenAI-only)
 
-- [ ] **C1 — source-policy passes on the real tree**
+- [x] **C1 — source-policy passes on the real tree**
   - Run: `npm run --silent source-policy:check`
   - Pass if: stdout contains `source policy passed` and
     `no ... Anthropic provider imports found`; exit 0.
-  - Observed: `___`
+  - Observed: `TypeScript source policy passed; scanned 140 source files; no Anthropic provider imports found; exit 0.`
 
 - [ ] **C2 — provider detection unit tests pass**
   - Run: `npx vitest run scripts/check-typescript-source-policy.test.ts`
