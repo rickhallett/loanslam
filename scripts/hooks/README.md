@@ -4,8 +4,10 @@ Committed hooks for the loanslam ops loop. They are **not** active until you
 point git at this directory (a one-time, per-repo step):
 
 ```sh
-git config core.hooksPath scripts/hooks
+just hooks-install        # = git config core.hooksPath scripts/hooks
 ```
+
+Reverse with `git config --unset core.hooksPath`.
 
 `core.hooksPath` is stored in the shared repo config, so it applies to every
 worktree. Each worktree carries its own committed `scripts/hooks/`, so the

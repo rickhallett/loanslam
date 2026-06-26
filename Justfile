@@ -175,6 +175,12 @@ self-gate:
     @npm run --silent verify
     @command -v fallow >/dev/null 2>&1 && fallow audit --format json || echo "self-gate: fallow not on PATH; ran verify only"
 
+# Activate the ops-loop pre-commit gate (sets the shared core.hooksPath).
+# Reverse with: git config --unset core.hooksPath
+hooks-install:
+    @git config core.hooksPath scripts/hooks
+    @echo "ops-loop pre-commit gate active (core.hooksPath=scripts/hooks)"
+
 # Privacy-preserving Hell Week digest (typed numbers from report.json only,
 # never evidence.json transcripts). e.g. just digest -- <run-dir> [--json]
 digest *digest_flags:
