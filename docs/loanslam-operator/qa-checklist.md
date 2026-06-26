@@ -387,11 +387,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 Skip if infra is unavailable; mark each `N/A`. These validate the real proof
 surface — their evidence is the run report and the judge LLM verdicts.
 
-- [ ] **N1 — Postgres precheck + smoke battery runs**
+- [x] **N1 — Postgres precheck + smoke battery runs**
   - Run: `just hell-week -- --profile smoke`
   - Pass if: a run folder is written under `artifacts/phase0/...` with a
     `report.json`; the CLI does not abort on the Postgres precheck.
-  - Observed: `___`
+  - Observed: `N/A — live infra unavailable. Local Hell Week DB URL points at localhost:5433, but reachability check returned ECONNREFUSED; smoke battery not run.`
 
 - [ ] **N2 — full battery + judge produces verdicts**
   - Run: `just hell-week` then `just hell-week-judge -- <new-run-dir>`
