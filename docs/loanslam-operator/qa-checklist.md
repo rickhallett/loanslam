@@ -267,10 +267,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: prints `scripts/hooks`.
   - Observed: `scripts/hooks; exit 0.`
 
-- [ ] **G2 — hook is executable**
+- [x] **G2 — hook is executable**
   - Run: `git ls-files -s scripts/hooks/pre-commit`
   - Pass if: mode begins `100755`.
-  - Observed: `___`
+  - Observed: `100755 3ea23c1f47be49bb2fd253bbb1e89dd586c0b3ba 0 scripts/hooks/pre-commit; exit 0.`
 
 - [ ] **G3 — hook runs both gates and passes on a benign staged file**
   - Run:
