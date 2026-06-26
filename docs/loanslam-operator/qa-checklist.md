@@ -272,7 +272,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: mode begins `100755`.
   - Observed: `100755 3ea23c1f47be49bb2fd253bbb1e89dd586c0b3ba 0 scripts/hooks/pre-commit; exit 0.`
 
-- [ ] **G3 — hook runs both gates and passes on a benign staged file**
+- [x] **G3 — hook runs both gates and passes on a benign staged file**
   - Run:
     ```sh
     mkdir -p scratch-qa && echo note > scratch-qa/benign.md && git add -f scratch-qa/benign.md
@@ -281,7 +281,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     ```
   - Pass if: stdout contains both `source policy passed` and `gate-slice passed`;
     `exit:0`.
-  - Observed: `___`
+  - Observed: `Printed TypeScript source policy passed and gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
 - [ ] **G4 — hook blocks a forbidden staged file**
   - Run:
