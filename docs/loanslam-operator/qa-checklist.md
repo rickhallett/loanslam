@@ -38,10 +38,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: three version strings print; exit 0.
   - Observed: `node v25.8.2; just 1.47.1; npm 11.11.1; exit 0.`
 
-- [ ] **A2 — inside the repo on a branch**
+- [x] **A2 — inside the repo on a branch**
   - Run: `git rev-parse --abbrev-ref HEAD`
   - Pass if: prints a branch name (not `HEAD`); exit 0.
-  - Observed: `___`
+  - Observed: `chore/core-maintainability-refactor; exit 0.`
 
 - [ ] **A3 — clean working tree (required for fixture tests)**
   - Run: `git status --porcelain`
