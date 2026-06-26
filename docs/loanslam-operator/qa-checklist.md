@@ -262,10 +262,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## G. Pre-commit hook (enforcement layer)
 
-- [ ] **G1 — hook is active**
+- [x] **G1 — hook is active**
   - Run: `git config core.hooksPath`
   - Pass if: prints `scripts/hooks`.
-  - Observed: `___`
+  - Observed: `scripts/hooks; exit 0.`
 
 - [ ] **G2 — hook is executable**
   - Run: `git ls-files -s scripts/hooks/pre-commit`
