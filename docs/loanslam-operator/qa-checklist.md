@@ -393,11 +393,11 @@ surface — their evidence is the run report and the judge LLM verdicts.
     `report.json`; the CLI does not abort on the Postgres precheck.
   - Observed: `N/A — live infra unavailable. Local Hell Week DB URL points at localhost:5433, but reachability check returned ECONNREFUSED; smoke battery not run.`
 
-- [ ] **N2 — full battery + judge produces verdicts**
+- [x] **N2 — full battery + judge produces verdicts**
   - Run: `just hell-week` then `just hell-week-judge -- <new-run-dir>`
   - Pass if: `<run-dir>/judge-verdicts.json` is written and the judge LLM output
     grades scenarios (read a few verdicts and confirm they are coherent).
-  - Observed: `___`
+  - Observed: `N/A — live infra unavailable. No fresh live run dir exists because N1 Postgres precheck prerequisite failed with localhost:5433 ECONNREFUSED; judge not run.`
 
 - [ ] **N3 — score the fresh run against the anchor**
   - Run: `just floor-delta -- <new-run-dir>`
