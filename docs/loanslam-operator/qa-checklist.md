@@ -297,11 +297,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## H. branch-risk
 
-- [ ] **H1 — engine-touching branch resolves to ENGINE**
+- [x] **H1 — engine-touching branch resolves to ENGINE**
   - Run: `just branch-risk -- --base dev`
   - Pass if: stdout contains `required proof bar: ENGINE` (this branch's refactor
     commits touch `packages/core/src`).
-  - Observed: `___`
+  - Observed: `Printed required proof bar: ENGINE; compared vs dev merge-base plus working tree; exit 0.`
 
 - [ ] **H2 — JSON output is well-formed**
   - Run: `npx tsx scripts/branch-risk.ts --base dev --json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['requiredProofBar']['tier'])"`
