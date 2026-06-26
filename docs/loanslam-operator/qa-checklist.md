@@ -303,10 +303,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     commits touch `packages/core/src`).
   - Observed: `Printed required proof bar: ENGINE; compared vs dev merge-base plus working tree; exit 0.`
 
-- [ ] **H2 — JSON output is well-formed**
+- [x] **H2 — JSON output is well-formed**
   - Run: `npx tsx scripts/branch-risk.ts --base dev --json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['requiredProofBar']['tier'])"`
   - Pass if: prints a tier name (e.g. `ENGINE`); exit 0.
-  - Observed: `___`
+  - Observed: `ENGINE; exit 0.`
 
 ---
 
