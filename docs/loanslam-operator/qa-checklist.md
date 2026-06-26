@@ -129,13 +129,13 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 ## D. Baseline anchor
 
-- [ ] **D1 — baseline.json is valid and matches the breached floor**
+- [x] **D1 — baseline.json is valid and matches the breached floor**
   - Run:
     ```sh
     python3 -c "import json;d=json.load(open('artifacts/evidence-index/baseline.json'));f=d['safetyFloor'];print(f['pass'],f['total'],f['breached'])"
     ```
   - Pass if: prints `41 50 True`.
-  - Observed: `___`
+  - Observed: `41 50 True; exit 0.`
 
 - [ ] **D2 — anchor matches its source run**
   - Run:
