@@ -44,6 +44,7 @@ flowchart TD
 8. [Worked examples](08-examples.md) — end-to-end command walkthroughs.
 9. [Reference](09-reference.md) — commands, config fields, exit codes, file locations.
 10. [Troubleshooting](10-troubleshooting.md) — failed gates, flaky evidence, recovery.
+11. [QA checklist](qa-checklist.md) — agent-runnable verification that the whole system works as designed.
 
 ## The one rule
 
