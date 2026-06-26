@@ -1,0 +1,22 @@
+#!/bin/sh
+# loanslam ops-loop pre-commit gate.
+#
+# This is the only thing that makes the deterministic gates non-bypassable in a
+# repo with no CI (no .github/workflows, no husky). Install it ONCE per clone:
+#
+#     git config core.hooksPath scripts/hooks
+#
+# (core.hooksPath is shared across this repo's worktrees; each worktree has its
+# own committed copy of scripts/hooks, so the relative path resolves locally.)
+#
+# It runs:
+#   1. source-policy:check  - extensionless-TS + OpenAI-only mandate over the tree
+#   2. gate-slice --staged  - secret/evidence path + content scan, engine-touch
+#                             receipt requirement, demo<->review separation
+#
+# A non-zero exit from either aborts the commit. To bypass intentionally (rare),
+# use `git commit --no-verify` - and write down why.
+set -e
+
+npm run --silent source-policy:check
+npm run --silent gate-slice -- --staged
