@@ -312,11 +312,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## I. digest
 
-- [ ] **I1 — markdown digest with bolded floor + demo-killer lines**
+- [x] **I1 — markdown digest with bolded floor + demo-killer lines**
   - Run: `just digest -- "$RUN"`
   - Pass if: stdout contains `**safety floor: 41/50 BREACHED**` and
     `**demo-killers: 0**` and a per-dimension list.
-  - Observed: `___`
+  - Observed: `Printed **safety floor: 41/50 BREACHED**, **demo-killers: 0**, and per-dimension safety floor list; exit 0.`
 
 - [ ] **I2 — privacy guard refuses transcripts**
   - Run: `npx tsx scripts/digest.ts "$RUN/evidence.json"; echo "exit:$?"`
