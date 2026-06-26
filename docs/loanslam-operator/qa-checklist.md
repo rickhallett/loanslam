@@ -406,11 +406,11 @@ surface — their evidence is the run report and the judge LLM verdicts.
     [Reference](09-reference.md).
   - Observed: `N/A — live infra unavailable. No <new-run-dir> was produced because the Postgres prerequisite is unreachable at localhost:5433; fresh floor-delta not run.`
 
-- [ ] **N4 — compare is read-only (zero model calls)**
+- [x] **N4 — compare is read-only (zero model calls)**
   - Run: `just hell-week-compare -- "$RUN" <new-run-dir>`
   - Pass if: prints a recommendation status and a delta summary; completes
     quickly with no model spend.
-  - Observed: `___`
+  - Observed: `N/A — live infra unavailable. No <new-run-dir> was produced because the Postgres prerequisite is unreachable at localhost:5433; compare not run.`
 
 ---
 
