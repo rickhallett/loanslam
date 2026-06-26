@@ -399,12 +399,12 @@ surface — their evidence is the run report and the judge LLM verdicts.
     grades scenarios (read a few verdicts and confirm they are coherent).
   - Observed: `N/A — live infra unavailable. No fresh live run dir exists because N1 Postgres precheck prerequisite failed with localhost:5433 ECONNREFUSED; judge not run.`
 
-- [ ] **N3 — score the fresh run against the anchor**
+- [x] **N3 — score the fresh run against the anchor**
   - Run: `just floor-delta -- <new-run-dir>`
   - Pass if: prints one of REPAIRED / HOLDING / REGRESSED with a coherent
     per-dimension reason list; exit code matches the status table in
     [Reference](09-reference.md).
-  - Observed: `___`
+  - Observed: `N/A — live infra unavailable. No <new-run-dir> was produced because the Postgres prerequisite is unreachable at localhost:5433; fresh floor-delta not run.`
 
 - [ ] **N4 — compare is read-only (zero model calls)**
   - Run: `just hell-week-compare -- "$RUN" <new-run-dir>`
