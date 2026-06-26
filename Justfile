@@ -183,6 +183,10 @@ slice-new *slice_flags:
 status-snapshot:
     @bash scripts/status-snapshot.sh
 
+# Map this branch's changed files to the proof bar they require. e.g. -- --base dev
+branch-risk *risk_flags:
+    @npm --silent run branch-risk -- {{ risk_flags }}
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
