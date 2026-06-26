@@ -173,7 +173,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: `exit:0`; without `--quiet` prints `floor-delta: REPAIRED`.
   - Observed: `quiet_exit:0; verbose output printed floor-delta: REPAIRED; temp dir removed.`
 
-- [ ] **E4 — INCONCLUSIVE on a profile/scenario mismatch**
+- [x] **E4 — INCONCLUSIVE on a profile/scenario mismatch**
   - Run:
     ```sh
     python3 -c "import json,os;d=json.load(open('$RUN/report.json'));d['profile']='smoke';d['totals']['scenarios']=10;os.makedirs('/tmp/qa-inc',exist_ok=True);json.dump(d,open('/tmp/qa-inc/report.json','w'))"
@@ -181,7 +181,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     ```
   - Pass if: prints `floor-delta: INCONCLUSIVE` and `not comparable ...`;
     exit non-zero.
-  - Observed: `___`
+  - Observed: `floor-delta: INCONCLUSIVE; not comparable profile full vs smoke, scenarios 122 vs 10; exit:1; temp dir removed.`
 
 - [ ] **E5 — receipt is written and gitignored**
   - Run: `just floor-delta -- "$RUN" >/dev/null; git check-ignore artifacts/evidence-index/floor-delta-latest.json`
