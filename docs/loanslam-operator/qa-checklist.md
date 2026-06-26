@@ -323,10 +323,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: stdout contains `refusing to read non-report file`; `exit:2`.
   - Observed: `digest: refusing to read non-report file: $RUN/evidence.json; exit:2.`
 
-- [ ] **I3 — JSON output is well-formed**
+- [x] **I3 — JSON output is well-formed**
   - Run: `just digest -- "$RUN" --json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['safetyFloor']['breached'])"`
   - Pass if: prints `True`.
-  - Observed: `___`
+  - Observed: `True; exit 0.`
 
 ---
 
