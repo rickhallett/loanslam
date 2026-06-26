@@ -109,10 +109,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     `no ... Anthropic provider imports found`; exit 0.
   - Observed: `TypeScript source policy passed; scanned 140 source files; no Anthropic provider imports found; exit 0.`
 
-- [ ] **C2 — provider detection unit tests pass**
+- [x] **C2 — provider detection unit tests pass**
   - Run: `npx vitest run scripts/check-typescript-source-policy.test.ts`
   - Pass if: stdout contains `Tests  7 passed`; exit 0.
-  - Observed: `___`
+  - Observed: `Test Files 1 passed; Tests 7 passed; exit 0.`
 
 - [ ] **C3 — a live Anthropic import is flagged (negative test)**
   - Run:
