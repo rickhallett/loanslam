@@ -236,7 +236,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: prints `requires a floor-delta receipt`; exit non-zero.
   - Observed: `Printed engine-touching commit requires a floor-delta receipt at /tmp/none.json; exit:1; post-cleanup git status output empty.`
 
-- [ ] **F5 — allows an engine change WITH a valid receipt**
+- [x] **F5 — allows an engine change WITH a valid receipt**
   - Run:
     ```sh
     just floor-delta -- "$RUN" >/dev/null   # writes a HOLDING receipt
@@ -245,7 +245,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged packages/core/src/__qa__/probe.ts; rm -rf packages/core/src/__qa__
     ```
   - Pass if: stdout contains `floor-delta receipt HOLDING` and `gate-slice passed`; `exit:0`.
-  - Observed: `___`
+  - Observed: `Printed floor-delta receipt HOLDING and gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
 - [ ] **F6 — blocks demo↔review widget cross-pollination**
   - Run:
