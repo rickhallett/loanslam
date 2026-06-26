@@ -372,13 +372,13 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## M. justfile target inventory
 
-- [ ] **M1 — all operator targets are registered**
+- [x] **M1 — all operator targets are registered**
   - Run:
     ```sh
     just --list | grep -Eo '(status-snapshot|branch-risk|self-gate|gate-slice|floor-delta|digest|checkpoint-packet|slice-new|hooks-install)' | sort -u | wc -l
     ```
   - Pass if: prints `9`.
-  - Observed: `___`
+  - Observed: `9; exit 0.`
 
 ---
 
