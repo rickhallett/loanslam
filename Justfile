@@ -154,6 +154,16 @@ hell-week-stability *stability_flags:
     @npm --silent run core:hell-week-stability -- {{ stability_flags }}
 
 # =============================================================================
+# Ops Loop Gates
+# =============================================================================
+
+# Score a candidate Hell Week run vs the committed baseline anchor; writes a
+# REPAIRED|HOLDING|REGRESSED|INCONCLUSIVE receipt and exits non-zero on a
+# regression. e.g. just floor-delta -- <run-dir-or-report.json>
+floor-delta *delta_flags:
+    @npm --silent run floor-delta -- {{ delta_flags }}
+
+# =============================================================================
 # Demo Logs
 # =============================================================================
 

@@ -11,6 +11,7 @@
     "build": "npm run source-policy:check && npm --workspaces --if-present run build",
     "source-policy:check": "tsx scripts/check-typescript-source-policy.ts",
     "verify": "npm test && npm run typecheck && npm run build",
+    "floor-delta": "tsx scripts/floor-delta.ts",
     "start": "tsx packages/core/src/cli.ts serve --demo-only --host 0.0.0.0 --demo-static-host-root packages/review-host/dist --demo-static-widget-root packages/review-widget/dist",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && prisma migrate deploy && npm run review-widget:build && npm run review-host:build",
