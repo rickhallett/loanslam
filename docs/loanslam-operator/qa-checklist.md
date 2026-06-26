@@ -183,10 +183,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     exit non-zero.
   - Observed: `floor-delta: INCONCLUSIVE; not comparable profile full vs smoke, scenarios 122 vs 10; exit:1; temp dir removed.`
 
-- [ ] **E5 — receipt is written and gitignored**
+- [x] **E5 — receipt is written and gitignored**
   - Run: `just floor-delta -- "$RUN" >/dev/null; git check-ignore artifacts/evidence-index/floor-delta-latest.json`
   - Pass if: prints the receipt path (i.e. it is ignored); the file exists.
-  - Observed: `___`
+  - Observed: `artifacts/evidence-index/floor-delta-latest.json; exists:yes; exit 0.`
 
 ---
 
