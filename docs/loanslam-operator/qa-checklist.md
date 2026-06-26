@@ -137,13 +137,13 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: prints `41 50 True`.
   - Observed: `41 50 True; exit 0.`
 
-- [ ] **D2 — anchor matches its source run**
+- [x] **D2 — anchor matches its source run**
   - Run:
     ```sh
     python3 -c "import json;b=json.load(open('artifacts/evidence-index/baseline.json'));r=json.load(open('$RUN/report.json'));print(b['runId']==r['runId'], b['safetyFloor']['pass']==r['safetyFloor']['pass'])"
     ```
   - Pass if: prints `True True`.
-  - Observed: `___`
+  - Observed: `True True; exit 0.`
 
 ---
 
