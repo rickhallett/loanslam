@@ -1043,7 +1043,37 @@ function resolveDemoStaticRoute(
     };
   }
 
-  return null;
+  return resolveHostStaticRoute(pathname, assets);
+}
+
+function resolveHostStaticRoute(
+  pathname: string,
+  assets: DemoStaticAssets,
+): { filePath: string; cacheControl: string } | null {
+  const relativePath = pathname.replace(/^\/+/, "");
+
+  if (!relativePath) {
+    return null;
+  }
+
+  if (pathname.endsWith("/")) {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, `${relativePath}index.html`),
+      cacheControl: "no-store",
+    };
+  }
+
+  if (relativePath.includes(".")) {
+    return {
+      filePath: safeStaticPath(assets.hostRoot, relativePath),
+      cacheControl: cacheControlForStaticPath(pathname),
+    };
+  }
+
+  return {
+    filePath: safeStaticPath(assets.hostRoot, `${relativePath}/index.html`),
+    cacheControl: "no-store",
+  };
 }
 
 function safeStaticPath(root: string, relativePath: string): string {

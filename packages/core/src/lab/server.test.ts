@@ -258,6 +258,9 @@ describe("lab server", () => {
     });
 
     const host = await fetch(`${baseUrl}/`);
+    const contact = await fetch(`${baseUrl}/contact/`);
+    const contactNoSlash = await fetch(`${baseUrl}/contact`);
+    const astroAsset = await fetch(`${baseUrl}/_astro/contact.css`);
     const widget = await fetch(`${baseUrl}/widget/`);
     const widgetAsset = await fetch(`${baseUrl}/assets/app.js`);
     const reportsIndex = await fetch(`${baseUrl}/reports/`);
@@ -267,6 +270,12 @@ describe("lab server", () => {
     expect(host.status).toBe(200);
     expect(host.headers.get("content-type")).toContain("text/html");
     expect(await host.text()).toContain("Review host");
+    expect(contact.status).toBe(200);
+    expect(await contact.text()).toContain("Contact page");
+    expect(contactNoSlash.status).toBe(200);
+    expect(await contactNoSlash.text()).toContain("Contact page");
+    expect(astroAsset.status).toBe(200);
+    expect(await astroAsset.text()).toContain(".contact");
     expect(widget.status).toBe(200);
     expect(await widget.text()).toContain("Widget shell");
     expect(widgetAsset.status).toBe(200);
@@ -354,7 +363,11 @@ function tempStaticAssets(): { hostRoot: string; widgetRoot: string } {
   const widgetRoot = join(dir, "widget");
   mkdirSync(join(widgetRoot, "assets"), { recursive: true });
   mkdirSync(hostRoot, { recursive: true });
+  mkdirSync(join(hostRoot, "contact"), { recursive: true });
+  mkdirSync(join(hostRoot, "_astro"), { recursive: true });
   writeFileSync(join(hostRoot, "index.html"), "<h1>Review host</h1>");
+  writeFileSync(join(hostRoot, "contact", "index.html"), "<h1>Contact page</h1>");
+  writeFileSync(join(hostRoot, "_astro", "contact.css"), ".contact {}");
   writeFileSync(join(hostRoot, "styles.css"), "body { color: black; }");
   writeFileSync(join(hostRoot, "loader.js"), "window.hostLoaded = true;");
   writeFileSync(join(hostRoot, "devtools.js"), "window.devtoolsLoaded = true;");
