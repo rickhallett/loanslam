@@ -94,10 +94,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: prints `OK`.
   - Observed: `OK; exit 0.`
 
-- [ ] **B5 — manual is complete (11 pages, diagrams present)**
+- [x] **B5 — manual is complete (11 pages, diagrams present)**
   - Run: `ls -1 docs/loanslam-operator/*.md | wc -l && grep -rl '```mermaid' docs/loanslam-operator | wc -l`
   - Pass if: first number ≥ `11`; second ≥ `6` (pages containing diagrams).
-  - Observed: `___`
+  - Observed: `12 manual pages; 7 pages containing Mermaid diagrams; exit 0.`
 
 ---
 
