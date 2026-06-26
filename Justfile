@@ -187,6 +187,11 @@ status-snapshot:
 branch-risk *risk_flags:
     @npm --silent run branch-risk -- {{ risk_flags }}
 
+# Compact checkpoint packet (orient + proof bar + evidence) for review/PR bodies.
+# e.g. just checkpoint-packet -- <run-dir>
+checkpoint-packet *packet_flags:
+    @bash scripts/checkpoint-packet.sh {{ packet_flags }}
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
