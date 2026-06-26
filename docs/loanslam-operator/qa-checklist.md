@@ -352,11 +352,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## L. slice-worktree
 
-- [ ] **L1 — dry-run plans a valid owner under the main repo root**
+- [x] **L1 — dry-run plans a valid owner under the main repo root**
   - Run: `just slice-new -- validator --dry-run`
   - Pass if: stdout contains `branch:   slice/validator-` and
     `worktree: /Users/.../.claude/worktrees/slice-validator-`; `(dry-run: nothing created)`.
-  - Observed: `___`
+  - Observed: `Printed branch: slice/validator-20260626-101236, worktree: /Users/mrkai/code/loanslam/.claude/worktrees/slice-validator-20260626-101236, and dry-run: nothing created; exit 0.`
 
 - [ ] **L2 — invalid owner is rejected**
   - Run: `bash scripts/slice-worktree.sh frontend --dry-run; echo "exit:$?"`
