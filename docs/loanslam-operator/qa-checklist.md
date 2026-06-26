@@ -67,14 +67,14 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: prints `9`.
   - Observed: `9; exit 0.`
 
-- [ ] **B3 — workflow arcs + config present, config is valid JSON**
+- [x] **B3 — workflow arcs + config present, config is valid JSON**
   - Run:
     ```sh
     ls .claude/skills/loanslam-operator/workflows/{hell-week-tune,promote-hop,digest-and-ping}.md \
       && python3 -c "import json;d=json.load(open('.claude/skills/loanslam-operator/workflows/ratchet.config.json'));print('promotionRequires',d['promotionRequires'],'ceiling',d['iterationCeiling'])"
     ```
   - Pass if: three files list; prints `promotionRequires REPAIRED ceiling 6`.
-  - Observed: `___`
+  - Observed: `Listed digest-and-ping.md, hell-week-tune.md, promote-hop.md; printed promotionRequires REPAIRED ceiling 6; exit 0.`
 
 - [ ] **B4 — all intra-bundle and manual links resolve**
   - Run:
