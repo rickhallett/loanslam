@@ -163,6 +163,12 @@ hell-week-stability *stability_flags:
 floor-delta *delta_flags:
     @npm --silent run floor-delta -- {{ delta_flags }}
 
+# Deterministic keep-commit gate over the staged diff: blocks staged secret
+# caches/evidence.json, decrypted key content, engine changes without a valid
+# floor-delta receipt, and demo<->review widget cross-pollination.
+gate-slice *gate_flags:
+    @npm --silent run gate-slice -- {{ gate_flags }}
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
