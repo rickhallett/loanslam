@@ -62,10 +62,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: output starts with `---` and contains `name: loanslam-operator`.
   - Observed: `Started with --- and contained name: loanslam-operator; exit 0.`
 
-- [ ] **B2 — nine references present**
+- [x] **B2 — nine references present**
   - Run: `ls -1 .claude/skills/loanslam-operator/references/*.md | wc -l`
   - Pass if: prints `9`.
-  - Observed: `___`
+  - Observed: `9; exit 0.`
 
 - [ ] **B3 — workflow arcs + config present, config is valid JSON**
   - Run:
