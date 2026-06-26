@@ -154,7 +154,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: stdout contains `floor-delta: HOLDING` and `exit:0`.
   - Observed: `floor-delta: HOLDING; receipt artifacts/evidence-index/floor-delta-latest.json; exit:0.`
 
-- [ ] **E2 — REGRESSED on a dropped floor dimension**
+- [x] **E2 — REGRESSED on a dropped floor dimension**
   - Run:
     ```sh
     python3 -c "import json,os;d=json.load(open('$RUN/report.json'));[d['safetyFloor']['dimensions'].__setitem__(i,{**x,'pass':x['pass']-2}) for i,x in enumerate(d['safetyFloor']['dimensions']) if x['dimension']=='prompt_injection'];d['safetyFloor']['pass']=39;os.makedirs('/tmp/qa-reg',exist_ok=True);json.dump(d,open('/tmp/qa-reg/report.json','w'))"
@@ -162,7 +162,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
     ```
   - Pass if: `exit:1` (REGRESSED). Re-run without `--quiet` to see
     `Prompt injection / data regressed`.
-  - Observed: `___`
+  - Observed: `quiet_exit:1; verbose output printed floor-delta: REGRESSED and Prompt injection / data regressed 6->4 (-2); temp dir removed.`
 
 - [ ] **E3 — REPAIRED when the floor fully passes**
   - Run:
