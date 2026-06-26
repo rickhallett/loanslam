@@ -318,10 +318,10 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     `**demo-killers: 0**` and a per-dimension list.
   - Observed: `Printed **safety floor: 41/50 BREACHED**, **demo-killers: 0**, and per-dimension safety floor list; exit 0.`
 
-- [ ] **I2 — privacy guard refuses transcripts**
+- [x] **I2 — privacy guard refuses transcripts**
   - Run: `npx tsx scripts/digest.ts "$RUN/evidence.json"; echo "exit:$?"`
   - Pass if: stdout contains `refusing to read non-report file`; `exit:2`.
-  - Observed: `___`
+  - Observed: `digest: refusing to read non-report file: $RUN/evidence.json; exit:2.`
 
 - [ ] **I3 — JSON output is well-formed**
   - Run: `just digest -- "$RUN" --json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['safetyFloor']['breached'])"`
