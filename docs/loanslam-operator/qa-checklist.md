@@ -194,7 +194,7 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
 
 Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
-- [ ] **F1 — passes on a benign non-engine staged file**
+- [x] **F1 — passes on a benign non-engine staged file**
   - Run:
     ```sh
     mkdir -p scratch-qa && echo note > scratch-qa/benign.md && git add -f scratch-qa/benign.md
@@ -202,7 +202,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged scratch-qa/benign.md; rm -rf scratch-qa
     ```
   - Pass if: stdout contains `gate-slice passed`; `exit:0`.
-  - Observed: `___`
+  - Observed: `gate-slice passed: scanned 1 staged file(s); exit:0; post-cleanup git status output empty.`
 
 - [ ] **F2 — blocks a staged env cache**
   - Run:
