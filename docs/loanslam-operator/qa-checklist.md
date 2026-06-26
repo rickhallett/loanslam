@@ -226,7 +226,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
   - Pass if: prints `possible API key`; exit non-zero.
   - Observed: `Printed possible API key (sk-...) in staged content: scratch-qa/leak.txt; exit:1; post-cleanup git status output empty.`
 
-- [ ] **F4 — blocks an engine change with no receipt**
+- [x] **F4 — blocks an engine change with no receipt**
   - Run:
     ```sh
     mkdir -p packages/core/src/__qa__ && echo 'export const x=1;' > packages/core/src/__qa__/probe.ts && git add -f packages/core/src/__qa__/probe.ts
@@ -234,7 +234,7 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
     git restore --staged packages/core/src/__qa__/probe.ts; rm -rf packages/core/src/__qa__
     ```
   - Pass if: prints `requires a floor-delta receipt`; exit non-zero.
-  - Observed: `___`
+  - Observed: `Printed engine-touching commit requires a floor-delta receipt at /tmp/none.json; exit:1; post-cleanup git status output empty.`
 
 - [ ] **F5 — allows an engine change WITH a valid receipt**
   - Run:
