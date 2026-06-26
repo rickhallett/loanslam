@@ -179,6 +179,10 @@ digest *digest_flags:
 slice-new *slice_flags:
     @bash scripts/slice-worktree.sh {{ slice_flags }}
 
+# Read-only orientation snapshot: branch, upstream, dirty state, worktrees, hook.
+status-snapshot:
+    @bash scripts/status-snapshot.sh
+
 # =============================================================================
 # Demo Logs
 # =============================================================================
