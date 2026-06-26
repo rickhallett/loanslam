@@ -332,11 +332,11 @@ Each test stages a throwaway file, runs the gate, then cleans up. None commit.
 
 ## J. status-snapshot
 
-- [ ] **J1 — snapshot reports branch, worktrees, and active hook**
+- [x] **J1 — snapshot reports branch, worktrees, and active hook**
   - Run: `just status-snapshot`
   - Pass if: stdout contains `## status snapshot`, a `- worktrees:` section
     listing `dev ->` and `staging ->`, and `pre-commit gate: active`.
-  - Observed: `___`
+  - Observed: `Printed ## status snapshot, pre-commit gate: active (scripts/hooks), and worktrees including staging -> and dev ->; exit 0. Snapshot also reported 1 changed path from unrelated untracked roadmap.`
 
 ---
 
