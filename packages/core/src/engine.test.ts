@@ -534,12 +534,12 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+      "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+        "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
       fields: standardHandoffFields,
     });
   });
@@ -1523,7 +1523,7 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.ui.primitive).toBe("intake_form");
-    expect(result.trace.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.trace.selectedServingMode).toBeNull();
     expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining([
@@ -1532,7 +1532,8 @@ describe("processTurn", () => {
         "sensitive_overshare",
       ]),
     );
-    expect(result.customerMessage).toMatch(/Do not send bank login details/i);
+    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/bank login details/i);
     expect(result.validatorOverrides.map((override) => override.code)).toEqual([
       "malformed_plan",
       "credential_offer_warned",

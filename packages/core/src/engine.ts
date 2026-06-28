@@ -800,14 +800,14 @@ function buildHandoffIntroMessage({
   }
 
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "I'd rather get you to a person who can help with this properly. Please share a few contact details below and the LoanSlam team will be in touch.";
+    return "I'd rather get you to a person who can help with your loan, repayment, or account support properly. Please share a few contact details below and the LoanSlam team will be in touch.";
   }
 
   if (
     servingMode === "handoff_account_specific" ||
     hasHandoffSafetyFlag(safetyFlags)
   ) {
-    return "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    return "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
   }
 
   return "I'll pass this to the LoanSlam team so a person can help. Please share a few contact details below so they can get back to you.";
@@ -818,8 +818,10 @@ function shouldPreserveValidatorHandoffMessage(
 ): boolean {
   return validated.validatorOverrides.some((override) =>
     [
+      "account_change_handoff_contextualized",
       "approval_status_handoff_required",
       "payment_link_handoff_required",
+      "reference_offer_handoff_contextualized",
     ].includes(override.code),
   );
 }

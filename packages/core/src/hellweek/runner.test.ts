@@ -185,7 +185,7 @@ describe("hell week scenario runner", () => {
     expect(finalTurn).toMatchObject({
       finalAction: "request_handoff_intake",
       routeForScoring: "handoff_account_specific",
-      selectedServingMode: "handoff_account_specific",
+      selectedServingMode: null,
       effectiveServingMode: "handoff_account_specific",
       validatorOverrideCodes: ["malformed_plan", "credential_offer_warned"],
     });

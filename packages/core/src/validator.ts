@@ -13,24 +13,30 @@ import type {
 import {
   buildApprovalEstimateBoundaryCopy,
   buildApprovalStatusHandoffCopy,
+  buildAccountChangeHandoffCopy,
   buildBadCreditEligibilityCopy,
+  buildCreditCheckEvasionBoundaryCopy,
   buildExcludedCopy,
   buildCredentialHandoffCopy,
   buildFallbackCopy,
   buildHandoffCopy,
   buildInternalDataBoundaryCopy,
   buildPaymentLinkHandoffCopy,
+  buildReferenceOfferHandoffCopy,
   buildSecondaryBorrowingBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
   detectApprovalEstimateRequest,
   detectApprovalStatusQuestion,
   detectBadCreditEligibilityQuestion,
+  detectCreditCheckEvasionRequest,
   detectCredentialBoundaryRequest,
   detectForbiddenCredentialRequest,
+  detectIntakeStyleInternalDataExposureRequest,
   detectInternalDataExposureRequest,
   detectPaymentLinkRequest,
   detectPromisedAccountValueOrOutcome,
+  detectReferenceOffer,
   detectSecondaryBorrowingAdviceRequest,
   detectSensitiveOvershare,
   hasHandoffSafetyFlag,
@@ -96,9 +102,12 @@ export const safetyGuardPipeline: readonly TurnGuard[] = [
   guardForbiddenCredentialRequestInPlan,
   guardForbiddenCredentialsInFacts,
   guardSecondaryBorrowingAdvice,
+  guardCreditCheckEvasion,
   guardApprovalEstimateAdvice,
   guardBadCreditEligibilityAnswer,
   guardApprovalStatusHandoff,
+  guardReferenceOfferHandoff,
+  guardAccountChangeHandoffAcknowledgement,
   guardPromisedAccountValue,
   guardOutOfDomainFallback,
   guardVulnerabilityRoute,
@@ -184,7 +193,11 @@ function guardInternalDataExposure(
   const { base } = context;
   const boundaryReason =
     "Requests for internal traces, hidden instructions, customer data, or policy bypass must not be served in chat.";
-  const boundary = buildInternalDataBoundaryCopy(boundaryReason);
+  const boundary = buildInternalDataBoundaryCopy(boundaryReason, {
+    includeCredentialWarning: detectIntakeStyleInternalDataExposureRequest(
+      context.userMessage,
+    ),
+  });
 
   if (base.finalAction === "refuse" && base.ui.primitive === "safe_fallback") {
     return {
@@ -252,6 +265,9 @@ function guardCredentialBoundary(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
+      selectedServingMode: null,
+      selectedRouteReason:
+        "Credential boundary risk takes precedence over retrieved routes.",
       safetyFlags: uniqueSafetyFlags([
         ...base.safetyFlags,
         "forbidden_credentials",
@@ -319,6 +335,9 @@ function guardForbiddenCredentialRequestInPlan(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
+      selectedServingMode: null,
+      selectedRouteReason:
+        "Credential boundary risk takes precedence over retrieved routes.",
       safetyFlags: uniqueSafetyFlags([
         ...base.safetyFlags,
         "forbidden_credentials",
@@ -352,6 +371,9 @@ function guardForbiddenCredentialsInFacts(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
+      selectedServingMode: null,
+      selectedRouteReason:
+        "Credential boundary risk takes precedence over retrieved routes.",
       safetyFlags: uniqueSafetyFlags([
         ...base.safetyFlags,
         "forbidden_credentials",
@@ -375,7 +397,7 @@ function guardSecondaryBorrowingAdvice(
     {
       code: "secondary_borrowing_advice_blocked",
       reason:
-        "Advice on whether to borrow from another lender is regulated financial advice and must not be answered in chat.",
+        "Advice on whether to borrow more or take another loan is regulated financial advice and must not be answered in chat.",
       toAction: excluded.action,
     },
     {
@@ -386,7 +408,42 @@ function guardSecondaryBorrowingAdvice(
       collectedFacts: {},
       selectedServingMode: "excluded",
       selectedRouteReason:
-        "Advice on whether to borrow from another lender is regulated financial advice.",
+        "Advice on whether to borrow more or take another loan is regulated financial advice.",
+    },
+  );
+}
+
+function guardCreditCheckEvasion(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectCreditCheckEvasionRequest(context.userMessage)) {
+    return null;
+  }
+
+  const { base } = context;
+  const excluded = buildCreditCheckEvasionBoundaryCopy();
+  const reason =
+    "Credit-check evasion or misrepresentation must not be coached in chat.";
+
+  return applyOverride(
+    base,
+    {
+      code: "credit_check_evasion_blocked",
+      reason,
+      toAction: excluded.action,
+    },
+    {
+      finalAction: excluded.action,
+      customerMessage: excluded.customerMessage,
+      ui: excluded.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "excluded",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "unsupported_request",
+      ]),
     },
   );
 }
@@ -491,6 +548,93 @@ function guardApprovalStatusHandoff(
       safetyFlags: uniqueSafetyFlags([
         ...base.safetyFlags,
         "account_specific_request",
+      ]),
+    },
+  );
+}
+
+function guardReferenceOfferHandoff(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, selectedMatch, userMessage } = context;
+
+  if (
+    base.finalAction !== "request_handoff_intake" ||
+    selectedMatch?.servingMode !== "handoff_account_specific" ||
+    !detectReferenceOffer(userMessage)
+  ) {
+    return null;
+  }
+
+  const reason =
+    "Reference numbers are account-specific and should be handled by the LoanSlam team.";
+  const handoff = buildReferenceOfferHandoffCopy(reason);
+
+  return applyOverride(
+    base,
+    {
+      code: "reference_offer_handoff_contextualized",
+      reason:
+        "Reference-offer handoff copy should preserve the account boundary without misrouting to contact-detail updates.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
+    },
+  );
+}
+
+function guardAccountChangeHandoffAcknowledgement(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, selectedMatch, userMessage } = context;
+
+  if (
+    base.finalAction !== "request_handoff_intake" ||
+    selectedMatch?.servingMode !== "handoff_account_specific" ||
+    selectedMatch.item?.id === "update-my-bank-details"
+  ) {
+    return null;
+  }
+
+  const handoff = buildAccountChangeHandoffCopy(
+    selectedMatch.item?.route_reason ??
+      "Account changes must be handled by the LoanSlam team.",
+    userMessage,
+  );
+
+  if (!handoff || base.customerMessage === handoff.customerMessage) {
+    return null;
+  }
+
+  return applyOverride(
+    base,
+    {
+      code: "account_change_handoff_contextualized",
+      reason:
+        "Account-change handoff copy should acknowledge the requested change without promising it.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason: selectedMatch.item?.route_reason ?? null,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+        "change_request",
       ]),
     },
   );
