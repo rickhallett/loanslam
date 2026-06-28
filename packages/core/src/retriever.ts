@@ -31,6 +31,7 @@ const stopTerms = new Set([
   "but",
   "by",
   "can",
+  "cant",
   "could",
   "did",
   "didnt",
