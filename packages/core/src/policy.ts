@@ -86,13 +86,22 @@ const approvalPromisePattern =
   /\b(your\s+)?(application|loan|request)\s+(is|was|has\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\byou\s+(are|were|have\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\b(approval|application\s+result)\s+(is|was|has\s+been|will\s+be)\s+(approved|accepted|guaranteed)\b|\b(approved|accepted|guaranteed)\s+(today|now|already)\b|\b(will\s+be\s+paid|will\s+receive\s+funds)\b/i;
 
 const sensitiveOversharePattern =
-  /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide|upload|attach)|let\s+me\s+(send|share|give|provide|upload|attach))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
+  /\b(here\s+(are|is)|i\s+(can|could|will|'ll)\s+(send|share|give|provide|upload|attach)|let\s+me\s+(send|share|give|provide|upload|attach))\b.{0,120}\b(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\b|\b(take|use|handle|accept)\s+(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(login|password)|banking\s+app\s+screenshot)\b|\b(my\s+)?(bank\s+details?|sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|banking\s+app\s+screenshot|date\s+of\s+birth|dob)\s*(is|are|:)\b/i;
 
 const internalDataExposurePattern =
-  /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
+  /\b(show|give|send|dump|display|reveal|print|list|export)\b.{0,100}\b(trace|traces|hidden\s+(prompt|instruction|instructions|internal|internals)|system\s+prompt|developer\s+message|customer\s+data|(other|last|previous|another)\s+customer'?s?\s+(email\s+address|email|phone|address|postcode|data|details)|other\s+customers?|conversation\s+logs?|audit\s+logs?|internal\s+(state|data|notes|reasoning|log|logs))\b|\b(put|send|append|include|copy|place)\b.{0,80}\b(my|customer|account|personal)\s+data\b.{0,80}\b(https?:\/\/|url|link|query\s*string)\b|\b(ignore\s+(the\s+)?policy|bypass\s+(compliance|policy|rules)|compliance\s+bypass|pretend\s+you\s+are\s+(staff|admin|agent))\b/i;
 
 const secondaryBorrowingAdvicePattern =
   /\bshould\s+i\b.{0,80}\bborrow\b.{0,80}\b(another|other|different)\s+lender\b|\bborrow\b.{0,80}\b(another|other|different)\s+lender\b.{0,80}\b(pay|repay|cover|clear)\b/i;
+
+const approvalEstimateRequestPattern =
+  /\bwhat\s+should\s+i\s+(say|do)\b.{0,100}\b(definitely\s+)?get\s+approved\b|\bhow\s+(can|do)\s+i\b.{0,100}\b(definitely\s+)?get\s+approved\b|\b(guarantee|improve|increase)\b.{0,80}\b(chance|chances|approval|approved)\b|\bwhat\s+(exact\s+)?(apr|rate|interest\s+rate)\s+(will|would|can|could)\s+i\s+(get|receive|pay)\b|\b(my|personal|personalised|exact)\b.{0,40}\b(apr|rate|interest\s+rate)\b.{0,80}\b(will|would|can|could)\s+i\s+(get|receive|pay)\b/i;
+
+const badCreditEligibilityQuestionPattern =
+  /\b(can|could)\s+i\s+(apply|qualify)\b.{0,100}\b(bad\s+credit|poor\s+credit|low\s+credit\s+score|credit\s+score\s+is\s+bad)\b|\b(do|will)\s+you\s+accept\b.{0,80}\b(bad\s+credit|poor\s+credit|low\s+credit\s+score)\b|\b(bad\s+credit|poor\s+credit|low\s+credit\s+score|credit\s+score\s+is\s+bad)\b.{0,100}\b(can|could)\s+i\s+(apply|qualify)\b/i;
+
+const approvalStatusQuestionPattern =
+  /\b(am|was)\s+i\s+(already\s+)?(approved|accepted|declined)\b|\bhave\s+i\s+been\s+(approved|accepted|declined)\b|\bhas\s+my\s+(application|loan|request)\s+been\s+(approved|accepted|declined|checked)\b|\bis\s+my\s+(application|loan|request)\s+(approved|accepted|declined|checked)\b/i;
 
 const credentialBoundaryQuestionPattern =
   /\b(?:should|can|could|do)\s+i\b.{0,100}\b(send|share|provide|give|upload|submit|tell|enter)\b.{0,100}\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b|\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b.{0,100}\b(?:should|can|could|do)\s+i\b.{0,100}\b(send|share|provide|give|upload|submit|tell|enter)\b|\b(?:upload|send|share|attach)\b.{0,80}\b(screenshot|screen\s*shot)\b.{0,80}\b(bank|banking|app|online\s+banking)\b|\b(screenshot|screen\s*shot)\b.{0,80}\b(bank|banking|app|online\s+banking)\b.{0,80}\b(?:upload|send|share|attach)\b/i;
@@ -155,6 +164,18 @@ export function detectSecondaryBorrowingAdviceRequest(text: string): boolean {
   return secondaryBorrowingAdvicePattern.test(text);
 }
 
+export function detectApprovalEstimateRequest(text: string): boolean {
+  return approvalEstimateRequestPattern.test(text);
+}
+
+export function detectBadCreditEligibilityQuestion(text: string): boolean {
+  return badCreditEligibilityQuestionPattern.test(text);
+}
+
+export function detectApprovalStatusQuestion(text: string): boolean {
+  return approvalStatusQuestionPattern.test(text);
+}
+
 export function detectCredentialBoundaryRequest(text: string): boolean {
   return credentialBoundaryQuestionPattern.test(text);
 }
@@ -208,7 +229,7 @@ export function buildHandoffCopy(reason: string): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I cannot handle that directly in chat. I can collect a few contact details and pass this to the LoanSlam team.";
+    "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -229,7 +250,7 @@ export function buildCredentialHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "Do not send bank login details, passwords, sort codes, account numbers, card details, security answers, one-time passcodes, or banking-app screenshots in this chat. I can collect standard contact details and pass this to the LoanSlam team.";
+    "Do not send bank login details, passwords, sort codes, account numbers, card details, security answers, one-time passcodes, or banking-app screenshots in this chat. I can't use or verify those details here. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -250,7 +271,28 @@ export function buildPaymentLinkHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't create or send a payment link in this chat. I can collect standard contact details and pass this to the LoanSlam team.";
+    "I can't create or send a payment link in this chat. Do not send card numbers, CVV, bank login details, sort codes, or account numbers here. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
+export function buildApprovalStatusHandoffCopy(): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I can't confirm whether your application is approved, declined, or still pending in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -327,6 +369,50 @@ export function buildSecondaryBorrowingBoundaryCopy(): {
     customerMessage,
     ui: {
       primitive: "safe_fallback",
+      message: customerMessage,
+      links: [...links],
+    },
+  };
+}
+
+export function buildApprovalEstimateBoundaryCopy(): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage =
+    "I can't predict or coach a personalised approval decision, APR, or rate in this chat. If you apply or check your quote, LoanSlam will show any available options through the normal application process.";
+
+  return {
+    action: "refuse",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: customerMessage,
+      links: [],
+    },
+  };
+}
+
+export function buildBadCreditEligibilityCopy(): {
+  action: "answer";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const links = [
+    {
+      label: "application form",
+      href: "https://apply.loanslam.co.uk/step-one/step-one.html",
+    },
+  ] as const satisfies readonly ApprovedLink[];
+  const customerMessage =
+    "Bad credit is one factor in LoanSlam's creditworthiness and affordability checks. This chat cannot say whether a particular credit score will qualify. The application uses a soft credit check and Open Banking data to assess the wider picture; the first two pages show any available options with no impact on your credit score.";
+
+  return {
+    action: "answer",
+    customerMessage,
+    ui: {
+      primitive: "message",
       message: customerMessage,
       links: [...links],
     },

@@ -173,9 +173,9 @@
       "question": "Can I apply if I have bad credit?",
       "question_variants": ["Do you accept poor credit?", "I've got a low credit score, can I still apply?", "Do you only lend to people with good credit?"],
       "serving_mode": "answer",
-      "answer_text": "We look at more than just your credit score - we use a soft credit check and Open Banking data to understand your wider financial situation, so a less-than-perfect credit history doesn't automatically rule you out. The first two pages of the application give you a personalised quote with no impact on your credit score.",
+      "answer_text": "Bad credit is one factor in LoanSlam's creditworthiness and affordability checks. The application uses a soft credit check and Open Banking data to assess the wider picture; this chat cannot say whether a particular credit score will qualify. The first two pages of the application show any available options with no impact on your credit score.",
       "links": [{ "label": "application form", "href": "https://apply.loanslam.co.uk/step-one/step-one.html" }],
-      "route_reason": null,
+      "route_reason": "Answer as neutral general criteria. Do not phrase this as yes/no eligibility reassurance or an approval estimate.",
       "tags": ["bad-credit", "eligibility", "soft-search"],
       "source_type": "synthetic",
       "status": "draft_synthetic"

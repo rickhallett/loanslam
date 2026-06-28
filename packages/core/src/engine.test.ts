@@ -534,14 +534,58 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+      "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.",
+        "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
       fields: standardHandoffFields,
     });
+  });
+
+  it("preserves payment-link validator handoff copy during intake rendering", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "answer",
+          customerMessage: "Here is your payment link: https://pay.example/test",
+          ui: {
+            primitive: "message",
+            message: "Here is your payment link: https://pay.example/test",
+            links: [{ label: "Pay now", url: "https://pay.example/test" }],
+          },
+          reasonCode: "bad_payment_link",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: {
+            citedItemIds: ["update-my-bank-details"],
+            servingMode: "answer",
+            confidence: "supported",
+          },
+          safetyFlags: [],
+          traceSummary: "Incorrectly invented a payment link.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Send me a payment link right now.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:45.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/can't create or send a payment link/i);
+    expect(result.customerMessage).not.toMatch(/https:\/\/pay\.example/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "payment_link_handoff_required",
+      }),
+    );
   });
 
   it("escalates explicit self-harm risk without standard intake copy", async () => {

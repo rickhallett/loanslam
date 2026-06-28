@@ -463,7 +463,7 @@ function applyHandoffStateRules(
 
   const customerMessage = currentValidated.safetyFlags.includes(
     "forbidden_credentials",
-  )
+  ) || shouldPreserveValidatorHandoffMessage(currentValidated)
     ? currentValidated.customerMessage
     : buildHandoffIntroMessage({
         servingMode: currentValidated.selectedServingMode,
@@ -807,10 +807,21 @@ function buildHandoffIntroMessage({
     servingMode === "handoff_account_specific" ||
     hasHandoffSafetyFlag(safetyFlags)
   ) {
-    return "I can't view or change account details myself in this chat, so I'll pass this to the LoanSlam team. They'll confirm your identity first, so please share a few contact details below and they'll be in touch.";
+    return "I can't view, confirm, or change personal account, application, balance, approval, payment, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
   }
 
   return "I'll pass this to the LoanSlam team so a person can help. Please share a few contact details below so they can get back to you.";
+}
+
+function shouldPreserveValidatorHandoffMessage(
+  validated: ValidatedPlanFragment,
+): boolean {
+  return validated.validatorOverrides.some((override) =>
+    [
+      "approval_status_handoff_required",
+      "payment_link_handoff_required",
+    ].includes(override.code),
+  );
 }
 
 function detectUrgentRisk(message: string): UrgentRiskKind | null {

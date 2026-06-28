@@ -11,6 +11,9 @@ import type {
 } from "@loanslam/contracts";
 
 import {
+  buildApprovalEstimateBoundaryCopy,
+  buildApprovalStatusHandoffCopy,
+  buildBadCreditEligibilityCopy,
   buildExcludedCopy,
   buildCredentialHandoffCopy,
   buildFallbackCopy,
@@ -20,6 +23,9 @@ import {
   buildSecondaryBorrowingBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
+  detectApprovalEstimateRequest,
+  detectApprovalStatusQuestion,
+  detectBadCreditEligibilityQuestion,
   detectCredentialBoundaryRequest,
   detectForbiddenCredentialRequest,
   detectInternalDataExposureRequest,
@@ -90,6 +96,9 @@ export const safetyGuardPipeline: readonly TurnGuard[] = [
   guardForbiddenCredentialRequestInPlan,
   guardForbiddenCredentialsInFacts,
   guardSecondaryBorrowingAdvice,
+  guardApprovalEstimateAdvice,
+  guardBadCreditEligibilityAnswer,
+  guardApprovalStatusHandoff,
   guardPromisedAccountValue,
   guardOutOfDomainFallback,
   guardVulnerabilityRoute,
@@ -378,6 +387,111 @@ function guardSecondaryBorrowingAdvice(
       selectedServingMode: "excluded",
       selectedRouteReason:
         "Advice on whether to borrow from another lender is regulated financial advice.",
+    },
+  );
+}
+
+function guardApprovalEstimateAdvice(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectApprovalEstimateRequest(context.userMessage)) {
+    return null;
+  }
+
+  const { base } = context;
+  const excluded = buildApprovalEstimateBoundaryCopy();
+  const reason =
+    "Personalised approval coaching, APR prediction, or rate prediction must not be answered in chat.";
+
+  return applyOverride(
+    base,
+    {
+      code: "approval_estimate_blocked",
+      reason,
+      toAction: excluded.action,
+    },
+    {
+      finalAction: excluded.action,
+      customerMessage: excluded.customerMessage,
+      ui: excluded.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "excluded",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
+    },
+  );
+}
+
+function guardBadCreditEligibilityAnswer(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, selectedMatch, userMessage } = context;
+
+  if (
+    base.finalAction !== "answer" ||
+    !detectBadCreditEligibilityQuestion(userMessage) ||
+    selectedMatch?.item?.id !== "can-i-apply-with-bad-credit"
+  ) {
+    return null;
+  }
+
+  const copy = buildBadCreditEligibilityCopy();
+  const reason =
+    "Bad-credit FAQ answers must stay neutral and avoid yes/no approval reassurance.";
+
+  return applyOverride(
+    base,
+    {
+      code: "bad_credit_faq_neutralized",
+      reason,
+      toAction: copy.action,
+    },
+    {
+      finalAction: copy.action,
+      customerMessage: copy.customerMessage,
+      ui: copy.ui,
+      selectedServingMode: "answer",
+      selectedRouteReason: reason,
+    },
+  );
+}
+
+function guardApprovalStatusHandoff(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, userMessage } = context;
+
+  if (!detectApprovalStatusQuestion(userMessage)) {
+    return null;
+  }
+
+  const handoff = buildApprovalStatusHandoffCopy();
+  const reason =
+    "Approval status is account-specific and cannot be confirmed yes/no in chat.";
+
+  return applyOverride(
+    base,
+    {
+      code: "approval_status_handoff_required",
+      reason,
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
     },
   );
 }
