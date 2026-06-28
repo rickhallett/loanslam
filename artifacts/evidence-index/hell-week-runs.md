@@ -2,6 +2,27 @@
 
 Generated after importing the schema-compatible reports from the dropped `artifacts/persisted-reports` commit into local Postgres. Cheap-model probe folders were intentionally ignored.
 
+## Current Variance Warning
+
+The validator hardening slice at `051249a` removed demo-killers in the last
+seen 3x judged Hell Week set, but the judged score was still materially
+variable:
+
+| Date | Set | Fine range | Dents range | Demo-killers | Floor delta |
+|---|---|---:|---:|---:|---|
+| 2026-06-28 | validator slice 3x judged full runs | 96-105 / 122 | 17-26 | 0 in 3/3 runs | HOLDING once, REGRESSED twice |
+
+Run IDs:
+
+- `hell-week-full-2026-06-28T18-49-50-479Z`: 103 fine, 19 dents, 0 demo-killers, floor-delta HOLDING.
+- `hell-week-full-2026-06-28T18-53-11-069Z`: 105 fine, 17 dents, 0 demo-killers, floor-delta REGRESSED.
+- `hell-week-full-2026-06-28T18-56-36-041Z`: 96 fine, 26 dents, 0 demo-killers, floor-delta REGRESSED.
+
+Treat the first run as the commit receipt only because it satisfied the
+keep-slice gate. Do not treat this as a repaired floor, ship-ready proof, or a
+scenario-extension green light; the pinned 122 still need REPAIRED/stable
+evidence before promotion beyond `dev` or new attack-shape expansion.
+
 ## Runs
 
 | Date | Source | Run ID | Profile | Model | Verdict | Pass rate | Demo-killers | Dents | DB import | Replay |
