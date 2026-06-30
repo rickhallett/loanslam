@@ -62,6 +62,14 @@ function toTurnEvidence(
     validatorOverrideCodes: trace.validatorOverrides.map(
       (override) => override.code,
     ),
+    ...(trace.validatorOverrides.length > 0
+      ? {
+          validatorOverrides: trace.validatorOverrides.map((override) => ({
+            code: override.code,
+            reason: override.reason,
+          })),
+        }
+      : {}),
     retrieved: trace.retrievedMatches.slice(0, 3).map((match) => ({
       itemId: match.itemId,
       servingMode: match.servingMode,
@@ -70,6 +78,9 @@ function toTurnEvidence(
     uiPrimitive: result.ui.primitive,
     ...(trace.shadowSignalStatus
       ? { signalStatus: trace.shadowSignalStatus }
+      : {}),
+    ...(trace.shadowSignalError
+      ? { signalError: trace.shadowSignalError }
       : {}),
     ...(trace.shadowSignalBundle
       ? {
