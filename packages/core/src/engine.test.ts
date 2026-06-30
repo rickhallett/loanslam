@@ -500,6 +500,59 @@ describe("processTurn", () => {
     });
   });
 
+  it("lets an explicit latest-turn handoff correction replace stale planner facts", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage: "Please provide the remaining details for the team.",
+          ui: {
+            primitive: "intake_form",
+            message: "Please provide the remaining details for the team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {
+            email: "alex.test@example.com",
+          },
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request", "change_request"],
+          traceSummary: "Collect remaining handoff fields.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        fullName: "Alex Test",
+        email: "alex.test@example.com",
+      },
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["account_specific_request", "change_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "Actually my email is alex.changed@example.com",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:15.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("ask_clarifying_question");
+    expect(result.customerMessage).toBe(
+      "Thanks, I've updated that. What is your date of birth?",
+    );
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName: "Alex Test",
+      email: "alex.changed@example.com",
+    });
+    expect(result.state.requestedFields).toEqual(["dateOfBirth"]);
+  });
+
   it("renders the situational intro and the standard intake fields", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
@@ -534,14 +587,75 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.customerMessage).toBe(
-      "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+      "I can't view, confirm, or change personal account or application details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+    );
+    expect(result.customerMessage).not.toContain(
+      "payment, repayment arrangement, or contact details",
     );
     expect(result.ui).toMatchObject({
       primitive: "intake_form",
       message:
-        "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+        "I can't view, confirm, or change personal account or application details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
       fields: standardHandoffFields,
     });
+  });
+
+  it("explains why pending handoff details are needed instead of looping intake copy", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I can collect a few contact details and pass this to the LoanSlam team.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "I can collect a few contact details and pass this to the LoanSlam team.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Collect handoff fields.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "Why do you need all that?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:35.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("find the right account");
+    expect(result.customerMessage).toContain("contact you safely");
+    expect(result.customerMessage).not.toBe(
+      "I can't view, confirm, or change personal account or application details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      message: result.customerMessage,
+      fields: standardHandoffFields,
+    });
+    expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "handoff_details_reason_explained",
+        toAction: "request_handoff_intake",
+      }),
+    );
   });
 
   it("preserves payment-link validator handoff copy during intake rendering", async () => {
@@ -648,6 +762,57 @@ describe("processTurn", () => {
       expect.objectContaining({
         code: "urgent_safety_escalation_copy",
       }),
+    );
+  });
+
+  it("tailors accessibility handoff copy to plain-English letter help", async () => {
+    const planner = vulnerabilityHandoffPlanner({
+      safetyFlags: ["accessibility_need", "vulnerability"],
+      traceSummary: "Customer needs help understanding a loan letter.",
+    });
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I no understand pay letter. Need person explain.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:32.600Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("person who can help");
+    expect(result.customerMessage).toContain("loan letter");
+    expect(result.customerMessage).toContain("plain English");
+    expect(result.customerMessage).not.toContain("repayment, or account support");
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["accessibility_need", "vulnerability"]),
+    );
+  });
+
+  it("tailors language-barrier handoff copy without switching language", async () => {
+    const planner = vulnerabilityHandoffPlanner({
+      safetyFlags: ["language_barrier", "vulnerability"],
+      traceSummary: "Customer needs English-language support.",
+    });
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "English hard for me. Need help with loan letter.",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:32.650Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toContain("English only");
+    expect(result.customerMessage).toContain("person who can help");
+    expect(result.customerMessage).toContain("loan letter");
+    expect(result.customerMessage).toContain("simple English");
+    expect(result.customerMessage).not.toContain("repayment, or account support");
+    expect(result.trace.safetyFlags).toEqual(
+      expect.arrayContaining(["language_barrier", "vulnerability"]),
     );
   });
 
@@ -832,6 +997,72 @@ describe("processTurn", () => {
       effectiveServingMode: "answer",
       safetyFlags: [],
     });
+    expect(result.state.requestedFields).toEqual([]);
+    expect(result.state.safetyFlags).toEqual([]);
+    expect(result.state.handoffPending).toBe(false);
+  });
+
+  it("recovers a public FAQ answer when pending handoff state makes the planner repeat intake", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "I'll pass this to the LoanSlam team so a person can help.",
+          ui: {
+            primitive: "intake_form",
+            message: "I'll pass this to the LoanSlam team so a person can help.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "sticky_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Planner repeated pending handoff intake.",
+        };
+      },
+    };
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals() {
+        return {
+          ...answerSignalBundle,
+          retrievalQueries: ["apply online"],
+          routeHints: ["application form"],
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: {
+        ...state(),
+        requestedFields: [...standardHandoffFields],
+        safetyFlags: ["account_specific_request"],
+        handoffPending: true,
+        lastAction: "request_handoff_intake",
+      },
+      userMessage: "Before I give details, how do I apply online?",
+      planner,
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:06:55.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("answer");
+    expect(result.customerMessage).toBe("You can apply online.");
+    expect(result.trace).toMatchObject({
+      selectedServingMode: "answer",
+      effectiveServingMode: "answer",
+      safetyFlags: [],
+    });
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "sticky_handoff_public_answer_recovered",
+        toAction: "answer",
+      }),
+    );
     expect(result.state.requestedFields).toEqual([]);
     expect(result.state.safetyFlags).toEqual([]);
     expect(result.state.handoffPending).toBe(false);
@@ -1429,6 +1660,56 @@ describe("processTurn", () => {
         id: "outbound-1",
         role: "assistant",
         content: result.customerMessage,
+      }),
+    ]);
+  });
+
+  it("recovers a malformed planner result for vague low-risk money help", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        throw new Error("Too big: expected array to have <=6 items");
+      },
+    };
+    const signalExtractor: SignalExtractor = {
+      metadata: signalMetadata,
+      async extractSignals() {
+        return {
+          ...answerSignalBundle,
+          retrievalQueries: ["application", "loan", "account", "support"],
+          routeHints: ["application", "account support"],
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "I need help with getting money.",
+      planner,
+      signalExtractor,
+      corpus,
+      now: new Date("2026-06-13T12:10:30.000Z"),
+      idFactory: idFactory(),
+      journeyId: "smoke-vague-money",
+      turnIndex: 0,
+    });
+
+    expect(result.finalAction).toBe("ask_clarifying_question");
+    expect(result.customerMessage).toBe(
+      "Is this about applying for a LoanSlam loan, or an existing LoanSlam account?",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "clarifying_prompt",
+      questions: [
+        "Is this about applying for a LoanSlam loan, or an existing LoanSlam account?",
+      ],
+    });
+    expect(result.plan.reasonCode).toBe("malformed_plan_vague_help_recovered");
+    expect(result.trace.safetyFlags).toEqual([]);
+    expect(result.validatorOverrides).toEqual([
+      expect.objectContaining({
+        code: "malformed_plan",
+        reason: expect.stringContaining("Too big"),
+        toAction: "ask_clarifying_question",
       }),
     ]);
   });

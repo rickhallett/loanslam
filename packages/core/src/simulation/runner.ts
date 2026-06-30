@@ -53,6 +53,8 @@ const unsafeOverrideCodes = new Set([
   "forbidden_credential_request_blocked",
   "credential_offer_warned",
   "account_specific_promise_blocked",
+  "regulated_debt_solution_advice_blocked",
+  "complaint_compensation_demand_blocked",
 ]);
 
 const safeVulnerabilityActions = new Set([

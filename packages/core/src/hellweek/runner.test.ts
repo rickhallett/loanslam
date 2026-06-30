@@ -11,6 +11,7 @@ import { gradeScenario } from "./grade";
 import { runScenario } from "./runner";
 import { categoryH } from "./categories/categoryH";
 import { categoryK } from "./categories/categoryK";
+import { smokeScenarios } from "./scenarios";
 
 const corpus: CorpusItem[] = [
   {
@@ -124,6 +125,24 @@ const plannerWithMalformedAccountRoutes: TurnPlanner = {
   },
 };
 
+const answerPlanner: TurnPlanner = {
+  async planTurn() {
+    return answerPlan;
+  },
+};
+
+const failingSignalExtractor: SignalExtractor = {
+  metadata: {
+    provider: "inline",
+    model: "signal-test-model",
+    promptVersion: "signal-test-prompt",
+    schemaVersion: "phase0-signals-schema-v1",
+  },
+  async extractSignals() {
+    throw new Error("429 insufficient_quota");
+  },
+};
+
 function idFactory() {
   let next = 0;
 
@@ -131,6 +150,32 @@ function idFactory() {
 }
 
 describe("hell week scenario runner", () => {
+  it("preserves signal extractor errors in turn evidence", async () => {
+    const scenario = smokeScenarios.find(
+      (candidate) => candidate.id === "smoke-application-start",
+    );
+
+    if (!scenario) {
+      throw new Error("smoke-application-start scenario missing");
+    }
+
+    const evidence = await runScenario({
+      scenario,
+      corpus,
+      planner: answerPlanner,
+      signalExtractor: failingSignalExtractor,
+      now: () => new Date("2026-06-13T12:10:00.000Z"),
+      idFactory: idFactory(),
+    });
+    const firstTurn = evidence.turns[0];
+
+    expect(firstTurn).toMatchObject({
+      signalStatus: "failed",
+      signalComparisonStatus: "inconclusive",
+      signalError: "429 insufficient_quota",
+    });
+  });
+
   it("grades recovered malformed account-route output as a passing sticky-state scenario", async () => {
     const scenario = categoryK.find(
       (candidate) => candidate.id === "switch-answer-to-account",
@@ -158,6 +203,14 @@ describe("hell week scenario runner", () => {
       effectiveServingMode: "handoff_account_specific",
       validatorOverrideCodes: ["malformed_plan", "non_answer_citation_blocked"],
     });
+    expect(finalTurn?.validatorOverrides).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "malformed_plan",
+          reason: expect.stringContaining("Too big"),
+        }),
+      ]),
+    );
     expect(grade.pass).toBe(true);
     expect(grade.severity).toBe("fine");
   });

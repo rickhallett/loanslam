@@ -20,9 +20,12 @@ describe("safetyGuardPipeline", () => {
       "guardForbiddenCredentialRequestInPlan",
       "guardForbiddenCredentialsInFacts",
       "guardSecondaryBorrowingAdvice",
+      "guardRegulatedDebtSolutionAdvice",
+      "guardComplaintCompensationDemand",
       "guardCreditCheckEvasion",
       "guardApprovalEstimateAdvice",
       "guardBadCreditEligibilityAnswer",
+      "guardStickyHandoffPublicAnswer",
       "guardApprovalStatusHandoff",
       "guardReferenceOfferHandoff",
       "guardAccountChangeHandoffAcknowledgement",
@@ -720,6 +723,55 @@ describe("validateTurnPlan", () => {
     );
   });
 
+  it("refuses bankruptcy advice before vulnerability routing", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        safetyFlags: ["hardship", "vulnerability"],
+      }),
+      [vulnerabilityMatch],
+      {
+        userMessage: "Should I go bankrupt instead of paying this loan?",
+      },
+    );
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.selectedServingMode).toBe("excluded");
+    expect(result.customerMessage).toMatch(/can't advise/i);
+    expect(result.customerMessage).toMatch(/bankrupt|bankruptcy/i);
+    expect(result.customerMessage).toMatch(/StepChange|MoneyHelper/i);
+    expect(result.customerMessage).not.toMatch(/few contact details/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "regulated_debt_solution_advice_blocked",
+        toAction: "refuse",
+      }),
+    );
+  });
+
+  it("refuses complaint compensation amount demands before complaint handoff", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        safetyFlags: ["complaint", "vulnerability"],
+      }),
+      [vulnerabilityMatch],
+      {
+        userMessage: "How much compensation should I demand in my complaint?",
+      },
+    );
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.selectedServingMode).toBe("excluded");
+    expect(result.customerMessage).toMatch(/can't tell you how much compensation/i);
+    expect(result.customerMessage).toMatch(/complaint/i);
+    expect(result.customerMessage).not.toMatch(/few contact details/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "complaint_compensation_demand_blocked",
+        toAction: "refuse",
+      }),
+    );
+  });
+
   it("does not block public eligibility questions as approval coaching", () => {
     const result = validateTurnPlan(plan(), [answerMatch], {
       userMessage: "What are the general eligibility criteria?",
@@ -778,7 +830,7 @@ describe("validateTurnPlan", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.selectedServingMode).toBe("handoff_account_specific");
-    expect(result.customerMessage).toMatch(/can't confirm whether/i);
+    expect(result.customerMessage).toMatch(/answer yes or no/i);
     expect(result.customerMessage).toMatch(/approved, declined, or still pending/i);
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
@@ -944,7 +996,8 @@ describe("validateTurnPlan", () => {
     expect(result.customerMessage).toMatch(
       /can't create or send a payment link/i,
     );
-    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/Do not send payment-link details/i);
+    expect(result.customerMessage).toMatch(/card details, or bank details/i);
     expect(result.customerMessage).not.toMatch(/https:\/\/pay\.example/i);
     expect(result.safetyFlags).toContain("account_specific_request");
     expect(result.validatorOverrides).toContainEqual(

@@ -15,6 +15,7 @@ import {
   buildApprovalStatusHandoffCopy,
   buildAccountChangeHandoffCopy,
   buildBadCreditEligibilityCopy,
+  buildComplaintCompensationBoundaryCopy,
   buildCreditCheckEvasionBoundaryCopy,
   buildExcludedCopy,
   buildCredentialHandoffCopy,
@@ -23,12 +24,14 @@ import {
   buildInternalDataBoundaryCopy,
   buildPaymentLinkHandoffCopy,
   buildReferenceOfferHandoffCopy,
+  buildRegulatedDebtSolutionBoundaryCopy,
   buildSecondaryBorrowingBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
   detectApprovalEstimateRequest,
   detectApprovalStatusQuestion,
   detectBadCreditEligibilityQuestion,
+  detectComplaintCompensationDemandRequest,
   detectCreditCheckEvasionRequest,
   detectCredentialBoundaryRequest,
   detectForbiddenCredentialRequest,
@@ -36,6 +39,7 @@ import {
   detectInternalDataExposureRequest,
   detectPaymentLinkRequest,
   detectPromisedAccountValueOrOutcome,
+  detectRegulatedDebtSolutionAdviceRequest,
   detectReferenceOffer,
   detectSecondaryBorrowingAdviceRequest,
   detectSensitiveOvershare,
@@ -102,9 +106,12 @@ export const safetyGuardPipeline: readonly TurnGuard[] = [
   guardForbiddenCredentialRequestInPlan,
   guardForbiddenCredentialsInFacts,
   guardSecondaryBorrowingAdvice,
+  guardRegulatedDebtSolutionAdvice,
+  guardComplaintCompensationDemand,
   guardCreditCheckEvasion,
   guardApprovalEstimateAdvice,
   guardBadCreditEligibilityAnswer,
+  guardStickyHandoffPublicAnswer,
   guardApprovalStatusHandoff,
   guardReferenceOfferHandoff,
   guardAccountChangeHandoffAcknowledgement,
@@ -413,6 +420,77 @@ function guardSecondaryBorrowingAdvice(
   );
 }
 
+function guardRegulatedDebtSolutionAdvice(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectRegulatedDebtSolutionAdviceRequest(context.userMessage)) {
+    return null;
+  }
+
+  const { base, selectedMatch } = context;
+  const excluded = buildRegulatedDebtSolutionBoundaryCopy();
+  const reason =
+    "Regulated debt-solution advice about bankruptcy, IVAs, or debt management plans must not be answered in chat.";
+  const selectedRouteReason =
+    selectedMatch?.servingMode === "excluded"
+      ? (selectedMatch.item?.route_reason ?? reason)
+      : reason;
+
+  return applyOverride(
+    base,
+    {
+      code: "regulated_debt_solution_advice_blocked",
+      reason,
+      toAction: excluded.action,
+    },
+    {
+      finalAction: excluded.action,
+      customerMessage: excluded.customerMessage,
+      ui: excluded.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "excluded",
+      selectedRouteReason,
+    },
+  );
+}
+
+function guardComplaintCompensationDemand(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  if (!detectComplaintCompensationDemandRequest(context.userMessage)) {
+    return null;
+  }
+
+  const { base, selectedMatch } = context;
+  const excluded = buildComplaintCompensationBoundaryCopy();
+  const reason =
+    "Complaint compensation amount demands must not be valued or coached in chat.";
+  const selectedRouteReason =
+    selectedMatch?.servingMode === "excluded"
+      ? (selectedMatch.item?.route_reason ?? reason)
+      : reason;
+
+  return applyOverride(
+    base,
+    {
+      code: "complaint_compensation_demand_blocked",
+      reason,
+      toAction: excluded.action,
+    },
+    {
+      finalAction: excluded.action,
+      customerMessage: excluded.customerMessage,
+      ui: excluded.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "excluded",
+      selectedRouteReason,
+      safetyFlags: uniqueSafetyFlags([...base.safetyFlags, "complaint"]),
+    },
+  );
+}
+
 function guardCreditCheckEvasion(
   context: GuardContext,
 ): ValidatedPlanFragment | null {
@@ -513,6 +591,61 @@ function guardBadCreditEligibilityAnswer(
       ui: copy.ui,
       selectedServingMode: "answer",
       selectedRouteReason: reason,
+    },
+  );
+}
+
+function guardStickyHandoffPublicAnswer(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, options, retrievedMatches, selectedMatch, userMessage } = context;
+
+  if (
+    base.finalAction !== "request_handoff_intake" ||
+    base.ui.primitive !== "intake_form" ||
+    options.signalBundle?.recommendedServingMode !== "answer" ||
+    options.signalBundle.safetySignals.length !== 0
+  ) {
+    return null;
+  }
+
+  const answerMatch = selectAnswerRecoveryMatch(
+    userMessage,
+    retrievedMatches,
+    selectedMatch,
+  );
+
+  if (!answerMatch?.item?.answer_text) {
+    return null;
+  }
+
+  const copy =
+    detectBadCreditEligibilityQuestion(userMessage) &&
+    answerMatch.item.id === "can-i-apply-with-bad-credit"
+      ? buildBadCreditEligibilityCopy()
+      : buildRetrievedAnswerCopy(answerMatch);
+  const reason =
+    "A fresh public FAQ during a pending handoff should answer from a retrieved answer item instead of repeating intake.";
+
+  return applyOverride(
+    base,
+    {
+      code: "sticky_handoff_public_answer_recovered",
+      reason,
+      toAction: copy.action,
+    },
+    {
+      finalAction: copy.action,
+      customerMessage: copy.customerMessage,
+      ui: copy.ui,
+      requestedFields: [],
+      collectedFacts: {},
+      selectedServingMode: "answer",
+      selectedRouteReason: answerMatch.item?.route_reason ?? null,
+      safetyFlags: uniqueSafetyFlags([
+        ...inferSafetyFlagsFromSignal(options.signalBundle),
+        ...inferSafetyFlagsFromMessage(userMessage),
+      ]),
     },
   );
 }
@@ -836,6 +969,71 @@ function selectPolicyMatch(
   );
 
   return citedMatch ?? topMatch;
+}
+
+function selectAnswerRecoveryMatch(
+  userMessage: string,
+  retrievedMatches: readonly RetrievedMatch[],
+  selectedMatch: RetrievedMatch | undefined,
+): RetrievedMatch | undefined {
+  const answerMatches = retrievedMatches.filter(
+    (match) => match.servingMode === "answer" && match.item?.answer_text,
+  );
+
+  if (answerMatches.length === 0) {
+    return undefined;
+  }
+
+  if (isApplyOnlineQuestion(userMessage)) {
+    return (
+      answerMatches.find((match) => match.item?.id === "how-do-i-apply") ??
+      answerMatches.find((match) =>
+        matchText(match).match(/\b(apply|application)\b/i),
+      ) ??
+      answerMatches[0]
+    );
+  }
+
+  if (selectedMatch?.servingMode === "answer" && selectedMatch.item?.answer_text) {
+    return selectedMatch;
+  }
+
+  return answerMatches[0];
+}
+
+function buildRetrievedAnswerCopy(match: RetrievedMatch): {
+  action: "answer";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage = match.item?.answer_text?.trim() ?? "";
+
+  return {
+    action: "answer",
+    customerMessage,
+    ui: {
+      primitive: "message",
+      message: customerMessage,
+      links: [...(match.item?.links ?? [])],
+    },
+  };
+}
+
+function isApplyOnlineQuestion(message: string): boolean {
+  return /\b(apply|application)\b.{0,80}\b(online|website|form)\b|\b(online|website|form)\b.{0,80}\b(apply|application)\b/i.test(
+    message,
+  );
+}
+
+function matchText(match: RetrievedMatch): string {
+  return [
+    match.item?.id,
+    match.item?.question,
+    ...(match.item?.question_variants ?? []),
+    ...(match.item?.tags ?? []),
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function isOutOfDomainFallback(
