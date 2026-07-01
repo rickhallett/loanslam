@@ -62,6 +62,60 @@
           </button>
         </form>
 
+        <section class="lookup" aria-label="Existing customer lookup">
+          <button
+            v-if="!showLookup && !matchedCustomer"
+            type="button"
+            class="lookup-toggle"
+            @click="showLookup = true"
+          >
+            I'm an existing customer
+          </button>
+
+          <form
+            v-if="showLookup && !matchedCustomer"
+            class="capture-form"
+            aria-label="Existing customer demo lookup"
+            @submit.prevent="submitLookup"
+          >
+            <header>
+              <p class="eyebrow">Demo lookup</p>
+              <h2>Find your demo record</h2>
+            </header>
+            <p class="form-note">
+              Demo identification against synthetic records only. Do not enter
+              real customer details.
+            </p>
+            <div class="field-grid">
+              <label
+                v-for="field in lookupFieldInputs"
+                :key="field.name"
+                :for="`lookup-${field.name}`"
+              >
+                <span>{{ field.label }}</span>
+                <input
+                  :id="`lookup-${field.name}`"
+                  v-model="lookupFields[field.name]"
+                  :type="field.type"
+                  autocomplete="off"
+                />
+              </label>
+            </div>
+            <button type="submit" :disabled="isLookingUp">
+              {{ isLookingUp ? "Checking" : "Find my demo record" }}
+            </button>
+          </form>
+
+          <p v-if="matchedCustomer" class="status success">
+            Matched demo record {{ matchedCustomer.loanReference }} for
+            {{ matchedCustomer.fullName }}.
+          </p>
+          <p v-else-if="lookupAttempted && !isLookingUp" class="status error">
+            No matching demo record. No account information is available; the
+            safe handoff path is still open.
+          </p>
+        </section>
+
         <form class="composer" aria-label="Send support message" @submit.prevent="sendMessage">
           <label for="support-message">Message</label>
           <textarea
@@ -147,6 +201,9 @@ import type {
   IpocChatMessage,
   IpocHandoffField,
   IpocHandoffIntake,
+  IpocLookupField,
+  IpocLookupFieldValues,
+  IpocLookupResponse,
   IpocSendMessageResponse,
   IpocSessionResponse,
   IpocSubmitIntakeResponse,
@@ -168,6 +225,22 @@ const errorMessage = ref<string | null>(null);
 const lastTicket = ref<IpocTicket | null>(null);
 const intakeStatus = ref<string | null>(null);
 const captureFields = ref<IpocHandoffIntake>(defaultCaptureFields());
+const showLookup = ref(false);
+const isLookingUp = ref(false);
+const lookupAttempted = ref(false);
+const matchedCustomer = ref<IpocLookupResponse["customer"]>(null);
+const lookupFields = ref<IpocLookupFieldValues>(defaultLookupFields());
+
+const lookupFieldInputs: Array<{
+  name: IpocLookupField;
+  label: string;
+  type: string;
+}> = [
+  { name: "fullName", label: "Full name", type: "text" },
+  { name: "dateOfBirth", label: "Date of birth", type: "date" },
+  { name: "address", label: "Address", type: "text" },
+  { name: "loanReference", label: "Loan reference", type: "text" },
+];
 
 const handoffFieldInputs: Array<{
   name: IpocHandoffField;
@@ -308,6 +381,46 @@ async function refreshTickets() {
   if (!selectedTicketId.value && response.tickets[0]) {
     selectedTicketId.value = response.tickets[0].id;
   }
+}
+
+async function submitLookup() {
+  if (!conversationRef.value) {
+    return;
+  }
+
+  isLookingUp.value = true;
+  errorMessage.value = null;
+
+  try {
+    const response = await $fetch<IpocLookupResponse>(
+      `/api/ipoc/sessions/${encodeURIComponent(conversationRef.value)}/lookup`,
+      {
+        method: "POST",
+        body: { fields: lookupFields.value },
+      },
+    );
+    messages.value = response.messages;
+    matchedCustomer.value = response.customer;
+    lookupAttempted.value = true;
+
+    if (response.matched) {
+      showLookup.value = false;
+    }
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : "The lookup route failed.";
+  } finally {
+    isLookingUp.value = false;
+  }
+}
+
+function defaultLookupFields(): IpocLookupFieldValues {
+  return {
+    fullName: "Demo Applicant",
+    dateOfBirth: "1990-01-01",
+    address: "1 Demo Street, Demotown, AB12 3CD",
+    loanReference: "LS-10001",
+  };
 }
 
 function defaultCaptureFields(): IpocHandoffIntake {

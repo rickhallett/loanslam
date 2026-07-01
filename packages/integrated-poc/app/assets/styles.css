@@ -225,6 +225,22 @@ textarea {
   opacity: 0.55;
 }
 
+.lookup {
+  display: grid;
+  gap: 10px;
+}
+
+.lookup-toggle {
+  justify-self: start;
+  border: 1px solid #245c4d;
+  border-radius: 8px;
+  padding: 9px 13px;
+  color: #245c4d;
+  background: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .composer textarea {
   width: 100%;
   resize: vertical;

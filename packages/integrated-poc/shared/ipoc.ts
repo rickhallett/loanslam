@@ -16,6 +16,30 @@ export const ipocHandoffFields = [
 export type IpocHandoffField = (typeof ipocHandoffFields)[number];
 export type IpocHandoffIntake = Record<IpocHandoffField, string>;
 
+export const ipocLookupFields = [
+  "fullName",
+  "dateOfBirth",
+  "address",
+  "loanReference",
+] as const;
+
+export type IpocLookupField = (typeof ipocLookupFields)[number];
+export type IpocLookupFieldValues = Record<IpocLookupField, string>;
+
+export interface IpocLookupRequest {
+  fields: Partial<Record<IpocLookupField, string>>;
+}
+
+export interface IpocLookupResponse {
+  conversationRef: string;
+  matched: boolean;
+  customer: {
+    fullName: string;
+    loanReference: string;
+  } | null;
+  messages: IpocChatMessage[];
+}
+
 export interface IpocChatMessage {
   id: string;
   role: "customer" | "assistant" | "system";

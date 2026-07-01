@@ -132,7 +132,8 @@ arc_003_chain:
   # Machine gates between slices; per-slice proof receipts; human checkpoint at arc closeout.
   - id: ipoc-010-customer-lookup
     slice_label: ipoc-customer-lookup-01
-    status: ready
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-customer-lookup-01-proof.md
     depends_on:
       - ipoc-009-capture-browser-proof
     summary: Read-only existing-customer lookup against synthetic mock records.

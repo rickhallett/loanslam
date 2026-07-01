@@ -5,6 +5,7 @@ import type { ConversationState, TurnTrace } from "@loanslam/contracts";
 import type {
   IpocChatMessage,
   IpocHandoffIntake,
+  IpocLookupFieldValues,
   IpocTicket,
 } from "../../shared/ipoc";
 
@@ -12,10 +13,74 @@ export interface IpocSession {
   state: ConversationState;
   traces: TurnTrace[];
   messages: IpocChatMessage[];
+  matchedLoanReference: string | null;
 }
+
+export interface IpocMockCustomerRecord {
+  loanReference: string;
+  fullName: string;
+  dateOfBirth: string;
+  address: string;
+  nextPaymentDate: string;
+  outstandingBalance: string;
+  loanStatus: "active" | "arrears" | "settled";
+}
+
+// Synthetic demo records only (D037/D038). Never seed real customer data.
+const mockCustomerRecords: IpocMockCustomerRecord[] = [
+  {
+    loanReference: "LS-10001",
+    fullName: "Demo Applicant",
+    dateOfBirth: "1990-01-01",
+    address: "1 Demo Street, Demotown, AB12 3CD",
+    nextPaymentDate: "2026-07-28",
+    outstandingBalance: "£1,240.50",
+    loanStatus: "active",
+  },
+  {
+    loanReference: "LS-10002",
+    fullName: "Sample Customer",
+    dateOfBirth: "1985-06-15",
+    address: "22 Placeholder Road, Testville, ZZ9 9ZZ",
+    nextPaymentDate: "2026-07-15",
+    outstandingBalance: "£310.00",
+    loanStatus: "arrears",
+  },
+];
 
 const sessions = new Map<string, IpocSession>();
 const tickets = new Map<string, IpocTicket>();
+
+function normalizeLookupValue(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function findMockCustomer(
+  fields: IpocLookupFieldValues,
+): IpocMockCustomerRecord | null {
+  return (
+    mockCustomerRecords.find(
+      (record) =>
+        normalizeLookupValue(record.fullName) ===
+          normalizeLookupValue(fields.fullName) &&
+        record.dateOfBirth === fields.dateOfBirth.trim() &&
+        normalizeLookupValue(record.address) ===
+          normalizeLookupValue(fields.address) &&
+        record.loanReference.toLowerCase() ===
+          fields.loanReference.trim().toLowerCase(),
+    ) ?? null
+  );
+}
+
+export function getMockCustomerByLoanReference(
+  loanReference: string,
+): IpocMockCustomerRecord | null {
+  return (
+    mockCustomerRecords.find(
+      (record) => record.loanReference === loanReference,
+    ) ?? null
+  );
+}
 
 export function createIpocSession(now = new Date()): IpocSession {
   const conversationRef = randomUUID();
@@ -30,6 +95,7 @@ export function createIpocSession(now = new Date()): IpocSession {
       handoffPending: false,
     },
     traces: [],
+    matchedLoanReference: null,
     messages: [
       {
         id: randomUUID(),
