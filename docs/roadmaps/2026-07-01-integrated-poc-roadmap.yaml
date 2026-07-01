@@ -6,6 +6,8 @@ source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
 active_arc: ipoc-arc-001
 active_slice: ipoc-golden-path-01
+active_slice_status: completed
+latest_proof_receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
 branch:
   base: dev
   implementation: feature/ipoc-golden-path-01
@@ -23,7 +25,7 @@ doctrine:
   - docs/llm-turn-planner-architecture.md
 first_dependency_chain:
   - id: ipoc-001-roadmap-and-scaffold
-    status: in_progress
+    status: completed
     depends_on: []
     summary: Create the committed roadmap and separate Integrated POC app package.
     write_scope:
@@ -36,7 +38,7 @@ first_dependency_chain:
       - Root scripts can run Integrated POC local dev, build, and typecheck targets.
       - Staged gate passes before commit.
   - id: ipoc-002-customer-visible-contract
-    status: planned
+    status: completed
     depends_on:
       - ipoc-001-roadmap-and-scaffold
     summary: Port one current-safe support or handoff-shaped customer journey into the new app surface.
@@ -46,7 +48,7 @@ first_dependency_chain:
       - Customer can start the journey through the Integrated POC app.
       - The path preserves current safe assistant behavior without adding account answers or actions.
   - id: ipoc-003-engine-route
-    status: planned
+    status: completed
     depends_on:
       - ipoc-002-customer-visible-contract
     summary: Route the customer turn through the current engine contract or a thin adapter over processTurn.
@@ -57,7 +59,7 @@ first_dependency_chain:
       - Server API owns engine invocation and state boundaries.
       - Browser receives a display-safe response model, not internal trace-only data.
   - id: ipoc-004-thin-ticket-context
-    status: planned
+    status: completed
     depends_on:
       - ipoc-003-engine-route
     summary: Record thin mock support/ticket context for handoff-shaped turns.
@@ -68,7 +70,7 @@ first_dependency_chain:
       - Mock store contains no real PII and performs no webhook or account side effects.
       - Ticket/support context can be read back by server-side code.
   - id: ipoc-005-admin-readback
-    status: planned
+    status: completed
     depends_on:
       - ipoc-004-thin-ticket-context
     summary: Add the admin/human-agent readback view for the mock ticket context.
@@ -78,7 +80,7 @@ first_dependency_chain:
     proof_bar:
       - Admin view lists and inspects the ticket/support context created by the customer path.
   - id: ipoc-006-browser-proof
-    status: planned
+    status: completed
     depends_on:
       - ipoc-005-admin-readback
     summary: Capture local browser proof through the real app path and server/admin readback.
@@ -88,6 +90,7 @@ first_dependency_chain:
     proof_bar:
       - Receipt names commands, local URLs, screenshots or artifacts, and commit hashes.
       - Static tests are not presented as behavior proof.
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
 human_gates:
   - choosing a framework other than the Nuxt/Vue Integrated POC app direction
   - abandoning the separate Integrated POC app/package
