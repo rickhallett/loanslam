@@ -15,6 +15,7 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
@@ -158,6 +159,72 @@ textarea {
   font-weight: 700;
 }
 
+.capture-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px 24px 24px;
+  border-top: 1px solid #e4e8eb;
+  background: #fbfcfd;
+}
+
+.capture-form header {
+  display: grid;
+  gap: 4px;
+}
+
+.capture-form h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+}
+
+.form-note {
+  margin: 0;
+  color: #46535d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field-grid label {
+  display: grid;
+  gap: 6px;
+  color: #46535d;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.field-grid input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #cbd4da;
+  border-radius: 8px;
+  padding: 10px 11px;
+  color: #1b1d1f;
+  background: #ffffff;
+}
+
+.capture-form button {
+  justify-self: start;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ffffff;
+  background: #245c4d;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.capture-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .composer textarea {
   width: 100%;
   resize: vertical;
@@ -275,6 +342,28 @@ textarea {
   line-height: 1.45;
 }
 
+.intake-readback {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e8eb;
+}
+
+.intake-readback h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.intake-readback dl {
+  gap: 10px;
+}
+
+.intake-readback p {
+  color: #46535d;
+  background: #f2f8f4;
+}
+
 @media (max-width: 860px) {
   .poc-shell {
     padding: 12px;
@@ -289,6 +378,10 @@ textarea {
   }
 
   .journey-status {
+    grid-template-columns: 1fr;
+  }
+
+  .field-grid {
     grid-template-columns: 1fr;
   }
 }

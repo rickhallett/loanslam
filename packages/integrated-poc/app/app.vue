@@ -26,7 +26,41 @@
           <p v-else-if="lastTicket" class="status success">
             Ticket {{ lastTicket.id }} is ready for human review.
           </p>
+          <p v-if="intakeStatus" class="status success">{{ intakeStatus }}</p>
         </section>
+
+        <form
+          v-if="activeCaptureTicket"
+          class="capture-form"
+          aria-label="Capture handoff details"
+          @submit.prevent="submitIntake"
+        >
+          <header>
+            <p class="eyebrow">Demo capture form</p>
+            <h2>Handoff details for {{ activeCaptureTicket.id }}</h2>
+          </header>
+          <p class="form-note">
+            Synthetic demo fields only. Do not enter real customer details.
+          </p>
+          <div class="field-grid">
+            <label
+              v-for="field in handoffFieldInputs"
+              :key="field.name"
+              :for="`capture-${field.name}`"
+            >
+              <span>{{ field.label }}</span>
+              <input
+                :id="`capture-${field.name}`"
+                v-model="captureFields[field.name]"
+                :type="field.type"
+                :autocomplete="field.autocomplete"
+              />
+            </label>
+          </div>
+          <button type="submit" :disabled="isSubmittingIntake">
+            {{ isSubmittingIntake ? "Capturing" : "Capture for agent" }}
+          </button>
+        </form>
 
         <form class="composer" aria-label="Send support message" @submit.prevent="sendMessage">
           <label for="support-message">Message</label>
@@ -88,6 +122,20 @@
             </div>
           </dl>
           <p>{{ selectedTicket.assistantPreview }}</p>
+          <section
+            v-if="selectedTicket.structuredIntake"
+            class="intake-readback"
+            aria-label="Captured intake"
+          >
+            <h3>Captured intake</h3>
+            <dl>
+              <div v-for="field in handoffFieldInputs" :key="field.name">
+                <dt>{{ field.label }}</dt>
+                <dd>{{ selectedTicket.structuredIntake.fields[field.name] }}</dd>
+              </div>
+            </dl>
+            <p>Synthetic demo fields only. No real customer PII.</p>
+          </section>
         </section>
       </aside>
     </section>
@@ -97,8 +145,11 @@
 <script setup lang="ts">
 import type {
   IpocChatMessage,
+  IpocHandoffField,
+  IpocHandoffIntake,
   IpocSendMessageResponse,
   IpocSessionResponse,
+  IpocSubmitIntakeResponse,
   IpocTicket,
   IpocTicketListResponse,
 } from "../shared/ipoc";
@@ -112,11 +163,60 @@ const tickets = ref<IpocTicket[]>([]);
 const selectedTicketId = ref<string | null>(null);
 const draft = ref(defaultMessage);
 const isSending = ref(false);
+const isSubmittingIntake = ref(false);
 const errorMessage = ref<string | null>(null);
 const lastTicket = ref<IpocTicket | null>(null);
+const intakeStatus = ref<string | null>(null);
+const captureFields = ref<IpocHandoffIntake>(defaultCaptureFields());
+
+const handoffFieldInputs: Array<{
+  name: IpocHandoffField;
+  label: string;
+  type: string;
+  autocomplete: string;
+}> = [
+  {
+    name: "fullName",
+    label: "Full name",
+    type: "text",
+    autocomplete: "off",
+  },
+  {
+    name: "dateOfBirth",
+    label: "Date of birth",
+    type: "date",
+    autocomplete: "off",
+  },
+  {
+    name: "postcode",
+    label: "Postcode",
+    type: "text",
+    autocomplete: "off",
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    autocomplete: "off",
+  },
+  {
+    name: "phone",
+    label: "Phone",
+    type: "tel",
+    autocomplete: "off",
+  },
+];
 
 const selectedTicket = computed(() => {
   return tickets.value.find((ticket) => ticket.id === selectedTicketId.value) ?? null;
+});
+
+const activeCaptureTicket = computed(() => {
+  if (!lastTicket.value || lastTicket.value.structuredIntake) {
+    return null;
+  }
+
+  return lastTicket.value;
 });
 
 onMounted(async () => {
@@ -140,6 +240,7 @@ async function sendMessage() {
   isSending.value = true;
   errorMessage.value = null;
   lastTicket.value = null;
+  intakeStatus.value = null;
 
   try {
     const response = await $fetch<IpocSendMessageResponse>(
@@ -155,6 +256,7 @@ async function sendMessage() {
     if (response.ticket) {
       lastTicket.value = response.ticket;
       selectedTicketId.value = response.ticket.id;
+      captureFields.value = defaultCaptureFields();
     }
 
     await refreshTickets();
@@ -166,6 +268,39 @@ async function sendMessage() {
   }
 }
 
+async function submitIntake() {
+  if (!conversationRef.value || !activeCaptureTicket.value) {
+    return;
+  }
+
+  isSubmittingIntake.value = true;
+  errorMessage.value = null;
+  intakeStatus.value = null;
+
+  try {
+    const response = await $fetch<IpocSubmitIntakeResponse>(
+      `/api/ipoc/sessions/${encodeURIComponent(conversationRef.value)}/intake`,
+      {
+        method: "POST",
+        body: {
+          ticketId: activeCaptureTicket.value.id,
+          fields: captureFields.value,
+        },
+      },
+    );
+    messages.value = response.messages;
+    lastTicket.value = response.ticket;
+    selectedTicketId.value = response.ticket.id;
+    intakeStatus.value = `Captured synthetic intake for ticket ${response.ticket.id}.`;
+    await refreshTickets();
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : "The capture route failed.";
+  } finally {
+    isSubmittingIntake.value = false;
+  }
+}
+
 async function refreshTickets() {
   const response = await $fetch<IpocTicketListResponse>("/api/ipoc/admin/tickets");
   tickets.value = response.tickets;
@@ -173,5 +308,15 @@ async function refreshTickets() {
   if (!selectedTicketId.value && response.tickets[0]) {
     selectedTicketId.value = response.tickets[0].id;
   }
+}
+
+function defaultCaptureFields(): IpocHandoffIntake {
+  return {
+    fullName: "Demo Applicant",
+    dateOfBirth: "1990-01-01",
+    postcode: "AB12 3CD",
+    email: "demo.applicant@example.invalid",
+    phone: "07000000000",
+  };
 }
 </script>

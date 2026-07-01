@@ -1,4 +1,20 @@
-import type { IntakeField, SafetyFlag, TurnAction, UiPlan } from "@loanslam/contracts";
+import type {
+  IntakeField,
+  SafetyFlag,
+  TurnAction,
+  UiPlan,
+} from "@loanslam/contracts";
+
+export const ipocHandoffFields = [
+  "fullName",
+  "dateOfBirth",
+  "postcode",
+  "email",
+  "phone",
+] as const satisfies readonly IntakeField[];
+
+export type IpocHandoffField = (typeof ipocHandoffFields)[number];
+export type IpocHandoffIntake = Record<IpocHandoffField, string>;
 
 export interface IpocChatMessage {
   id: string;
@@ -29,11 +45,28 @@ export interface IpocSendMessageResponse {
   ticket: IpocTicket | null;
 }
 
+export interface IpocSubmitIntakeRequest {
+  ticketId: string;
+  fields: Partial<Record<IpocHandoffField, string>>;
+}
+
+export interface IpocSubmitIntakeResponse {
+  conversationRef: string;
+  messages: IpocChatMessage[];
+  ticket: IpocTicket;
+}
+
+export interface IpocStructuredIntake {
+  fields: IpocHandoffIntake;
+  capturedAt: string;
+  piiPolicy: "synthetic_demo_fields_only";
+}
+
 export interface IpocTicket {
   id: string;
   conversationRef: string;
   requestRef: string | null;
-  status: "open";
+  status: "open" | "intake_captured";
   queue: "support";
   createdAt: string;
   customerContext: {
@@ -49,6 +82,7 @@ export interface IpocTicket {
     requestedFields: IntakeField[];
     validatorOverrideCodes: string[];
   };
+  structuredIntake: IpocStructuredIntake | null;
   assistantPreview: string;
 }
 

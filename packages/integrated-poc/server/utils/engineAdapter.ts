@@ -84,6 +84,7 @@ export function maybeBuildTicketFromTurn({
       summary: summarizeHandoffContext(result),
       piiPolicy: "raw_customer_message_omitted",
     },
+    structuredIntake: null,
     engine: {
       finalAction: result.finalAction,
       uiPrimitive: result.ui.primitive,

@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 
 import type { ConversationState, TurnTrace } from "@loanslam/contracts";
 
-import type { IpocChatMessage, IpocTicket } from "../../shared/ipoc";
+import type {
+  IpocChatMessage,
+  IpocHandoffIntake,
+  IpocTicket,
+} from "../../shared/ipoc";
 
 export interface IpocSession {
   state: ConversationState;
@@ -61,6 +65,36 @@ export function appendMessage(
 export function saveIpocTicket(ticket: IpocTicket): IpocTicket {
   tickets.set(ticket.id, ticket);
   return ticket;
+}
+
+export function updateIpocTicketIntake({
+  ticketId,
+  conversationRef,
+  fields,
+  capturedAt = new Date(),
+}: {
+  ticketId: string;
+  conversationRef: string;
+  fields: IpocHandoffIntake;
+  capturedAt?: Date;
+}): IpocTicket | null {
+  const ticket = tickets.get(ticketId);
+
+  if (!ticket || ticket.conversationRef !== conversationRef) {
+    return null;
+  }
+
+  const updatedTicket: IpocTicket = {
+    ...ticket,
+    status: "intake_captured",
+    structuredIntake: {
+      fields,
+      capturedAt: capturedAt.toISOString(),
+      piiPolicy: "synthetic_demo_fields_only",
+    },
+  };
+  tickets.set(ticketId, updatedTicket);
+  return updatedTicket;
 }
 
 export function listIpocTickets(): IpocTicket[] {

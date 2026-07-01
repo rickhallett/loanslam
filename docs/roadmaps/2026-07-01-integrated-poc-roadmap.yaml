@@ -4,11 +4,11 @@ status: active
 updated: 2026-07-01
 source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
-active_arc: ipoc-arc-001
-active_slice: ipoc-golden-path-01
-active_slice_status: completed
+active_arc: ipoc-arc-002
+active_slice: ipoc-handoff-capture-01
+active_slice_status: in_progress
 latest_proof_receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
-next_agenda_card: docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md
+active_agenda_card: docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md
 branch:
   base: dev
   implementation: feature/ipoc-golden-path-01
@@ -92,6 +92,39 @@ first_dependency_chain:
       - Receipt names commands, local URLs, screenshots or artifacts, and commit hashes.
       - Static tests are not presented as behavior proof.
     receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
+handoff_capture_chain:
+  - id: ipoc-007-handoff-capture-form
+    status: in_progress
+    depends_on:
+      - ipoc-006-browser-proof
+    summary: Add customer-side handoff capture form with current engine intake fields.
+    write_scope:
+      - packages/integrated-poc/
+    proof_bar:
+      - Customer can submit synthetic demo-only handoff fields after the engine asks for intake.
+      - Form uses fullName, dateOfBirth, postcode, email, and phone only.
+  - id: ipoc-008-intake-ticket-update
+    status: planned
+    depends_on:
+      - ipoc-007-handoff-capture-form
+    summary: Validate and attach structured intake fields to the thin mock ticket.
+    write_scope:
+      - packages/integrated-poc/server/
+      - packages/integrated-poc/shared/
+    proof_bar:
+      - Mock ticket remains in-memory and does not become CRM, auth, webhook, or account state.
+      - Server/admin readback shows the synthetic structured intake.
+  - id: ipoc-009-capture-browser-proof
+    status: planned
+    depends_on:
+      - ipoc-008-intake-ticket-update
+    summary: Capture browser proof for message, handoff response, form submission, and admin readback.
+    write_scope:
+      - artifacts/integrated-poc/
+      - docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml
+    proof_bar:
+      - Receipt names commands, local URLs, screenshots or artifacts, and commit hashes.
+      - Static tests are not presented as behavior proof.
 human_gates:
   - choosing a framework other than the Nuxt/Vue Integrated POC app direction
   - abandoning the separate Integrated POC app/package
