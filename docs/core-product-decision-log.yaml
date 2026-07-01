@@ -1,7 +1,7 @@
 version: 1
 title: Core Product Decision Log
 status: active
-updated: 2026-06-13
+updated: 2026-07-01
 authority:
   role: Canonical record of accepted questions and answers from product and engine
     alignment sessions.
@@ -13,6 +13,8 @@ authority:
     - docs/product-brief.md
     - docs/architecture.md
     - docs/llm-turn-planner-architecture.md
+    - docs/prds/2026-06-20-site-widget-integration-architecture-prd.md
+    - docs/prds/2026-06-30-integrated-poc-reference.md
     - data/public-info/loanslam-synthetic-kb.json
 decisions:
   - id: D001
@@ -169,4 +171,345 @@ decisions:
       comparison reports, a current baseline, visible failure modes, corpus gaps, UX
       weaknesses, and a recommendation to productise, productise with named caveats,
       or not productise yet.
+    status: accepted
+  - id: D012
+    date: 2026-06-30
+    topic: Integrated POC deployable direction
+    question: Does the integrated POC replace the widget-adapter architecture as
+      the primary deployable target, or sit beside it as another demo host?
+    accepted_answer: The integrated POC becomes the new deployable surface when it
+      is complete. Until then, keep the existing widget-adapter architecture alive
+      as usable transitional code, but treat it as code due for sunset rather than
+      the long-term architecture. This does not require deleting the current
+      iframe/native adapter work immediately; it changes its status from future
+      default to migration bridge.
+    status: accepted
+  - id: D013
+    date: 2026-06-30
+    topic: Integrated POC first slice
+    question: What is the smallest first integrated POC slice that proves the new
+      deployable rather than becoming another broad widget or account-service build?
+    accepted_answer: Start with one golden path that proves the end-to-end
+      infrastructure. A customer enters through the integrated surface, the bot is
+      journey-aware enough to help or hand off, the handoff creates useful server-side
+      state, and an admin/human-agent view can read back the ticket/customer context.
+      Flows that have not been developed yet, especially richer existing-customer
+      lookup, simple account answers, and account actions, are second-slice work
+      after the end-to-end infrastructure has been proven.
+    status: accepted
+  - id: D014
+    date: 2026-06-30
+    topic: Migration-first golden path guardrail
+    question: Should the first golden path be optimized around a newly invented
+      demo goal, or should it mostly replicate current proven behaviour in the new
+      infrastructure?
+    accepted_answer: The first golden path should be migration-first. It should
+      replicate what already works in the current surfaces inside the new integrated
+      infrastructure, then add second-slice features on top once the end-to-end
+      infrastructure is proven. Do not over-optimize the first slice around an
+      invented demo goal. Diverge from current behaviour only when the new
+      infrastructure requires it or when there is a clear product, verification, or
+      stakeholder reason.
+    status: accepted
+  - id: D015
+    date: 2026-06-30
+    topic: Migration baseline
+    question: When the first slice replicates what already exists, what exactly is
+      the baseline?
+    accepted_answer: Replicate the customer-visible contract, not the old
+      architecture. The baseline is the current site/application journey shape, the
+      current assistant behaviour for FAQ/help/handoff/safe refusal, and the current
+      server-side demo/session evidence. Do not preserve iframe transport, package
+      splits, or review-host quirks unless they are needed as temporary
+      compatibility while the integrated POC is replacing the widget-adapter stack.
+    status: accepted
+  - id: D016
+    date: 2026-06-30
+    topic: Integrated POC app boundary
+    question: Should the new integrated POC mutate the existing site or demo/review
+      hosts, or live as a separate app/package?
+    accepted_answer: Create a separate app/package for the integrated POC. It should
+      consume the current engine/contracts and reuse current site/application assets
+      where useful, but its job is to become the new deployable surface. Do not mutate
+      the existing site, demo host, review host, or widget-adapter stack into the POC
+      unless a temporary compatibility bridge is explicitly needed. This preserves a
+      clean sunset path for the widget-adapter architecture while keeping current
+      transitional surfaces working.
+    status: accepted
+  - id: D017
+    date: 2026-06-30
+    topic: Integrated POC roadmap source of truth
+    question: Should next-stage work be controlled by an in-repo YAML roadmap/issue
+      map, or by Linear/an external tracker?
+    accepted_answer: Start with an in-repo machine-readable roadmap or issue map as
+      the source of truth for agent execution. It should be committed and reviewed
+      with the code, and it should define dependency order, slice boundaries, and
+      verification bars. Do not optimize around iteration speed or external tracker
+      workflow before there is evidence that iteration speed is the important
+      variable. Linear or another tracker can be added later if it proves enough
+      human QA, review, or stakeholder-coordination value to justify the extra
+      surface.
+    status: accepted
+  - id: D018
+    date: 2026-06-30
+    topic: Read-only first capability posture
+    question: For the first integrated POC slices, how page-aware and action-capable
+      should the assistant be?
+    accepted_answer: Prioritise read-only operations in the first few integrated POC
+      slices. Page and journey awareness should let the assistant observe route,
+      page type, current application step, declared journey state, and server-side
+      context; it may answer, explain, navigate, hand off, and support admin readback.
+      It should not mutate application data, update accounts, infer eligibility, make
+      loan decisions, or perform account/application actions in these early slices.
+      Read-only capability increases development velocity while keeping product and
+      compliance risk low, and there is no current evidence that optimizing beyond
+      that for action capability is the important variable.
+    status: accepted
+  - id: D019
+    date: 2026-06-30
+    topic: Thin mocks and demoable deployability
+    question: How thin should the mock Aryza/SoloSight/support-ticket schemas be,
+      and what does deployability mean for the integrated POC?
+    accepted_answer: Keep the mock external systems thin, simple, and functional.
+      They should emphasize that this is a quality proof of concept rather than a
+      production artifact or long-term enterprise implementation. The deployable
+      surface is deployable in the sense of demoability and reviewability. Stakeholders
+      can run it, inspect the flow, and understand the integration shape. It should
+      not imply that the mock systems, schemas, or app structure are production-ready
+      or meant to be employed unchanged in the long run.
+    status: accepted
+  - id: D020
+    date: 2026-06-30
+    topic: Boundary-only layering discipline
+    question: Where should Harry-style repository/service/controller layering be
+      mandatory in the integrated POC?
+    accepted_answer: Make repository/service/controller-style layering mandatory at
+      API-like boundaries. That includes API handlers/controllers, persistence access,
+      mock external-system adapters, auth/session seams if they are introduced, and
+      engine integration points. This is where the code behaves like a traditional
+      Node API layer and the pattern has clear value. Elsewhere, especially in thin
+      UI and demo composition, prefer direct boring composition unless there is an
+      easy win or demonstrated value. Do not retrofit the pattern across the codebase
+      or prematurely optimize for it ahead of need.
+    status: accepted
+  - id: D021
+    date: 2026-06-30
+    topic: Demoability proof and test de-escalation
+    question: What is the first proof bar for saying the integrated POC is demoable,
+      and how should tests relate to that proof?
+    accepted_answer: The first proof bar is local browser proof through the real app
+      path plus server/admin readback. A reviewer should be able to run the new app,
+      complete the migration-first customer-visible path, see assistant behavior
+      through the real route, create or read back demo handoff/ticket state, and
+      inspect the admin view. Unit and integration tests are useful where they provide
+      verification fabric for agents or prove valid behavior, especially around
+      boundaries and invariants. They are not useful as testing cosplay, as a proxy
+      for seriousness, or as a representational substitute for good engineering.
+      Tests that go deep while drifting away from the behavior proof priority should
+      be de-escalated or abandoned.
+    status: accepted
+  - id: D022
+    date: 2026-06-30
+    topic: First integrated POC dependency chain
+    question: What is the first dependency chain for the in-repo roadmap?
+    accepted_answer: The first dependency chain is ordered by proof dependency
+      rather than feature excitement. Start with the new integrated app scaffold plus
+      roadmap and doctrine. Then port the customer-visible contract into that app,
+      wire the current assistant through the real app route, add thin read-only mock
+      state plus handoff or ticket readback, add the admin view, and capture the
+      browser proof flow. Second-slice features such as existing-customer lookup,
+      account answers, and account actions wait behind this chain.
+    status: accepted
+  - id: D023
+    date: 2026-06-30
+    topic: Agentic first-light proof-of-work trail
+    question: How should the migration track agentic development arcs and human
+      verification touchpoints without optimizing for those metrics too early?
+    accepted_answer: Emphasize an agentic first-light development arc during the
+      migration. Aim for increasingly long human-out-of-the-loop engineering spans,
+      with human touchpoints reserved for verification that needs judgement or
+      opinion. Measure the touchpoints now but do not optimize for them yet. Use a
+      lightweight structured label taxonomy in the in-repo roadmap and commits so
+      history can show the epic, issue or item, slice, and arc number for each piece
+      of work, along with where human verification happened. The goal is proof of
+      work in the commit chain, not metadata ceremony.
+    status: accepted
+  - id: D024
+    date: 2026-06-30
+    topic: Post-first-chain roadmap touchstones
+    question: What non-granular roadmap touchstones should sit beyond the first
+      integrated POC dependency chain?
+    accepted_answer: Record coarse touchstones beyond the first chain without
+      drilling into granular scope yet. The touchstones are read-only
+      existing-customer or context work, read-only account-answer work, agent/admin
+      workflow improvements for handoff review and human readback, widget-adapter
+      sunset once the integrated POC is demoable enough, and carefully scoped
+      action capability only if stakeholder value later proves it is worth the risk.
+      Each touchstone should carry its own future proof bar and human-verification
+      point when it becomes active. Until then, the touchstones provide context for
+      the current work, not detailed implementation commitments.
+    status: accepted
+  - id: D025
+    date: 2026-06-30
+    topic: Agentic slice labels and incomplete-arc signal
+    question: What must the proof-of-work labels show about whether commits happened
+      inside an agentic arc, and what does an incomplete arc mean?
+    accepted_answer: Use slice as the scoped agentic execution unit. A commit should
+      make it possible to determine whether the work was part of an agentic arc or
+      outside one. It is reasonable to scope slices so completion is highly likely
+      for frontier models when the definition of good behavior and the verification
+      fabric are concrete enough. If an agentic slice is not completed, treat that as
+      a signal that the slice was scoped incorrectly, was too complex, or did not
+      define what good looks like clearly enough for machine iteration without human
+      judgement. Do not treat incomplete arcs only as model failure.
+    status: accepted
+  - id: D026
+    date: 2026-06-30
+    topic: Agenda card and AFK execution contract
+    question: What must every agentic slice define before an agent starts, and what
+      should the agent assume after the start is confirmed green?
+    accepted_answer: Every agentic slice must define good_look, proof_bar,
+      human_gate, allowed_autonomy, and stop_condition before development starts.
+      If any of those are ambiguous, the agent must push back before beginning the
+      slice. The approved agenda card is the green-light artifact. Once it is
+      confirmed green and the slice starts, the agent should assume the human is AFK
+      until the next predefined checkpoint or an explicit failure trigger. The agent
+      should not keep stopping merely to ask for the next slice. Checkpoint touchstones
+      and failure conditions should be defined ahead of time so context pressure,
+      token pressure, or LLM uncertainty does not decide when work stops. This extends
+      the existing Loanslam operator four-touchpoint model rather than replacing it.
+    status: accepted
+  - id: D027
+    date: 2026-06-30
+    topic: Documentation cleanup gate and context hygiene
+    question: What documentation cleanup is required before the integrated POC
+      migration doctrine becomes permanent guidance?
+    accepted_answer: Before or as part of the integrated POC move, run a significant
+      documentation cleanup. Agentic reliability depends on small, focused,
+      task-oriented context more than on adding more skills, more always-loaded
+      information, or ever-growing instruction files. Documentation should be layered
+      and lazy-loaded so only operationally necessary docs sit near the top levels of
+      the repository. Archive and stale material should be moved deep into clearly
+      non-operational locations, outside the repo, or into another tracking system
+      rather than sitting at the top of the working context. The cleanup should happen
+      before or as part of the ADR and migration agenda so the new doctrine lands on a
+      clean context surface.
+    status: accepted
+  - id: D028
+    date: 2026-06-30
+    topic: Documentation cleanup sequencing
+    question: Should documentation cleanup be a preflight gate before the ADR, or
+      the first agenda-card slice before implementation?
+    accepted_answer: Make documentation cleanup pre-implementation work. It should be
+      the first agenda-card slice before integrated POC implementation begins, not a
+      later tidy-up. ADR thinking and outlines may proceed in parallel, but the ADR
+      and migration doctrine should not be treated as final until the cleanup gate has
+      classified repository docs into keep, lazy-load, rewrite, archive, or delete.
+      This avoids blocking useful thinking while still ensuring permanent guidance
+      lands on a clean context surface.
+    status: accepted
+  - id: D029
+    date: 2026-06-30
+    topic: Documentation cleanup taxonomy and deletion bias
+    question: Should the documentation cleanup taxonomy include REWRITE, and how
+      should that affect deletion pressure?
+    accepted_answer: Include REWRITE as the fifth cleanup state alongside KEEP,
+      LAZY-LOAD, ARCHIVE, and DELETE. REWRITE is for docs whose subject remains
+      operationally necessary but whose current wording, placement, or framing would
+      damage context clarity if kept as-is. The extra state must not make docs harder
+      to delete. If a doc should be removed to preserve context clarity, it should
+      still be moved to DELETE rather than protected by a larger taxonomy.
+    status: accepted
+  - id: D030
+    date: 2026-06-30
+    topic: Whole-repository documentation cleanup scope
+    question: Should the first documentation cleanup slice audit only the
+      agent-visible surface, or the whole repository?
+    accepted_answer: Audit the whole repository. The cleanup should not stop at the
+      obvious agent-visible layer, because stale or misleading docs elsewhere can
+      still become reachable context later. To keep the slice usable, order the audit
+      and report by context risk, starting with always-loaded files, root docs,
+      directly linked docs, active PRDs and decision logs, operator docs, then deeper
+      historical material. The goal is to get the cleanup over with once, while
+      preserving the context clarity bias that motivated the cleanup in the first
+      place.
+    status: accepted
+  - id: D031
+    date: 2026-06-30
+    topic: Two-phase cleanup agenda card and ambiguity threshold
+    question: Should the first cleanup slice only produce an audit matrix, or should
+      it classify and apply changes in one agenda-card slice, and how much ambiguity
+      should be clarified first?
+    accepted_answer: Use one agenda card with two internal phases for the whole-repo
+      documentation cleanup. Phase 1 produces the classification matrix. Phase 2
+      applies unambiguous moves, deletions, rewrites, and lazy-load changes in the
+      same slice. The agent should stop for human judgement only on ambiguous or
+      high-risk docs, especially where the ambiguity is operationally significant.
+      Clarification has diminishing returns, particularly in deep historical material,
+      so remaining questions should be asked only when the answer changes operational
+      behaviour, scope, risk, reversibility, proof, or active context structure.
+      Significant ambiguity should be made explicit in the matrix or agenda card
+      rather than quietly resolved by guesswork.
+    status: accepted
+  - id: D032
+    date: 2026-07-01
+    topic: Archive location and deletion default
+    question: Where should ARCHIVE docs physically go, and when should archive be
+      preferred over delete?
+    accepted_answer: Default stale docs to DELETE and rely on git history for
+      ordinary recovery. Use ARCHIVE only when a doc has real historical or
+      evidential value that should remain browsable after cleanup. Archived docs
+      should go somewhere deliberately non-operational and deep, such as
+      docs/non-operational/archive/<cleanup-date>-doc-cleanup/, with a blunt README
+      stating that agents must not treat the archive as active guidance. Do not
+      create the archive directory until the cleanup slice actually has files worth
+      archiving.
+    status: accepted
+  - id: D033
+    date: 2026-07-01
+    topic: Cleanup classification matrix location
+    question: Where should the documentation cleanup classification matrix live
+      after the cleanup slice?
+    accepted_answer: Keep the classification matrix as a non-operational proof
+      artifact, not active doctrine. Store it under
+      docs/non-operational/doc-cleanup/<cleanup-date>-classification.yaml and include
+      only a short summary in the agenda-card closeout. The matrix should be durable
+      enough to audit what happened, but buried enough that future agents do not treat
+      every classified stale doc as live context.
+    status: accepted
+  - id: D034
+    date: 2026-07-01
+    topic: High-risk documentation cleanup stop rule
+    question: Which docs are high-risk enough that the cleanup agent must stop for
+      human judgement before deleting, moving, or rewriting them?
+    accepted_answer: Stop only for docs whose cleanup could change agent behaviour,
+      deployment or promotion rules, secret handling, verification evidence,
+      stakeholder commitments, product or compliance doctrine, or active roadmap
+      decisions. Everything else should be classified and acted on by the cleanup
+      agent when the state is clear. High-risk must not become a blanket excuse to
+      stop on ordinary stale notes or low-risk clutter.
+    status: accepted
+  - id: D035
+    date: 2026-07-01
+    topic: Documentation cleanup proof bar
+    question: What is the proof bar for saying the documentation cleanup slice is
+      done?
+    accepted_answer: The cleanup slice is done only when it has a committed
+      classification matrix, an applied cleanup diff, no top-level archive, no stale
+      docs linked from active context, updated README, AGENTS, and CONTEXT pointers
+      where needed, and an agenda-card closeout summary listing deleted, rewritten,
+      archived, kept, and lazy-loaded counts plus any high-risk docs deferred for
+      human judgement. A matrix alone is not enough, and a tidy diff without the
+      matrix and closeout is not enough.
+    status: accepted
+  - id: D036
+    date: 2026-07-01
+    topic: Integrated POC implementation start artifact
+    question: After the cleanup gate closes, what exact artifact starts integrated
+      POC implementation?
+    accepted_answer: The cleanup closeout unlocks a new Integrated POC Implementation
+      Agenda Card. That agenda card must reference the cleanup matrix, final ADR or
+      doctrine, the in-repo roadmap first chain, and the first Golden Path Slice.
+      Implementation must not start from this chat thread or from the integrated POC
+      reference memo alone.
     status: accepted
