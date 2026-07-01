@@ -95,6 +95,9 @@ textarea {
 }
 
 .conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   padding: 24px;
   overflow: auto;
 }
@@ -112,6 +115,33 @@ textarea {
 
 .message.assistant {
   border: 1px solid #d9e3de;
+  background: #f2f8f4;
+}
+
+.message.customer {
+  align-self: flex-end;
+  border: 1px solid #c9d9e9;
+  background: #f1f7fc;
+}
+
+.status {
+  margin: 0;
+  max-width: 720px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.status.error {
+  border: 1px solid #e4c4bd;
+  color: #7b2d21;
+  background: #fff4f1;
+}
+
+.status.success {
+  border: 1px solid #bfdacb;
+  color: #245c4d;
   background: #f2f8f4;
 }
 
@@ -150,6 +180,11 @@ textarea {
   cursor: pointer;
 }
 
+.composer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .empty-state {
   margin: 24px;
   padding: 18px;
@@ -167,6 +202,76 @@ textarea {
 
 .empty-state p {
   margin: 0;
+  line-height: 1.45;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-bottom: 1px solid #e4e8eb;
+}
+
+.ticket-row {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  border: 1px solid #d8dee3;
+  border-radius: 8px;
+  padding: 12px;
+  color: #1f282e;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ticket-row.selected {
+  border-color: #245c4d;
+  box-shadow: inset 3px 0 0 #245c4d;
+}
+
+.ticket-row span {
+  color: #5b6872;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.ticket-row strong {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.ticket-detail {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.ticket-detail dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.ticket-detail dt {
+  color: #5b6872;
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.ticket-detail dd {
+  margin: 3px 0 0;
+  color: #1f282e;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.ticket-detail p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8fafb;
   line-height: 1.45;
 }
 
