@@ -12,15 +12,22 @@ states:
   - REWRITE
   - ARCHIVE
   - DELETE
+closeout_counts:
+  KEEP: 21
+  LAZY-LOAD: 68
+  REWRITE: 3
+  ARCHIVE: 0
+  DELETE: 1
 applied_actions:
   - "Created this classification matrix as the current documentation cleanup record."
   - "Moved the 2026-06-20 documentation audit PRD and matrix from docs/prds to docs/non-operational/doc-cleanup."
   - "Updated active README and AGENTS pointers away from the old June cleanup matrix."
+  - "Narrowed product-brief AWS/deadline wording to historical context without changing the product safety boundary."
+  - "Promoted the durable static-vs-live evidence rule into docs/llm-turn-planner-architecture.md."
+  - "Deleted docs/phase-0-static-routing-restraint-audit-2026-06-15.md after replacing active references."
+  - "Confirmed the old P2 stale PRDs, lab analyses, and artifact Markdown summaries from the 2026-06-20 matrix were already absent."
   - "No archive directory was created; no top-level archive was introduced."
-  - "No documentation was deleted in this slice because the stale candidates were either evidence records, product doctrine, or still useful lazy-load prior art."
 deferred_high_risk:
-  - path: "docs/product-brief.md"
-    reason: "Contains historical AWS and MVP deployment wording; this is product and stakeholder doctrine, so it needs explicit owner judgment before rewrite."
   - path: "docs/core-product-decision-log.yaml"
     reason: "Decision log is authoritative product history; keep intact unless a new decision record supersedes specific entries."
   - path: "docs/loanslam-operator/"
@@ -313,10 +320,10 @@ decisions:
     action: "Keep."
     reason: "Compact route/API battery guide."
   - path: "docs/phase-0-static-routing-restraint-audit-2026-06-15.md"
-    state: LAZY-LOAD
+    state: DELETE
     risk: historical-decision
-    action: "Keep as dated prior art."
-    reason: "Already warns that line numbers and classifications are historical."
+    action: "Delete after promoting the durable rule to docs/llm-turn-planner-architecture.md."
+    reason: "Dated line-number audit should not stay in normal context once the durable evidence rule is in the architecture doc."
   - path: "docs/prds/2026-06-14-stochastic-test-simulator-prd.md"
     state: LAZY-LOAD
     risk: historical-prd
@@ -433,10 +440,10 @@ decisions:
     action: "Keep."
     reason: "Approved cleanup agenda for this slice."
   - path: "docs/product-brief.md"
-    state: KEEP
+    state: REWRITE
     risk: product-doctrine
-    action: "Keep; defer high-risk doctrine rewrite."
-    reason: "Product and safety boundary remains active even where historical delivery wording needs owner review."
+    action: "Narrow historical AWS/deadline wording while preserving the product and safety boundary."
+    reason: "Necessary product doctrine remains active; stale implementation-gate wording was over-steering current Phase 0 work."
   - path: "docs/reports/2026-06-20-repository-surface-audit.md"
     state: LAZY-LOAD
     risk: audit-report
