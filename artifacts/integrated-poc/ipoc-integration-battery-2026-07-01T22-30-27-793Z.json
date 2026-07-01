@@ -1,0 +1,86 @@
+{
+  "base": "http://127.0.0.1:3631",
+  "ranAt": "2026-07-01T22:30:27.794Z",
+  "results": [
+    {
+      "id": "session-create",
+      "pass": true,
+      "detail": "conversationRef e7eec85c-0b4a-4f9b-b949-3b4b66284e65"
+    },
+    {
+      "id": "lookup-match",
+      "pass": true,
+      "detail": "matched with display-safe pair only"
+    },
+    {
+      "id": "lookup-no-match",
+      "pass": true,
+      "detail": "no match, no data disclosed"
+    },
+    {
+      "id": "answers-gated-unmatched",
+      "pass": true,
+      "detail": "status 403"
+    },
+    {
+      "id": "lookup-validation",
+      "pass": true,
+      "detail": "status 400"
+    },
+    {
+      "id": "answer-nextPaymentDate",
+      "pass": true,
+      "detail": "Your next demo payment for LS-10001 is due on 2026-07-28."
+    },
+    {
+      "id": "answer-outstandingBalance",
+      "pass": true,
+      "detail": "Your demo outstanding balance for LS-10001 is £1,240.50."
+    },
+    {
+      "id": "answer-loanStatus",
+      "pass": true,
+      "detail": "Your demo loan LS-10001 is currently active."
+    },
+    {
+      "id": "answer-invalid-question",
+      "pass": true,
+      "detail": "status 400"
+    },
+    {
+      "id": "engine-boundary-matched-session",
+      "pass": true,
+      "detail": "finalAction request_handoff_intake, no mock values in engine response"
+    },
+    {
+      "id": "engine-turn-ticket",
+      "pass": true,
+      "detail": "ticket TCK-FC379BA4"
+    },
+    {
+      "id": "ticket-status-in-review",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-invalid-transition",
+      "pass": true,
+      "detail": "status 409"
+    },
+    {
+      "id": "ticket-note",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-status-resolved",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-activity-readback",
+      "pass": true,
+      "detail": "activity kinds: lookup_matched, account_answer, account_answer, account_answer"
+    }
+  ]
+}
