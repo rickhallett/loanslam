@@ -14,6 +14,7 @@ Co-Authored-By: (the agent's name and attribution byline)
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
 - Documentation cleanup is governed by `docs/prds/2026-07-01-documentation-cleanup-agenda-card.md` and the current classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; older cleanup records under `docs/non-operational/doc-cleanup/` are prior art only.
+- Integrated POC implementation starts from `docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md`; do not start from chat context or older reference memos.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
 ## Provider Mandate
