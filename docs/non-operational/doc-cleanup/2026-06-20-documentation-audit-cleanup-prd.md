@@ -1,5 +1,9 @@
 # PRD: Documentation Audit and Cleanup Recommendations
 
+> Historical record. This 2026-06-20 cleanup setup is prior art only. The current
+> cleanup authority is `../../prds/2026-07-01-documentation-cleanup-agenda-card.md`
+> plus `2026-07-01-classification.yaml`.
+
 ## Problem Statement
 
 The repository still contains enough Markdown to steer future agents, reviewers,
@@ -22,8 +26,9 @@ current commands, recent commits, or an explicit product/agent authority role.
 
 The audit should treat the 2026-06-15 Markdown pruning spec from Git history as
 prior art only. It can suggest candidate risks, but it must not be copied forward
-without rechecking against the current repository. The resulting current matrix
-lives in `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`.
+without rechecking against the current repository. The resulting 2026-06-20
+matrix now lives beside this file as
+`2026-06-20-documentation-audit-recommendation-matrix.md`.
 
 ## User Stories
 

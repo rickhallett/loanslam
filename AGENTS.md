@@ -13,7 +13,7 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
-- Documentation cleanup decisions are recorded in `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`; check it before reintroducing old docs/artifacts.
+- Documentation cleanup is governed by `docs/prds/2026-07-01-documentation-cleanup-agenda-card.md` and the current classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; older cleanup records under `docs/non-operational/doc-cleanup/` are prior art only.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
 ## Provider Mandate

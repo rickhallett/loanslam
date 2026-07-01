@@ -1,0 +1,499 @@
+version: 1
+cleanup_date: "2026-07-01"
+agenda_card: "docs/prds/2026-07-01-documentation-cleanup-agenda-card.md"
+source_reference: "docs/prds/2026-06-30-integrated-poc-reference.md"
+inventory:
+  tracked_before_cleanup: 92
+  visible_before_cleanup: 91
+  tracked_note: "Tracked count includes CLAUDE.md, a symlink to AGENTS.md."
+states:
+  - KEEP
+  - LAZY-LOAD
+  - REWRITE
+  - ARCHIVE
+  - DELETE
+applied_actions:
+  - "Created this classification matrix as the current documentation cleanup record."
+  - "Moved the 2026-06-20 documentation audit PRD and matrix from docs/prds to docs/non-operational/doc-cleanup."
+  - "Updated active README and AGENTS pointers away from the old June cleanup matrix."
+  - "No archive directory was created; no top-level archive was introduced."
+  - "No documentation was deleted in this slice because the stale candidates were either evidence records, product doctrine, or still useful lazy-load prior art."
+deferred_high_risk:
+  - path: "docs/product-brief.md"
+    reason: "Contains historical AWS and MVP deployment wording; this is product and stakeholder doctrine, so it needs explicit owner judgment before rewrite."
+  - path: "docs/core-product-decision-log.yaml"
+    reason: "Decision log is authoritative product history; keep intact unless a new decision record supersedes specific entries."
+  - path: "docs/loanslam-operator/"
+    reason: "Operator docs affect agent behavior and verification; keep as lazy-load operational context rather than pruning opportunistically."
+  - path: ".agents/skills/loanslam-operator/ and .claude/skills/loanslam-operator/"
+    reason: "Duplicated skill bundles are compatibility surfaces; do not deduplicate without checking the active agent loaders."
+  - path: "secrets/README.md and .sops.yaml"
+    reason: "Secret handling docs/config are high-risk operational controls."
+  - path: "docs/prds/*"
+    reason: "Most PRDs are historical or active product contracts; classify as lazy-load unless the current agenda explicitly supersedes them."
+decisions:
+  - path: ".agents/skills/loanslam-operator/SKILL.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep in skill bundle; load through the operator skill only."
+    reason: "Agent entrypoint for Loanslam operations, not first-layer repo context."
+  - path: ".agents/skills/loanslam-operator/references/agent-arcs.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Operator reference for autonomous arcs."
+  - path: ".agents/skills/loanslam-operator/references/evidence.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Operator evidence reference."
+  - path: ".agents/skills/loanslam-operator/references/failure-triage.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Operator failure-triage reference."
+  - path: ".agents/skills/loanslam-operator/references/orient.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Operator orientation reference."
+  - path: ".agents/skills/loanslam-operator/references/release.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Release/promotion behavior is high-risk and should stay in the skill bundle."
+  - path: ".agents/skills/loanslam-operator/references/secrets.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Secret handling reference; high-risk."
+  - path: ".agents/skills/loanslam-operator/references/verification.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Verification reference for operator workflows."
+  - path: ".agents/skills/loanslam-operator/references/worktrees.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Worktree discipline reference."
+  - path: ".agents/skills/loanslam-operator/references/write-scope-guardrails.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Write-scope guardrail reference."
+  - path: ".agents/skills/loanslam-operator/workflows/digest-and-ping.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Operator workflow."
+  - path: ".agents/skills/loanslam-operator/workflows/hell-week-tune.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Hell Week tuning workflow."
+  - path: ".agents/skills/loanslam-operator/workflows/promote-hop.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep."
+    reason: "Promotion workflow; high-risk."
+  - path: ".claude/skills/loanslam-operator/SKILL.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for Claude-compatible loaders."
+    reason: "Compatibility copy of the Loanslam operator skill."
+  - path: ".claude/skills/loanslam-operator/references/agent-arcs.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of operator reference."
+  - path: ".claude/skills/loanslam-operator/references/evidence.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of operator reference."
+  - path: ".claude/skills/loanslam-operator/references/failure-triage.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of operator reference."
+  - path: ".claude/skills/loanslam-operator/references/orient.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of operator reference."
+  - path: ".claude/skills/loanslam-operator/references/release.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of high-risk release guidance."
+  - path: ".claude/skills/loanslam-operator/references/secrets.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of secret handling guidance."
+  - path: ".claude/skills/loanslam-operator/references/verification.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of verification guidance."
+  - path: ".claude/skills/loanslam-operator/references/worktrees.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of worktree guidance."
+  - path: ".claude/skills/loanslam-operator/references/write-scope-guardrails.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility copy of write-scope guidance."
+  - path: ".claude/skills/loanslam-operator/workflows/digest-and-ping.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility workflow."
+  - path: ".claude/skills/loanslam-operator/workflows/hell-week-tune.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility workflow."
+  - path: ".claude/skills/loanslam-operator/workflows/promote-hop.md"
+    state: LAZY-LOAD
+    risk: agent-skill
+    action: "Keep for compatibility."
+    reason: "Compatibility workflow."
+  - path: ".sops.yaml"
+    state: KEEP
+    risk: secrets
+    action: "Keep."
+    reason: "SOPS configuration is active secret infrastructure."
+  - path: "AGENTS.md"
+    state: REWRITE
+    risk: always-loaded
+    action: "Update stale documentation cleanup pointer."
+    reason: "Root agent authority should point to the current cleanup record, not the old June matrix."
+  - path: "CLAUDE.md"
+    state: KEEP
+    risk: always-loaded
+    action: "Keep symlink."
+    reason: "Compatibility entrypoint to AGENTS.md."
+  - path: "CONTEXT.md"
+    state: KEEP
+    risk: always-loaded
+    action: "Keep."
+    reason: "Shared domain vocabulary remains current."
+  - path: "README.md"
+    state: REWRITE
+    risk: always-loaded
+    action: "Update current direction and source-of-truth pointers."
+    reason: "README should expose the integrated POC direction and demote old cleanup records."
+  - path: "artifacts/evidence-index/hell-week-runs.md"
+    state: KEEP
+    risk: evidence
+    action: "Keep."
+    reason: "Compact evidence index; evidence docs are high-risk to delete."
+  - path: "backlog.yml"
+    state: KEEP
+    risk: backlog
+    action: "Keep."
+    reason: "Structured backlog context, not prose sprawl."
+  - path: "docker-compose.postgres.yml"
+    state: KEEP
+    risk: infra
+    action: "Keep."
+    reason: "Local Postgres infrastructure configuration."
+  - path: "docs/core-product-decision-log.yaml"
+    state: KEEP
+    risk: product-doctrine
+    action: "Keep."
+    reason: "Current product decision log."
+  - path: "docs/hell-week-agent-loop-playbook.md"
+    state: KEEP
+    risk: verification
+    action: "Keep."
+    reason: "Current bounded Hell Week tuning loop."
+  - path: "docs/hell-week-gauntlet.md"
+    state: KEEP
+    risk: verification
+    action: "Keep."
+    reason: "Current Hell Week operator guide."
+  - path: "docs/hell-week-measurement-integrity-runway-log-2026-06-20.md"
+    state: LAZY-LOAD
+    risk: evidence
+    action: "Keep as historical evidence."
+    reason: "Dated runway log; useful only when reconstructing Hell Week evidence history."
+  - path: "docs/hell-week-performance-regression-report-2026-06-20.md"
+    state: LAZY-LOAD
+    risk: evidence
+    action: "Keep as historical evidence."
+    reason: "Dated performance report; do not load by default."
+  - path: "docs/llm-turn-planner-architecture.md"
+    state: KEEP
+    risk: architecture
+    action: "Keep."
+    reason: "Canonical Phase 0 engine architecture."
+  - path: "docs/loanslam-operator/01-overview.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/02-architecture.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/03-getting-started.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/04-operations.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/05-proof-and-gates.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/06-workflows.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual section, loaded when needed."
+  - path: "docs/loanslam-operator/07-worktrees-and-promotion.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Promotion guidance is high-risk but useful when explicitly loaded."
+  - path: "docs/loanslam-operator/08-examples.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator examples, loaded when needed."
+  - path: "docs/loanslam-operator/09-reference.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator reference, loaded when needed."
+  - path: "docs/loanslam-operator/10-troubleshooting.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator troubleshooting, loaded when needed."
+  - path: "docs/loanslam-operator/README.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator manual index."
+  - path: "docs/loanslam-operator/qa-checklist.md"
+    state: LAZY-LOAD
+    risk: operator-doc
+    action: "Keep."
+    reason: "Operator QA checklist."
+  - path: "docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-cleanup-prd.md"
+    state: LAZY-LOAD
+    risk: prior-art
+    action: "Moved from docs/prds and marked historical."
+    reason: "Prior cleanup planning record; not active product roadmap."
+  - path: "docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md"
+    state: LAZY-LOAD
+    risk: prior-art
+    action: "Moved from docs/prds and marked historical."
+    reason: "Prior cleanup matrix; superseded by this classification."
+  - path: "docs/non-operational/doc-cleanup/2026-07-01-classification.yaml"
+    state: KEEP
+    risk: cleanup-record
+    action: "Create and keep as current cleanup closeout record."
+    reason: "Current classification matrix required by the July agenda card."
+  - path: "docs/phase-0-core-api-battery.md"
+    state: KEEP
+    risk: verification
+    action: "Keep."
+    reason: "Compact route/API battery guide."
+  - path: "docs/phase-0-static-routing-restraint-audit-2026-06-15.md"
+    state: LAZY-LOAD
+    risk: historical-decision
+    action: "Keep as dated prior art."
+    reason: "Already warns that line numbers and classifications are historical."
+  - path: "docs/prds/2026-06-14-stochastic-test-simulator-prd.md"
+    state: LAZY-LOAD
+    risk: historical-prd
+    action: "Keep as prior art."
+    reason: "STS is implemented; doc is not first-layer context."
+  - path: "docs/prds/2026-06-15-structured-signal-routing-prd.md"
+    state: LAZY-LOAD
+    risk: historical-prd
+    action: "Keep as prior art."
+    reason: "Signal routing history; current behavior still needs live evidence."
+  - path: "docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md"
+    state: KEEP
+    risk: product-safety
+    action: "Keep."
+    reason: "Current display-boundary safety contract."
+  - path: "docs/prds/2026-06-20-application-flow-site-style-parity-prd.md"
+    state: LAZY-LOAD
+    risk: historical-prd
+    action: "Keep as prior art."
+    reason: "Site/app-flow context; not first-layer Phase 0 engine context."
+  - path: "docs/prds/2026-06-20-customer-facing-agent-acceptance-spec.md"
+    state: LAZY-LOAD
+    risk: product-spec
+    action: "Keep as prior art."
+    reason: "Acceptance spec may inform later productisation."
+  - path: "docs/prds/2026-06-20-hell-week-coverage-expansion-spec.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Historical verification expansion spec."
+  - path: "docs/prds/2026-06-20-hell-week-judge-trustworthiness-prd.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Judge trustworthiness history."
+  - path: "docs/prds/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Measurement runway history."
+  - path: "docs/prds/2026-06-20-hell-week-performance-regression-analysis-prd.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Performance regression analysis history."
+  - path: "docs/prds/2026-06-20-hellweek-judge-foundation-handoff.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as handoff prior art."
+    reason: "Historical judge foundation handoff."
+  - path: "docs/prds/2026-06-20-repository-surface-audit-prd.md"
+    state: LAZY-LOAD
+    risk: audit-prd
+    action: "Keep as prior art."
+    reason: "Repository audit setup record."
+  - path: "docs/prds/2026-06-20-site-widget-integration-architecture-prd.md"
+    state: LAZY-LOAD
+    risk: architecture-prd
+    action: "Keep as prior art until integrated POC supersedes it."
+    reason: "Widget-adapter architecture is due for sunset after integrated POC completion."
+  - path: "docs/prds/2026-06-20-static-runtime-code-health-audit-prd.md"
+    state: LAZY-LOAD
+    risk: audit-prd
+    action: "Keep as prior art."
+    reason: "Runtime code-health audit setup record."
+  - path: "docs/prds/2026-06-20-test-signal-trust-strategy-spec.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Test signal strategy history."
+  - path: "docs/prds/2026-06-20-website-copy-config-prd.md"
+    state: LAZY-LOAD
+    risk: site-prd
+    action: "Keep as prior art."
+    reason: "Website copy/config context."
+  - path: "docs/prds/2026-06-21-calibration-foundations-spec.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Calibration history."
+  - path: "docs/prds/2026-06-21-engine-safety-guard-robustness-spec.md"
+    state: LAZY-LOAD
+    risk: safety-spec
+    action: "Keep as prior art."
+    reason: "Safety-guard robustness history."
+  - path: "docs/prds/2026-06-21-judge-trust-release-candidate-arc-prd.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "Judge trust release-candidate arc history."
+  - path: "docs/prds/2026-06-21-release-gate-stability-and-demo-readiness-spec.md"
+    state: LAZY-LOAD
+    risk: release-spec
+    action: "Keep as prior art."
+    reason: "Release gate stability history."
+  - path: "docs/prds/2026-06-21T090837Z-hell-week-openai-judge-and-safety-runway.md"
+    state: LAZY-LOAD
+    risk: verification-spec
+    action: "Keep as prior art."
+    reason: "OpenAI judge and safety runway history."
+  - path: "docs/prds/2026-06-29-validator-layer-quality-review.md"
+    state: LAZY-LOAD
+    risk: review-doc
+    action: "Keep as prior art."
+    reason: "Recent validator-layer review; may guide hardening but not first-layer context."
+  - path: "docs/prds/2026-06-30-integrated-poc-reference.md"
+    state: KEEP
+    risk: current-roadmap
+    action: "Keep."
+    reason: "Current integrated POC reference and direction."
+  - path: "docs/prds/2026-07-01-documentation-cleanup-agenda-card.md"
+    state: KEEP
+    risk: current-agenda
+    action: "Keep."
+    reason: "Approved cleanup agenda for this slice."
+  - path: "docs/product-brief.md"
+    state: KEEP
+    risk: product-doctrine
+    action: "Keep; defer high-risk doctrine rewrite."
+    reason: "Product and safety boundary remains active even where historical delivery wording needs owner review."
+  - path: "docs/reports/2026-06-20-repository-surface-audit.md"
+    state: LAZY-LOAD
+    risk: audit-report
+    action: "Keep as historical report."
+    reason: "Repository surface audit evidence; not first-layer context."
+  - path: "docs/reports/2026-06-20-static-runtime-code-health-audit.md"
+    state: LAZY-LOAD
+    risk: audit-report
+    action: "Keep as historical report."
+    reason: "Runtime code-health report; not first-layer context."
+  - path: "docs/reports/2026-06-23-full-repo-code-review.md"
+    state: LAZY-LOAD
+    risk: audit-report
+    action: "Keep as historical report."
+    reason: "Full repo review report; not first-layer context."
+  - path: "docs/reusable-worktree-branch-cicd-protocol.md"
+    state: KEEP
+    risk: operations
+    action: "Keep."
+    reason: "Current reusable worktree and promotion protocol."
+  - path: "docs/stochastic-test-simulator-guide.md"
+    state: KEEP
+    risk: verification
+    action: "Keep."
+    reason: "Current STS operator guide."
+  - path: "packages/demo-host/README.md"
+    state: KEEP
+    risk: package-doc
+    action: "Keep."
+    reason: "Current Loanslam demo-host guide."
+  - path: "packages/review-host/README.md"
+    state: LAZY-LOAD
+    risk: legacy-package-doc
+    action: "Keep while just review exists."
+    reason: "Explicitly framed as legacy review-only surface."
+  - path: "qa.yaml"
+    state: KEEP
+    risk: verification-config
+    action: "Keep."
+    reason: "Structured QA config."
+  - path: "scripts/hooks/README.md"
+    state: KEEP
+    risk: tooling-doc
+    action: "Keep."
+    reason: "Hook documentation for local tooling."
+  - path: "secrets/README.md"
+    state: KEEP
+    risk: secrets
+    action: "Keep."
+    reason: "Canonical secret workflow documentation."
+  - path: "site/docs/2026-06-20-application-flow-link-audit.md"
+    state: LAZY-LOAD
+    risk: site-report
+    action: "Keep as site-specific historical audit."
+    reason: "Useful only when working on the site/app-flow surface."
+  - path: "site/docs/live-application-capture/README.md"
+    state: LAZY-LOAD
+    risk: site-evidence
+    action: "Keep as site-specific capture index."
+    reason: "Useful only when working on the site/app-flow surface."

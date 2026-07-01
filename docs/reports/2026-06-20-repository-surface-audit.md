@@ -89,7 +89,7 @@ Current authority stack:
    full productisation resumes.
 4. `README.md` is the normal front door and command map, but not the final
    authority where it conflicts with current files or the docs audit matrix.
-5. `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md` is the
+5. `docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md` is the
    current documentation cleanup decision record.
 6. `docs/hell-week-gauntlet.md`, `docs/hell-week-agent-loop-playbook.md`,
    `docs/stochastic-test-simulator-guide.md`, and
@@ -226,7 +226,7 @@ Current source-of-truth docs:
 - `docs/hell-week-agent-loop-playbook.md`
 - `docs/stochastic-test-simulator-guide.md`
 - `artifacts/evidence-index/hell-week-runs.md`
-- `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`
+- `docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md`
 - `secrets/README.md`
 
 Drift observed:
