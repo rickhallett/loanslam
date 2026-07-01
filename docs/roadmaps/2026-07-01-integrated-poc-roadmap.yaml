@@ -4,25 +4,26 @@ status: active
 updated: 2026-07-01
 source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
-active_arc: ipoc-arc-002
-active_slice: ipoc-handoff-capture-01
-active_slice_status: completed
+active_arc: ipoc-arc-003
+active_slice: ipoc-customer-lookup-01
+active_slice_status: ready
 latest_proof_receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
-active_agenda_card: docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md
+active_agenda_card: docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
 branch:
   base: dev
   implementation: feature/ipoc-golden-path-01
   worktree: .claude/worktrees/ipoc-golden-path-01
 proof_of_work_labels:
   epic: ipoc
-  slice: ipoc-handoff-capture-01
-  arc: ipoc-arc-002
-  human_checkpoint: final-review
+  slice: ipoc-customer-lookup-01
+  arc: ipoc-arc-003
+  human_checkpoint: arc-closeout
 doctrine:
   - CONTEXT.md
   - docs/core-product-decision-log.yaml
   - docs/prds/2026-06-30-integrated-poc-reference.md
   - docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
+  - docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
   - docs/llm-turn-planner-architecture.md
 first_dependency_chain:
   - id: ipoc-001-roadmap-and-scaffold
@@ -126,12 +127,77 @@ handoff_capture_chain:
       - Receipt names commands, local URLs, screenshots or artifacts, and commit hashes.
       - Static tests are not presented as behavior proof.
     receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
+arc_003_chain:
+  # Batch-authorized arc: human green-light given upfront 2026-07-01 (D037/D038).
+  # Machine gates between slices; per-slice proof receipts; human checkpoint at arc closeout.
+  - id: ipoc-010-customer-lookup
+    slice_label: ipoc-customer-lookup-01
+    status: ready
+    depends_on:
+      - ipoc-009-capture-browser-proof
+    summary: Read-only existing-customer lookup against synthetic mock records.
+    write_scope:
+      - packages/integrated-poc/
+    proof_bar:
+      - Lookup matches on fullName, dateOfBirth, address, and loanReference only (D038).
+      - No match discloses no data and degrades to the current safe handoff path.
+      - Mock records are synthetic, in-memory, and never real PII.
+  - id: ipoc-011-account-answers
+    slice_label: ipoc-account-answers-01
+    status: pending
+    depends_on:
+      - ipoc-010-customer-lookup
+    summary: Read-only account-answer demo from the matched mock record.
+    write_scope:
+      - packages/integrated-poc/
+    proof_bar:
+      - Answer set is nextPaymentDate, outstandingBalance, and loanStatus only (D038 default).
+      - Answers render server-side from the mock record; browser never receives the full record.
+      - No account action or write-capable flow is introduced.
+  - id: ipoc-012-admin-workflow
+    slice_label: ipoc-admin-workflow-01
+    status: pending
+    depends_on:
+      - ipoc-009-capture-browser-proof
+    summary: Admin/human-agent workflow improvements — ticket status transitions, notes, lookup/answer activity.
+    write_scope:
+      - packages/integrated-poc/
+    proof_bar:
+      - Admin readback shows ticket status transitions, agent notes, and lookup/answer activity.
+      - Ticket store remains thin and in-memory.
+  - id: ipoc-013-integration-proof
+    slice_label: ipoc-integration-proof-01
+    status: pending
+    depends_on:
+      - ipoc-011-account-answers
+      - ipoc-012-admin-workflow
+    summary: Browser-proof batch plus Hell Week battery extension for lookup and answer paths.
+    write_scope:
+      - artifacts/integrated-poc/
+      - docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml
+    proof_bar:
+      - Receipts name commands, local URLs, screenshots or artifacts, and commit hashes.
+      - Hell Week battery covers lookup and account-answer paths using the OpenAI provider ladder.
+      - Static tests are not presented as behavior proof.
+  - id: ipoc-014-adapter-sunset-assessment
+    slice_label: ipoc-adapter-sunset-01
+    status: pending
+    depends_on:
+      - ipoc-013-integration-proof
+    summary: Widget-adapter sunset assessment — written recommendation with evidence, no deletion.
+    write_scope:
+      - docs/
+    proof_bar:
+      - Assessment names what the Integrated POC now covers, what the adapter still uniquely provides, and a recommendation.
+      - Acting on the recommendation remains behind a human gate.
 human_gates:
   - choosing a framework other than the Nuxt/Vue Integrated POC app direction
   - abandoning the separate Integrated POC app/package
   - changing the Customer-Visible Contract instead of porting it
   - adding real auth, PII persistence, CRM, SoloSight, webhook, deployment, or secret changes
-  - expanding into existing-customer lookup, account answers, or account actions
+  - expanding into account actions or any write-capable account flow (read-only
+    existing-customer lookup and the D038 answer set were authorized 2026-07-01)
+  - expanding lookup fields or the demoable answer set beyond D037/D038
   - promoting a branch with inherited ENGINE risk without the required integration proof
 stop_conditions:
   - app scaffold requires mutating site or widget-adapter packages

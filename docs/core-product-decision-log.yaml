@@ -513,3 +513,33 @@ decisions:
       Implementation must not start from this chat thread or from the integrated POC
       reference memo alone.
     status: accepted
+  - id: D037
+    date: 2026-07-01
+    topic: Arc-level batch authorization and existing-customer lookup gate
+    question: May the Integrated POC expand into existing-customer lookup and
+      read-only account answers, and may an arc run multiple slices without
+      per-slice human green-lights?
+    accepted_answer: Yes, upfront, for ipoc-arc-003. Read-only existing-customer
+      lookup and read-only account answers are authorized against synthetic mock
+      records only, held in the thin in-memory store. Account actions and any
+      write-capable account flow remain behind a human gate. The arc runs all its
+      slices under machine gates (gate-slice, verify, branch-risk) with per-slice
+      proof receipts; the human checkpoint moves to arc closeout. Invariant gates
+      (PII, auth, CRM/SoloSight/webhook, deployment, secrets, engine/validator/
+      contract semantics, promotion with ENGINE risk) are unchanged and still
+      interrupt the run.
+    status: accepted
+  - id: D038
+    date: 2026-07-01
+    topic: Lookup field set and demoable answer set
+    question: Which fields identify an existing customer for the demo lookup, and
+      which account answers are demoable?
+    accepted_answer: Lookup matches on fullName, dateOfBirth, address, and
+      loanReference. Full address supersedes postcode for this lookup surface by
+      explicit human decision, resolving the prior postcode-to-address gate for
+      lookup matching only; the handoff capture form contract is unchanged. The
+      demoable answer set defaults to nextPaymentDate, outstandingBalance, and
+      loanStatus; this default was agent-proposed and human-delegated, so it may
+      be shrunk without a new decision but not expanded. Lookup is demo
+      identification against synthetic records, not identity verification.
+    status: accepted
