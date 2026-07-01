@@ -40,6 +40,26 @@ export interface IpocLookupResponse {
   messages: IpocChatMessage[];
 }
 
+// Demoable answer set per D038: shrinkable without a new decision, not expandable.
+export const ipocAccountQuestions = [
+  "nextPaymentDate",
+  "outstandingBalance",
+  "loanStatus",
+] as const;
+
+export type IpocAccountQuestion = (typeof ipocAccountQuestions)[number];
+
+export interface IpocAccountAnswerRequest {
+  question: IpocAccountQuestion;
+}
+
+export interface IpocAccountAnswerResponse {
+  conversationRef: string;
+  question: IpocAccountQuestion;
+  answer: string;
+  messages: IpocChatMessage[];
+}
+
 export interface IpocChatMessage {
   id: string;
   role: "customer" | "assistant" | "system";

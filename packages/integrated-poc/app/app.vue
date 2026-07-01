@@ -110,6 +110,21 @@
             Matched demo record {{ matchedCustomer.loanReference }} for
             {{ matchedCustomer.fullName }}.
           </p>
+          <div
+            v-if="matchedCustomer"
+            class="answer-actions"
+            aria-label="Read-only demo account questions"
+          >
+            <button
+              v-for="action in accountQuestionInputs"
+              :key="action.question"
+              type="button"
+              :disabled="isAsking"
+              @click="askAccountQuestion(action.question)"
+            >
+              {{ action.label }}
+            </button>
+          </div>
           <p v-else-if="lookupAttempted && !isLookingUp" class="status error">
             No matching demo record. No account information is available; the
             safe handoff path is still open.
@@ -198,6 +213,8 @@
 
 <script setup lang="ts">
 import type {
+  IpocAccountAnswerResponse,
+  IpocAccountQuestion,
   IpocChatMessage,
   IpocHandoffField,
   IpocHandoffIntake,
@@ -230,6 +247,17 @@ const isLookingUp = ref(false);
 const lookupAttempted = ref(false);
 const matchedCustomer = ref<IpocLookupResponse["customer"]>(null);
 const lookupFields = ref<IpocLookupFieldValues>(defaultLookupFields());
+
+const isAsking = ref(false);
+
+const accountQuestionInputs: Array<{
+  question: IpocAccountQuestion;
+  label: string;
+}> = [
+  { question: "nextPaymentDate", label: "Next payment date" },
+  { question: "outstandingBalance", label: "Outstanding balance" },
+  { question: "loanStatus", label: "Loan status" },
+];
 
 const lookupFieldInputs: Array<{
   name: IpocLookupField;
@@ -411,6 +439,31 @@ async function submitLookup() {
       error instanceof Error ? error.message : "The lookup route failed.";
   } finally {
     isLookingUp.value = false;
+  }
+}
+
+async function askAccountQuestion(question: IpocAccountQuestion) {
+  if (!conversationRef.value || !matchedCustomer.value) {
+    return;
+  }
+
+  isAsking.value = true;
+  errorMessage.value = null;
+
+  try {
+    const response = await $fetch<IpocAccountAnswerResponse>(
+      `/api/ipoc/sessions/${encodeURIComponent(conversationRef.value)}/account-answers`,
+      {
+        method: "POST",
+        body: { question },
+      },
+    );
+    messages.value = response.messages;
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : "The account answer route failed.";
+  } finally {
+    isAsking.value = false;
   }
 }
 

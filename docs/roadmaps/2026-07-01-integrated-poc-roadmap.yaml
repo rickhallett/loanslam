@@ -5,8 +5,8 @@ updated: 2026-07-01
 source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
 active_arc: ipoc-arc-003
-active_slice: ipoc-customer-lookup-01
-active_slice_status: ready
+active_slice: ipoc-account-answers-01
+active_slice_status: active
 latest_proof_receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
 active_agenda_card: docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
 branch:
@@ -145,7 +145,8 @@ arc_003_chain:
       - Mock records are synthetic, in-memory, and never real PII.
   - id: ipoc-011-account-answers
     slice_label: ipoc-account-answers-01
-    status: pending
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-account-answers-01-proof.md
     depends_on:
       - ipoc-010-customer-lookup
     summary: Read-only account-answer demo from the matched mock record.

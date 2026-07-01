@@ -241,6 +241,27 @@ textarea {
   cursor: pointer;
 }
 
+.answer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.answer-actions button {
+  border: 1px solid #245c4d;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #245c4d;
+  background: #f2f7f5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.answer-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .composer textarea {
   width: 100%;
   resize: vertical;
