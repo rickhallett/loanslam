@@ -1,0 +1,18 @@
+{
+  "name": "@loanslam/integrated-poc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@loanslam/contracts": "0.0.0",
+    "@loanslam/core": "0.0.0",
+    "nuxt": "^4.4.8",
+    "vue": "^3.5.24"
+  }
+}

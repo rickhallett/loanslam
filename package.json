@@ -46,7 +46,10 @@
     "review-widget:dev": "npm --workspace @loanslam/review-widget run dev",
     "review-widget:build": "npm --workspace @loanslam/review-widget run build",
     "review-host:dev": "npm --workspace @loanslam/review-host run dev",
-    "review-host:build": "npm --workspace @loanslam/review-host run build"
+    "review-host:build": "npm --workspace @loanslam/review-host run build",
+    "integrated-poc:dev": "npm --workspace @loanslam/integrated-poc run dev",
+    "integrated-poc:build": "npm --workspace @loanslam/integrated-poc run build",
+    "integrated-poc:typecheck": "npm --workspace @loanslam/integrated-poc run typecheck"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
