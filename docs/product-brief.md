@@ -43,7 +43,9 @@ The MVP succeeds if it can:
 - **persist a full, reviewable audit trail of every inbound and outbound message** (the one non-negotiable compliance requirement)
 - avoid direct customer-record mutation
 - keep all business and safety decisions on the backend
-- **be live and deployed on AWS** within the 30-day deadline
+- for the original MVP baseline, be deployable to the owned production surface;
+  the historical 30-day AWS target is not the current Phase 0 implementation
+  gate
 
 ## 3. Target Users
 
@@ -332,9 +334,11 @@ Each slice should include product behaviour, safety boundary, backend decisionin
 
 ## 15. Open Decisions
 
-The core product cannot be safely released until these decisions are owned:
+The core product cannot be safely released beyond Phase 0 / integrated POC
+demonstration until these decisions are owned:
 
-- **the AWS surface available** (which services, who owns the deployment pipeline)
+- **the production deployment surface** (AWS was the original assumption; the
+  owner must still choose services and deployment ownership before release)
 - **the ticket webhook contract** (payload, queue, priority, auth, confirmation copy)
 - **the canned-response corpus** (format, size, how it is delivered and refreshed)
 - the approved knowledge base and grounding policy
@@ -360,7 +364,9 @@ The core product cannot be safely released until these decisions are owned:
 - Do not treat identity intake as customer verification.
 - Do not collect or action bank/payment credentials (sort code, account number); standard handoff PII (name, DOB, address, phone, email, situational context) is permitted.
 - **Do not drop any inbound or outbound message from the audit trail.**
-- Must be live and deployed on AWS by the 30-day deadline.
+- Before production release, the deployment surface, owner, and operational
+  controls must be explicitly owned. The original 30-day AWS deadline is
+  historical context, not the current Phase 0 gate.
 
 ## 17. Learning Over Time
 

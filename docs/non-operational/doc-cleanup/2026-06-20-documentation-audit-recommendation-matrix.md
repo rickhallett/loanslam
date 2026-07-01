@@ -85,7 +85,7 @@ evidence, or product-reconstruction reason to keep a Markdown receipt.
 | P1 | EDIT | `packages/review-host/README.md` | Legacy MAL review demo guide | `packages/review-host`, `packages/review-widget`, and `just review` exist, but MAL branding can over-steer future Loanslam context. | Keep while `just review` exists; add clearer legacy/review-only framing or remove with the review packages later. |
 | P1 | KEEP | `secrets/README.md` | Secret workflow guide | Commands match `just secrets-*`; aligns with `AGENTS.md` secret discipline. | Keep. |
 | P1 | KEEP | `site/docs/live-application-capture/README.md` | Site/application capture index | Current 2026-06-20 capture for offline/static customer-journey prototype; scoped to site work. | Keep as source index for the local apply-flow prototype. |
-| P2 | EDIT | `docs/phase-0-static-routing-restraint-audit-2026-06-15.md` | Dated static-restraint decision note | Contains useful principle, but claims file-by-file checked line numbers from 2026-06-15. Code and evidence surfaces have moved since then. | Keep only if edited into a dated decision note. Remove line-number authority or mark as historical. |
+| P2 | DELETE | `docs/phase-0-static-routing-restraint-audit-2026-06-15.md` | Dated static-restraint decision note | Contains useful principle, but claims file-by-file checked line numbers from 2026-06-15. Code and evidence surfaces have moved since then. | Deleted in the 2026-07-01 cleanup after promoting the durable static-vs-live evidence rule into `docs/llm-turn-planner-architecture.md`. |
 | P2 | DELETE | `docs/prds/2026-06-13-phase-0-engine-stakeholder-readiness-prd.md` | Completed readiness PRD | Later docs, Hell Week, demo display boundary, and DB-backed evidence supersede this readiness runway. | Delete after confirming no unique current decision remains. |
 | P2 | DELETE | `docs/prds/2026-06-15-llm-centric-intelligence-prd.md` | Broad strategic PRD | Useful historical frame, but too broad for active context. Distilled direction lives in structured signal routing and architecture docs. | Delete from normal context. |
 | P2 | DELETE | `docs/prds/2026-06-15-markdown-context-pruning-spec.md` | Stale prior pruning spec | It references deleted files such as `docs/architecture.md`, old superpowers docs, and many artifact summaries. This matrix supersedes it. | Delete after `AGENTS.md` and README no longer point at it. |
@@ -126,10 +126,10 @@ evidence, or product-reconstruction reason to keep a Markdown receipt.
    - Repair any references revealed by `rg` after deletion.
 
 4. **Optional demotion slice**
-   - Either edit `docs/phase-0-static-routing-restraint-audit-2026-06-15.md`
-     into a dated decision note or delete it after promoting its one durable
-     rule into the architecture doc: static tests guard hard invariants; live
-     model-backed evidence owns natural-language routing quality.
+   - Closed in the 2026-07-01 cleanup: the dated static-routing audit was
+     deleted after promoting its one durable rule into the architecture doc.
+     Static tests guard hard invariants; live model-backed evidence owns
+     natural-language routing quality.
 
 ## Verification Commands For Cleanup
 

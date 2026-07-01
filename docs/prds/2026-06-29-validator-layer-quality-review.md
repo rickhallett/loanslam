@@ -36,12 +36,10 @@ conservative guard semantics. Every step here is order- and behaviour-preserving
 
 - `docs/llm-turn-planner-architecture.md` — the architecture contract ("the LLM
   may reason; it does not own compliance"; the validator is a policy/contract
-  backstop, not a UX critic). Finding P1 is a gap between this doc and the code.
-- `docs/phase-0-static-routing-restraint-audit-2026-06-15.md` — the static-restraint
-  doctrine (keep static restraints only for tiny non-negotiable
-  safety/schema/determinism invariants; demote NL-routing regex to judge/live-session
-  evidence). The registry's `authority` field is where this doctrine becomes
-  enforceable rather than a dated note.
+  backstop, not a UX critic; static checks guard hard invariants while live
+  evidence owns natural-language routing quality). Finding P1 is a gap between
+  this doc and the code. The registry's `authority` field is where this doctrine
+  becomes enforceable rather than a dated note.
 - Complements, does not supersede,
   `docs/prds/2026-06-21-engine-safety-guard-robustness-spec.md` and
   `docs/prds/2026-06-20-static-runtime-code-health-audit-prd.md`.

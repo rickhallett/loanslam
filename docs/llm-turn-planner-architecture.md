@@ -208,6 +208,19 @@ the product what later audit storage should preserve.
 Live lab API evidence is the highest-value signal for user-visible routing
 behaviour. Static fixtures are useful, but they are not enough by themselves.
 
+## Static invariants and live routing evidence
+
+Static checks may guard tiny non-negotiable invariants: schema compatibility,
+deterministic fallback behavior, forbidden credential collection, account-fact
+invention, UI/action contracts, and trace/report shape. They should not become
+the judge for natural-language routing quality.
+
+Natural-language routing quality belongs to live evidence: lab API sessions,
+journey simulations, Hell Week captures, and judged transcript/trace reviews.
+Regex phrase matching, lexical cue sets, score boosts, and wording-specific test
+assertions may be useful as signals or local scaffolding, but they are not
+release proof for customer-visible routing behavior.
+
 ## Failure behaviour
 
 Failure should be boring and safe:

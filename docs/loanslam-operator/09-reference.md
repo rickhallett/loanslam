@@ -74,6 +74,5 @@
 | `docs/hell-week-agent-loop-playbook.md` | the bounded autonomous loop |
 | `docs/hell-week-gauntlet.md` | the run + grading model |
 | `docs/phase-0-core-api-battery.md` | the cheap lab-API path |
-| `docs/llm-turn-planner-architecture.md` | the engine / owners |
-| `docs/phase-0-static-routing-restraint-audit-2026-06-15.md` | the BURN guardrail |
+| `docs/llm-turn-planner-architecture.md` | the engine / owners / static-vs-live evidence rule |
 | `AGENTS.md` | branch / worktree / secret / provider doctrine |
