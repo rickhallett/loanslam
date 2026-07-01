@@ -262,6 +262,79 @@ textarea {
   opacity: 0.55;
 }
 
+.workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workflow-actions button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  background: #245c4d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.workflow-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ticket-activity ul,
+.ticket-notes ul {
+  margin: 8px 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.ticket-activity h3,
+.ticket-notes h3 {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+}
+
+.activity-kind {
+  font-weight: 700;
+  color: #245c4d;
+  margin-right: 6px;
+}
+
+.ticket-notes form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ticket-notes textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #cbd4da;
+  border-radius: 8px;
+  padding: 10px;
+  color: #1b1d1f;
+  background: #ffffff;
+}
+
+.ticket-notes button {
+  justify-self: start;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  background: #245c4d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ticket-notes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .composer textarea {
   width: 100%;
   resize: vertical;

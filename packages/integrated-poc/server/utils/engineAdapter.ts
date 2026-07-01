@@ -85,6 +85,7 @@ export function maybeBuildTicketFromTurn({
       piiPolicy: "raw_customer_message_omitted",
     },
     structuredIntake: null,
+    agentNotes: [],
     engine: {
       finalAction: result.finalAction,
       uiPrimitive: result.ui.primitive,

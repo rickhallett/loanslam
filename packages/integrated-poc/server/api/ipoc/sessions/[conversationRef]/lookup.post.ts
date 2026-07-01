@@ -10,6 +10,7 @@ import {
   appendMessage,
   findMockCustomer,
   getIpocSession,
+  recordSessionActivity,
 } from "../../../../utils/ipocStore";
 
 export default defineEventHandler(
@@ -46,6 +47,11 @@ export default defineEventHandler(
 
     if (!record) {
       session.matchedLoanReference = null;
+      recordSessionActivity(
+        session,
+        "lookup_no_match",
+        "Demo lookup did not match a record; no data disclosed.",
+      );
       appendMessage(session, {
         role: "assistant",
         content:
@@ -61,6 +67,11 @@ export default defineEventHandler(
     }
 
     session.matchedLoanReference = record.loanReference;
+    recordSessionActivity(
+      session,
+      "lookup_matched",
+      `Matched demo record ${record.loanReference}.`,
+    );
     appendMessage(session, {
       role: "assistant",
       content: `Thanks ${record.fullName}, I've matched demo record ${record.loanReference}. I can answer read-only demo questions about your next payment date, outstanding balance, or loan status.`,

@@ -3,10 +3,14 @@ import { randomUUID } from "node:crypto";
 import type { ConversationState, TurnTrace } from "@loanslam/contracts";
 
 import type {
+  IpocActivityEvent,
+  IpocActivityKind,
+  IpocAdminTicket,
   IpocChatMessage,
   IpocHandoffIntake,
   IpocLookupFieldValues,
   IpocTicket,
+  IpocTicketStatus,
 } from "../../shared/ipoc";
 
 export interface IpocSession {
@@ -14,6 +18,7 @@ export interface IpocSession {
   traces: TurnTrace[];
   messages: IpocChatMessage[];
   matchedLoanReference: string | null;
+  activity: IpocActivityEvent[];
 }
 
 export interface IpocMockCustomerRecord {
@@ -96,6 +101,7 @@ export function createIpocSession(now = new Date()): IpocSession {
     },
     traces: [],
     matchedLoanReference: null,
+    activity: [],
     messages: [
       {
         id: randomUUID(),
@@ -152,7 +158,8 @@ export function updateIpocTicketIntake({
 
   const updatedTicket: IpocTicket = {
     ...ticket,
-    status: "intake_captured",
+    // Only advance open tickets; never regress an in_review/resolved ticket.
+    status: ticket.status === "open" ? "intake_captured" : ticket.status,
     structuredIntake: {
       fields,
       capturedAt: capturedAt.toISOString(),
@@ -163,8 +170,88 @@ export function updateIpocTicketIntake({
   return updatedTicket;
 }
 
-export function listIpocTickets(): IpocTicket[] {
-  return [...tickets.values()].sort((left, right) =>
-    right.createdAt.localeCompare(left.createdAt),
-  );
+export function recordSessionActivity(
+  session: IpocSession,
+  kind: IpocActivityKind,
+  detail: string,
+  now = new Date(),
+): IpocActivityEvent {
+  const event: IpocActivityEvent = {
+    id: randomUUID(),
+    kind,
+    detail,
+    createdAt: now.toISOString(),
+  };
+  session.activity.push(event);
+  return event;
+}
+
+const allowedStatusTransitions: Record<IpocTicketStatus, IpocTicketStatus[]> = {
+  open: ["in_review"],
+  intake_captured: ["in_review"],
+  in_review: ["resolved"],
+  resolved: [],
+};
+
+export type TicketStatusUpdateResult =
+  | { ok: true; ticket: IpocTicket }
+  | { ok: false; reason: "not_found" | "invalid_transition"; from?: IpocTicketStatus };
+
+export function updateIpocTicketStatus(
+  ticketId: string,
+  status: IpocTicketStatus,
+): TicketStatusUpdateResult {
+  const ticket = tickets.get(ticketId);
+
+  if (!ticket) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  if (!allowedStatusTransitions[ticket.status].includes(status)) {
+    return { ok: false, reason: "invalid_transition", from: ticket.status };
+  }
+
+  const updated: IpocTicket = { ...ticket, status };
+  tickets.set(ticketId, updated);
+  return { ok: true, ticket: updated };
+}
+
+export function addIpocTicketNote(
+  ticketId: string,
+  note: string,
+  now = new Date(),
+): IpocTicket | null {
+  const ticket = tickets.get(ticketId);
+
+  if (!ticket) {
+    return null;
+  }
+
+  const updated: IpocTicket = {
+    ...ticket,
+    agentNotes: [
+      ...ticket.agentNotes,
+      { id: randomUUID(), note, createdAt: now.toISOString() },
+    ],
+  };
+  tickets.set(ticketId, updated);
+  return updated;
+}
+
+export function getIpocAdminTicket(ticketId: string): IpocAdminTicket | null {
+  const ticket = tickets.get(ticketId);
+  return ticket ? withActivity(ticket) : null;
+}
+
+export function listIpocTickets(): IpocAdminTicket[] {
+  return [...tickets.values()]
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .map(withActivity);
+}
+
+function withActivity(ticket: IpocTicket): IpocAdminTicket {
+  return {
+    ...ticket,
+    activity: sessions.get(ticket.conversationRef)?.activity ?? [],
+  };
 }

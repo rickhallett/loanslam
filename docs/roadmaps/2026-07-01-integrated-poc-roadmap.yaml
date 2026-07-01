@@ -5,7 +5,7 @@ updated: 2026-07-01
 source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
 active_arc: ipoc-arc-003
-active_slice: ipoc-account-answers-01
+active_slice: ipoc-admin-workflow-01
 active_slice_status: active
 latest_proof_receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
 active_agenda_card: docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
@@ -158,7 +158,8 @@ arc_003_chain:
       - No account action or write-capable flow is introduced.
   - id: ipoc-012-admin-workflow
     slice_label: ipoc-admin-workflow-01
-    status: pending
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-admin-workflow-01-proof.md
     depends_on:
       - ipoc-009-capture-browser-proof
     summary: Admin/human-agent workflow improvements — ticket status transitions, notes, lookup/answer activity.

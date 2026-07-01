@@ -106,11 +106,47 @@ export interface IpocStructuredIntake {
   piiPolicy: "synthetic_demo_fields_only";
 }
 
+export type IpocTicketStatus =
+  | "open"
+  | "intake_captured"
+  | "in_review"
+  | "resolved";
+
+export interface IpocAgentNote {
+  id: string;
+  note: string;
+  createdAt: string;
+}
+
+export type IpocActivityKind =
+  | "lookup_matched"
+  | "lookup_no_match"
+  | "account_answer";
+
+export interface IpocActivityEvent {
+  id: string;
+  kind: IpocActivityKind;
+  detail: string;
+  createdAt: string;
+}
+
+export interface IpocUpdateTicketStatusRequest {
+  status: IpocTicketStatus;
+}
+
+export interface IpocAddTicketNoteRequest {
+  note: string;
+}
+
+export interface IpocAdminTicketResponse {
+  ticket: IpocAdminTicket;
+}
+
 export interface IpocTicket {
   id: string;
   conversationRef: string;
   requestRef: string | null;
-  status: "open" | "intake_captured";
+  status: IpocTicketStatus;
   queue: "support";
   createdAt: string;
   customerContext: {
@@ -128,8 +164,13 @@ export interface IpocTicket {
   };
   structuredIntake: IpocStructuredIntake | null;
   assistantPreview: string;
+  agentNotes: IpocAgentNote[];
+}
+
+export interface IpocAdminTicket extends IpocTicket {
+  activity: IpocActivityEvent[];
 }
 
 export interface IpocTicketListResponse {
-  tickets: IpocTicket[];
+  tickets: IpocAdminTicket[];
 }

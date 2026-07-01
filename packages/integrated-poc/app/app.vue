@@ -191,6 +191,53 @@
             </div>
           </dl>
           <p>{{ selectedTicket.assistantPreview }}</p>
+
+          <div class="workflow-actions" aria-label="Ticket workflow">
+            <button
+              v-for="transition in availableTransitions"
+              :key="transition.status"
+              type="button"
+              :disabled="isUpdatingTicket"
+              @click="updateTicketStatus(transition.status)"
+            >
+              {{ transition.label }}
+            </button>
+          </div>
+
+          <section
+            v-if="selectedTicket.activity.length > 0"
+            class="ticket-activity"
+            aria-label="Session activity"
+          >
+            <h3>Session activity</h3>
+            <ul>
+              <li v-for="event in selectedTicket.activity" :key="event.id">
+                <span class="activity-kind">{{ event.kind }}</span>
+                {{ event.detail }}
+              </li>
+            </ul>
+          </section>
+
+          <section class="ticket-notes" aria-label="Agent notes">
+            <h3>Agent notes</h3>
+            <ul v-if="selectedTicket.agentNotes.length > 0">
+              <li v-for="note in selectedTicket.agentNotes" :key="note.id">
+                {{ note.note }}
+              </li>
+            </ul>
+            <p v-else class="form-note">No agent notes yet.</p>
+            <form @submit.prevent="addTicketNote">
+              <label for="agent-note">Add note</label>
+              <textarea id="agent-note" v-model="noteDraft" rows="2" />
+              <button
+                type="submit"
+                :disabled="isUpdatingTicket || !noteDraft.trim()"
+              >
+                {{ isUpdatingTicket ? "Saving" : "Add note" }}
+              </button>
+            </form>
+          </section>
+
           <section
             v-if="selectedTicket.structuredIntake"
             class="intake-readback"
@@ -215,6 +262,8 @@
 import type {
   IpocAccountAnswerResponse,
   IpocAccountQuestion,
+  IpocAdminTicket,
+  IpocAdminTicketResponse,
   IpocChatMessage,
   IpocHandoffField,
   IpocHandoffIntake,
@@ -226,6 +275,7 @@ import type {
   IpocSubmitIntakeResponse,
   IpocTicket,
   IpocTicketListResponse,
+  IpocTicketStatus,
 } from "../shared/ipoc";
 
 const defaultMessage =
@@ -233,7 +283,21 @@ const defaultMessage =
 
 const conversationRef = ref<string | null>(null);
 const messages = ref<IpocChatMessage[]>([]);
-const tickets = ref<IpocTicket[]>([]);
+const tickets = ref<IpocAdminTicket[]>([]);
+const noteDraft = ref("");
+const isUpdatingTicket = ref(false);
+
+const transitionLabels: Partial<Record<IpocTicketStatus, string>> = {
+  in_review: "Start review",
+  resolved: "Resolve",
+};
+
+const nextStatuses: Record<IpocTicketStatus, IpocTicketStatus[]> = {
+  open: ["in_review"],
+  intake_captured: ["in_review"],
+  in_review: ["resolved"],
+  resolved: [],
+};
 const selectedTicketId = ref<string | null>(null);
 const draft = ref(defaultMessage);
 const isSending = ref(false);
@@ -310,6 +374,17 @@ const handoffFieldInputs: Array<{
 
 const selectedTicket = computed(() => {
   return tickets.value.find((ticket) => ticket.id === selectedTicketId.value) ?? null;
+});
+
+const availableTransitions = computed(() => {
+  if (!selectedTicket.value) {
+    return [];
+  }
+
+  return nextStatuses[selectedTicket.value.status].map((status) => ({
+    status,
+    label: transitionLabels[status] ?? status,
+  }));
 });
 
 const activeCaptureTicket = computed(() => {
@@ -399,6 +474,57 @@ async function submitIntake() {
       error instanceof Error ? error.message : "The capture route failed.";
   } finally {
     isSubmittingIntake.value = false;
+  }
+}
+
+async function updateTicketStatus(status: IpocTicketStatus) {
+  if (!selectedTicket.value) {
+    return;
+  }
+
+  isUpdatingTicket.value = true;
+  errorMessage.value = null;
+
+  try {
+    await $fetch<IpocAdminTicketResponse>(
+      `/api/ipoc/admin/tickets/${encodeURIComponent(selectedTicket.value.id)}/status`,
+      {
+        method: "POST",
+        body: { status },
+      },
+    );
+    await refreshTickets();
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : "The status update failed.";
+  } finally {
+    isUpdatingTicket.value = false;
+  }
+}
+
+async function addTicketNote() {
+  if (!selectedTicket.value || !noteDraft.value.trim()) {
+    return;
+  }
+
+  isUpdatingTicket.value = true;
+  errorMessage.value = null;
+
+  try {
+    await $fetch<IpocAdminTicketResponse>(
+      `/api/ipoc/admin/tickets/${encodeURIComponent(selectedTicket.value.id)}/notes`,
+      {
+        method: "POST",
+        body: { note: noteDraft.value },
+      },
+    );
+    noteDraft.value = "";
+    await refreshTickets();
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error ? error.message : "The note update failed.";
+  } finally {
+    isUpdatingTicket.value = false;
   }
 }
 

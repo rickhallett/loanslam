@@ -10,6 +10,7 @@ import {
   appendMessage,
   getIpocSession,
   getMockCustomerByLoanReference,
+  recordSessionActivity,
   type IpocMockCustomerRecord,
 } from "../../../../utils/ipocStore";
 
@@ -68,6 +69,11 @@ export default defineEventHandler(
 
     const answer = renderAnswer(question, record);
 
+    recordSessionActivity(
+      session,
+      "account_answer",
+      `Answered ${question} from demo record ${record.loanReference}.`,
+    );
     appendMessage(session, {
       role: "customer",
       content: customerQuestions[question],
