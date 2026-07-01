@@ -8,6 +8,7 @@ active_arc: ipoc-arc-001
 active_slice: ipoc-golden-path-01
 active_slice_status: completed
 latest_proof_receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
+next_agenda_card: docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md
 branch:
   base: dev
   implementation: feature/ipoc-golden-path-01
@@ -105,6 +106,7 @@ stop_conditions:
   - browser proof cannot run through the real app path
   - roadmap, agenda card, implementation diff, and proof receipt disagree
 post_first_chain_touchstones:
+  - handoff capture form and structured intake readback
   - read-only existing-customer/context lookup
   - read-only account-answer demo using mock records
   - agent/admin workflow improvements for handoff review and human readback
