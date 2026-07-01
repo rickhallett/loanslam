@@ -425,4 +425,4 @@ verification (medium and above). Findings cite `file:line` against commit
 `bbf414e`. Severity reflects the verifier-adjusted grade except H6, noted inline.
 This is a dated evidence receipt; supersede or delete it once the listed issues are
 resolved, per the documentation-audit decision rules in
-`docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md`.
+`docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md`.

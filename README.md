@@ -1,9 +1,9 @@
 # Loanslam TurnPlanner Core
 
-> **Status: Phase 0 engine proof with stakeholder demo deployment wiring.** This
+> **Status: Phase 0 engine proof with integrated POC migration queued.** This
 > repo is proving the TurnPlanner engine before productising ticket webhooks or
-> real PII intake. The stakeholder demo now has Vercel deployment wiring and
-> owner-only Postgres interaction logging.
+> real PII intake. Existing widget-adapter demo surfaces remain deployable for
+> demonstrations until the integrated POC becomes the new deployable surface.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
@@ -274,12 +274,16 @@ just site-build
 
 - [Product brief](./docs/product-brief.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
+- [Integrated POC reference](./docs/prds/2026-06-30-integrated-poc-reference.md)
 - [Stakeholder demo safe display boundary](./docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
 - [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
 - [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)
 - [Hell Week evidence index](./artifacts/evidence-index/hell-week-runs.md)
-- [Documentation audit recommendation matrix](./docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md)
+
+Documentation cleanup records live under
+[`docs/non-operational/doc-cleanup/`](./docs/non-operational/doc-cleanup/). They
+are not product or runtime authority unless an active agenda card points at them.
 
 ## Not built in Phase 0
 

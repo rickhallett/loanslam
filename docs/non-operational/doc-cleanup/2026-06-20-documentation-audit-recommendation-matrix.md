@@ -1,5 +1,9 @@
 # Documentation Audit Recommendation Matrix - 2026-06-20
 
+> Historical record. This matrix is prior art for the current cleanup pass. The
+> current cleanup authority is `../../prds/2026-07-01-documentation-cleanup-agenda-card.md`
+> plus `2026-07-01-classification.yaml`.
+
 ## Practical Takeaway
 
 The repository is much smaller than the stale 2026-06-15 pruning spec describes,
@@ -34,9 +38,9 @@ Observed scope:
 
 - 28 tracked Markdown paths from `git ls-files '*.md'`.
 - 29 visible Markdown paths from `rg --files` before this matrix was written,
-  because
-  `docs/prds/2026-06-20-documentation-audit-cleanup-prd.md` is currently
-  untracked.
+  because the 2026-06-20 cleanup PRD was untracked at that point. It now lives
+  beside this file as
+  `2026-06-20-documentation-audit-cleanup-prd.md`.
 - This matrix is the generated audit artifact and becomes the next visible
   Markdown path after the audit write.
 - `CLAUDE.md` is a tracked symlink to `AGENTS.md`.
@@ -75,8 +79,8 @@ evidence, or product-reconstruction reason to keep a Markdown receipt.
 | P1 | KEEP | `docs/prds/2026-06-15-structured-signal-routing-prd.md` | Current route-evidence decision record | Matches live signal extractor/retrieval direction in `packages/core/src/signals` and architecture doc. | Keep as concise decision history. |
 | P1 | KEEP | `docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md` | Demo display-boundary contract | Live code includes `packages/core/src/lab/demoDisplay.ts`, demo state token tests, `/demo` API, and demo/review widgets. | Keep as active safety/display contract. |
 | P1 | KEEP | `docs/prds/2026-06-20-site-widget-integration-architecture-prd.md` | Site/widget integration architecture | Recent site/widget work exists in sibling worktrees; doc clearly separates iframe adapter from future native host API. | Keep, but treat as site integration authority, not Phase 0 engine authority. |
-| P1 | KEEP | `docs/prds/2026-06-20-documentation-audit-cleanup-prd.md` | Audit setup PRD | Currently untracked, but it defines this audit and explicitly demotes the older pruning spec. | Track it with this branch if the audit PRD should remain; otherwise this matrix can supersede it after cleanup lands. |
-| P1 | KEEP | `docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md` | Generated audit artifact | Created by this audit as the current recommendation matrix and `AGENTS.md` backref target. | Keep while cleanup is being executed. After cleanup lands, either keep as the decision record or replace with a shorter docs-health note. |
+| P1 | KEEP | `docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-cleanup-prd.md` | Audit setup PRD | Defines this historical audit and explicitly demotes the older pruning spec. | Kept as prior art after the 2026-07-01 cleanup pass. |
+| P1 | KEEP | `docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md` | Generated audit artifact | Created by this audit as the 2026-06-20 recommendation matrix. | Kept as prior art after the 2026-07-01 cleanup pass. |
 | P1 | KEEP | `packages/demo-host/README.md` | Current Loanslam demo host guide | `packages/demo-host`, `packages/demo-widget`, and `just demo` exist; README describes demo-safe API boundary. | Keep. |
 | P1 | EDIT | `packages/review-host/README.md` | Legacy MAL review demo guide | `packages/review-host`, `packages/review-widget`, and `just review` exist, but MAL branding can over-steer future Loanslam context. | Keep while `just review` exists; add clearer legacy/review-only framing or remove with the review packages later. |
 | P1 | KEEP | `secrets/README.md` | Secret workflow guide | Commands match `just secrets-*`; aligns with `AGENTS.md` secret discipline. | Keep. |
@@ -133,7 +137,7 @@ evidence, or product-reconstruction reason to keep a Markdown receipt.
 git status --short --branch
 git ls-files '*.md' | sort
 rg --files -uu -g '*.md' -g '!node_modules/**' -g '!.git/**' -g '!dist/**' -g '!coverage/**' | sort
-rg -n 'docs/architecture.md|phase-0-human-validation-guide|agent-hell-battery|docs/prds/2026-06-15-markdown-context-pruning-spec|artifacts/phase0/lab-session-notes-2026-06-14.md|artifacts/phase0/cheap-model-quality-probe-2026-06-16T08-17-59Z/report.md|phase-0-lab-api-battery-26-analysis-2026-06-14|phase-0-lab-scenario-analysis-2026-06-14|phase-0-stakeholder-evidence' AGENTS.md README.md docs packages site secrets artifacts -g '*.md' -g '!docs/prds/2026-06-20-documentation-audit-recommendation-matrix.md'
+rg -n 'docs/architecture.md|phase-0-human-validation-guide|agent-hell-battery|docs/prds/2026-06-15-markdown-context-pruning-spec|artifacts/phase0/lab-session-notes-2026-06-14.md|artifacts/phase0/cheap-model-quality-probe-2026-06-16T08-17-59Z/report.md|phase-0-lab-api-battery-26-analysis-2026-06-14|phase-0-lab-scenario-analysis-2026-06-14|phase-0-stakeholder-evidence' AGENTS.md README.md docs packages site secrets artifacts -g '*.md' -g '!docs/non-operational/doc-cleanup/2026-06-20-documentation-audit-recommendation-matrix.md'
 just --list
 npm pkg get scripts --json
 ```
