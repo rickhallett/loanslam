@@ -235,6 +235,62 @@ function pushMessage(role: ChatMessage['role'], text: string, ui: UiPlan | null 
   messages.value.push({ id: nextId++, role, text, ui });
 }
 
+// dc2-003 (D046): the conversation survives full page loads via
+// sessionStorage (per-tab, gone on tab close). Restored transcripts are
+// text-only — interactive UiPlans are not resurrected.
+const STORAGE_KEY = 'mal-chat-state-v1';
+
+function persistState(): void {
+  try {
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        messages: messages.value.map(({ role, text }) => ({ role, text })),
+        sessionRef: sessionRef.value,
+        conciergeSessionRef: conciergeSessionRef.value,
+        activeTicketId: activeTicketId.value,
+        applyIntroDone: applyIntroDone.value,
+        storedContext: storedContext.value,
+        isChatComplete: isChatComplete.value,
+      }),
+    );
+  } catch {
+    // Storage unavailable (private mode, quota): persistence is best-effort.
+  }
+}
+
+function restoreState(): boolean {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const saved = JSON.parse(raw) as {
+      messages?: Array<{ role: ChatMessage['role']; text: string }>;
+      sessionRef?: string | null;
+      conciergeSessionRef?: string | null;
+      activeTicketId?: string | null;
+      applyIntroDone?: boolean;
+      storedContext?: typeof storedContext.value;
+      isChatComplete?: boolean;
+    };
+    if (!saved.messages || saved.messages.length === 0) return false;
+    messages.value = saved.messages.map((entry) => ({
+      id: nextId++,
+      role: entry.role,
+      text: entry.text,
+      ui: null,
+    }));
+    sessionRef.value = saved.sessionRef ?? null;
+    conciergeSessionRef.value = saved.conciergeSessionRef ?? null;
+    activeTicketId.value = saved.activeTicketId ?? null;
+    applyIntroDone.value = saved.applyIntroDone ?? false;
+    storedContext.value = saved.storedContext ?? null;
+    isChatComplete.value = saved.isChatComplete ?? false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function hasRenderableContent(plan: UiPlan): boolean {
   switch (plan.primitive) {
     case 'choice_list':
@@ -469,6 +525,11 @@ function reset(): void {
   applyOfferMessageId.value = null;
   handoffOfferMessageId.value = null;
   messages.value = [];
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // best-effort
+  }
   pushMessage('assistant', WELCOME);
   maybeApplyIntro();
 }
@@ -533,8 +594,13 @@ watch([isApplyRoute, isOpen, conciergeAvailable], () => {
   maybeApplyIntro();
 });
 
+watch(
+  () => [messages.value.length, sessionRef.value, conciergeSessionRef.value] as const,
+  () => persistState(),
+);
+
 onMounted(async () => {
-  pushMessage('assistant', WELCOME);
+  if (!restoreState()) pushMessage('assistant', WELCOME);
   // The loader auto-opens the panel once the widget announces ready; the
   // native panel is ready immediately (deployed-Astro behavior parity).
   if (isContactRoute.value) openPanel();

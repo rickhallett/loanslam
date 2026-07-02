@@ -5,18 +5,18 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
 epic: demo-concierge
 campaign: demo-concierge-002
-active_arc: concierge2-arc-001
-active_slice: concierge-persistence-01
+active_arc: concierge2-arc-002
+active_slice: concierge2-deploy-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-page-context-01-proof.md
+latest_proof_receipt: artifacts/demo-concierge/concierge-persistence-01-proof.md
 branch:
   base: dev
   implementation: feature/demo-concierge-02
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-persistence-01
-  arc: concierge2-arc-001
+  slice: concierge2-deploy-01
+  arc: concierge2-arc-002
   campaign: demo-concierge-002
   human_checkpoint: campaign-closeout
 doctrine:
@@ -58,7 +58,8 @@ arc_001_chain:
         served by the engine.
   - id: dc2-003-persistence
     slice_label: concierge-persistence-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-persistence-01-proof.md
     depends_on:
       - dc2-002-page-context
     summary: Transcript and session refs persist in sessionStorage; restored
