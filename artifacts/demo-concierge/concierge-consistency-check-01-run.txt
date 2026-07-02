@@ -1,0 +1,15 @@
+# concierge-consistency-check-01 run receipt (2026-07-02)
+
+$ node scripts/campaign-consistency-check.mjs docs/roadmaps/2026-07-02-demo-concierge-roadmap.yaml
+docs/roadmaps/2026-07-02-demo-concierge-roadmap.yaml: checked 8 chain items
+consistency check passed (0 warning(s))
+exit: 0
+
+$ node scripts/campaign-consistency-check.mjs docs/roadmaps/2026-07-02-site-nuxt-roadmap.yaml docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml  # observational smoke on shipped epics
+docs/roadmaps/2026-07-02-site-nuxt-roadmap.yaml: checked 12 chain items
+docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml: checked 18 chain items
+FAIL  docs/roadmaps/2026-07-02-site-nuxt-roadmap.yaml: slice sitenuxt-chat-backend-01 touched package-lock.json, outside write_scope [packages/site-nuxt/, packages/integrated-poc/, scripts/]
+FAIL  docs/roadmaps/2026-07-02-site-nuxt-roadmap.yaml: slice sitenuxt-reports-01 touched scripts/site-nuxt-deploy-pack.mjs, outside write_scope [packages/site-nuxt/, artifacts/site-nuxt/]
+FAIL  docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml: slice ipoc-deploy-live-01 touched packages/integrated-poc/.gitignore, outside write_scope [scripts/, package.json, artifacts/integrated-poc/, docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml]
+consistency check FAILED with 3 finding(s)
+exit: 1 (historical true positives; enforcement is forward-looking per the campaign protocol)

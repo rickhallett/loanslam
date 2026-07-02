@@ -6,16 +6,16 @@ source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
 epic: demo-concierge
 campaign: demo-concierge-001
 active_arc: concierge-arc-001
-active_slice: concierge-consistency-check-01
+active_slice: concierge-surface-01
 active_slice_status: pending
-latest_proof_receipt: null
+latest_proof_receipt: artifacts/demo-concierge/concierge-consistency-check-01-run.txt
 branch:
   base: dev
   implementation: feature/demo-concierge-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-consistency-check-01
+  slice: concierge-surface-01
   arc: concierge-arc-001
   campaign: demo-concierge-001
   human_checkpoint: campaign-closeout
@@ -28,7 +28,8 @@ arc_001_chain:
   # Chat surface reaches /apply/ (plumbing, no new intelligence). D045.
   - id: dc-001-consistency-check
     slice_label: concierge-consistency-check-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-consistency-check-01-run.txt
     depends_on: []
     summary: Mechanical roadmap/card/diff/receipt consistency script required
       by the campaign protocol before any promotion.
