@@ -6,8 +6,8 @@ source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-002
 active_slice: sitenuxt-chat-deploy-01
-active_slice_status: active
-latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-001-closeout.md
+active_slice_status: completed
+latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-002-closeout.md
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-002-agenda-card.md
 branch:
   base: dev
@@ -129,7 +129,9 @@ arc_002_chain:
       - /contact/ closed-state remains 0.00% vs Astro; open-panel initial state committed with structural assertions.
   - id: sn-009-chat-deploy
     slice_label: sitenuxt-chat-deploy-01
-    status: active
+    status: completed
+    receipt: artifacts/site-nuxt/sitenuxt-chat-deploy-01-browser.png
+    live_url: https://loanslam-site-nuxt-production.up.railway.app/contact/
     depends_on:
       - sn-008-chat-proof
     summary: Secrets sync, deploy, live behavior proof, closeout, human report.

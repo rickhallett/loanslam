@@ -26,6 +26,12 @@ rmSync(pack, { recursive: true, force: true });
 mkdirSync(pack, { recursive: true });
 cpSync(output, resolve(pack, "output"), { recursive: true });
 
+// The contact chat runs the engine on this service; the corpus is read from
+// the filesystem at runtime (cwd/data candidate in engineAdapter).
+const corpus = "data/public-info/loanslam-synthetic-kb.json";
+mkdirSync(resolve(pack, "data/public-info"), { recursive: true });
+cpSync(resolve(root, corpus), resolve(pack, corpus));
+
 const nitroPackage = JSON.parse(
   readFileSync(resolve(output, "server/package.json"), "utf8"),
 );
