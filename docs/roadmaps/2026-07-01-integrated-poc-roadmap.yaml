@@ -15,7 +15,7 @@ branch:
   worktree: .claude/worktrees/ipoc-deploy-01
 proof_of_work_labels:
   epic: ipoc
-  slice: ipoc-deploy-build-01
+  slice: ipoc-demo-runbook-01
   arc: ipoc-arc-004
   human_checkpoint: arc-closeout
 doctrine:

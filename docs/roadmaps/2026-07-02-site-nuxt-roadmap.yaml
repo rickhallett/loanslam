@@ -7,15 +7,15 @@ epic: site-nuxt
 active_arc: sitenuxt-arc-003
 active_slice: sitenuxt-reports-01
 active_slice_status: completed
-latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-002-closeout.md
-active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-002-agenda-card.md
+latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-003-closeout.md
+active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-003-agenda-card.md
 branch:
   base: dev
   implementation: feature/site-nuxt-chat-01
   worktree: .claude/worktrees/site-nuxt-01
 proof_of_work_labels:
   epic: site-nuxt
-  slice: sitenuxt-chat-deploy-01
+  slice: sitenuxt-reports-01
   arc: sitenuxt-arc-001
   human_checkpoint: arc-closeout
 doctrine:
@@ -93,7 +93,7 @@ arc_002_chain:
   - id: sn-006-chat-backend
     slice_label: sitenuxt-chat-backend-01
     status: completed
-    receipt: commit 634bd28 (probes in commit message; battery lands in sn-008)
+    receipt: artifacts/site-nuxt/sitenuxt-chat-proof-01-proof.md
     depends_on: []
     summary: Chat routes on the site-nuxt server importing ipoc modules in place; cancel-handoff route; probes.
     write_scope:
@@ -173,7 +173,7 @@ arc_003_chain:
   - id: sn-012-reports
     slice_label: sitenuxt-reports-01
     status: completed
-    receipt: live https://loanslam-site-nuxt-production.up.railway.app/reports/ (200) + hell-week-full.html (200)
+    receipt: artifacts/site-nuxt/sitenuxt-arc-003-closeout.md
     depends_on:
       - sn-011-contact-context
     summary: Serve the review-host report dashboards at /reports on the Nuxt site.
