@@ -114,6 +114,16 @@
                   </button>
                 </div>
               </div>
+              <div
+                v-if="index === messages.length - 1 && message.id === formFillMessageId && pendingFormFill"
+                class="primitive"
+              >
+                <div class="choices">
+                  <button id="mal-form-fill" class="chip" type="button" @click="confirmFormFill">
+                    Fill these in for me ({{ Object.keys(pendingFormFill).length }})
+                  </button>
+                </div>
+              </div>
             </li>
             <li v-if="isSending" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
@@ -171,6 +181,7 @@ import type {
   ConciergeSessionResponse,
   ConciergeStatusResponse,
 } from '../lib/concierge';
+import { applyFormFill } from '../lib/formFill';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
 import { snapshotPage } from '../lib/pageSnapshot';
 
@@ -227,6 +238,8 @@ const applyOfferMessageId = ref<number | null>(null);
 const handoffOfferMessageId = ref<number | null>(null);
 const suggestNavMessageId = ref<number | null>(null);
 const suggestNavTarget = ref<string | null>(null);
+const formFillMessageId = ref<number | null>(null);
+const pendingFormFill = ref<Record<string, string> | null>(null);
 const conciergeAvailable = ref(false);
 const conciergeSessionRef = ref<string | null>(null);
 const applyIntroDone = ref(false);
@@ -362,6 +375,20 @@ function goToApply(): void {
 // concierge offers the support team, a deterministic quick action routes
 // the next turn to the validated engine, which owns the existing handoff
 // intake flow (form, ticket, server readback) unchanged.
+function confirmFormFill(): void {
+  const fill = pendingFormFill.value;
+  pendingFormFill.value = null;
+  formFillMessageId.value = null;
+  if (!fill) return;
+  const applied = applyFormFill(fill);
+  pushMessage(
+    'assistant',
+    applied.length > 0
+      ? `Done — I've filled in ${applied.length} field${applied.length === 1 ? '' : 's'} for you. Check them over and adjust anything before you continue.`
+      : 'I could not find those fields on this step of the form.',
+  );
+}
+
 function goToSuggested(): void {
   const target = suggestNavTarget.value;
   suggestNavTarget.value = null;
@@ -462,6 +489,15 @@ async function submit(
         suggestNavTarget.value = null;
         suggestNavMessageId.value = null;
       }
+      // Propose-and-confirm fill (dc3-002): nothing applies without the click.
+      const fill = assistant.formFill ?? null;
+      if (fill && isApplyRoute.value && Object.keys(fill).length > 0) {
+        pendingFormFill.value = fill;
+        formFillMessageId.value = lastId;
+      } else {
+        pendingFormFill.value = null;
+        formFillMessageId.value = null;
+      }
       return;
     }
     const ref = await ensureSession();
@@ -556,6 +592,8 @@ function reset(): void {
   handoffOfferMessageId.value = null;
   suggestNavTarget.value = null;
   suggestNavMessageId.value = null;
+  pendingFormFill.value = null;
+  formFillMessageId.value = null;
   messages.value = [];
   try {
     sessionStorage.removeItem(STORAGE_KEY);

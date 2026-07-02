@@ -93,6 +93,13 @@ state — answer about the exact step and fields, acknowledge what they have
 already completed, and point to what comes next. Encourage steady progress
 without pressure.
 
+On the application form, when the customer has told you their details in
+conversation, you may propose values through formFill — only fields the
+customer actually gave you, never invented or guessed. Formats: dob is
+DD/MM/YYYY; mobile is 11 digits starting 07; employmentStatus is exactly one
+of "Employed - full time", "Employed - part time", "Self employed",
+"On benefits", "Retired". When you propose a fill, say so in your reply.
+
 Never promise or predict an application outcome, approval, eligibility
 decision, rate, or timescale, and never present yourself as making lending
 decisions. Anything account-specific (balances, payments, their loan)
@@ -108,9 +115,26 @@ const ALLOWED_ROUTES = new Set(
     .map((entry) => entry.route),
 );
 
+// dc3-002 (D046): the model may PROPOSE values for the application form's
+// details step — known field names only, applied client-side only after an
+// explicit user click.
+const FORM_FILL_FIELDS = [
+  "monthlyIncome",
+  "employmentStatus",
+  "firstName",
+  "lastName",
+  "dob",
+  "mobile",
+  "email",
+  "postcode",
+  "line1",
+  "city",
+] as const;
+
 export interface ConciergeTurnResult {
   reply: string;
   navigateTo: string | null;
+  formFill: Record<string, string> | null;
 }
 
 const CONCIERGE_OUTPUT_SCHEMA = {
@@ -122,8 +146,18 @@ const CONCIERGE_OUTPUT_SCHEMA = {
       description:
         "A route path from the available-routes list when taking the customer to a page would genuinely help; otherwise null.",
     },
+    formFill: {
+      type: ["object", "null"],
+      description:
+        "On the application form only: values the customer has actually told you, offered as a fill proposal. Never invent values. Null when you have nothing to propose.",
+      properties: Object.fromEntries(
+        FORM_FILL_FIELDS.map((field) => [field, { type: ["string", "null"] }]),
+      ),
+      required: [...FORM_FILL_FIELDS],
+      additionalProperties: false,
+    },
   },
-  required: ["reply", "navigateTo"],
+  required: ["reply", "navigateTo", "formFill"],
   additionalProperties: false,
 } as const;
 
@@ -198,8 +232,13 @@ export async function runConciergeTurn({
 
   let reply = response.output_text.trim();
   let navigateTo: string | null = null;
+  let formFill: Record<string, string> | null = null;
   try {
-    const parsed = JSON.parse(response.output_text) as ConciergeTurnResult;
+    const parsed = JSON.parse(response.output_text) as {
+      reply?: unknown;
+      navigateTo?: unknown;
+      formFill?: unknown;
+    };
     reply = String(parsed.reply ?? "").trim();
     // Allowlist enforcement: off-manifest proposals are dropped here and
     // never reach the browser.
@@ -207,10 +246,20 @@ export async function runConciergeTurn({
       typeof parsed.navigateTo === "string" && ALLOWED_ROUTES.has(parsed.navigateTo)
         ? parsed.navigateTo
         : null;
+    // Fill proposals only make sense on the form page (formState present),
+    // and only known fields with string values survive.
+    if (formState && parsed.formFill && typeof parsed.formFill === "object") {
+      const filtered: Record<string, string> = {};
+      for (const field of FORM_FILL_FIELDS) {
+        const value = (parsed.formFill as Record<string, unknown>)[field];
+        if (typeof value === "string" && value.trim()) filtered[field] = value.trim();
+      }
+      formFill = Object.keys(filtered).length > 0 ? filtered : null;
+    }
   } catch {
-    // Fall back to the raw text as the reply; no suggestion.
+    // Fall back to the raw text as the reply; no suggestion, no fill.
   }
 
   session.messages.push({ role: "assistant", content: reply });
-  return { reply, navigateTo };
+  return { reply, navigateTo, formFill };
 }

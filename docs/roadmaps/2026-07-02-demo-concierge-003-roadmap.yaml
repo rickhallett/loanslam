@@ -5,10 +5,10 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-003-card.md
 epic: demo-concierge
 campaign: demo-concierge-003
-active_arc: concierge3-arc-001
-active_slice: concierge-form-fill-01
+active_arc: concierge3-arc-002
+active_slice: concierge3-staging-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-suggest-nav-01-proof.md
+latest_proof_receipt: artifacts/demo-concierge/concierge-form-fill-01-proof.md
 branch:
   base: feature/demo-concierge-02 (campaign-002 closeout commit)
   implementation: feature/demo-concierge-03
@@ -16,8 +16,8 @@ branch:
   merge_gate: does NOT merge to dev until human UAT accepts (D046)
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-form-fill-01
-  arc: concierge3-arc-001
+  slice: concierge3-staging-01
+  arc: concierge3-arc-002
   campaign: demo-concierge-003
   human_checkpoint: campaign-closeout
 doctrine:
@@ -44,7 +44,8 @@ arc_001_chain:
         non-apply route; an off-manifest target is dropped server-side.
   - id: dc3-002-form-fill
     slice_label: concierge-form-fill-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-form-fill-01-proof.md
     depends_on:
       - dc3-001-suggest-nav
     summary: Structured output may propose apply-form values (known field

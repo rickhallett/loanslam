@@ -16,5 +16,8 @@ export interface ConciergeMessageResponse {
     // dc3-001 (D046): allowlist-validated navigation proposal; the widget
     // renders it as a confirm-to-act chip. Never auto-executed.
     navigateTo?: string | null;
+    // dc3-002 (D046): known-field fill proposal for the application form;
+    // applied client-side only after an explicit user click.
+    formFill?: Record<string, string> | null;
   };
 }

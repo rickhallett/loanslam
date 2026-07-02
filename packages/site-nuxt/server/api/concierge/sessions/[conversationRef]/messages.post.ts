@@ -55,6 +55,10 @@ export default defineEventHandler(async (event) => {
   });
   return {
     conversationRef,
-    assistant: { message: result.reply, navigateTo: result.navigateTo },
+    assistant: {
+      message: result.reply,
+      navigateTo: result.navigateTo,
+      formFill: result.formFill,
+    },
   };
 });
