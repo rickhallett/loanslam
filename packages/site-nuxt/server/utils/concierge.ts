@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import OpenAI from "openai";
 
+import routeManifest from "../../route-manifest.json";
+
 // Demo-concierge surface (D045): a segregated, demo-only route serving
 // apply-journey assistance straight from a frontier OpenAI model. No
 // validator, no grounding rule — guardrails are system-prompt-only by
@@ -97,6 +99,34 @@ decisions. Anything account-specific (balances, payments, their loan)
 belongs with the support team, not you. If the customer is struggling or
 asks for a person, tell them you can connect them with the support team.`;
 
+// dc3-001 (D046): the model may PROPOSE navigation; only allowlisted routes
+// from the committed manifest survive, and nothing navigates without a
+// user click in the widget.
+const ALLOWED_ROUTES = new Set(
+  (routeManifest.routes as Array<{ route: string; kind: string }>)
+    .filter((entry) => entry.kind === "page")
+    .map((entry) => entry.route),
+);
+
+export interface ConciergeTurnResult {
+  reply: string;
+  navigateTo: string | null;
+}
+
+const CONCIERGE_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    reply: { type: "string", description: "Your reply to the customer." },
+    navigateTo: {
+      type: ["string", "null"],
+      description:
+        "A route path from the available-routes list when taking the customer to a page would genuinely help; otherwise null.",
+    },
+  },
+  required: ["reply", "navigateTo"],
+  additionalProperties: false,
+} as const;
+
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
@@ -117,7 +147,7 @@ export async function runConciergeTurn({
   message: string;
   formState?: Record<string, unknown> | null;
   pageContext?: Record<string, unknown> | null;
-}): Promise<string> {
+}): Promise<ConciergeTurnResult> {
   session.messages.push({ role: "customer", content: message });
   if (session.messages.length > MAX_HISTORY_MESSAGES) {
     session.messages.splice(0, session.messages.length - MAX_HISTORY_MESSAGES);
@@ -144,14 +174,43 @@ export async function runConciergeTurn({
     });
   }
 
+  input.push({
+    role: "developer",
+    content:
+      `Available routes for navigateTo (propose at most one, only when it genuinely helps): ` +
+      [...ALLOWED_ROUTES].join(" "),
+  });
+
   const response = await getClient().responses.create({
     model: conciergeModel(),
     instructions: CONCIERGE_INSTRUCTIONS,
     input,
-    max_output_tokens: 400,
+    max_output_tokens: 600,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "concierge_turn",
+        schema: CONCIERGE_OUTPUT_SCHEMA as unknown as Record<string, unknown>,
+        strict: true,
+      },
+    },
   });
 
-  const reply = response.output_text.trim();
+  let reply = response.output_text.trim();
+  let navigateTo: string | null = null;
+  try {
+    const parsed = JSON.parse(response.output_text) as ConciergeTurnResult;
+    reply = String(parsed.reply ?? "").trim();
+    // Allowlist enforcement: off-manifest proposals are dropped here and
+    // never reach the browser.
+    navigateTo =
+      typeof parsed.navigateTo === "string" && ALLOWED_ROUTES.has(parsed.navigateTo)
+        ? parsed.navigateTo
+        : null;
+  } catch {
+    // Fall back to the raw text as the reply; no suggestion.
+  }
+
   session.messages.push({ role: "assistant", content: reply });
-  return reply;
+  return { reply, navigateTo };
 }

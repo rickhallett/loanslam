@@ -11,5 +11,10 @@ export interface ConciergeSessionResponse {
 
 export interface ConciergeMessageResponse {
   conversationRef: string;
-  assistant: { message: string };
+  assistant: {
+    message: string;
+    // dc3-001 (D046): allowlist-validated navigation proposal; the widget
+    // renders it as a confirm-to-act chip. Never auto-executed.
+    navigateTo?: string | null;
+  };
 }

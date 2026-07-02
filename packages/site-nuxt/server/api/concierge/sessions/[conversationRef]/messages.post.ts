@@ -47,11 +47,14 @@ export default defineEventHandler(async (event) => {
       ? (value as Record<string, unknown>)
       : null;
 
-  const reply = await runConciergeTurn({
+  const result = await runConciergeTurn({
     session,
     message,
     formState: asObject(body.formState),
     pageContext: asObject(body.pageContext),
   });
-  return { conversationRef, assistant: { message: reply } };
+  return {
+    conversationRef,
+    assistant: { message: result.reply, navigateTo: result.navigateTo },
+  };
 });

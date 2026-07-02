@@ -104,6 +104,16 @@
                   </button>
                 </div>
               </div>
+              <div
+                v-if="index === messages.length - 1 && message.id === suggestNavMessageId && suggestNavTarget"
+                class="primitive"
+              >
+                <div class="choices">
+                  <button id="mal-suggest-nav" class="chip" type="button" @click="goToSuggested">
+                    Take me there ({{ suggestNavTarget }})
+                  </button>
+                </div>
+              </div>
             </li>
             <li v-if="isSending" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
@@ -215,6 +225,8 @@ const APPLY_ITEM_IDS = new Set([
 const isOpen = ref(false);
 const applyOfferMessageId = ref<number | null>(null);
 const handoffOfferMessageId = ref<number | null>(null);
+const suggestNavMessageId = ref<number | null>(null);
+const suggestNavTarget = ref<string | null>(null);
 const conciergeAvailable = ref(false);
 const conciergeSessionRef = ref<string | null>(null);
 const applyIntroDone = ref(false);
@@ -350,6 +362,13 @@ function goToApply(): void {
 // concierge offers the support team, a deterministic quick action routes
 // the next turn to the validated engine, which owns the existing handoff
 // intake flow (form, ticket, server readback) unchanged.
+function goToSuggested(): void {
+  const target = suggestNavTarget.value;
+  suggestNavTarget.value = null;
+  suggestNavMessageId.value = null;
+  if (target) void navigateTo(target);
+}
+
 function connectSupport(): void {
   handoffOfferMessageId.value = null;
   void submit("I'd like to talk to a person about my loan application, please.", {
@@ -389,7 +408,7 @@ async function ensureConciergeSession(): Promise<string> {
   return session.conversationRef;
 }
 
-async function sendConciergeTurn(message: string): Promise<string> {
+async function sendConciergeTurn(message: string): Promise<ConciergeMessageResponse['assistant']> {
   const ref = await ensureConciergeSession();
   const result = await $fetch<ConciergeMessageResponse>(
     `/api/concierge/sessions/${encodeURIComponent(ref)}/messages`,
@@ -402,7 +421,7 @@ async function sendConciergeTurn(message: string): Promise<string> {
       },
     },
   );
-  return result.assistant.message;
+  return result.assistant;
 }
 
 function maybeApplyIntro(): void {
@@ -428,12 +447,21 @@ async function submit(
       // Concierge mode (D046): every route except /contact/ (the validated
       // engine keeps the support chat). Page snapshot as context; form
       // snapshot additionally on /apply/. No engine, no telemetry, no UiPlan.
-      const reply = await sendConciergeTurn(trimmed);
-      pushMessage('assistant', reply);
+      const assistant = await sendConciergeTurn(trimmed);
+      pushMessage('assistant', assistant.message);
+      const lastId = messages.value.at(-1)?.id ?? null;
       applyOfferMessageId.value = null;
-      handoffOfferMessageId.value = /support team/i.test(reply)
-        ? (messages.value.at(-1)?.id ?? null)
-        : null;
+      handoffOfferMessageId.value = /support team/i.test(assistant.message) ? lastId : null;
+      // Confirm-to-act navigation proposal (dc3-001): drop it when it
+      // points at the page the customer is already on.
+      const target = assistant.navigateTo ?? null;
+      if (target && normalizePath(target) !== normalizePath(route.path)) {
+        suggestNavTarget.value = target;
+        suggestNavMessageId.value = lastId;
+      } else {
+        suggestNavTarget.value = null;
+        suggestNavMessageId.value = null;
+      }
       return;
     }
     const ref = await ensureSession();
@@ -448,6 +476,8 @@ async function submit(
       ? (messages.value.at(-1)?.id ?? null)
       : null;
     handoffOfferMessageId.value = null;
+    suggestNavTarget.value = null;
+    suggestNavMessageId.value = null;
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -524,6 +554,8 @@ function reset(): void {
   errorMessage.value = '';
   applyOfferMessageId.value = null;
   handoffOfferMessageId.value = null;
+  suggestNavTarget.value = null;
+  suggestNavMessageId.value = null;
   messages.value = [];
   try {
     sessionStorage.removeItem(STORAGE_KEY);
