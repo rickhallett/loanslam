@@ -26,7 +26,17 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    publicAssets: [{ dir: `${siteDir}/public` }],
+    publicAssets: [
+      { dir: `${siteDir}/public` },
+      // The Hell Week report dashboards the old site service exposed (D044);
+      // consumed in place from review-host like the other shared sources.
+      {
+        dir: fileURLToPath(
+          new URL("../review-host/public/reports", import.meta.url),
+        ),
+        baseURL: "/reports",
+      },
+    ],
   },
   vite: {
     // Content JSON keys like "process" must not become top-level named

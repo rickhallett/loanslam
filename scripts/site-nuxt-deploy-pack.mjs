@@ -51,6 +51,14 @@ writeFileSync(
   )}\n`,
 );
 
+// The repo-root .gitignore excludes reports/ and the upload indexer honors
+// it; re-include the packed dashboards the same way the root file re-includes
+// the review-host originals.
+writeFileSync(
+  resolve(pack, ".gitignore"),
+  "!output/public/reports/\n!output/public/reports/*.html\n",
+);
+
 writeFileSync(
   resolve(pack, "railway.json"),
   `${JSON.stringify(
