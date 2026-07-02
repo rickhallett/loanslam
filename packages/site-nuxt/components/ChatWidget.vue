@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div id="mal-frost" :class="{ 'is-visible': isOpen }" @click="closePanel" />
+    <!-- The frost exists to obscure the contact page's phone numbers and
+         focus attention on the assistant; on every other route the page
+         stays readable behind the open panel. -->
+    <div id="mal-frost" :class="{ 'is-visible': isOpen && isContactRoute }" @click="closePanel" />
 
     <button
       id="mal-launcher"
