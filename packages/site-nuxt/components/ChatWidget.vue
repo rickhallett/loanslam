@@ -392,9 +392,20 @@ async function ensureConciergeSession(): Promise<string> {
   return session.conversationRef;
 }
 
-async function sendConciergeTurn(message: string): Promise<string> {
-  const ref = await ensureConciergeSession();
-  const result = await $fetch<ConciergeMessageResponse>(
+function transcriptForResume(): Array<{ role: 'customer' | 'assistant'; content: string }> {
+  // Text-only replay (dr-001). The current customer turn is already in
+  // messages.value (pushed by submit) and is sent separately as the new
+  // turn, so drop the trailing customer message to avoid double-counting;
+  // the WELCOME line is UI, not a turn.
+  const history = [...messages.value];
+  if (history.at(-1)?.role === 'customer') history.pop();
+  return history
+    .filter((m) => m.text && m.text !== WELCOME)
+    .map((m) => ({ role: m.role, content: m.text }));
+}
+
+async function postConciergeMessage(ref: string, message: string, resume: boolean) {
+  return $fetch<ConciergeMessageResponse>(
     `/api/concierge/sessions/${encodeURIComponent(ref)}/messages`,
     {
       method: 'POST',
@@ -402,10 +413,26 @@ async function sendConciergeTurn(message: string): Promise<string> {
         message,
         formState: isApplyRoute.value ? snapshotApplicationForm() : null,
         pageContext: snapshotPage(route.path),
+        resumeTranscript: resume ? transcriptForResume() : null,
       },
     },
   );
-  return result.assistant.message;
+}
+
+async function sendConciergeTurn(message: string): Promise<string> {
+  const ref = await ensureConciergeSession();
+  try {
+    const result = await postConciergeMessage(ref, message, false);
+    return result.assistant.message;
+  } catch (error) {
+    // dr-001 (D047): the server lost this session (restart/redeploy). Open a
+    // fresh one, replay our transcript as context, and retry the turn once.
+    if ((error as { statusCode?: number }).statusCode !== 404) throw error;
+    conciergeSessionRef.value = null;
+    const freshRef = await ensureConciergeSession();
+    const result = await postConciergeMessage(freshRef, message, true);
+    return result.assistant.message;
+  }
 }
 
 function maybeApplyIntro(): void {

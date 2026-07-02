@@ -6,9 +6,9 @@ source_agenda: docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
 epic: demo-resilience
 campaign: demo-resilience-001
 active_arc: resilience-arc-001
-active_slice: session-resurrection-01
+active_slice: reply-streaming-01
 active_slice_status: pending
-latest_proof_receipt: null
+latest_proof_receipt: artifacts/demo-resilience/dr001-resurrection-proof.md
 branch:
   base: dev (after concierge-probes-001 lands)
   implementation: feature/demo-resilience-01
@@ -27,7 +27,8 @@ doctrine:
 arc_001_chain:
   - id: dr-001-resurrection
     slice_label: session-resurrection-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-resilience/dr001-resurrection-proof.md
     depends_on: []
     summary: On a 404 from the concierge messages route, open a fresh
       session, replay the sessionStorage transcript as text-only context,

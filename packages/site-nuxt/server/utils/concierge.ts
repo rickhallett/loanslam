@@ -112,12 +112,21 @@ export async function runConciergeTurn({
   message,
   formState,
   pageContext,
+  resumeTranscript,
 }: {
   session: ConciergeSession;
   message: string;
   formState?: Record<string, unknown> | null;
   pageContext?: Record<string, unknown> | null;
+  resumeTranscript?: Array<{ role: "customer" | "assistant"; content: string }> | null;
 }): Promise<string> {
+  // dr-001 (D047): session resurrection. If a lost server session was
+  // reseeded on the client, seed this fresh session's history from the
+  // replayed transcript (text-only) before the new turn.
+  if (session.messages.length === 0 && resumeTranscript && resumeTranscript.length > 0) {
+    session.messages.push(...resumeTranscript.slice(-MAX_HISTORY_MESSAGES));
+  }
+
   session.messages.push({ role: "customer", content: message });
   if (session.messages.length > MAX_HISTORY_MESSAGES) {
     session.messages.splice(0, session.messages.length - MAX_HISTORY_MESSAGES);

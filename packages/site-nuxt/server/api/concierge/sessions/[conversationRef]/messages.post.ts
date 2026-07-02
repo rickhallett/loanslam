@@ -11,6 +11,7 @@ interface ConciergeMessageRequest {
   message?: unknown;
   formState?: unknown;
   pageContext?: unknown;
+  resumeTranscript?: unknown;
 }
 
 export default defineEventHandler(async (event) => {
@@ -47,11 +48,24 @@ export default defineEventHandler(async (event) => {
       ? (value as Record<string, unknown>)
       : null;
 
+  const resumeTranscript = Array.isArray(body.resumeTranscript)
+    ? body.resumeTranscript
+        .filter(
+          (entry): entry is { role: "customer" | "assistant"; content: string } =>
+            !!entry &&
+            typeof entry === "object" &&
+            (entry.role === "customer" || entry.role === "assistant") &&
+            typeof entry.content === "string",
+        )
+        .map((entry) => ({ role: entry.role, content: entry.content }))
+    : null;
+
   const reply = await runConciergeTurn({
     session,
     message,
     formState: asObject(body.formState),
     pageContext: asObject(body.pageContext),
+    resumeTranscript,
   });
   return { conversationRef, assistant: { message: reply } };
 });
