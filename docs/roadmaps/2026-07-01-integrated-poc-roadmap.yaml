@@ -216,7 +216,8 @@ arc_004_chain:
       - Integration battery passes against the local production-mode server.
   - id: ipoc-016-deploy-service
     slice_label: ipoc-deploy-service-01
-    status: pending
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-deploy-service-01-proof.md
     depends_on:
       - ipoc-015-deploy-build
     summary: Create the loanslam-ipoc Railway service and wire secrets through the encrypted tooling.
@@ -234,6 +235,8 @@ arc_004_chain:
       - ipoc-016-deploy-service
     summary: Deploy, generate the Railway domain, and prove the live URL with battery and browser proof.
     write_scope:
+      - scripts/
+      - package.json
       - artifacts/integrated-poc/
       - docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml
     proof_bar:
