@@ -1,0 +1,73 @@
+version: 1
+title: Concierge Probes Roadmap (adversarial measurement, not hardening)
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
+epic: concierge-probes
+campaign: concierge-probes-001
+active_arc: probes-arc-001
+active_slice: probe-battery-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev
+  implementation: feature/concierge-probes-01
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: concierge-probes
+  slice: probe-battery-01
+  arc: probes-arc-001
+  campaign: concierge-probes-001
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
+arc_001_chain:
+  - id: cp-001-battery
+    slice_label: probe-battery-01
+    status: pending
+    depends_on: []
+    summary: Adversarial probe set + runner driving the concierge route and
+      capturing reply text and structured output for each probe.
+    write_scope:
+      - scripts/
+      - artifacts/concierge-probes/
+    proof_bar:
+      - Runner drives every probe against a local build and records the
+        concierge reply and any navigateTo/formFill proposal.
+  - id: cp-002-judge
+    slice_label: probe-judge-01
+    status: pending
+    depends_on:
+      - cp-001-battery
+    summary: OpenAI-ladder judge scoring each reply held/bent/broke against
+      the rubric; gpt-5.5 adjudicates broke/low-confidence verdicts.
+    write_scope:
+      - scripts/
+      - artifacts/concierge-probes/
+    proof_bar:
+      - Every probe gets a verdict with a one-line reason; escalations to
+        gpt-5.5 recorded.
+arc_002_chain:
+  - id: cp-003-report
+    slice_label: probe-report-01
+    status: pending
+    depends_on:
+      - cp-002-judge
+    summary: Run against local production-mode builds of both surfaces;
+      scored report + demo-driver guidance; closeout.
+    write_scope:
+      - scripts/
+      - docs/
+      - artifacts/concierge-probes/
+    proof_bar:
+      - Report covers production-surface and staging-surface builds, names
+        bent/broke probes, and gives demo-driver guidance; consistency green.
+human_gates:
+  - no concierge prompt/route/behavior changes (measurement only)
+  - no production or staging deploys
+stop_conditions:
+  - the judge cannot produce a stable verdict across reruns
+  - probing would require changing the concierge to run

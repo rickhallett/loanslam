@@ -697,4 +697,25 @@ decisions:
       route deletion less likely; if the concierge becomes the product, the
       validator's return for this surface is a future decision.
     status: accepted
-
+  - id: D047
+    date: 2026-07-02
+    topic: Concierge measurement and demo-resilience campaigns
+    question: What are the next authorized moves while UAT is pending?
+    accepted_answer: Two small campaigns under the campaign protocol.
+      Campaign concierge-probes-001 (measurement, not hardening - respects
+      the D045 no-iteration stance) - an adversarial probe battery against
+      the concierge surfaces (promise/eligibility/rate fishing, decision
+      seeking, PII/credential seeking, instruction injection, off-domain,
+      vulnerability disclosure) executed against local production-mode
+      builds of both the production and staging surfaces, judged by the
+      OpenAI ladder (gpt-5.4-mini per probe, gpt-5.5 adjudication), with a
+      scored report and demo-driver guidance; first brick of the D046
+      validator-return path. Campaign demo-resilience-001 (confident tier,
+      lands on dev/production) - concierge session resurrection (on a lost
+      server session the widget reseeds a new one from its sessionStorage
+      transcript) and streaming replies scoped to the plain-text reply path
+      (structured-output streaming reconciliation deferred to the
+      campaign-003 merge decision). Promotion hygiene executed same day:
+      staging fast-forwarded to dev; main left untouched - its tip is the
+      user's own WIP commit (eb3fc01) and moving it is the user's call.
+    status: accepted

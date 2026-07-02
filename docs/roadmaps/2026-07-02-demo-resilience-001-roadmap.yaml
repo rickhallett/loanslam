@@ -1,0 +1,78 @@
+version: 1
+title: Demo Resilience Roadmap (session resurrection + streaming)
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
+epic: demo-resilience
+campaign: demo-resilience-001
+active_arc: resilience-arc-001
+active_slice: session-resurrection-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev (after concierge-probes-001 lands)
+  implementation: feature/demo-resilience-01
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: demo-resilience
+  slice: session-resurrection-01
+  arc: resilience-arc-001
+  campaign: demo-resilience-001
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
+arc_001_chain:
+  - id: dr-001-resurrection
+    slice_label: session-resurrection-01
+    status: pending
+    depends_on: []
+    summary: On a 404 from the concierge messages route, open a fresh
+      session, replay the sessionStorage transcript as text-only context,
+      and retry the turn once.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-resilience/
+    proof_bar:
+      - Killing the server session mid-conversation and sending again
+        recovers with the transcript intact; no duplicate/out-of-order turns.
+  - id: dr-002-streaming
+    slice_label: reply-streaming-01
+    status: pending
+    depends_on:
+      - dr-001-resurrection
+    summary: Stream plain-text concierge replies into the panel (production
+      reply path; structured-output streaming deferred).
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-resilience/
+    proof_bar:
+      - A reply renders incrementally; the non-streaming structured path is
+        unregressed.
+arc_002_chain:
+  - id: dr-003-deploy
+    slice_label: resilience-deploy-01
+    status: pending
+    depends_on:
+      - dr-002-streaming
+    summary: Regression, production deploy, live restart-recovery proof,
+      closeout.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - docs/
+      - artifacts/demo-resilience/
+    proof_bar:
+      - Campaign-001/002 rehearsals green; production deploy; live proof that
+        a browser session recovers after a server redeploy; closeout with
+        consistency output.
+human_gates:
+  - no durable/server-side session store (client-side resilience only)
+  - no changes to engine, ipoc, widgets, Astro site, or the campaign-003 branch
+stop_conditions:
+  - resurrection causes duplicate or out-of-order turns
+  - streaming regresses the non-streaming or structured-output paths
