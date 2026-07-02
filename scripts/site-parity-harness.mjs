@@ -91,12 +91,16 @@ const routes = manifest.routes.filter((r) => !routesFilter || routesFilter.inclu
 // Nuxt side so the rest of the page stays pixel-guarded, and records the
 // applied deviation in the report. Any other deviation still fails.
 const CHAT_CHROME_CSS = "#mal-launcher, #mal-panel, #mal-frost { display: none !important; }";
+// D046: the launcher is site-wide on the Nuxt app (closed by default), so
+// chat chrome is masked Nuxt-side on every route by default; the rest of
+// each page stays pixel-guarded. /contact/ masks both sides (native panel
+// vs iframe widget, dedicated proof in scripts/contact-chat-parity.mjs).
+const DEFAULT_DEVIATION = {
+  decision: "D046",
+  reason: "site-wide chat launcher, closed by default (Nuxt only)",
+  nuxtHideCss: CHAT_CHROME_CSS,
+};
 const acceptedDeviations = {
-  "/apply/": {
-    decision: "D045",
-    reason: "layout-level chat launcher on the apply journey (Nuxt only)",
-    nuxtHideCss: CHAT_CHROME_CSS,
-  },
   "/contact/": {
     decision: "D042/D043",
     reason:
@@ -164,7 +168,7 @@ const results = [];
 
 for (const entry of routes) {
   const probeRoute = entry.kind === "not_found" ? "/__parity-not-found__/" : entry.route;
-  const deviation = acceptedDeviations[entry.route] ?? null;
+  const deviation = acceptedDeviations[entry.route] ?? DEFAULT_DEVIATION;
   for (const viewport of viewports) {
     const astro = await capture(page, astroBase, probeRoute, viewport, deviation?.astroHideCss);
     const nuxt = await capture(page, nuxtBase, probeRoute, viewport, deviation?.nuxtHideCss);

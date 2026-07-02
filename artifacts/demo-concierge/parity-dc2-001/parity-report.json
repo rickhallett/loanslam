@@ -1,0 +1,642 @@
+{
+  "ranAt": "2026-07-02T08:28:43.706Z",
+  "astroBase": "http://localhost:4321",
+  "nuxtBase": "http://127.0.0.1:3641",
+  "pixelThreshold": 0.005,
+  "acceptedDeviations": {
+    "/contact/": {
+      "decision": "D042/D043",
+      "reason": "native chat panel replaces the iframe widget; chat chrome has its own dedicated proof (scripts/contact-chat-parity.mjs), so it is masked on both sides here",
+      "astroHideCss": "#mal-launcher, #mal-panel, #mal-frost { display: none !important; }",
+      "nuxtHideCss": "#mal-launcher, #mal-panel, #mal-frost { display: none !important; }"
+    }
+  },
+  "total": 52,
+  "passed": 52,
+  "results": [
+    {
+      "route": "/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/personal-loans/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/about-us/personal-loans/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/apply/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/apply/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/complaints/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/complaints/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/contact/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D042/D043",
+        "reason": "native chat panel replaces the iframe widget; chat chrome has its own dedicated proof (scripts/contact-chat-parity.mjs), so it is masked on both sides here"
+      }
+    },
+    {
+      "route": "/contact/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D042/D043",
+        "reason": "native chat panel replaces the iframe widget; chat chrome has its own dedicated proof (scripts/contact-chat-parity.mjs), so it is masked on both sides here"
+      }
+    },
+    {
+      "route": "/covid-19-help/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/covid-19-help/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/existing-customers/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/existing-customers/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/extra-support/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/extra-support/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/faq/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/faq/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/instalment-loan/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/instalment-loan/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/login/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/login/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/can-i-get-a-personal-loan-with-a-poor-credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/can-i-get-a-personal-loan-with-a-poor-credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-can-i-boost-my-credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-can-i-boost-my-credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-can-i-check-my-credit-score-for-free/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-can-i-check-my-credit-score-for-free/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-to-check-your-credit-history/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/how-to-check-your-credit-history/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/whats-a-credit-builder-card/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/whats-a-credit-builder-card/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/will-a-personal-loan-affect-my-credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/news/will-a-personal-loan-affect-my-credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/open-banking/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/open-banking/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/positive-outcomes/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/positive-outcomes/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/privacy-policy/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/privacy-policy/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/sorry/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/sorry/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/terms-and-conditions/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    },
+    {
+      "route": "/terms-and-conditions/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true,
+      "acceptedDeviation": {
+        "decision": "D046",
+        "reason": "site-wide chat launcher, closed by default (Nuxt only)"
+      }
+    }
+  ]
+}

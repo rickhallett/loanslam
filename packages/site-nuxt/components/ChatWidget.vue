@@ -1,5 +1,5 @@
 <template>
-  <div v-show="isChatRoute">
+  <div>
     <div id="mal-frost" :class="{ 'is-visible': isOpen }" @click="closePanel" />
 
     <button
@@ -184,19 +184,16 @@ const WELCOME =
 const APPLY_INTRO =
   "Here's the application — a few short steps, starting with your details. I can see the form as you fill it in (test details only on this prototype), so if anything's unclear just ask me here.";
 
-// Layout-level surface (D045): the widget stays mounted across client-side
-// navigation so chat state survives; the launcher renders only on the chat
-// routes so every other route keeps Astro pixel parity. /contact/ keeps its
-// auto-open loader parity.
-const CHAT_PATHS = new Set(['/contact', '/apply']);
-
+// Layout-level surface (D045/D046): the widget is mounted once and present
+// on every route — closed by default, opt-in via the launcher. Only
+// /contact/ keeps its auto-open loader parity. The site-wide launcher is a
+// recorded parity deviation, masked in the harness.
 function normalizePath(path: string): string {
   const trimmed = path.replace(/\/+$/, '');
   return trimmed === '' ? '/' : trimmed;
 }
 
 const route = useRoute();
-const isChatRoute = computed(() => CHAT_PATHS.has(normalizePath(route.path)));
 const isContactRoute = computed(() => normalizePath(route.path) === '/contact');
 const isApplyRoute = computed(() => normalizePath(route.path) === '/apply');
 
@@ -514,12 +511,6 @@ watch(
     if (prev && !now && !isChatComplete.value) focusInput();
   },
 );
-
-watch(isChatRoute, (onChatRoute) => {
-  // The mal-open body class only belongs to routes where the chrome shows.
-  if (!onChatRoute) document.body.classList.remove('mal-open');
-  else if (isOpen.value) document.body.classList.add('mal-open');
-});
 
 watch(isContactRoute, (now, prev) => {
   // Each arrival at /contact/ auto-opens, matching the per-visit loader

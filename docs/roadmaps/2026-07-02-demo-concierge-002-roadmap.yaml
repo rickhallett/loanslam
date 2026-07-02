@@ -6,16 +6,16 @@ source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
 epic: demo-concierge
 campaign: demo-concierge-002
 active_arc: concierge2-arc-001
-active_slice: concierge-presence-01
+active_slice: concierge-page-context-01
 active_slice_status: pending
-latest_proof_receipt: null
+latest_proof_receipt: artifacts/demo-concierge/concierge-presence-01-proof.md
 branch:
   base: dev
   implementation: feature/demo-concierge-02
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-presence-01
+  slice: concierge-page-context-01
   arc: concierge2-arc-001
   campaign: demo-concierge-002
   human_checkpoint: campaign-closeout
@@ -28,7 +28,8 @@ arc_001_chain:
   # Confident tier (D046): presence, page context, persistence.
   - id: dc2-001-presence
     slice_label: concierge-presence-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-presence-01-proof.md
     depends_on: []
     summary: Launcher on all routes, closed by default (contact auto-open
       unchanged); parity-harness deviation generalized to mask chat chrome.
