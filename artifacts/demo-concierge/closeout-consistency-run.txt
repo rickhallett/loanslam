@@ -1,0 +1,2 @@
+docs/roadmaps/2026-07-02-demo-concierge-roadmap.yaml: checked 8 chain items
+consistency check passed (0 warning(s))

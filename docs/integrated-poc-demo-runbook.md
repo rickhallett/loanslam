@@ -2,6 +2,9 @@
 
 Live URL: https://loanslam-ipoc-production.up.railway.app
 
+> The apply-journey concierge demo on the Nuxt site has its own runbook:
+> `docs/demo-concierge-runbook.md`.
+
 A stakeholder can run this cold in about five minutes. Everything on screen is
 synthetic demo data; nothing is a real customer record.
 

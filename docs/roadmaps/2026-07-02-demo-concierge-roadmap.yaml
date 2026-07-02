@@ -7,8 +7,8 @@ epic: demo-concierge
 campaign: demo-concierge-001
 active_arc: concierge-arc-003
 active_slice: concierge-rehearsal-01
-active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-exposure-01-proof.md
+active_slice_status: completed
+latest_proof_receipt: artifacts/demo-concierge/demo-concierge-001-closeout.md
 branch:
   base: dev
   implementation: feature/demo-concierge-01
@@ -143,7 +143,8 @@ arc_003_chain:
       - Rate limit and kill switch proven on the live URL; no new secrets.
   - id: dc-008-rehearsal
     slice_label: concierge-rehearsal-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/demo-concierge-001-closeout.md
     depends_on:
       - dc-007-exposure
     summary: Happy-path rehearsal battery on the live URL; demo runbook
