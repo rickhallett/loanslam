@@ -5,7 +5,7 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-002
-active_slice: sitenuxt-chat-backend-01
+active_slice: sitenuxt-chat-proof-01
 active_slice_status: active
 latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-001-closeout.md
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-002-agenda-card.md
@@ -15,7 +15,7 @@ branch:
   worktree: .claude/worktrees/site-nuxt-01
 proof_of_work_labels:
   epic: site-nuxt
-  slice: sitenuxt-chat-backend-01
+  slice: sitenuxt-chat-proof-01
   arc: sitenuxt-arc-001
   human_checkpoint: arc-closeout
 doctrine:
@@ -92,7 +92,8 @@ arc_002_chain:
   # human touchpoint at successful sn-009 closeout.
   - id: sn-006-chat-backend
     slice_label: sitenuxt-chat-backend-01
-    status: active
+    status: completed
+    receipt: commit 634bd28 (probes in commit message; battery lands in sn-008)
     depends_on: []
     summary: Chat routes on the site-nuxt server importing ipoc modules in place; cancel-handoff route; probes.
     write_scope:
@@ -103,7 +104,8 @@ arc_002_chain:
       - Session, message (live engine), intake, and cancel-handoff probes pass on the site-nuxt server.
   - id: sn-007-chat-panel
     slice_label: sitenuxt-chat-panel-01
-    status: pending
+    status: completed
+    receipt: artifacts/site-nuxt/sitenuxt-chat-panel-01-browser.png
     depends_on:
       - sn-006-chat-backend
     summary: Native launcher/frost/panel with widget-parity chrome and texts on /contact/.
@@ -113,7 +115,7 @@ arc_002_chain:
       - Panel works end-to-end locally; iframe loader and devtools removed from the Nuxt page only.
   - id: sn-008-chat-proof
     slice_label: sitenuxt-chat-proof-01
-    status: pending
+    status: active
     depends_on:
       - sn-007-chat-panel
     summary: Behavior battery, closed-state pixel parity, open-state chrome proof.

@@ -1,0 +1,485 @@
+/* GENERATED in part: the "widget styles" section below is transformed from
+   packages/review-widget/src/styles.css (selectors prefixed with #mal-panel).
+   Chrome values mirror site/src/pages/contact.astro malChatConfig + the
+   review-host loader.js (D042). */
+
+#mal-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #00879b;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s, opacity 0.18s;
+}
+#mal-launcher:hover { transform: scale(1.08); }
+#mal-launcher:focus-visible { outline: 3px solid #f7a823; outline-offset: 3px; }
+#mal-launcher .mal-icon { width: 26px; height: 26px; fill: white; }
+
+#mal-panel {
+  position: fixed;
+  bottom: 96px;
+  right: 24px;
+  width: 500px;
+  height: 700px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 120px);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.22);
+  z-index: 9998;
+  display: flex;
+  transition: opacity 0.15s;
+  color: #172026;
+  font-family: Poppins, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+#mal-panel * { box-sizing: border-box; }
+#mal-panel button, #mal-panel input, #mal-panel textarea { font: inherit; }
+#mal-panel h1, #mal-panel p, #mal-panel ul { font-family: inherit; }
+
+#mal-frost {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: rgba(250, 247, 241, 0.58);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+#mal-frost.is-visible { opacity: 1; pointer-events: auto; }
+
+@media (max-width: 600px) {
+  #mal-panel { inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; }
+  body.mal-open #mal-launcher { display: none !important; }
+}
+
+/* -- widget styles (transformed) -- */
+#mal-panel .widget-shell {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+#mal-panel .chat-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+  font-size: 14px;
+  animation: panel-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+#mal-panel .chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  background: #12343b;
+  color: #ffffff;
+}
+
+#mal-panel .eyebrow {
+  margin: 0 0 4px;
+  color: #b7d7ca;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+#mal-panel .chat-header h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+#mal-panel .chat-status {
+  margin: 4px 0 0;
+  color: #d8e8e1;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+#mal-panel .chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#mal-panel .chat-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 8%);
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.chat-header-actions button:hover,
+#mal-panel .chat-header-actions button:focus-visible {
+  background: rgb(255 255 255 / 16%);
+  outline: 2px solid rgb(255 255 255 / 40%);
+  outline-offset: 2px;
+}
+
+/* ── Messages ───────────────────────────────────────────── */
+#mal-panel .message-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 20px 18px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+#mal-panel .message {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(88%, 420px);
+  padding: 11px 13px;
+  border-radius: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 2px rgb(18 31 38 / 5%);
+  animation: message-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+#mal-panel .message-assistant {
+  align-self: flex-start;
+  border: 1px solid #d7e5df;
+  background: #f2f7f4;
+  color: #172026;
+}
+
+#mal-panel .message-user {
+  align-self: flex-end;
+  background: #1a8787;
+  color: #ffffff;
+  transform-origin: bottom right;
+}
+
+#mal-panel .message-text {
+  white-space: pre-wrap;
+}
+
+#mal-panel .thinking-bubble {
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 13px;
+}
+
+#mal-panel .thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+#mal-panel .thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #41535a;
+  opacity: 0.55;
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}
+
+#mal-panel .thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+#mal-panel .thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ── Engine-driven primitives (inside the assistant message) ─── */
+#mal-panel .primitive {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#mal-panel .choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#mal-panel .chip {
+  padding: 8px 12px;
+  border: 1px solid #1a8787;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #156b6b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+#mal-panel .chip:hover {
+  background: #1a8787;
+  color: #ffffff;
+}
+
+#mal-panel .links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#mal-panel .link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e6f0ec;
+  color: #156b6b;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#mal-panel .link:hover {
+  background: #d8e8e1;
+}
+
+#mal-panel .handoff {
+  padding: 10px 13px;
+  border-radius: 8px;
+  background: #fff4e8;
+  border: 1px solid #f3ddae;
+  color: #92580a;
+  font-size: 12px;
+}
+
+/* ── Engine intake form (rendered inside the message) ───────── */
+#mal-panel .identity-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 12px;
+  border: 1px solid #cbd9d5;
+  border-radius: 8px;
+  background: #ffffff;
+  animation: message-in 0.25s cubic-bezier(0.2, 0.8, 0.3, 1) 0.1s both;
+}
+
+#mal-panel .identity-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #41535a;
+  font-size: 12px;
+}
+
+#mal-panel .identity-field span {
+  font-weight: 600;
+}
+
+.identity-field input,
+#mal-panel .identity-field textarea {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #b8c7ce;
+  border-radius: 8px;
+  background: #ffffff;
+  resize: vertical;
+}
+
+#mal-panel .identity-field input {
+  height: 36px;
+}
+
+.identity-field input:focus-visible,
+#mal-panel .identity-field textarea:focus-visible {
+  outline: none;
+  border-color: #1f6f78;
+  box-shadow: 0 0 0 3px rgb(31 111 120 / 18%);
+}
+
+#mal-panel .identity-form button {
+  justify-self: end;
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #12343b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    filter 0.12s;
+}
+
+#mal-panel .identity-form button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: scale(1.04);
+}
+
+/* ── Notices & errors ───────────────────────────────────── */
+#mal-panel .error {
+  margin: 0 18px 10px;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+#mal-panel .terminal-note {
+  margin: 0 18px 10px;
+  color: #69797a;
+  font-size: 13px;
+}
+
+#mal-panel .uat-notice {
+  margin: 0;
+  color: #69797a;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+#mal-panel .uat-notice-composer {
+  padding: 0 18px 10px;
+}
+
+/* ── Composer ───────────────────────────────────────────── */
+#mal-panel .composer {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #dce4e7;
+  background: #ffffff;
+}
+
+#mal-panel .composer input {
+  height: 44px;
+  min-width: 0;
+  padding: 0 13px;
+  border: 1px solid #b8c7ce;
+  border-radius: 8px;
+  background: #ffffff;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+#mal-panel .composer input:focus-visible {
+  outline: none;
+  border-color: #1f6f78;
+  box-shadow: 0 0 0 3px rgb(31 111 120 / 18%);
+}
+
+#mal-panel .composer-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: #1a8787;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    filter 0.12s;
+}
+
+.composer-send:hover:not(:disabled),
+#mal-panel .composer-send:focus-visible:not(:disabled) {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+  outline: 3px solid rgb(26 135 135 / 22%);
+  outline-offset: 2px;
+}
+
+#mal-panel .composer-send:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+button:disabled,
+input:disabled,
+#mal-panel textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ── Motion ─────────────────────────────────────────────── */
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes thinking-pulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-panel,
+  .message,
+  #mal-panel .identity-form {
+    animation: none;
+  }
+
+  #mal-panel .thinking-dots span {
+    animation: none;
+  }
+
+  .composer input,
+  .composer-send,
+  #mal-panel .identity-form button {
+    transition: none;
+  }
+}
+

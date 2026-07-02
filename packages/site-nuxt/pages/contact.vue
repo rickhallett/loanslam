@@ -54,45 +54,34 @@
         <p v-html="contactCopy.debtAdvice.bodyHtml" />
       </aside>
     </div>
+
+    <ClientOnly>
+      <ChatWidget />
+    </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
-// The assistant widget loader and devtools ship inline exactly as on the
-// Astro contact page, sourced raw from the review-host package.
-import reviewHostDevtools from '../../review-host/public/devtools.js?raw';
-import reviewHostLoader from '../../review-host/public/loader.js?raw';
 import { page } from '../lib/content';
 import { contactCopy } from '../lib/site-copy';
 
+// The iframe loader/devtools are replaced by the native ChatWidget on this
+// page (D042); the Astro contact page keeps its own iframe machinery.
 const contact = page('contact');
-
-const chatConfigScript = `(function () {
-  var mode = new URLSearchParams(location.search).get('widget') || 'local';
-  var isLocal = location.hostname === '127.0.0.1' || location.hostname === 'localhost';
-
-  window.malChatConfig = {
-    widgetUrl: mode === 'remote' || !isLocal ? location.origin + '/widget/' : 'http://127.0.0.1:5175',
-    brandName: 'Loans by MAL',
-    launcherOpenLabel: 'Open Loans by MAL assistant',
-    launcherCloseLabel: 'Close Loans by MAL assistant',
-    panelLabel: 'Loans by MAL assistant',
-    launcherColor: '#00879b',
-    launcherFocusColor: '#f7a823',
-    frostBackground: 'rgba(250, 247, 241, 0.58)',
-    panelRadius: '16px',
-  };
-})();`;
 
 useHead({
   title: contact.seo_title ?? contact.title,
   meta: contact.seo_description
     ? [{ name: 'description', content: contact.seo_description }]
     : [],
-  script: [
-    { innerHTML: chatConfigScript, tagPosition: 'bodyClose' },
-    { innerHTML: reviewHostLoader, tagPosition: 'bodyClose' },
-    { innerHTML: reviewHostDevtools, tagPosition: 'bodyClose' },
+  link: [
+    // Poppins matches the review-widget chrome the iframe version loads.
+    { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap',
+    },
   ],
 });
 </script>
