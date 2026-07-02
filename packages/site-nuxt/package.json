@@ -10,6 +10,8 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@loanslam/contracts": "0.0.0",
+    "@loanslam/core": "0.0.0",
     "@fontsource-variable/bricolage-grotesque": "^5.2.10",
     "@fontsource-variable/plus-jakarta-sans": "^5.2.5",
     "nuxt": "^4.4.8",
