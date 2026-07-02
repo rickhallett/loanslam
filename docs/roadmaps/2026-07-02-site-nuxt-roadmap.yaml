@@ -5,7 +5,7 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-001
-active_slice: site-nuxt-scaffold-01
+active_slice: site-nuxt-bespoke-01
 active_slice_status: active
 latest_proof_receipt: null
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
@@ -15,7 +15,7 @@ branch:
   worktree: .claude/worktrees/site-nuxt-01
 proof_of_work_labels:
   epic: site-nuxt
-  slice: site-nuxt-scaffold-01
+  slice: site-nuxt-bespoke-01
   arc: sitenuxt-arc-001
   human_checkpoint: arc-closeout
 doctrine:
@@ -25,7 +25,8 @@ doctrine:
 arc_001_chain:
   - id: sn-001-scaffold
     slice_label: site-nuxt-scaffold-01
-    status: active
+    status: completed
+    receipt: artifacts/site-nuxt/site-nuxt-scaffold-01-proof.md
     depends_on: []
     summary: Nuxt package with layout/chrome port, fonts, global css, parity harness and route manifest.
     write_scope:
@@ -38,7 +39,8 @@ arc_001_chain:
       - Route manifest generated from the Astro build is committed.
   - id: sn-002-prose
     slice_label: site-nuxt-prose-01
-    status: pending
+    status: completed
+    receipt: artifacts/site-nuxt/parity-sn002/parity-report.json
     depends_on:
       - sn-001-scaffold
     summary: Content lib port, catch-all prose template, news index and article routes.
@@ -48,7 +50,7 @@ arc_001_chain:
       - All prose and news routes pass parity.
   - id: sn-003-bespoke
     slice_label: site-nuxt-bespoke-01
-    status: pending
+    status: active
     depends_on:
       - sn-002-prose
     summary: Home, faq, instalment-loan, contact, and login pages.
