@@ -186,6 +186,9 @@ import { homeCopy } from '../lib/site-copy';
 
 const home = page('home');
 const [featured, ...rest] = posts;
+if (!featured) {
+  throw new Error('home page requires at least one news post');
+}
 
 useHead({
   title: home.seo_title ?? home.title,

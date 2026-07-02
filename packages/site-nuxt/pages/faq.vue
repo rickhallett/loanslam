@@ -11,10 +11,10 @@
 
     <div class="container section faq-grid">
       <div>
-        <h2 class="group-title"><span>{{ faqPageCopy.groups[0].number }}</span>{{ faqPageCopy.groups[0].title }}</h2>
+        <h2 class="group-title"><span>{{ applicationGroup.number }}</span>{{ applicationGroup.title }}</h2>
         <FaqList :items="application" />
 
-        <h2 class="group-title spaced"><span>{{ faqPageCopy.groups[1].number }}</span>{{ faqPageCopy.groups[1].title }}</h2>
+        <h2 class="group-title spaced"><span>{{ existingGroup.number }}</span>{{ existingGroup.title }}</h2>
         <FaqList :items="existing" />
       </div>
 
@@ -34,6 +34,11 @@ import { page, rewriteLinks } from '../lib/content';
 import { faqPageCopy } from '../lib/site-copy';
 
 const faq = page('faq');
+
+const [applicationGroup, existingGroup] = faqPageCopy.groups;
+if (!applicationGroup || !existingGroup) {
+  throw new Error('faq page copy requires two question groups');
+}
 
 // Source order on the live site: 9 application questions, then 3 existing-customer ones.
 const items = faqQa.map((item) => ({ ...item, a: rewriteLinks(item.a) }));

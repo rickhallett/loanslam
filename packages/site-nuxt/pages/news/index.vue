@@ -42,6 +42,9 @@ import { formatDate, posts } from '../../lib/content';
 import { newsCopy } from '../../lib/site-copy';
 
 const [featured, ...rest] = posts;
+if (!featured) {
+  throw new Error('news index requires at least one post');
+}
 
 useHead({
   title: newsCopy.index.title,
