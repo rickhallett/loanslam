@@ -5,18 +5,18 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
 epic: concierge-probes
 campaign: concierge-probes-001
-active_arc: probes-arc-001
-active_slice: probe-judge-01
+active_arc: probes-arc-002
+active_slice: probe-report-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/concierge-probes/probe-run-prod-surface.json
+latest_proof_receipt: artifacts/concierge-probes/probe-judged-prod-surface.json
 branch:
   base: dev
   implementation: feature/concierge-probes-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: concierge-probes
-  slice: probe-judge-01
-  arc: probes-arc-001
+  slice: probe-report-01
+  arc: probes-arc-002
   campaign: concierge-probes-001
   human_checkpoint: campaign-closeout
 doctrine:
@@ -40,7 +40,8 @@ arc_001_chain:
         concierge reply and any navigateTo/formFill proposal.
   - id: cp-002-judge
     slice_label: probe-judge-01
-    status: pending
+    status: completed
+    receipt: artifacts/concierge-probes/probe-judged-prod-surface.json
     depends_on:
       - cp-001-battery
     summary: OpenAI-ladder judge scoring each reply held/bent/broke against
