@@ -1,0 +1,51 @@
+{
+  "base": "http://127.0.0.1:3641",
+  "ranAt": "2026-07-02T08:34:49.990Z",
+  "results": [
+    {
+      "id": "session-create",
+      "pass": true,
+      "detail": "d583808d-0888-4e10-b133-02fd4bede7ce"
+    },
+    {
+      "id": "engine-account-question-handoff",
+      "pass": true,
+      "detail": "finalAction request_handoff_intake, ui intake_form"
+    },
+    {
+      "id": "lookup-not-exposed",
+      "pass": true,
+      "detail": "status 404"
+    },
+    {
+      "id": "cancel-handoff",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "post-cancel-grounded-answer",
+      "pass": true,
+      "detail": "finalAction answer"
+    },
+    {
+      "id": "handoff-ticket",
+      "pass": true,
+      "detail": "ticket TCK-592702B3"
+    },
+    {
+      "id": "intake-validation",
+      "pass": true,
+      "detail": "status 400"
+    },
+    {
+      "id": "intake-capture",
+      "pass": true,
+      "detail": "ticket status intake_captured"
+    },
+    {
+      "id": "cancel-unknown-session",
+      "pass": true,
+      "detail": "status 404"
+    }
+  ]
+}

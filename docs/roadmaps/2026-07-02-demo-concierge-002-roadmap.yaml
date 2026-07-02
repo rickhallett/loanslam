@@ -7,8 +7,8 @@ epic: demo-concierge
 campaign: demo-concierge-002
 active_arc: concierge2-arc-002
 active_slice: concierge2-deploy-01
-active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-persistence-01-proof.md
+active_slice_status: completed
+latest_proof_receipt: artifacts/demo-concierge/demo-concierge-002-closeout.md
 branch:
   base: dev
   implementation: feature/demo-concierge-02
@@ -74,7 +74,8 @@ arc_001_chain:
 arc_002_chain:
   - id: dc2-004-deploy
     slice_label: concierge2-deploy-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/demo-concierge-002-closeout.md
     depends_on:
       - dc2-003-persistence
     summary: Full regression, production deploy, live proof, closeout.
