@@ -5,7 +5,7 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-002
-active_slice: sitenuxt-chat-deploy-01
+active_slice: sitenuxt-chat-devtools-01
 active_slice_status: completed
 latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-002-closeout.md
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-002-agenda-card.md
@@ -142,6 +142,20 @@ arc_002_chain:
       - docs/
     proof_bar:
       - Live launcher-to-ticket flow proven on the deployed URL; verify and branch-risk at closeout.
+  - id: sn-010-chat-devtools
+    slice_label: sitenuxt-chat-devtools-01
+    status: completed
+    receipt: artifacts/site-nuxt/sitenuxt-chat-devtools-01-live.png
+    depends_on:
+      - sn-009-chat-deploy
+    summary: Carry sm-devtools onto the native chat (D043 veto response) via mirrored telemetry.
+    write_scope:
+      - packages/site-nuxt/
+      - packages/integrated-poc/
+      - artifacts/site-nuxt/
+      - docs/
+    proof_bar:
+      - Devtools panel mounts behind ?devtools=true and renders serving mode, flags, turn, and state machine from native telemetry, locally and on the live URL.
 human_gates:
   - any intentional deviation from the Astro output (content, styling, routes, redirects, SEO)
   - touching site/, loanslam-site, loanslam-ipoc, Postgres, DNS, or custom domains

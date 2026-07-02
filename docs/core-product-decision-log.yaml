@@ -610,4 +610,19 @@ decisions:
       nondeterministic). The review-widget and demo-widget surfaces remain
       untouched and deliberately separate.
     status: accepted
+  - id: D043
+    date: 2026-07-02
+    topic: Devtools carried onto the native contact chat (D042 partial veto)
+    question: Which D042 contract deltas stand after human review?
+    accepted_answer: The sm-devtools engine-internals panel is required on the
+      Nuxt contact page for stakeholder demo value (veto of the D042 drop).
+      It ships verbatim behind ?devtools=true; the ipoc surface now returns
+      the same content-free DemoDisplayTelemetry the demo API produced
+      (mirrored builders in the ipoc adapter; devtools.js consumes the frozen
+      contract via same-window postMessage). Client-side reset and the
+      dropped continuation/access tokens stand for the demo phase per the
+      recorded stance - reset becomes a real endpoint when sessions get a
+      real store, and an access token or rate limit is revisited before the
+      URL circulates beyond stakeholders.
+    status: accepted
 

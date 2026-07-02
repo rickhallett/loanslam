@@ -1,4 +1,5 @@
 import type {
+  DemoDisplayTelemetry,
   IntakeField,
   SafetyFlag,
   TurnAction,
@@ -85,6 +86,7 @@ export interface IpocSendMessageResponse {
     finalAction: TurnAction;
     requestedFields: IntakeField[];
     safetyFlags: SafetyFlag[];
+    telemetry: DemoDisplayTelemetry;
   };
   ticket: IpocTicket | null;
 }
@@ -98,6 +100,7 @@ export interface IpocSubmitIntakeResponse {
   conversationRef: string;
   messages: IpocChatMessage[];
   ticket: IpocTicket;
+  telemetry: DemoDisplayTelemetry;
 }
 
 export interface IpocStructuredIntake {

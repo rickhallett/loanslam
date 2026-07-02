@@ -9,6 +9,7 @@ import {
   maybeBuildTicketFromTurn,
   runIpocTurn,
 } from "../../../../utils/engineAdapter";
+import { buildTurnTelemetry } from "../../../../utils/turnTelemetry";
 import {
   appendMessage,
   getIpocSession,
@@ -68,6 +69,10 @@ export default defineEventHandler(async (event): Promise<IpocSendMessageResponse
         finalAction: result.finalAction,
         requestedFields: [...result.state.requestedFields],
         safetyFlags: [...result.trace.safetyFlags],
+        telemetry: buildTurnTelemetry({
+          result,
+          turn: session.traces.length,
+        }),
       },
       ticket,
     };

@@ -11,6 +11,7 @@ import {
   getIpocSession,
   updateIpocTicketIntake,
 } from "../../../../utils/ipocStore";
+import { buildIntakeTelemetry } from "../../../../utils/turnTelemetry";
 
 export default defineEventHandler(
   async (event): Promise<IpocSubmitIntakeResponse> => {
@@ -72,6 +73,11 @@ export default defineEventHandler(
       conversationRef,
       messages: session.messages,
       ticket,
+      telemetry: buildIntakeTelemetry({
+        state: session.state,
+        submittedFields: Object.keys(validation.fields),
+        turn: session.traces.length,
+      }),
     };
   },
 );

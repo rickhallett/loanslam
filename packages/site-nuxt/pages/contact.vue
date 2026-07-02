@@ -62,6 +62,10 @@
 </template>
 
 <script setup lang="ts">
+// The sm-devtools engine-internals panel ships verbatim (gated behind
+// ?devtools=true); the native ChatWidget feeds it the same content-free
+// telemetry the iframe widget posted (D043).
+import reviewHostDevtools from '../../review-host/public/devtools.js?raw';
 import { page } from '../lib/content';
 import { contactCopy } from '../lib/site-copy';
 
@@ -83,6 +87,7 @@ useHead({
       href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap',
     },
   ],
+  script: [{ innerHTML: reviewHostDevtools, tagPosition: 'bodyClose' }],
 });
 </script>
 

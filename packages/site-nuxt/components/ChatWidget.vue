@@ -188,6 +188,12 @@ function linkHref(link: { url?: string | null; href?: string | null }): string {
   return link.url ?? link.href ?? '#';
 }
 
+function emitTelemetry(telemetry: unknown): void {
+  // Same-window loopback the sm-devtools panel already accepts: content-free
+  // decision metadata for the stakeholder engine-internals view (D043).
+  window.postMessage(telemetry, window.location.origin);
+}
+
 async function ensureSession(): Promise<string> {
   if (sessionRef.value) return sessionRef.value;
   const session = await $fetch<IpocSessionResponse>('/api/ipoc/sessions', { method: 'POST' });
@@ -211,6 +217,7 @@ async function submit(text: string): Promise<void> {
     );
     if (result.ticket) activeTicketId.value = result.ticket.id;
     pushMessage('assistant', result.assistant.message, result.assistant.ui);
+    emitTelemetry(result.assistant.telemetry);
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -239,6 +246,7 @@ async function onIntakeSubmit(values: Record<IntakeField, string>): Promise<void
       { method: 'POST', body: { ticketId: activeTicketId.value, fields: values } },
     );
     pushMessage('customer', 'Shared my contact details.');
+    emitTelemetry(result.telemetry);
     const confirmation = result.messages.at(-1);
     pushMessage(
       'assistant',
