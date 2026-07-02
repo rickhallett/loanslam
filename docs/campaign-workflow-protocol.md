@@ -171,10 +171,11 @@ mandatory habits:
 
 ## First campaign
 
-The first instantiation is the pre-demo convergence campaign: complete
-sitenuxt-arc-003 (sn-011, sn-012), merge `feature/site-nuxt-chat-01` to dev
-and promote, then a hardening arc (session-store abstraction with TTL and
-reset endpoint, access control/rate limit for the public ipoc surface, and a
-drafted D-entry for durable conversation recording). Its endpoint is the
-stakeholder demo — a human event. Its card is authored separately under this
-protocol and green-lit as a D-entry before work starts.
+The first instantiation is the pre-demo convergence campaign: merge
+`feature/site-nuxt-chat-01` (sitenuxt-arc-003 complete as of 2026-07-02) to
+dev and promote, build the promotion consistency check, then a hardening arc
+(session-store abstraction with TTL and reset endpoint, access control/rate
+limit for the public ipoc surface, and a drafted D-entry for durable
+conversation recording). Its endpoint is the stakeholder demo — a human
+event. Its card is authored separately under this protocol and green-lit as
+a D-entry before work starts.
