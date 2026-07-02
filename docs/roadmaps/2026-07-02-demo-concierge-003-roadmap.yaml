@@ -7,8 +7,8 @@ epic: demo-concierge
 campaign: demo-concierge-003
 active_arc: concierge3-arc-002
 active_slice: concierge3-rehearsal-01
-active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge3-staging-01-proof.md
+active_slice_status: completed
+latest_proof_receipt: artifacts/demo-concierge/demo-concierge-003-closeout.md
 branch:
   base: feature/demo-concierge-02 (campaign-002 closeout commit)
   implementation: feature/demo-concierge-03
@@ -76,7 +76,8 @@ arc_002_chain:
         service untouched by this campaign (spot check).
   - id: dc3-004-rehearsal
     slice_label: concierge3-rehearsal-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/demo-concierge-003-closeout.md
     depends_on:
       - dc3-003-staging
     summary: Staging rehearsal including suggestion and fill beats; closeout
