@@ -1,0 +1,90 @@
+{
+  "ranAt": "2026-07-02T04:58:58.814Z",
+  "astroBase": "http://127.0.0.1:4321",
+  "nuxtBase": "http://127.0.0.1:3640",
+  "pixelThreshold": 0.005,
+  "total": 10,
+  "passed": 10,
+  "results": [
+    {
+      "route": "/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/contact/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/contact/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/faq/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/faq/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/instalment-loan/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/instalment-loan/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/login/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/login/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    }
+  ]
+}
