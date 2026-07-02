@@ -162,6 +162,7 @@ import type {
   ConciergeStatusResponse,
 } from '../lib/concierge';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
+import { snapshotPage } from '../lib/pageSnapshot';
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
 // surface: same texts, same UiPlan rendering, same interaction rules (D042).
@@ -336,7 +337,14 @@ async function sendConciergeTurn(message: string): Promise<string> {
   const ref = await ensureConciergeSession();
   const result = await $fetch<ConciergeMessageResponse>(
     `/api/concierge/sessions/${encodeURIComponent(ref)}/messages`,
-    { method: 'POST', body: { message, formState: snapshotApplicationForm() } },
+    {
+      method: 'POST',
+      body: {
+        message,
+        formState: isApplyRoute.value ? snapshotApplicationForm() : null,
+        pageContext: snapshotPage(route.path),
+      },
+    },
   );
   return result.assistant.message;
 }
@@ -360,9 +368,10 @@ async function submit(
   isSending.value = true;
 
   try {
-    if (!forceEngine && isApplyRoute.value && conciergeAvailable.value) {
-      // Concierge mode: the segregated frontier-model route with a live
-      // form-state snapshot. No engine, no telemetry, no UiPlan.
+    if (!forceEngine && !isContactRoute.value && conciergeAvailable.value) {
+      // Concierge mode (D046): every route except /contact/ (the validated
+      // engine keeps the support chat). Page snapshot as context; form
+      // snapshot additionally on /apply/. No engine, no telemetry, no UiPlan.
       const reply = await sendConciergeTurn(trimmed);
       pushMessage('assistant', reply);
       applyOfferMessageId.value = null;

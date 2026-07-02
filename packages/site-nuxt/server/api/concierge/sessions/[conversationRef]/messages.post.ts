@@ -10,6 +10,7 @@ import {
 interface ConciergeMessageRequest {
   message?: unknown;
   formState?: unknown;
+  pageContext?: unknown;
 }
 
 export default defineEventHandler(async (event) => {
@@ -41,11 +42,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Message is required." });
   }
 
-  const formState =
-    body.formState && typeof body.formState === "object" && !Array.isArray(body.formState)
-      ? (body.formState as Record<string, unknown>)
+  const asObject = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
       : null;
 
-  const reply = await runConciergeTurn({ session, message, formState });
+  const reply = await runConciergeTurn({
+    session,
+    message,
+    formState: asObject(body.formState),
+    pageContext: asObject(body.pageContext),
+  });
   return { conversationRef, assistant: { message: reply } };
 });

@@ -77,24 +77,25 @@ export function getConciergeSession(ref: string): ConciergeSession | undefined {
 
 // House voice matched to the support chat the customer has already used;
 // the no-promises instruction is the accepted D045 guardrail.
-const CONCIERGE_INSTRUCTIONS = `You are the LoanSlam assistant, guiding a customer through the loan
-application form on this page. LoanSlam is a UK lender offering unsecured
-instalment loans. This is a prototype site and every detail the customer
-enters is synthetic test data.
+const CONCIERGE_INSTRUCTIONS = `You are the LoanSlam assistant, a guide across the LoanSlam website.
+LoanSlam is a UK lender offering unsecured instalment loans. This is a
+prototype site and every detail the customer enters is synthetic test data.
 
-Voice: match the LoanSlam support chat the customer has already used —
-warm, plain UK English, concise. Two or three short sentences per reply
-unless the question genuinely needs more. No emojis.
+Voice: warm, plain UK English, concise. Two or three short sentences per
+reply unless the question genuinely needs more. No emojis.
 
-When the customer's current form state is provided, use it: answer about
-the exact step and fields in front of them, acknowledge what they have
+When the customer's current page is provided, ground your help in it:
+explain what the page covers, answer questions about its content, and point
+to what is in front of them. On the application form, use the provided form
+state — answer about the exact step and fields, acknowledge what they have
 already completed, and point to what comes next. Encourage steady progress
 without pressure.
 
 Never promise or predict an application outcome, approval, eligibility
 decision, rate, or timescale, and never present yourself as making lending
-decisions. If the customer is struggling or asks for a person, tell them
-you can connect them with the support team.`;
+decisions. Anything account-specific (balances, payments, their loan)
+belongs with the support team, not you. If the customer is struggling or
+asks for a person, tell them you can connect them with the support team.`;
 
 let client: OpenAI | null = null;
 
@@ -110,10 +111,12 @@ export async function runConciergeTurn({
   session,
   message,
   formState,
+  pageContext,
 }: {
   session: ConciergeSession;
   message: string;
   formState?: Record<string, unknown> | null;
+  pageContext?: Record<string, unknown> | null;
 }): Promise<string> {
   session.messages.push({ role: "customer", content: message });
   if (session.messages.length > MAX_HISTORY_MESSAGES) {
@@ -125,6 +128,14 @@ export async function runConciergeTurn({
       role: entry.role === "customer" ? "user" : "assistant",
       content: entry.content,
     }));
+
+  if (pageContext && Object.keys(pageContext).length > 0) {
+    // Cap defensively; the client already truncates the excerpt.
+    input.push({
+      role: "developer",
+      content: `Customer's current page: ${JSON.stringify(pageContext).slice(0, 3000)}`,
+    });
+  }
 
   if (formState && Object.keys(formState).length > 0) {
     input.push({
