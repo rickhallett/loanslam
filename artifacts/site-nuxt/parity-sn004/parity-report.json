@@ -1,0 +1,26 @@
+{
+  "ranAt": "2026-07-02T05:00:09.024Z",
+  "astroBase": "http://127.0.0.1:4321",
+  "nuxtBase": "http://127.0.0.1:3640",
+  "pixelThreshold": 0.005,
+  "total": 2,
+  "passed": 2,
+  "results": [
+    {
+      "route": "/apply/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/apply/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    }
+  ]
+}

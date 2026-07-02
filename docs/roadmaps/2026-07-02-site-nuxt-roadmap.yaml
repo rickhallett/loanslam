@@ -5,7 +5,7 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-001
-active_slice: site-nuxt-apply-01
+active_slice: site-nuxt-deploy-01
 active_slice_status: active
 latest_proof_receipt: null
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
@@ -15,7 +15,7 @@ branch:
   worktree: .claude/worktrees/site-nuxt-01
 proof_of_work_labels:
   epic: site-nuxt
-  slice: site-nuxt-apply-01
+  slice: site-nuxt-deploy-01
   arc: sitenuxt-arc-001
   human_checkpoint: arc-closeout
 doctrine:
@@ -61,7 +61,8 @@ arc_001_chain:
       - All bespoke routes pass parity; full route manifest green except /apply/.
   - id: sn-004-apply
     slice_label: site-nuxt-apply-01
-    status: active
+    status: completed
+    receipt: artifacts/site-nuxt/parity-sn004-full/parity-report.json
     depends_on:
       - sn-003-bespoke
     summary: Apply page with ApplicationJourney.vue reuse.
@@ -72,7 +73,7 @@ arc_001_chain:
       - Full route manifest green.
   - id: sn-005-deploy
     slice_label: site-nuxt-deploy-01
-    status: pending
+    status: active
     depends_on:
       - sn-004-apply
     summary: Railway service loanslam-site-nuxt, live URL, live parity spot-check, closeout.
