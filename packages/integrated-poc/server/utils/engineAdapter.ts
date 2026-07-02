@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import type { IntakeField, ValidatedTurnResult } from "@loanslam/contracts";
@@ -13,9 +14,33 @@ import { OpenAiTurnPlanner } from "@loanslam/core/planners/openai";
 import type { IpocTicket } from "../../shared/ipoc";
 import type { IpocSession } from "./ipocStore";
 
-const corpus = loadCorpusFromFile(
-  resolve(process.cwd(), "../..", "data/public-info/loanslam-synthetic-kb.json"),
-).items;
+// The dev server runs with cwd=packages/integrated-poc; the built Nitro
+// output runs from the repo root or a deploy artifact directory. Resolve the
+// corpus against whichever exists, with an env override for deploys.
+function resolveCorpusPath(): string {
+  if (process.env.IPOC_CORPUS_PATH) {
+    return process.env.IPOC_CORPUS_PATH;
+  }
+
+  const relativePath = "data/public-info/loanslam-synthetic-kb.json";
+  const candidates = [
+    resolve(process.cwd(), relativePath),
+    resolve(process.cwd(), "../..", relativePath),
+  ];
+  const found = candidates.find((candidate) => existsSync(candidate));
+
+  if (!found) {
+    // Plain Error: this runs at module init, before the class declaration
+    // below is initialized.
+    throw new Error(
+      `Corpus file not found. Checked: ${candidates.join(", ")}. Set IPOC_CORPUS_PATH to override.`,
+    );
+  }
+
+  return found;
+}
+
+const corpus = loadCorpusFromFile(resolveCorpusPath()).items;
 const handoffActions = new Set([
   "request_handoff_intake",
   "create_ticket",

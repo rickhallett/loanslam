@@ -202,7 +202,8 @@ arc_004_chain:
   # between slices; human checkpoint at arc closeout.
   - id: ipoc-015-deploy-build
     slice_label: ipoc-deploy-build-01
-    status: active
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-deploy-build-01-proof.md
     depends_on:
       - ipoc-014-adapter-sunset-assessment
     summary: Production build/start entry points for the ipoc service; local production-mode proof.
