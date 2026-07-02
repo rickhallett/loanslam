@@ -1,0 +1,109 @@
+{
+  "source": "site/dist",
+  "routes": [
+    {
+      "route": "/",
+      "kind": "page"
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "kind": "not_found"
+    },
+    {
+      "route": "/about-us/",
+      "kind": "page"
+    },
+    {
+      "route": "/about-us/credit-score/",
+      "kind": "page"
+    },
+    {
+      "route": "/about-us/personal-loans/",
+      "kind": "page"
+    },
+    {
+      "route": "/apply/",
+      "kind": "page"
+    },
+    {
+      "route": "/complaints/",
+      "kind": "page"
+    },
+    {
+      "route": "/contact/",
+      "kind": "page"
+    },
+    {
+      "route": "/covid-19-help/",
+      "kind": "page"
+    },
+    {
+      "route": "/existing-customers/",
+      "kind": "page"
+    },
+    {
+      "route": "/extra-support/",
+      "kind": "page"
+    },
+    {
+      "route": "/faq/",
+      "kind": "page"
+    },
+    {
+      "route": "/instalment-loan/",
+      "kind": "page"
+    },
+    {
+      "route": "/login/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/can-i-get-a-personal-loan-with-a-poor-credit-score/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/how-can-i-boost-my-credit-score/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/how-can-i-check-my-credit-score-for-free/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/how-to-check-your-credit-history/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/whats-a-credit-builder-card/",
+      "kind": "page"
+    },
+    {
+      "route": "/news/will-a-personal-loan-affect-my-credit-score/",
+      "kind": "page"
+    },
+    {
+      "route": "/open-banking/",
+      "kind": "page"
+    },
+    {
+      "route": "/positive-outcomes/",
+      "kind": "page"
+    },
+    {
+      "route": "/privacy-policy/",
+      "kind": "page"
+    },
+    {
+      "route": "/sorry/",
+      "kind": "page"
+    },
+    {
+      "route": "/terms-and-conditions/",
+      "kind": "page"
+    }
+  ]
+}

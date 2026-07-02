@@ -1,0 +1,58 @@
+{
+  "ranAt": "2026-07-02T04:51:05.508Z",
+  "astroBase": "http://127.0.0.1:4321",
+  "nuxtBase": "http://127.0.0.1:3640",
+  "pixelThreshold": 0.005,
+  "total": 6,
+  "passed": 6,
+  "results": [
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    }
+  ]
+}

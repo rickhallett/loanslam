@@ -1,0 +1,148 @@
+<template>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="cols">
+        <div class="brand-col">
+          <img src="/duck.png" alt="" width="69" height="78" loading="lazy" />
+          <p class="brand-name">{{ brand.footerName }}</p>
+          <p class="tagline">{{ brand.tagline }}</p>
+        </div>
+        <nav v-for="col in footer.columns" :key="col.heading" :aria-label="col.heading">
+          <h3>{{ col.heading }}</h3>
+          <ul>
+            <li v-for="l in col.links" :key="l.href">
+              <a :href="l.href">{{ l.label }}</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="legal">
+        <p v-for="(paragraph, i) in footer.legalParagraphsHtml" :key="i" v-html="paragraph" />
+        <div class="legal-row">
+          <p>{{ footer.copyright }}</p>
+          <ul>
+            <li v-for="link in footer.policyLinks" :key="link.href">
+              <a :href="link.href">{{ link.label }}</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="watermark" aria-hidden="true">{{ footer.watermark }}</p>
+  </footer>
+</template>
+
+<script setup lang="ts">
+import { siteChrome } from '../lib/site-copy';
+
+const { brand, footer } = siteChrome;
+</script>
+
+<style scoped>
+  .site-footer {
+    position: relative;
+    background: var(--ink-950);
+    color: var(--on-dark-muted);
+    padding-block: 4rem 0;
+    font-size: 0.95rem;
+    overflow: hidden;
+  }
+
+  .cols {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.3fr repeat(3, 1fr);
+    gap: 2rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .brand-name {
+    font-family: var(--font-display);
+    color: #fff;
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0.6rem 0 0;
+  }
+
+  .tagline {
+    color: var(--green-500);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  h3 {
+    color: #fff;
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.9rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  a {
+    color: var(--on-dark);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+
+  .legal {
+    position: relative;
+    padding-top: 2rem;
+    font-size: 0.82rem;
+    max-width: 70rem;
+  }
+
+  .legal a {
+    color: var(--on-dark);
+  }
+
+  .legal-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .legal-row ul {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .watermark {
+    margin: 1.5rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(4rem, 13vw, 11rem);
+    line-height: 0.78;
+    letter-spacing: -0.04em;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.045);
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @media (max-width: 820px) {
+    .cols {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>
