@@ -1,4 +1,4 @@
-import { createError, getRequestIP, readBody } from "h3";
+import { createError, getRequestIP, readBody, setResponseHeaders } from "h3";
 
 import {
   conciergeEnabled,
@@ -12,6 +12,7 @@ interface ConciergeMessageRequest {
   formState?: unknown;
   pageContext?: unknown;
   resumeTranscript?: unknown;
+  stream?: unknown;
 }
 
 export default defineEventHandler(async (event) => {
@@ -60,12 +61,45 @@ export default defineEventHandler(async (event) => {
         .map((entry) => ({ role: entry.role, content: entry.content }))
     : null;
 
-  const reply = await runConciergeTurn({
+  const turn = {
     session,
     message,
     formState: asObject(body.formState),
     pageContext: asObject(body.pageContext),
     resumeTranscript,
-  });
+  };
+
+  // dr-002 (D047): opt-in SSE streaming for the plain-text reply path. All
+  // request validation (kill switch, rate limit, 404, 400) happens above,
+  // before any bytes stream — the dr-001 resurrection path still sees a
+  // plain 404 status. Non-streaming JSON remains the default for scripts
+  // and API consumers.
+  if (body.stream === true) {
+    setResponseHeaders(event, {
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache",
+    });
+    const encoder = new TextEncoder();
+    const frame = (payload: Record<string, unknown>) =>
+      encoder.encode(`data: ${JSON.stringify(payload)}\n\n`);
+    return new ReadableStream({
+      async start(controller) {
+        try {
+          const reply = await runConciergeTurn({
+            ...turn,
+            onDelta: (delta) => controller.enqueue(frame({ delta })),
+          });
+          controller.enqueue(frame({ done: true, conversationRef, message: reply }));
+        } catch {
+          controller.enqueue(
+            frame({ error: "The assistant hit a problem mid-reply. Please try again." }),
+          );
+        }
+        controller.close();
+      },
+    });
+  }
+
+  const reply = await runConciergeTurn(turn);
   return { conversationRef, assistant: { message: reply } };
 });

@@ -113,12 +113,16 @@ export async function runConciergeTurn({
   formState,
   pageContext,
   resumeTranscript,
+  onDelta,
 }: {
   session: ConciergeSession;
   message: string;
   formState?: Record<string, unknown> | null;
   pageContext?: Record<string, unknown> | null;
   resumeTranscript?: Array<{ role: "customer" | "assistant"; content: string }> | null;
+  // dr-002 (D047): when provided, the reply streams and each text delta is
+  // forwarded as it arrives; the returned string is still the full reply.
+  onDelta?: (delta: string) => void;
 }): Promise<string> {
   // dr-001 (D047): session resurrection. If a lost server session was
   // reseeded on the client, seed this fresh session's history from the
@@ -153,14 +157,33 @@ export async function runConciergeTurn({
     });
   }
 
-  const response = await getClient().responses.create({
-    model: conciergeModel(),
-    instructions: CONCIERGE_INSTRUCTIONS,
-    input,
-    max_output_tokens: 400,
-  });
+  let reply: string;
+  if (onDelta) {
+    const stream = await getClient().responses.create({
+      model: conciergeModel(),
+      instructions: CONCIERGE_INSTRUCTIONS,
+      input,
+      max_output_tokens: 400,
+      stream: true,
+    });
+    let full = "";
+    for await (const chunk of stream) {
+      if (chunk.type === "response.output_text.delta") {
+        full += chunk.delta;
+        onDelta(chunk.delta);
+      }
+    }
+    reply = full.trim();
+  } else {
+    const response = await getClient().responses.create({
+      model: conciergeModel(),
+      instructions: CONCIERGE_INSTRUCTIONS,
+      input,
+      max_output_tokens: 400,
+    });
+    reply = response.output_text.trim();
+  }
 
-  const reply = response.output_text.trim();
   session.messages.push({ role: "assistant", content: reply });
   return reply;
 }

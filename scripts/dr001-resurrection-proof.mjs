@@ -25,9 +25,22 @@ const check = (id, ok, detail = "") => {
 };
 
 async function say(page, text) {
+  // Wait for the turn to COMPLETE, not for the thinking dots to vanish —
+  // under dr-002 streaming the dots yield at the first delta while the
+  // reply is still arriving. Done = a new assistant bubble exists and the
+  // composer's data-sending flag has cleared.
+  const baseline = await page.evaluate(
+    () => document.querySelectorAll(".message-assistant:not(.thinking-bubble)").length,
+  );
   await page.fill(".composer input", text);
   await page.click(".composer-send");
-  await page.waitForFunction(() => !document.querySelector(".thinking-bubble"), { timeout: 90000 });
+  await page.waitForFunction(
+    (before) =>
+      !document.querySelector(".composer[data-sending]") &&
+      document.querySelectorAll(".message-assistant:not(.thinking-bubble)").length > before,
+    baseline,
+    { timeout: 90000 },
+  );
   return (await page.locator(".message-assistant .message-text").last().textContent()) ?? "";
 }
 

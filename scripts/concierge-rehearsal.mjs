@@ -26,17 +26,29 @@ const check = (id, ok, detail = "") => {
   console.log(`${ok ? "PASS" : "FAIL"}  ${id}  ${detail}`);
 };
 
-async function waitForReply(page) {
-  await page.waitForFunction(() => !document.querySelector(".thinking-bubble"), {
-    timeout: 90000,
-  });
+async function waitForReply(page, baseline) {
+  // Turn-complete = a new assistant bubble exists and the composer's
+  // data-sending flag has cleared. Works on both the pre-streaming build
+  // (no data-sending attribute; bubble lands whole) and the dr-002
+  // streaming build (dots yield at the first delta while text still grows).
+  await page.waitForFunction(
+    (before) =>
+      !document.querySelector(".composer[data-sending]") &&
+      !document.querySelector(".thinking-bubble") &&
+      document.querySelectorAll(".message-assistant:not(.thinking-bubble)").length > before,
+    baseline,
+    { timeout: 90000 },
+  );
   return (await page.locator(".message-assistant .message-text").last().textContent()) ?? "";
 }
 
 async function say(page, text) {
+  const baseline = await page.evaluate(
+    () => document.querySelectorAll(".message-assistant:not(.thinking-bubble)").length,
+  );
   await page.fill(".composer input", text);
   await page.click(".composer-send");
-  return waitForReply(page);
+  return waitForReply(page, baseline);
 }
 
 const browser = await chromium.launch({ executablePath, headless: true });

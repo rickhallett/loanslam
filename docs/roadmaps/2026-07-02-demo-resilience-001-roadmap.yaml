@@ -5,10 +5,10 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
 epic: demo-resilience
 campaign: demo-resilience-001
-active_arc: resilience-arc-001
-active_slice: reply-streaming-01
+active_arc: resilience-arc-002
+active_slice: resilience-deploy-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-resilience/dr001-resurrection-proof.md
+latest_proof_receipt: artifacts/demo-resilience/dr002-streaming-proof.md
 branch:
   base: dev (after concierge-probes-001 lands)
   implementation: feature/demo-resilience-01
@@ -42,7 +42,8 @@ arc_001_chain:
         recovers with the transcript intact; no duplicate/out-of-order turns.
   - id: dr-002-streaming
     slice_label: reply-streaming-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-resilience/dr002-streaming-proof.md
     depends_on:
       - dr-001-resurrection
     summary: Stream plain-text concierge replies into the panel (production
