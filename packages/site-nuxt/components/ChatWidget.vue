@@ -84,6 +84,16 @@
                   Our support team will take it from here.
                 </div>
               </div>
+              <div
+                v-if="index === messages.length - 1 && message.id === applyOfferMessageId"
+                class="primitive"
+              >
+                <div class="choices">
+                  <button id="mal-apply-nav" class="chip" type="button" @click="goToApply">
+                    Take me to the application
+                  </button>
+                </div>
+              </div>
             </li>
             <li v-if="isSending" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
@@ -166,7 +176,22 @@ const route = useRoute();
 const isChatRoute = computed(() => CHAT_PATHS.has(normalizePath(route.path)));
 const isContactRoute = computed(() => normalizePath(route.path) === '/contact');
 
+// dc-003 (D045): deterministic navigation offer. When a grounded answer's
+// top retrieval match is an apply-journey FAQ item, offer to take the user
+// to the application form. Client-side quick action only — the engine and
+// validator are untouched; no offer on safety-flagged turns.
+const APPLY_ITEM_IDS = new Set([
+  'how-do-i-apply',
+  'what-is-the-eligibility-criteria',
+  'can-i-apply-with-bad-credit',
+  'can-i-apply-jointly',
+  'what-documents-do-i-need',
+  'will-my-credit-score-be-affected',
+  'why-are-applications-declined-general',
+]);
+
 const isOpen = ref(false);
+const applyOfferMessageId = ref<number | null>(null);
 const storedContext = ref<'vulnerability' | 'handoff' | 'general' | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
@@ -224,6 +249,18 @@ const VULNERABLE_FLAGS = new Set([
 ]);
 const HANDOFF_ACTIONS = new Set(['request_handoff_intake', 'create_ticket', 'escalate']);
 
+function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
+  if (telemetry.finalAction !== 'answer' || telemetry.safetyFlags.length > 0) return false;
+  if (normalizePath(route.path) === '/apply') return false;
+  const top = telemetry.retrieval.matches[0];
+  return top !== undefined && APPLY_ITEM_IDS.has(top.itemId);
+}
+
+function goToApply(): void {
+  applyOfferMessageId.value = null;
+  void navigateTo('/apply/');
+}
+
 function contextForTelemetry(
   telemetry: DemoDisplayTelemetry,
 ): 'vulnerability' | 'handoff' | 'general' {
@@ -264,6 +301,9 @@ async function submit(text: string): Promise<void> {
     if (result.ticket) activeTicketId.value = result.ticket.id;
     pushMessage('assistant', result.assistant.message, result.assistant.ui);
     emitTelemetry(result.assistant.telemetry);
+    applyOfferMessageId.value = applyOfferEligible(result.assistant.telemetry)
+      ? (messages.value.at(-1)?.id ?? null)
+      : null;
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -336,6 +376,7 @@ function reset(): void {
   activeTicketId.value = null;
   isChatComplete.value = false;
   errorMessage.value = '';
+  applyOfferMessageId.value = null;
   messages.value = [];
   pushMessage('assistant', WELCOME);
 }
