@@ -1,22 +1,22 @@
 version: 1
 title: Integrated POC Roadmap
 status: active
-updated: 2026-07-01
+updated: 2026-07-02
 source_agenda: docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
-active_arc: ipoc-arc-003
-active_slice: ipoc-adapter-sunset-01
-active_slice_status: completed
+active_arc: ipoc-arc-004
+active_slice: ipoc-deploy-build-01
+active_slice_status: active
 latest_proof_receipt: artifacts/integrated-poc/ipoc-arc-003-closeout.md
-active_agenda_card: docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
+active_agenda_card: docs/prds/2026-07-02-integrated-poc-arc-004-agenda-card.md
 branch:
   base: dev
-  implementation: feature/ipoc-golden-path-01
-  worktree: .claude/worktrees/ipoc-golden-path-01
+  implementation: feature/ipoc-deploy-01
+  worktree: .claude/worktrees/ipoc-deploy-01
 proof_of_work_labels:
   epic: ipoc
-  slice: ipoc-customer-lookup-01
-  arc: ipoc-arc-003
+  slice: ipoc-deploy-build-01
+  arc: ipoc-arc-004
   human_checkpoint: arc-closeout
 doctrine:
   - CONTEXT.md
@@ -24,6 +24,7 @@ doctrine:
   - docs/prds/2026-06-30-integrated-poc-reference.md
   - docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md
   - docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md
+  - docs/prds/2026-07-02-integrated-poc-arc-004-agenda-card.md
   - docs/llm-turn-planner-architecture.md
 first_dependency_chain:
   - id: ipoc-001-roadmap-and-scaffold
@@ -196,6 +197,58 @@ arc_003_chain:
     proof_bar:
       - Assessment names what the Integrated POC now covers, what the adapter still uniquely provides, and a recommendation.
       - Acting on the recommendation remains behind a human gate.
+arc_004_chain:
+  # Deployment arc, batch-authorized 2026-07-02 (D039/D040). Machine gates
+  # between slices; human checkpoint at arc closeout.
+  - id: ipoc-015-deploy-build
+    slice_label: ipoc-deploy-build-01
+    status: active
+    depends_on:
+      - ipoc-014-adapter-sunset-assessment
+    summary: Production build/start entry points for the ipoc service; local production-mode proof.
+    write_scope:
+      - package.json
+      - packages/integrated-poc/
+      - scripts/
+    proof_bar:
+      - Root ipoc-build and ipoc-start scripts produce and run the Nitro node-server output locally.
+      - Integration battery passes against the local production-mode server.
+  - id: ipoc-016-deploy-service
+    slice_label: ipoc-deploy-service-01
+    status: pending
+    depends_on:
+      - ipoc-015-deploy-build
+    summary: Create the loanslam-ipoc Railway service and wire secrets through the encrypted tooling.
+    write_scope:
+      - secrets/manifest.json
+      - secrets/production.env.sops
+      - artifacts/integrated-poc/
+    proof_bar:
+      - Service exists in loanslam-staging-site beside the untouched loanslam-site service.
+      - OPENAI_API_KEY flows sops -> railway via stdin tooling; dry-run recorded; no value printed anywhere.
+  - id: ipoc-017-deploy-live
+    slice_label: ipoc-deploy-live-01
+    status: pending
+    depends_on:
+      - ipoc-016-deploy-service
+    summary: Deploy, generate the Railway domain, and prove the live URL with battery and browser proof.
+    write_scope:
+      - artifacts/integrated-poc/
+      - docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml
+    proof_bar:
+      - Integration battery passes against the live URL, including the live-engine boundary case.
+      - Headless browser proof of the full demo journey on the live URL with receipt.
+  - id: ipoc-018-demo-runbook
+    slice_label: ipoc-demo-runbook-01
+    status: pending
+    depends_on:
+      - ipoc-017-deploy-live
+    summary: Stakeholder demo runbook and executable adapter-sunset plan.
+    write_scope:
+      - docs/
+    proof_bar:
+      - Runbook is followable cold and names known limitations (no auth, in-memory state).
+      - Sunset plan has an explicit trigger (one completed stakeholder demo) and rollback note; execution stays human-gated.
 human_gates:
   - choosing a framework other than the Nuxt/Vue Integrated POC app direction
   - abandoning the separate Integrated POC app/package

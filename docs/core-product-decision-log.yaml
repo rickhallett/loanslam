@@ -543,3 +543,29 @@ decisions:
       be shrunk without a new decision but not expanded. Lookup is demo
       identification against synthetic records, not identity verification.
     status: accepted
+  - id: D039
+    date: 2026-07-02
+    topic: Arc-003 closeout approvals
+    question: What did the human decide on the four open items from the
+      ipoc-arc-003 closeout?
+    accepted_answer: All approved. The D038 default answer set stands
+      (nextPaymentDate, outstandingBalance, loanStatus). The Integrated POC
+      deployment arc is green-lit. feature/ipoc-golden-path-01 was promoted
+      into dev (fast-forward). The review-host/review-widget pair stays out of
+      the demo-adapter sunset and gets its own product decision later.
+    status: accepted
+  - id: D040
+    date: 2026-07-02
+    topic: Integrated POC deployment shape (ipoc-arc-004)
+    question: How does the Integrated POC deploy for the stakeholder demo?
+    accepted_answer: A new Railway service (loanslam-ipoc) in the existing
+      loanslam-staging-site project, beside the untouched loanslam-site demo
+      service, on a Railway-generated domain only (no custom DNS). The app
+      builds via the Nuxt/Nitro node-server output with root ipoc-build and
+      ipoc-start scripts. OPENAI_API_KEY is promoted into
+      secrets/production.env.sops and given a railway deploy target in the
+      secrets manifest; values flow only through the encrypted-secrets tooling
+      (sops set via stdin, sync-railway dry-run then apply) and are never
+      printed. The mock ticket/record store stays in-memory demo state; the
+      deployed surface remains read-only and synthetic-data-only.
+    status: accepted
