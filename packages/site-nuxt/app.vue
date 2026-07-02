@@ -6,6 +6,9 @@
       <NuxtPage />
     </main>
     <SiteFooter />
+    <ClientOnly>
+      <ChatWidget />
+    </ClientOnly>
   </div>
 </template>
 

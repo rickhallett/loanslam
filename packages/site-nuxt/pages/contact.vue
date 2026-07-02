@@ -54,11 +54,9 @@
         <p v-html="contactCopy.debtAdvice.bodyHtml" />
       </aside>
     </div>
-
-    <ClientOnly>
-      <ChatWidget />
-    </ClientOnly>
   </div>
+  <!-- The ChatWidget is mounted at layout level (app.vue) so chat state
+       survives navigation between /contact/ and /apply/ (D045). -->
 </template>
 
 <script setup lang="ts">

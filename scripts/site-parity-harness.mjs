@@ -86,6 +86,26 @@ if (process.argv.includes("--write-manifest")) {
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 const routes = manifest.routes.filter((r) => !routesFilter || routesFilter.includes(r.route));
 
+// Accepted deviations (D045): the layout-level chat launcher exists on the
+// Nuxt site only, on the routes below. The harness hides that chrome on the
+// Nuxt side so the rest of the page stays pixel-guarded, and records the
+// applied deviation in the report. Any other deviation still fails.
+const CHAT_CHROME_CSS = "#mal-launcher, #mal-panel, #mal-frost { display: none !important; }";
+const acceptedDeviations = {
+  "/apply/": {
+    decision: "D045",
+    reason: "layout-level chat launcher on the apply journey (Nuxt only)",
+    nuxtHideCss: CHAT_CHROME_CSS,
+  },
+  "/contact/": {
+    decision: "D042/D043",
+    reason:
+      "native chat panel replaces the iframe widget; chat chrome has its own dedicated proof (scripts/contact-chat-parity.mjs), so it is masked on both sides here",
+    astroHideCss: CHAT_CHROME_CSS,
+    nuxtHideCss: CHAT_CHROME_CSS,
+  },
+};
+
 const executablePath = `${homedir()}/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`;
 const settleCss = `*, *::before, *::after {
   animation: none !important;
@@ -93,10 +113,11 @@ const settleCss = `*, *::before, *::after {
   caret-color: transparent !important;
 }`;
 
-async function capture(page, base, route, viewport) {
+async function capture(page, base, route, viewport, extraCss = null) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   await page.goto(`${base}${route}`, { waitUntil: "networkidle", timeout: 45000 });
   await page.addStyleTag({ content: settleCss });
+  if (extraCss) await page.addStyleTag({ content: extraCss });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150);
   const text = await page.evaluate(() =>
@@ -143,9 +164,10 @@ const results = [];
 
 for (const entry of routes) {
   const probeRoute = entry.kind === "not_found" ? "/__parity-not-found__/" : entry.route;
+  const deviation = acceptedDeviations[entry.route] ?? null;
   for (const viewport of viewports) {
-    const astro = await capture(page, astroBase, probeRoute, viewport);
-    const nuxt = await capture(page, nuxtBase, probeRoute, viewport);
+    const astro = await capture(page, astroBase, probeRoute, viewport, deviation?.astroHideCss);
+    const nuxt = await capture(page, nuxtBase, probeRoute, viewport, deviation?.nuxtHideCss);
     const textMatch = astro.text === nuxt.text;
     const titleMatch = astro.title === nuxt.title;
     const { ratio, diff } = comparePixels(astro.png, nuxt.png);
@@ -158,6 +180,9 @@ for (const entry of routes) {
       pixelRatio: Number(ratio.toFixed(5)),
       pass,
     };
+    if (deviation) {
+      result.acceptedDeviation = { decision: deviation.decision, reason: deviation.reason };
+    }
     if (!textMatch) result.textDiff = firstTextDiff(astro.text, nuxt.text);
     if (!titleMatch) result.titles = { astro: astro.title, nuxt: nuxt.title };
     if (!pass) {
@@ -182,6 +207,7 @@ const report = {
   astroBase,
   nuxtBase,
   pixelThreshold,
+  acceptedDeviations,
   total: results.length,
   passed: results.length - failed.length,
   results,

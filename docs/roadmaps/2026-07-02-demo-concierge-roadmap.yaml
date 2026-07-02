@@ -6,16 +6,16 @@ source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
 epic: demo-concierge
 campaign: demo-concierge-001
 active_arc: concierge-arc-001
-active_slice: concierge-surface-01
+active_slice: concierge-navigate-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-consistency-check-01-run.txt
+latest_proof_receipt: artifacts/demo-concierge/concierge-surface-01-proof.md
 branch:
   base: dev
   implementation: feature/demo-concierge-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-surface-01
+  slice: concierge-navigate-01
   arc: concierge-arc-001
   campaign: demo-concierge-001
   human_checkpoint: campaign-closeout
@@ -42,13 +42,17 @@ arc_001_chain:
         against this roadmap.
   - id: dc-002-surface
     slice_label: concierge-surface-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-surface-01-proof.md
     depends_on:
       - dc-001-consistency-check
     summary: Launcher/panel lifted to a layout-level component with chat state
       surviving client-side navigation; launcher present on /apply/.
     write_scope:
+      # scripts/ added at execution: the proof bar requires recording the
+      # /apply/ deviation in the parity harness, which lives in scripts/.
       - packages/site-nuxt/
+      - scripts/
       - artifacts/demo-concierge/
     proof_bar:
       - Contact battery green; /contact/ closed-state parity holds; /apply/

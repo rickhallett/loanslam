@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-show="isChatRoute">
     <div id="mal-frost" :class="{ 'is-visible': isOpen }" @click="closePanel" />
 
     <button
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 import type { DemoDisplayTelemetry, IntakeField, UiPlan } from '@loanslam/contracts';
 import type {
@@ -150,6 +150,21 @@ interface ChatMessage {
 
 const WELCOME =
   "Hi, I'm the LoanSlam assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+
+// Layout-level surface (D045): the widget stays mounted across client-side
+// navigation so chat state survives; the launcher renders only on the chat
+// routes so every other route keeps Astro pixel parity. /contact/ keeps its
+// auto-open loader parity.
+const CHAT_PATHS = new Set(['/contact', '/apply']);
+
+function normalizePath(path: string): string {
+  const trimmed = path.replace(/\/+$/, '');
+  return trimmed === '' ? '/' : trimmed;
+}
+
+const route = useRoute();
+const isChatRoute = computed(() => CHAT_PATHS.has(normalizePath(route.path)));
+const isContactRoute = computed(() => normalizePath(route.path) === '/contact');
 
 const isOpen = ref(false);
 const storedContext = ref<'vulnerability' | 'handoff' | 'general' | null>(null);
@@ -373,11 +388,23 @@ watch(
   },
 );
 
+watch(isChatRoute, (onChatRoute) => {
+  // The mal-open body class only belongs to routes where the chrome shows.
+  if (!onChatRoute) document.body.classList.remove('mal-open');
+  else if (isOpen.value) document.body.classList.add('mal-open');
+});
+
+watch(isContactRoute, (now, prev) => {
+  // Each arrival at /contact/ auto-opens, matching the per-visit loader
+  // behavior the page had when the widget was mounted by the page itself.
+  if (now && !prev) openPanel();
+});
+
 onMounted(() => {
   pushMessage('assistant', WELCOME);
   // The loader auto-opens the panel once the widget announces ready; the
   // native panel is ready immediately (deployed-Astro behavior parity).
-  openPanel();
+  if (isContactRoute.value) openPanel();
 });
 </script>
 
