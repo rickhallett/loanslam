@@ -669,4 +669,32 @@ decisions:
       new secrets. Revert path is kill switch then route deletion after the
       demo; productizing any concierge behavior requires a new decision.
     status: accepted
+  - id: D046
+    date: 2026-07-02
+    topic: Concierge expansion authorized as two risk-split campaigns
+    question: How does the concierge take a more active role across the
+      site, and where does each risk tier deploy?
+    accepted_answer: Two campaigns under docs/campaign-workflow-protocol.md,
+      split by blast radius so human UAT can pick the strongest demo card.
+      Campaign demo-concierge-002 (confident wins, deploys to the existing
+      production demo service) - launcher present but closed by default on
+      every route (auto-open stays contact-only), concierge serves all
+      routes except /contact/ with a DOM-derived page snapshot as context
+      (route, title, headings, text excerpt - same pattern as the form
+      snapshot), and transcript/session refs persist in sessionStorage so
+      the conversation survives full page loads. Campaign demo-concierge-003
+      (tricksy, deploys ONLY to a new loanslam-site-nuxt-staging Railway
+      service; its branch does not merge to dev until UAT accepts) -
+      structured concierge output proposing navigation from an allowlist
+      built from the committed route manifest, rendered as confirm-to-act
+      chips, and propose-and-confirm form filling on /apply/ where model
+      -proposed values apply client-side only after an explicit user click.
+      Standing up the staging service, its variables, and the sops->railway
+      OPENAI_API_KEY sync for it are authorized. D045's posture (ungated
+      model, system-prompt guardrails, kill switch, rate limits, synthetic
+      data only) carries to both. The adapter/Astro sunset is deprioritized,
+      not cancelled. Noted for the record - each expansion makes post-demo
+      route deletion less likely; if the concierge becomes the product, the
+      validator's return for this surface is a future decision.
+    status: accepted
 

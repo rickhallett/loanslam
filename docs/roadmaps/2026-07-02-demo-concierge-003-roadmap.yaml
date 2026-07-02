@@ -1,0 +1,96 @@
+version: 1
+title: Demo Concierge 003 Roadmap (active guidance, staging only)
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-003-card.md
+epic: demo-concierge
+campaign: demo-concierge-003
+active_arc: concierge3-arc-001
+active_slice: concierge-suggest-nav-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: feature/demo-concierge-02 (campaign-002 closeout commit)
+  implementation: feature/demo-concierge-03
+  worktree: .claude/worktrees/demo-concierge-01
+  merge_gate: does NOT merge to dev until human UAT accepts (D046)
+proof_of_work_labels:
+  epic: demo-concierge
+  slice: concierge-suggest-nav-01
+  arc: concierge3-arc-001
+  campaign: demo-concierge-003
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-02-demo-concierge-campaign-003-card.md
+arc_001_chain:
+  # Tricksy tier (D046): the model proposes, the user disposes.
+  - id: dc3-001-suggest-nav
+    slice_label: concierge-suggest-nav-01
+    status: pending
+    depends_on: []
+    summary: Structured concierge output with optional navigation target,
+      validated server-side against the committed route manifest; rendered
+      as a confirm-to-act chip.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Live flow shows a suggestion rendered and executed by click on a
+        non-apply route; an off-manifest target is dropped server-side.
+  - id: dc3-002-form-fill
+    slice_label: concierge-form-fill-01
+    status: pending
+    depends_on:
+      - dc3-001-suggest-nav
+    summary: Structured output may propose apply-form values (known field
+      names only); confirm chip applies them via native input events.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Live flow proposes values from conversation, applies them on click,
+        and the form's Vue state visibly updates; nothing applies without
+        the click; ApplicationJourney.vue untouched.
+arc_002_chain:
+  - id: dc3-003-staging
+    slice_label: concierge3-staging-01
+    status: pending
+    depends_on:
+      - dc3-002-form-fill
+    summary: Create loanslam-site-nuxt-staging service, key sync (dry-run
+      recorded), deploy, generated domain.
+    write_scope:
+      - scripts/
+      - secrets/manifest.json
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Staging URL serves the site with campaign-003 features; production
+        service untouched by this campaign (spot check).
+  - id: dc3-004-rehearsal
+    slice_label: concierge3-rehearsal-01
+    status: pending
+    depends_on:
+      - dc3-003-staging
+    summary: Staging rehearsal including suggestion and fill beats; closeout
+      and UAT handover script.
+    write_scope:
+      - scripts/
+      - docs/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Rehearsal green against staging; closeout with consistency output
+        and a followable UAT script comparing both campaigns.
+human_gates:
+  - merge to dev / production deploy of any campaign-003 feature (UAT gate)
+  - everything in the campaign-003 card
+stop_conditions:
+  - campaign-001/002 stop conditions
+  - form filling cannot drive the shared component through native events
+    without modifying it
+  - structured output cannot be validated server-side
+  - staging service costs or conflicts surface on the shared project

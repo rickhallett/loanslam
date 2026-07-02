@@ -1,0 +1,92 @@
+version: 1
+title: Demo Concierge 002 Roadmap (site-wide page-aware presence)
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
+epic: demo-concierge
+campaign: demo-concierge-002
+active_arc: concierge2-arc-001
+active_slice: concierge-presence-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev
+  implementation: feature/demo-concierge-02
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: demo-concierge
+  slice: concierge-presence-01
+  arc: concierge2-arc-001
+  campaign: demo-concierge-002
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
+arc_001_chain:
+  # Confident tier (D046): presence, page context, persistence.
+  - id: dc2-001-presence
+    slice_label: concierge-presence-01
+    status: pending
+    depends_on: []
+    summary: Launcher on all routes, closed by default (contact auto-open
+      unchanged); parity-harness deviation generalized to mask chat chrome.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Surface proof shows launcher closed-by-default on prose/news/faq
+        routes and contact auto-open unchanged; full manifest harness green.
+  - id: dc2-002-page-context
+    slice_label: concierge-page-context-01
+    status: pending
+    depends_on:
+      - dc2-001-presence
+    summary: DOM-derived page snapshot piped into concierge turns; concierge
+      serves all routes except /contact/; system prompt generalized.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Live turns on two non-apply route types answer with visible awareness
+        of the page; /apply/ still includes the form snapshot; contact still
+        served by the engine.
+  - id: dc2-003-persistence
+    slice_label: concierge-persistence-01
+    status: pending
+    depends_on:
+      - dc2-002-page-context
+    summary: Transcript and session refs persist in sessionStorage; restored
+      transcripts are text-only.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Full page reload restores the transcript and continues the same
+        concierge session (server history intact).
+arc_002_chain:
+  - id: dc2-004-deploy
+    slice_label: concierge2-deploy-01
+    status: pending
+    depends_on:
+      - dc2-003-persistence
+    summary: Full regression, production deploy, live proof, closeout.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - docs/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Contact battery green; campaign-001 rehearsal still 6/6; manifest
+        harness green; live page-aware + persistence spot proof on the
+        production URL; closeout with consistency output.
+human_gates:
+  - everything in the campaign-002 card (no campaign-003 features here)
+stop_conditions:
+  - campaign-001 stop conditions
+  - persistence cannot restore without corrupting chat behavior
+  - the generalized deviation masks anything beyond chat chrome
