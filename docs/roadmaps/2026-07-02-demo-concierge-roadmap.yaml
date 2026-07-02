@@ -66,7 +66,10 @@ arc_001_chain:
     summary: Deterministic navigation offer to /apply/ from apply/eligibility
       telemetry plus user confirmation.
     write_scope:
+      # scripts/ added at execution: committed proof scripts live in scripts/
+      # (same correction as dc-002; flagged by the consistency check).
       - packages/site-nuxt/
+      - scripts/
       - artifacts/demo-concierge/
     proof_bar:
       - Headless browser flow proves chat intent -> offer -> navigation to
