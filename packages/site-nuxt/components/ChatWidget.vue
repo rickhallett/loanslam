@@ -146,6 +146,12 @@ import type {
   IpocSessionResponse,
   IpocSubmitIntakeResponse,
 } from '../../integrated-poc/shared/ipoc';
+import type {
+  ConciergeMessageResponse,
+  ConciergeSessionResponse,
+  ConciergeStatusResponse,
+} from '../lib/concierge';
+import { snapshotApplicationForm } from '../lib/formSnapshot';
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
 // surface: same texts, same UiPlan rendering, same interaction rules (D042).
@@ -161,6 +167,13 @@ interface ChatMessage {
 const WELCOME =
   "Hi, I'm the LoanSlam assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
 
+// dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
+// to the segregated concierge route with a snapshot of the form state; the
+// validated engine keeps serving every other route. Disabled everywhere by
+// the kill switch (status endpoint gates the UI affordances too).
+const APPLY_INTRO =
+  "Here's the application — a few short steps, starting with your details. I can see the form as you fill it in (test details only on this prototype), so if anything's unclear just ask me here.";
+
 // Layout-level surface (D045): the widget stays mounted across client-side
 // navigation so chat state survives; the launcher renders only on the chat
 // routes so every other route keeps Astro pixel parity. /contact/ keeps its
@@ -175,6 +188,7 @@ function normalizePath(path: string): string {
 const route = useRoute();
 const isChatRoute = computed(() => CHAT_PATHS.has(normalizePath(route.path)));
 const isContactRoute = computed(() => normalizePath(route.path) === '/contact');
+const isApplyRoute = computed(() => normalizePath(route.path) === '/apply');
 
 // dc-003 (D045): deterministic navigation offer. When a grounded answer's
 // top retrieval match is an apply-journey FAQ item, offer to take the user
@@ -192,6 +206,9 @@ const APPLY_ITEM_IDS = new Set([
 
 const isOpen = ref(false);
 const applyOfferMessageId = ref<number | null>(null);
+const conciergeAvailable = ref(false);
+const conciergeSessionRef = ref<string | null>(null);
+const applyIntroDone = ref(false);
 const storedContext = ref<'vulnerability' | 'handoff' | 'general' | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
@@ -250,6 +267,9 @@ const VULNERABLE_FLAGS = new Set([
 const HANDOFF_ACTIONS = new Set(['request_handoff_intake', 'create_ticket', 'escalate']);
 
 function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
+  // The kill switch silences every concierge affordance, including the
+  // navigation nudge into the concierge-assisted journey.
+  if (!conciergeAvailable.value) return false;
   if (telemetry.finalAction !== 'answer' || telemetry.safetyFlags.length > 0) return false;
   if (normalizePath(route.path) === '/apply') return false;
   const top = telemetry.retrieval.matches[0];
@@ -284,6 +304,31 @@ async function ensureSession(): Promise<string> {
   return session.conversationRef;
 }
 
+async function ensureConciergeSession(): Promise<string> {
+  if (conciergeSessionRef.value) return conciergeSessionRef.value;
+  const session = await $fetch<ConciergeSessionResponse>('/api/concierge/sessions', {
+    method: 'POST',
+  });
+  conciergeSessionRef.value = session.conversationRef;
+  return session.conversationRef;
+}
+
+async function sendConciergeTurn(message: string): Promise<string> {
+  const ref = await ensureConciergeSession();
+  const result = await $fetch<ConciergeMessageResponse>(
+    `/api/concierge/sessions/${encodeURIComponent(ref)}/messages`,
+    { method: 'POST', body: { message, formState: snapshotApplicationForm() } },
+  );
+  return result.assistant.message;
+}
+
+function maybeApplyIntro(): void {
+  if (!isApplyRoute.value || !isOpen.value) return;
+  if (!conciergeAvailable.value || applyIntroDone.value) return;
+  applyIntroDone.value = true;
+  pushMessage('assistant', APPLY_INTRO);
+}
+
 async function submit(text: string): Promise<void> {
   const trimmed = text.trim();
   if (!trimmed || isSending.value || isChatComplete.value) return;
@@ -293,6 +338,14 @@ async function submit(text: string): Promise<void> {
   isSending.value = true;
 
   try {
+    if (isApplyRoute.value && conciergeAvailable.value) {
+      // Concierge mode: the segregated frontier-model route with a live
+      // form-state snapshot. No engine, no telemetry, no UiPlan.
+      const reply = await sendConciergeTurn(trimmed);
+      pushMessage('assistant', reply);
+      applyOfferMessageId.value = null;
+      return;
+    }
     const ref = await ensureSession();
     const result = await $fetch<IpocSendMessageResponse>(
       `/api/ipoc/sessions/${encodeURIComponent(ref)}/messages`,
@@ -374,11 +427,14 @@ function reset(): void {
   // the next message, mirroring the widget's local-clear fallback.
   sessionRef.value = null;
   activeTicketId.value = null;
+  conciergeSessionRef.value = null;
+  applyIntroDone.value = false;
   isChatComplete.value = false;
   errorMessage.value = '';
   applyOfferMessageId.value = null;
   messages.value = [];
   pushMessage('assistant', WELCOME);
+  maybeApplyIntro();
 }
 
 function focusInput(): void {
@@ -441,11 +497,23 @@ watch(isContactRoute, (now, prev) => {
   if (now && !prev) openPanel();
 });
 
-onMounted(() => {
+watch([isApplyRoute, isOpen, conciergeAvailable], () => {
+  // Arrival introduction (D045): fires when the open panel reaches /apply/
+  // (chat-driven navigation) or when the panel is first opened there.
+  maybeApplyIntro();
+});
+
+onMounted(async () => {
   pushMessage('assistant', WELCOME);
   // The loader auto-opens the panel once the widget announces ready; the
   // native panel is ready immediately (deployed-Astro behavior parity).
   if (isContactRoute.value) openPanel();
+  try {
+    const status = await $fetch<ConciergeStatusResponse>('/api/concierge/status');
+    conciergeAvailable.value = status.enabled;
+  } catch {
+    conciergeAvailable.value = false;
+  }
 });
 </script>
 
