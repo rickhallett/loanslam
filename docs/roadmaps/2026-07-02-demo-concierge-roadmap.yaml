@@ -1,0 +1,152 @@
+version: 1
+title: Demo Concierge Roadmap
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
+epic: demo-concierge
+campaign: demo-concierge-001
+active_arc: concierge-arc-001
+active_slice: concierge-consistency-check-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev
+  implementation: feature/demo-concierge-01
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: demo-concierge
+  slice: concierge-consistency-check-01
+  arc: concierge-arc-001
+  campaign: demo-concierge-001
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
+arc_001_chain:
+  # Chat surface reaches /apply/ (plumbing, no new intelligence). D045.
+  - id: dc-001-consistency-check
+    slice_label: concierge-consistency-check-01
+    status: pending
+    depends_on: []
+    summary: Mechanical roadmap/card/diff/receipt consistency script required
+      by the campaign protocol before any promotion.
+    write_scope:
+      - scripts/
+      - docs/roadmaps/2026-07-02-demo-concierge-roadmap.yaml
+    proof_bar:
+      - Script verifies completed chain ids have existing receipts, receipts
+        name ancestor commits, and write scopes were respected; runs green
+        against this roadmap.
+  - id: dc-002-surface
+    slice_label: concierge-surface-01
+    status: pending
+    depends_on:
+      - dc-001-consistency-check
+    summary: Launcher/panel lifted to a layout-level component with chat state
+      surviving client-side navigation; launcher present on /apply/.
+    write_scope:
+      - packages/site-nuxt/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Contact battery green; /contact/ closed-state parity holds; /apply/
+        deviation recorded for the parity harness.
+  - id: dc-003-navigate
+    slice_label: concierge-navigate-01
+    status: pending
+    depends_on:
+      - dc-002-surface
+    summary: Deterministic navigation offer to /apply/ from apply/eligibility
+      telemetry plus user confirmation.
+    write_scope:
+      - packages/site-nuxt/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Headless browser flow proves chat intent -> offer -> navigation to
+        /apply/ with chat state intact.
+arc_002_chain:
+  # The concierge brain (segregated, ungated per D045).
+  - id: dc-004-route
+    slice_label: concierge-route-01
+    status: pending
+    depends_on:
+      - dc-002-surface
+    summary: Segregated concierge Nitro route with frontier model, house-voice
+      system prompt, no validator, env-var kill switch.
+    write_scope:
+      - packages/site-nuxt/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Probe shows concierge turns served live from the model; kill switch
+        env var disables the route.
+  - id: dc-005-form-state
+    slice_label: concierge-form-state-01
+    status: pending
+    depends_on:
+      - dc-003-navigate
+      - dc-004-route
+    summary: Reactive form-state store from ApplicationJourney.vue serialized
+      into concierge turns; arrival introduction on /apply/.
+    write_scope:
+      - packages/site-nuxt/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Scripted flow proves arrival intro and a form question answered with
+        visible awareness of entered field values.
+  - id: dc-006-handoff
+    slice_label: concierge-handoff-01
+    status: pending
+    depends_on:
+      - dc-005-form-state
+    summary: Difficulty path offering and triggering the existing handoff
+      intake flow from concierge mode.
+    write_scope:
+      - packages/site-nuxt/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Scripted flow reaches the existing intake form from a concierge
+        conversation and server readback shows the ticket.
+arc_003_chain:
+  # Demo insurance: exposure controls and rehearsal, then closeout.
+  - id: dc-007-exposure
+    slice_label: concierge-exposure-01
+    status: pending
+    depends_on:
+      - dc-006-handoff
+    summary: IP/session rate limit on the concierge route; kill switch proven
+      live; deploy.
+    write_scope:
+      - packages/site-nuxt/
+      - scripts/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Rate limit and kill switch proven on the live URL; no new secrets.
+  - id: dc-008-rehearsal
+    slice_label: concierge-rehearsal-01
+    status: pending
+    depends_on:
+      - dc-007-exposure
+    summary: Happy-path rehearsal battery on the live URL; demo runbook
+      update; campaign closeout report.
+    write_scope:
+      - scripts/
+      - docs/
+      - artifacts/demo-concierge/
+    proof_bar:
+      - Rehearsal battery green on the live URL (intent -> navigate -> intro
+        -> form questions -> handoff).
+      - Closeout report includes consistency-check output; runbook followable
+        cold.
+human_gates:
+  - anything listed under Non-Goals / Preserved Human Gates in the campaign
+    card (engine path, Astro site, DNS, auth/PII/CRM, productization)
+  - any expansion of the concierge beyond the apply journey
+stop_conditions:
+  - contact battery or /contact/ closed-state parity cannot be preserved by
+    the surface lift
+  - concierge work creates pressure to modify the validated engine path
+  - form-state read-in requires restructuring ApplicationJourney.vue beyond a
+    thin reactive store
+  - consistency check fails at an arc close
+  - card, roadmap, diff, and receipts disagree

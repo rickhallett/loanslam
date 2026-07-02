@@ -1,7 +1,7 @@
 version: 1
 title: Core Product Decision Log
 status: active
-updated: 2026-07-01
+updated: 2026-07-02
 authority:
   role: Canonical record of accepted questions and answers from product and engine
     alignment sessions.
@@ -639,5 +639,34 @@ decisions:
       that decision. Direction accepted - once these land, the Astro site has
       served its purpose and retirement proceeds under the existing
       human-gated sunset plan.
+    status: accepted
+  - id: D045
+    date: 2026-07-02
+    topic: Demo-concierge campaign authorization (demo-only compliance
+      deviation)
+    question: Is the apply-journey chat concierge authorized for the
+      stakeholder demo, and on what contract?
+    accepted_answer: Authorized as the demo-concierge campaign under
+      docs/campaign-workflow-protocol.md, card
+      docs/prds/2026-07-02-demo-concierge-campaign-001-card.md, endpoint the
+      stakeholder demo. This knowingly deviates from three recorded lines,
+      demo-only and reversible. (1) Product-frame extension - the chat may
+      offer to take a user into the apply journey, introduce the form, and
+      assist with it; apply/eligibility remain FAQ content for the support
+      chat, and this does not make the product a sales funnel. (2) Parity
+      deviation - the chat launcher/panel appears on /apply/ and other
+      routes via a layout-level component; the accepted deviation is
+      recorded for the parity harness. (3) Engine bypass - a segregated
+      concierge route serves apply-journey assistance from a frontier
+      OpenAI model with no validator; guardrails are system-prompt-only (a
+      short no-promises/no-eligibility-decisions instruction plus house
+      voice and concision), explicitly accepted in lieu of iterative
+      hardening. Form field state (synthetic demo data only) is serialized
+      into concierge turns, crossing the content-free telemetry boundary
+      for this surface only. The validated processTurn path, the support
+      chat, and its batteries are untouched. Exposure controls, not content
+      hardening - IP/session rate limiting and an env-var kill switch; no
+      new secrets. Revert path is kill switch then route deletion after the
+      demo; productizing any concierge behavior requires a new decision.
     status: accepted
 
