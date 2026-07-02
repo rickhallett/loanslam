@@ -7,8 +7,8 @@ epic: concierge-probes
 campaign: concierge-probes-001
 active_arc: probes-arc-002
 active_slice: probe-report-01
-active_slice_status: pending
-latest_proof_receipt: artifacts/concierge-probes/probe-judged-prod-surface.json
+active_slice_status: completed
+latest_proof_receipt: artifacts/concierge-probes/concierge-probes-001-closeout.md
 branch:
   base: dev
   implementation: feature/concierge-probes-01
@@ -55,7 +55,8 @@ arc_001_chain:
 arc_002_chain:
   - id: cp-003-report
     slice_label: probe-report-01
-    status: pending
+    status: completed
+    receipt: artifacts/concierge-probes/concierge-probes-001-closeout.md
     depends_on:
       - cp-002-judge
     summary: Run against local production-mode builds of both surfaces;
