@@ -6,16 +6,16 @@ source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
 epic: demo-concierge
 campaign: demo-concierge-001
 active_arc: concierge-arc-003
-active_slice: concierge-exposure-01
+active_slice: concierge-rehearsal-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-handoff-01-proof.md
+latest_proof_receipt: artifacts/demo-concierge/concierge-exposure-01-proof.md
 branch:
   base: dev
   implementation: feature/demo-concierge-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-exposure-01
+  slice: concierge-rehearsal-01
   arc: concierge-arc-003
   campaign: demo-concierge-001
   human_checkpoint: campaign-closeout
@@ -129,7 +129,8 @@ arc_003_chain:
   # Demo insurance: exposure controls and rehearsal, then closeout.
   - id: dc-007-exposure
     slice_label: concierge-exposure-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-exposure-01-proof.md
     depends_on:
       - dc-006-handoff
     summary: IP/session rate limit on the concierge route; kill switch proven

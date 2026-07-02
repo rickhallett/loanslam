@@ -1,7 +1,8 @@
-import { createError, readBody } from "h3";
+import { createError, getRequestIP, readBody } from "h3";
 
 import {
   conciergeEnabled,
+  conciergeRateLimitExceeded,
   getConciergeSession,
   runConciergeTurn,
 } from "../../../../utils/concierge";
@@ -14,6 +15,11 @@ interface ConciergeMessageRequest {
 export default defineEventHandler(async (event) => {
   if (!conciergeEnabled()) {
     throw createError({ statusCode: 503, statusMessage: "Concierge is disabled." });
+  }
+
+  const ip = getRequestIP(event, { xForwardedFor: true }) ?? "unknown";
+  if (conciergeRateLimitExceeded("messages", ip)) {
+    throw createError({ statusCode: 429, statusMessage: "Too many requests." });
   }
 
   const conversationRef = getRouterParam(event, "conversationRef");

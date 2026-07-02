@@ -30,6 +30,33 @@ export function conciergeEnabled(): boolean {
   return process.env.CONCIERGE_KILL_SWITCH !== "1";
 }
 
+// Fixed-window per-IP rate limit (dc-007): exposure control for the public
+// URL — protects the OpenAI budget, not the content (D045). Counted before
+// body validation so hammering costs no model calls.
+const RATE_WINDOW_MS = 5 * 60_000;
+const RATE_LIMITS = { sessions: 10, messages: 30 } as const;
+const rateBuckets = new Map<string, { windowStart: number; count: number }>();
+
+export function conciergeRateLimitExceeded(
+  kind: keyof typeof RATE_LIMITS,
+  ip: string,
+): boolean {
+  const now = Date.now();
+  if (rateBuckets.size > 1000) {
+    for (const [key, bucket] of rateBuckets) {
+      if (now - bucket.windowStart >= RATE_WINDOW_MS) rateBuckets.delete(key);
+    }
+  }
+  const key = `${kind}:${ip}`;
+  let bucket = rateBuckets.get(key);
+  if (!bucket || now - bucket.windowStart >= RATE_WINDOW_MS) {
+    bucket = { windowStart: now, count: 0 };
+    rateBuckets.set(key, bucket);
+  }
+  bucket.count += 1;
+  return bucket.count > RATE_LIMITS[kind];
+}
+
 export function conciergeModel(): string {
   return process.env.CONCIERGE_MODEL ?? "gpt-5.5";
 }
