@@ -29,6 +29,7 @@ doctrine:
 first_dependency_chain:
   - id: ipoc-001-roadmap-and-scaffold
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
     depends_on: []
     summary: Create the committed roadmap and separate Integrated POC app package.
     write_scope:
@@ -42,6 +43,7 @@ first_dependency_chain:
       - Staged gate passes before commit.
   - id: ipoc-002-customer-visible-contract
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
     depends_on:
       - ipoc-001-roadmap-and-scaffold
     summary: Port one current-safe support or handoff-shaped customer journey into the new app surface.
@@ -52,6 +54,7 @@ first_dependency_chain:
       - The path preserves current safe assistant behavior without adding account answers or actions.
   - id: ipoc-003-engine-route
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
     depends_on:
       - ipoc-002-customer-visible-contract
     summary: Route the customer turn through the current engine contract or a thin adapter over processTurn.
@@ -63,6 +66,7 @@ first_dependency_chain:
       - Browser receives a display-safe response model, not internal trace-only data.
   - id: ipoc-004-thin-ticket-context
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
     depends_on:
       - ipoc-003-engine-route
     summary: Record thin mock support/ticket context for handoff-shaped turns.
@@ -74,6 +78,7 @@ first_dependency_chain:
       - Ticket/support context can be read back by server-side code.
   - id: ipoc-005-admin-readback
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-golden-path-01-proof.md
     depends_on:
       - ipoc-004-thin-ticket-context
     summary: Add the admin/human-agent readback view for the mock ticket context.
@@ -97,6 +102,7 @@ first_dependency_chain:
 handoff_capture_chain:
   - id: ipoc-007-handoff-capture-form
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
     depends_on:
       - ipoc-006-browser-proof
     summary: Add customer-side handoff capture form with current engine intake fields.
@@ -107,6 +113,7 @@ handoff_capture_chain:
       - Form uses fullName, dateOfBirth, postcode, email, and phone only.
   - id: ipoc-008-intake-ticket-update
     status: completed
+    receipt: artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md
     depends_on:
       - ipoc-007-handoff-capture-form
     summary: Validate and attach structured intake fields to the thin mock ticket.
