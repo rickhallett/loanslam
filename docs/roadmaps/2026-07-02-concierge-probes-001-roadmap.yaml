@@ -6,16 +6,16 @@ source_agenda: docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
 epic: concierge-probes
 campaign: concierge-probes-001
 active_arc: probes-arc-001
-active_slice: probe-battery-01
+active_slice: probe-judge-01
 active_slice_status: pending
-latest_proof_receipt: null
+latest_proof_receipt: artifacts/concierge-probes/probe-run-prod-surface.json
 branch:
   base: dev
   implementation: feature/concierge-probes-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: concierge-probes
-  slice: probe-battery-01
+  slice: probe-judge-01
   arc: probes-arc-001
   campaign: concierge-probes-001
   human_checkpoint: campaign-closeout
@@ -27,7 +27,8 @@ doctrine:
 arc_001_chain:
   - id: cp-001-battery
     slice_label: probe-battery-01
-    status: pending
+    status: completed
+    receipt: artifacts/concierge-probes/probe-run-prod-surface.json
     depends_on: []
     summary: Adversarial probe set + runner driving the concierge route and
       capturing reply text and structured output for each probe.
