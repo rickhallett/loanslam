@@ -569,3 +569,21 @@ decisions:
       printed. The mock ticket/record store stays in-memory demo state; the
       deployed surface remains read-only and synthetic-data-only.
     status: accepted
+  - id: D041
+    date: 2026-07-02
+    topic: Astro-to-Nuxt site migration arc (sitenuxt-arc-001)
+    question: How does the marketing site move from Astro to Nuxt, and what is
+      the parity standard?
+    accepted_answer: The Astro site under site/ is recreated in a new
+      packages/site-nuxt Nuxt app with identical styling and content,
+      consuming the same site-copy and content JSON. Parity is machine-judged
+      by a committed harness that compares every route in the Astro build
+      against the Nuxt app via normalized DOM-text diff and pixel diff at
+      desktop and mobile viewports; routes under the pixel threshold pass
+      without human review, and only above-threshold routes escalate a diff
+      image for human eyes. Any intentional deviation from the Astro output
+      is a human gate. The Nuxt site deploys as its own Railway service
+      beside the existing ones; the old site service, DNS, and cutover remain
+      human-gated, and folding site and assistant into one app is a later
+      product decision.
+    status: accepted

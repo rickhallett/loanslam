@@ -1,0 +1,91 @@
+version: 1
+title: Site Nuxt Migration Roadmap
+status: active
+updated: 2026-07-02
+source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
+epic: site-nuxt
+active_arc: sitenuxt-arc-001
+active_slice: site-nuxt-scaffold-01
+active_slice_status: active
+latest_proof_receipt: null
+active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
+branch:
+  base: dev
+  implementation: feature/site-nuxt-01
+  worktree: .claude/worktrees/site-nuxt-01
+proof_of_work_labels:
+  epic: site-nuxt
+  slice: site-nuxt-scaffold-01
+  arc: sitenuxt-arc-001
+  human_checkpoint: arc-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
+arc_001_chain:
+  - id: sn-001-scaffold
+    slice_label: site-nuxt-scaffold-01
+    status: active
+    depends_on: []
+    summary: Nuxt package with layout/chrome port, fonts, global css, parity harness and route manifest.
+    write_scope:
+      - packages/site-nuxt/
+      - package.json
+      - package-lock.json
+      - scripts/
+    proof_bar:
+      - Parity harness runs and reports; 404 and one prose route pass text and pixel parity.
+      - Route manifest generated from the Astro build is committed.
+  - id: sn-002-prose
+    slice_label: site-nuxt-prose-01
+    status: pending
+    depends_on:
+      - sn-001-scaffold
+    summary: Content lib port, catch-all prose template, news index and article routes.
+    write_scope:
+      - packages/site-nuxt/
+    proof_bar:
+      - All prose and news routes pass parity.
+  - id: sn-003-bespoke
+    slice_label: site-nuxt-bespoke-01
+    status: pending
+    depends_on:
+      - sn-002-prose
+    summary: Home, faq, instalment-loan, contact, and login pages.
+    write_scope:
+      - packages/site-nuxt/
+    proof_bar:
+      - All bespoke routes pass parity; full route manifest green except /apply/.
+  - id: sn-004-apply
+    slice_label: site-nuxt-apply-01
+    status: pending
+    depends_on:
+      - sn-003-bespoke
+    summary: Apply page with ApplicationJourney.vue reuse.
+    write_scope:
+      - packages/site-nuxt/
+    proof_bar:
+      - /apply/ passes parity; interactive journey browser proof captured.
+      - Full route manifest green.
+  - id: sn-005-deploy
+    slice_label: site-nuxt-deploy-01
+    status: pending
+    depends_on:
+      - sn-004-apply
+    summary: Railway service loanslam-site-nuxt, live URL, live parity spot-check, closeout.
+    write_scope:
+      - scripts/
+      - package.json
+      - artifacts/site-nuxt/
+      - docs/
+    proof_bar:
+      - Live URL serves the full route manifest; live parity spot-check receipt committed.
+      - just branch-risk -- --base dev run at closeout; cutover remains human-gated.
+human_gates:
+  - any intentional deviation from the Astro output (content, styling, routes, redirects, SEO)
+  - touching site/, loanslam-site, loanslam-ipoc, Postgres, DNS, or custom domains
+  - cutover or retirement of the Astro site service
+stop_conditions:
+  - parity cannot converge on a route without changing content
+  - the harness requires mocked rendering instead of the real apps
+  - card, roadmap, implementation diff, and receipts disagree
