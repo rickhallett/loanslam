@@ -1,0 +1,138 @@
+{
+  "ranAt": "2026-07-02T05:09:04.199Z",
+  "astroBase": "http://127.0.0.1:4321",
+  "nuxtBase": "https://loanslam-site-nuxt-production.up.railway.app",
+  "pixelThreshold": 0.005,
+  "total": 16,
+  "passed": 16,
+  "results": [
+    {
+      "route": "/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/__parity-not-found__/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/about-us/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/apply/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/apply/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/contact/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/contact/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/faq/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/faq/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/news/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/news/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/news/how-can-i-boost-my-credit-score/",
+      "viewport": "desktop",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    },
+    {
+      "route": "/news/how-can-i-boost-my-credit-score/",
+      "viewport": "mobile",
+      "textMatch": true,
+      "titleMatch": true,
+      "pixelRatio": 0,
+      "pass": true
+    }
+  ]
+}

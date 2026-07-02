@@ -51,7 +51,9 @@
     "integrated-poc:build": "npm --workspace @loanslam/integrated-poc run build",
     "integrated-poc:typecheck": "npm --workspace @loanslam/integrated-poc run typecheck",
     "ipoc-build": "npm run integrated-poc:build",
-    "ipoc-start": "node packages/integrated-poc/.output/server/index.mjs"
+    "ipoc-start": "node packages/integrated-poc/.output/server/index.mjs",
+    "site-nuxt-build": "npm --workspace @loanslam/site-nuxt run build",
+    "site-nuxt-start": "node packages/site-nuxt/.output/server/index.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
