@@ -587,3 +587,27 @@ decisions:
       human-gated, and folding site and assistant into one app is a later
       product decision.
     status: accepted
+  - id: D042
+    date: 2026-07-02
+    topic: Native contact-page chat on the ipoc surface (sitenuxt-arc-002)
+    question: How does the poc chat integrate into the Nuxt contact page, and
+      which /demo contract behaviors carry over?
+    accepted_answer: The Nuxt contact page replaces the iframe loader with a
+      native launcher and panel that visually match the current widget chrome
+      and speak the ipoc Nitro surface, which imports the same processTurn
+      engine. Contract deltas (agent defaults, human-vetoable) - reset is
+      client-side (drop the session ref and start a new session, mirroring the
+      widget's local-clear fallback); cancel-handoff becomes an ipoc route
+      calling the engine's exported cancelHandoff state helper (no engine
+      change); continuation tokens are dropped (stateful same-service
+      sessions); the demo access token is not carried (same-origin routes on
+      the noindex demo site, matching the ipoc posture); the review-stack
+      devtools script is not carried onto the Nuxt contact page. Parity
+      standard - closed-state contact page stays at 0.00 percent pixel parity
+      (launcher chrome identical); the open panel's initial state is
+      screenshot-compared and structurally asserted; conversation behavior is
+      proven by scripted live-engine flows, not pixels (LLM turns are
+      nondeterministic). The review-widget and demo-widget surfaces remain
+      untouched and deliberately separate.
+    status: accepted
+
