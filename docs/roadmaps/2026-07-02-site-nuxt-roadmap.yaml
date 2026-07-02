@@ -5,7 +5,7 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md
 epic: site-nuxt
 active_arc: sitenuxt-arc-002
-active_slice: sitenuxt-chat-proof-01
+active_slice: sitenuxt-chat-deploy-01
 active_slice_status: active
 latest_proof_receipt: artifacts/site-nuxt/sitenuxt-arc-001-closeout.md
 active_agenda_card: docs/prds/2026-07-02-site-nuxt-arc-002-agenda-card.md
@@ -15,7 +15,7 @@ branch:
   worktree: .claude/worktrees/site-nuxt-01
 proof_of_work_labels:
   epic: site-nuxt
-  slice: sitenuxt-chat-proof-01
+  slice: sitenuxt-chat-deploy-01
   arc: sitenuxt-arc-001
   human_checkpoint: arc-closeout
 doctrine:
@@ -115,7 +115,8 @@ arc_002_chain:
       - Panel works end-to-end locally; iframe loader and devtools removed from the Nuxt page only.
   - id: sn-008-chat-proof
     slice_label: sitenuxt-chat-proof-01
-    status: active
+    status: completed
+    receipt: artifacts/site-nuxt/sitenuxt-chat-proof-01-proof.md
     depends_on:
       - sn-007-chat-panel
     summary: Behavior battery, closed-state pixel parity, open-state chrome proof.
@@ -128,7 +129,7 @@ arc_002_chain:
       - /contact/ closed-state remains 0.00% vs Astro; open-panel initial state committed with structural assertions.
   - id: sn-009-chat-deploy
     slice_label: sitenuxt-chat-deploy-01
-    status: pending
+    status: active
     depends_on:
       - sn-008-chat-proof
     summary: Secrets sync, deploy, live behavior proof, closeout, human report.
