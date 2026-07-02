@@ -94,6 +94,16 @@
                   </button>
                 </div>
               </div>
+              <div
+                v-if="index === messages.length - 1 && message.id === handoffOfferMessageId"
+                class="primitive"
+              >
+                <div class="choices">
+                  <button id="mal-handoff-nav" class="chip" type="button" @click="connectSupport">
+                    Connect me with the support team
+                  </button>
+                </div>
+              </div>
             </li>
             <li v-if="isSending" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
@@ -206,6 +216,7 @@ const APPLY_ITEM_IDS = new Set([
 
 const isOpen = ref(false);
 const applyOfferMessageId = ref<number | null>(null);
+const handoffOfferMessageId = ref<number | null>(null);
 const conciergeAvailable = ref(false);
 const conciergeSessionRef = ref<string | null>(null);
 const applyIntroDone = ref(false);
@@ -281,6 +292,17 @@ function goToApply(): void {
   void navigateTo('/apply/');
 }
 
+// dc-006 (D045): the difficulty path out of concierge mode. When the
+// concierge offers the support team, a deterministic quick action routes
+// the next turn to the validated engine, which owns the existing handoff
+// intake flow (form, ticket, server readback) unchanged.
+function connectSupport(): void {
+  handoffOfferMessageId.value = null;
+  void submit("I'd like to talk to a person about my loan application, please.", {
+    forceEngine: true,
+  });
+}
+
 function contextForTelemetry(
   telemetry: DemoDisplayTelemetry,
 ): 'vulnerability' | 'handoff' | 'general' {
@@ -329,7 +351,10 @@ function maybeApplyIntro(): void {
   pushMessage('assistant', APPLY_INTRO);
 }
 
-async function submit(text: string): Promise<void> {
+async function submit(
+  text: string,
+  { forceEngine = false }: { forceEngine?: boolean } = {},
+): Promise<void> {
   const trimmed = text.trim();
   if (!trimmed || isSending.value || isChatComplete.value) return;
 
@@ -338,12 +363,15 @@ async function submit(text: string): Promise<void> {
   isSending.value = true;
 
   try {
-    if (isApplyRoute.value && conciergeAvailable.value) {
+    if (!forceEngine && isApplyRoute.value && conciergeAvailable.value) {
       // Concierge mode: the segregated frontier-model route with a live
       // form-state snapshot. No engine, no telemetry, no UiPlan.
       const reply = await sendConciergeTurn(trimmed);
       pushMessage('assistant', reply);
       applyOfferMessageId.value = null;
+      handoffOfferMessageId.value = /support team/i.test(reply)
+        ? (messages.value.at(-1)?.id ?? null)
+        : null;
       return;
     }
     const ref = await ensureSession();
@@ -357,6 +385,7 @@ async function submit(text: string): Promise<void> {
     applyOfferMessageId.value = applyOfferEligible(result.assistant.telemetry)
       ? (messages.value.at(-1)?.id ?? null)
       : null;
+    handoffOfferMessageId.value = null;
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -432,6 +461,7 @@ function reset(): void {
   isChatComplete.value = false;
   errorMessage.value = '';
   applyOfferMessageId.value = null;
+  handoffOfferMessageId.value = null;
   messages.value = [];
   pushMessage('assistant', WELCOME);
   maybeApplyIntro();

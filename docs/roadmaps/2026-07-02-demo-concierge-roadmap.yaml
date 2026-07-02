@@ -5,18 +5,18 @@ updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
 epic: demo-concierge
 campaign: demo-concierge-001
-active_arc: concierge-arc-002
-active_slice: concierge-handoff-01
+active_arc: concierge-arc-003
+active_slice: concierge-exposure-01
 active_slice_status: pending
-latest_proof_receipt: artifacts/demo-concierge/concierge-form-state-01-proof.md
+latest_proof_receipt: artifacts/demo-concierge/concierge-handoff-01-proof.md
 branch:
   base: dev
   implementation: feature/demo-concierge-01
   worktree: .claude/worktrees/demo-concierge-01
 proof_of_work_labels:
   epic: demo-concierge
-  slice: concierge-handoff-01
-  arc: concierge-arc-002
+  slice: concierge-exposure-01
+  arc: concierge-arc-003
   campaign: demo-concierge-001
   human_checkpoint: campaign-closeout
 doctrine:
@@ -111,7 +111,8 @@ arc_002_chain:
         visible awareness of entered field values.
   - id: dc-006-handoff
     slice_label: concierge-handoff-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-concierge/concierge-handoff-01-proof.md
     depends_on:
       - dc-005-form-state
     summary: Difficulty path offering and triggering the existing handoff
