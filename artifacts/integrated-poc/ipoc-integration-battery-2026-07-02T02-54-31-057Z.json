@@ -1,0 +1,86 @@
+{
+  "base": "https://loanslam-ipoc-production.up.railway.app",
+  "ranAt": "2026-07-02T02:54:31.061Z",
+  "results": [
+    {
+      "id": "session-create",
+      "pass": true,
+      "detail": "conversationRef 4927c5d5-00f3-4c20-af7e-b394670c24d8"
+    },
+    {
+      "id": "lookup-match",
+      "pass": true,
+      "detail": "matched with display-safe pair only"
+    },
+    {
+      "id": "lookup-no-match",
+      "pass": true,
+      "detail": "no match, no data disclosed"
+    },
+    {
+      "id": "answers-gated-unmatched",
+      "pass": true,
+      "detail": "status 403"
+    },
+    {
+      "id": "lookup-validation",
+      "pass": true,
+      "detail": "status 400"
+    },
+    {
+      "id": "answer-nextPaymentDate",
+      "pass": true,
+      "detail": "Your next demo payment for LS-10001 is due on 2026-07-28."
+    },
+    {
+      "id": "answer-outstandingBalance",
+      "pass": true,
+      "detail": "Your demo outstanding balance for LS-10001 is £1,240.50."
+    },
+    {
+      "id": "answer-loanStatus",
+      "pass": true,
+      "detail": "Your demo loan LS-10001 is currently active."
+    },
+    {
+      "id": "answer-invalid-question",
+      "pass": true,
+      "detail": "status 400"
+    },
+    {
+      "id": "engine-boundary-matched-session",
+      "pass": true,
+      "detail": "finalAction request_handoff_intake, no mock values in engine response"
+    },
+    {
+      "id": "engine-turn-ticket",
+      "pass": true,
+      "detail": "ticket TCK-5325D717"
+    },
+    {
+      "id": "ticket-status-in-review",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-invalid-transition",
+      "pass": true,
+      "detail": "status 409"
+    },
+    {
+      "id": "ticket-note",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-status-resolved",
+      "pass": true,
+      "detail": "status 200"
+    },
+    {
+      "id": "ticket-activity-readback",
+      "pass": true,
+      "detail": "activity kinds: lookup_matched, account_answer, account_answer, account_answer"
+    }
+  ]
+}

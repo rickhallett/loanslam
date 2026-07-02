@@ -230,7 +230,9 @@ arc_004_chain:
       - OPENAI_API_KEY flows sops -> railway via stdin tooling; dry-run recorded; no value printed anywhere.
   - id: ipoc-017-deploy-live
     slice_label: ipoc-deploy-live-01
-    status: pending
+    status: completed
+    receipt: artifacts/integrated-poc/ipoc-deploy-live-01-proof.md
+    live_url: https://loanslam-ipoc-production.up.railway.app
     depends_on:
       - ipoc-016-deploy-service
     summary: Deploy, generate the Railway domain, and prove the live URL with battery and browser proof.
