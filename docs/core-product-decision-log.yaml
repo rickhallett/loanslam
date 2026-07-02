@@ -625,4 +625,19 @@ decisions:
       real store, and an access token or rate limit is revisited before the
       URL circulates beyond stakeholders.
     status: accepted
+  - id: D044
+    date: 2026-07-02
+    topic: Final Astro parity items and retirement direction
+    question: Which of the remaining Astro-site deltas close now, and what is
+      the direction for the Astro stack?
+    accepted_answer: Port the contact-route highlighting (session-context ->
+      data-revealed on panel close) to the native chat now, deriving the
+      context client-side from turn telemetry with the same flag/action sets
+      the demo display used. Port the /reports dashboards to the Nuxt site
+      now (high stakeholder value). Durable conversation recording on the
+      ipoc surface waits; the widget's verbatim recording notice stands until
+      that decision. Direction accepted - once these land, the Astro site has
+      served its purpose and retirement proceeds under the existing
+      human-gated sunset plan.
+    status: accepted
 

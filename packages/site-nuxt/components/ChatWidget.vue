@@ -130,7 +130,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
 
-import type { IntakeField, UiPlan } from '@loanslam/contracts';
+import type { DemoDisplayTelemetry, IntakeField, UiPlan } from '@loanslam/contracts';
 import type {
   IpocSendMessageResponse,
   IpocSessionResponse,
@@ -152,6 +152,7 @@ const WELCOME =
   "Hi, I'm the LoanSlam assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
 
 const isOpen = ref(false);
+const storedContext = ref<'vulnerability' | 'handoff' | 'general' | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
 const activeTicketId = ref<string | null>(null);
@@ -192,6 +193,36 @@ function emitTelemetry(telemetry: unknown): void {
   // Same-window loopback the sm-devtools panel already accepts: content-free
   // decision metadata for the stakeholder engine-internals view (D043).
   window.postMessage(telemetry, window.location.origin);
+  storedContext.value = contextForTelemetry(telemetry as DemoDisplayTelemetry);
+}
+
+// Mirrors core/lab/demoDisplay hostContextForState (D044): the coarse
+// session context that promotes the matching contact route card on close.
+const VULNERABLE_FLAGS = new Set([
+  'vulnerability',
+  'distress',
+  'hardship',
+  'accessibility_need',
+  'language_barrier',
+  'legal_threat',
+  'complaint',
+]);
+const HANDOFF_ACTIONS = new Set(['request_handoff_intake', 'create_ticket', 'escalate']);
+
+function contextForTelemetry(
+  telemetry: DemoDisplayTelemetry,
+): 'vulnerability' | 'handoff' | 'general' {
+  if (telemetry.safetyFlags.some((flag) => VULNERABLE_FLAGS.has(flag))) {
+    return 'vulnerability';
+  }
+  if (
+    telemetry.intake.handoffPending ||
+    HANDOFF_ACTIONS.has(telemetry.finalAction) ||
+    telemetry.uiPrimitive === 'handoff_confirmation'
+  ) {
+    return 'handoff';
+  }
+  return 'general';
 }
 
 async function ensureSession(): Promise<string> {
@@ -310,6 +341,15 @@ function openPanel(): void {
 function closePanel(): void {
   isOpen.value = false;
   document.body.classList.remove('mal-open');
+  // Loader parity: re-apply the stored context on close and bring the
+  // promoted contact route card into view.
+  if (storedContext.value !== null) {
+    const section = document.getElementById('contact-section');
+    if (section) {
+      section.setAttribute('data-revealed', storedContext.value);
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 }
 
 function togglePanel(): void {
