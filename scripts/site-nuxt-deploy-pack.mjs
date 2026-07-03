@@ -10,7 +10,16 @@
 //   npm run site-nuxt-build && node scripts/site-nuxt-deploy-pack.mjs
 //   cd packages/site-nuxt/.railway-pack && railway up --ci
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -20,6 +29,40 @@ const pack = resolve(root, "packages/site-nuxt/.railway-pack");
 if (!existsSync(resolve(output, "server/index.mjs"))) {
   console.error("No build output found. Run `npm run site-nuxt-build` first.");
   process.exit(1);
+}
+
+// The /reports pages are generated from the publish manifest; refuse to pack
+// a stale set. Two failure modes, checked in order: the committed source
+// pages drifted from the manifest (regenerate), or the build output predates
+// the source pages (rebuild).
+const reportsCheck = spawnSync(
+  "node",
+  ["scripts/build-reports.mjs", "--check"],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
+if (reportsCheck.status !== 0) {
+  console.error(
+    "Stale /reports sources. Run `just reports-build`, rebuild, then re-pack.",
+  );
+  process.exit(1);
+}
+const reportsSrc = resolve(root, "packages/review-host/public/reports");
+const reportsOut = resolve(output, "public/reports");
+for (const file of readdirSync(reportsSrc).filter((f) => f.endsWith(".html"))) {
+  const built = resolve(reportsOut, file);
+  if (
+    !existsSync(built) ||
+    readFileSync(built, "utf8") !==
+      readFileSync(resolve(reportsSrc, file), "utf8")
+  ) {
+    console.error(
+      `Build output is stale for reports/${file}. Run \`npm run site-nuxt-build\` again.`,
+    );
+    process.exit(1);
+  }
 }
 
 rmSync(pack, { recursive: true, force: true });

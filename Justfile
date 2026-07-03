@@ -195,6 +195,11 @@ slice-new *slice_flags:
 status-snapshot:
     @bash scripts/status-snapshot.sh
 
+# Regenerate the /reports static pages from the publish manifest
+# (packages/review-host/reports-manifest.json). Add -- --check to verify only.
+reports-build *reports_flags:
+    @node scripts/build-reports.mjs {{ reports_flags }}
+
 # Map this branch's changed files to the proof bar they require. e.g. -- --base dev
 branch-risk *risk_flags:
     @npm --silent run branch-risk -- {{ risk_flags }}
