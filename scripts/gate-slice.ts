@@ -46,12 +46,7 @@ function git(args: string[]): string {
 }
 
 function stagedFiles(): string[] {
-  return git([
-    "diff",
-    "--cached",
-    "--name-only",
-    "--diff-filter=ACMR",
-  ])
+  return git(["diff", "--cached", "--name-only", "--diff-filter=ACMR"])
     .split(/\r?\n/)
     .filter(Boolean);
 }
@@ -80,7 +75,11 @@ function isEngineSource(file: string): boolean {
   );
 }
 
-const widgetFamilies: Array<{ self: RegExp; foreignImport: RegExp; label: string }> = [
+const widgetFamilies: Array<{
+  self: RegExp;
+  foreignImport: RegExp;
+  label: string;
+}> = [
   {
     label: "demo-widget/demo-host importing review-*",
     self: /^packages\/demo-(?:widget|host)\//,
@@ -93,15 +92,17 @@ const widgetFamilies: Array<{ self: RegExp; foreignImport: RegExp; label: string
   },
 ];
 
+// Imports live in code. Rendered evidence documents (the generated /reports
+// pages) legitimately mention foreign package names as text and must not
+// trip the cross-pollination check.
+const widgetCodeFile = /\.(?:ts|tsx|js|mjs|cjs|vue|css)$/;
+
 export interface GateResult {
   violations: string[];
   notes: string[];
 }
 
-export function evaluateGate(
-  files: string[],
-  receiptPath: string,
-): GateResult {
+export function evaluateGate(files: string[], receiptPath: string): GateResult {
   const violations: string[] = [];
   const notes: string[] = [];
 
@@ -124,7 +125,7 @@ export function evaluateGate(
     }
 
     for (const family of widgetFamilies) {
-      if (family.self.test(file)) {
+      if (family.self.test(file) && widgetCodeFile.test(file)) {
         if (ensureAdded().some((line) => family.foreignImport.test(line))) {
           violations.push(
             `widget cross-pollination (${family.label}): ${file}`,
@@ -204,6 +205,9 @@ export function main(argv: string[]): void {
   console.log(`gate-slice passed: scanned ${files.length} staged file(s).`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main(process.argv.slice(2));
 }
