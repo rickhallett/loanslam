@@ -1,0 +1,82 @@
+version: 1
+title: Audit Log Roadmap (judge-shaped concierge turn log)
+status: active
+updated: 2026-07-03
+source_agenda: docs/prds/2026-07-03-audit-log-campaign-001-card.md
+epic: audit-log
+campaign: audit-log-001
+active_arc: audit-arc-001
+active_slice: turn-log-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev (post demo-killbeat authorization, 65c45c5)
+  implementation: feature/audit-log-01
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: audit-log
+  slice: turn-log-01
+  arc: audit-arc-001
+  campaign: audit-log-001
+  human_checkpoint: audit-report-review
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-03-audit-log-campaign-001-card.md
+arc_001_chain:
+  - id: al-001-turn-log
+    slice_label: turn-log-01
+    status: pending
+    depends_on: []
+    summary: One structured JSON line per concierge turn to stdout
+      (timestamp, conversationRef, route, message/reply, context flags,
+      kept and dropped proposals with reason, latency, model, tokens);
+      judge-compatible schema documented.
+    write_scope:
+      - packages/site-nuxt/server/
+      - docs/
+      - scripts/
+      - artifacts/audit-log/
+    proof_bar:
+      - A local session yields one well-formed line per turn, including a
+        forced dropped proposal.
+      - Battery green; streaming and resurrection unregressed.
+  - id: al-002-harvest
+    slice_label: harvest-01
+    status: pending
+    depends_on:
+      - al-001-turn-log
+    summary: just harvest-logs pulls a session window via railway logs
+      --json into a committed receipt; conversationRef join documented.
+    write_scope:
+      - justfile
+      - scripts/
+      - docs/
+      - artifacts/audit-log/
+    proof_bar:
+      - Harvest of a local-session window produces a parseable receipt.
+arc_002_chain:
+  - id: al-003-audit-report
+    slice_label: audit-report-01
+    status: pending
+    depends_on:
+      - al-002-harvest
+    summary: Production deploy, harvest a real session, replay through the
+      judge ladder, deliver the first audit report, closeout.
+    write_scope:
+      - scripts/
+      - docs/
+      - artifacts/audit-log/
+    proof_bar:
+      - Production emits turn lines; a harvested real session replays
+        through the judge ladder; audit report delivered; consistency
+        output committed.
+human_gates:
+  - reviewing the first audit report (campaign endpoint)
+  - any real-customer-data logging decision (redaction/consent) - out of
+    scope here by D049
+stop_conditions:
+  - logging degrades the reply path (latency or streaming regressions)
+  - log volume trips Railway limits
+  - a secret-like value appears in a log line (halt; add redaction first)

@@ -742,3 +742,28 @@ decisions:
       edge HTTP logs (routes, timings, statuses) with the client-side
       sessionStorage transcript as the content record.
     status: accepted
+  - id: D049
+    date: 2026-07-03
+    topic: Concierge audit trail via a judge-shaped turn log
+    question: How does after-the-fact audit mature without new
+      infrastructure or a server-side session store?
+    accepted_answer: Campaign audit-log-001. Each concierge turn emits one
+      structured JSON line to stdout - timestamp, conversationRef, route,
+      message and reply text, page/form-context flags, any structured
+      proposal AND whether the server dropped it (with reason), latency,
+      model, token counts. Railway's existing log capture is the store;
+      no database, no observability service, no OpenTelemetry. The line
+      schema is judge-compatible so any harvested traffic slice (UAT
+      sessions, demo dry-runs) replays through the Hell Week / probe
+      judge ladder as an eval corpus - the second brick of the D046
+      validator-return path. A just harvest target pulls session logs
+      into committed receipts before Railway retention expires;
+      conversationRef is the join key across client transcript, turn log,
+      and edge HTTP logs. Boundaries for the record - content logging is
+      acceptable ONLY because all data is synthetic by decree and must be
+      re-decided (with redaction rules) before any real customer data
+      flows; logging stays append-only evidence and does not introduce a
+      durable session store (D047 posture unchanged); the campaign-003
+      staging surface stays frozen pending UAT - the turn log lands on
+      dev and rides the next production deploy.
+    status: accepted
