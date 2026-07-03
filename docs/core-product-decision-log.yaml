@@ -719,3 +719,26 @@ decisions:
       staging fast-forwarded to dev; main left untouched - its tip is the
       user's own WIP commit (eb3fc01) and moving it is the user's call.
     status: accepted
+  - id: D048
+    date: 2026-07-03
+    topic: Kill beat authorized as a scripted demo move
+    question: How does the demo surprise stakeholders without adding a
+      third capability card?
+    accepted_answer: Campaign demo-killbeat-001 (docs tier, lands on dev).
+      The demo choreography gains a scripted kill beat - mid-conversation,
+      the driver runs a real railway redeploy of the production service in
+      front of stakeholders and the next turn recovers with context intact
+      (demo-resilience-001 behavior, proven live 5/5 on 2026-07-03). Scope
+      is choreography only - the runbook gains the beat and its go/no-go
+      rule (scripts/dr003-live-restart-proof.mjs green against production
+      on demo morning, wired as a just target), with zero product-code
+      changes. Rationale - the surprise budget of the demo is one or two
+      moments; deliberately breaking our own infrastructure live is the
+      confidence play, and if UAT accepts campaign-003 the form-fill card
+      remains the feature crescendo after it. UAT audit posture recorded
+      for the record - the concierge persists no message content
+      server-side (in-memory sessions, no content logging; the widget
+      recording notice is cautionary); after-the-fact audit pairs Railway
+      edge HTTP logs (routes, timings, statuses) with the client-side
+      sessionStorage transcript as the content record.
+    status: accepted

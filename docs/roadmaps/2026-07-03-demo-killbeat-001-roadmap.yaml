@@ -1,0 +1,47 @@
+version: 1
+title: Demo Killbeat Roadmap (scripted live-restart demo move)
+status: active
+updated: 2026-07-03
+source_agenda: docs/prds/2026-07-03-demo-killbeat-campaign-001-card.md
+epic: demo-killbeat
+campaign: demo-killbeat-001
+active_arc: killbeat-arc-001
+active_slice: kill-beat-script-01
+active_slice_status: pending
+latest_proof_receipt: null
+branch:
+  base: dev (post demo-resilience-001 merge, 73f4045)
+  implementation: feature/demo-killbeat-01
+  worktree: .claude/worktrees/demo-concierge-01
+proof_of_work_labels:
+  epic: demo-killbeat
+  slice: kill-beat-script-01
+  arc: killbeat-arc-001
+  campaign: demo-killbeat-001
+  human_checkpoint: stakeholder-demo
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-03-demo-killbeat-campaign-001-card.md
+arc_001_chain:
+  - id: kb-001-kill-beat-script
+    slice_label: kill-beat-script-01
+    status: pending
+    depends_on: []
+    summary: Add the kill beat to the demo runbook (placement after the
+      form-aware turns, driver lines, expected timing, abort rule) and
+      wire scripts/dr003-live-restart-proof.mjs as the demo-morning
+      go/no-go check via a just target.
+    write_scope:
+      - docs/
+      - justfile
+      - artifacts/demo-killbeat/
+    proof_bar:
+      - Runbook beat reads as a followable script with a go/no-go rule.
+      - The just target runs the live restart proof against production and
+        reports 5/5.
+human_gates:
+  - performing the beat in a real demo
+stop_conditions:
+  - the restart proof cannot be made reliably green against production
