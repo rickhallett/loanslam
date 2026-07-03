@@ -1,0 +1,2 @@
+docs/roadmaps/2026-07-02-demo-resilience-001-roadmap.yaml: checked 3 chain items
+consistency check passed (0 warning(s))

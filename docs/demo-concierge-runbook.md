@@ -49,7 +49,10 @@ Rehearse before the demo (the exact choreography above, headless):
   decision with a named revert path, not an oversight.
 - Exposure controls, not content controls: per-IP rate limits (10 sessions /
   30 messages per 5 minutes) and a kill switch.
-- Sessions are in-memory; conversations reset on redeploy.
+- Sessions are in-memory server-side, but a redeploy no longer shows: the
+  widget reseeds a fresh session from its own transcript and continues
+  (demo-resilience-001, proven live with a mid-conversation redeploy).
+  Replies stream into the panel as they generate.
 - Do not circulate the URL beyond stakeholders.
 
 ## Operations
@@ -58,8 +61,11 @@ Rehearse before the demo (the exact choreography above, headless):
   `CONCIERGE_KILL_SWITCH=1` on the `loanslam-site-nuxt` service variables and
   redeploy; set back to `0` to restore. Proven live 2026-07-02.
 - Redeploy: `npm run site-nuxt-build && node scripts/site-nuxt-deploy-pack.mjs`,
-  then from `packages/site-nuxt/.railway-pack`: `railway up --ci`
-  (service `loanslam-site-nuxt`, project `loanslam-staging-site`).
+  then copy the `.railway-pack` contents to a directory OUTSIDE the repo and
+  from there: `railway up --ci -p <project-id> -s loanslam-site-nuxt
+  -e production`. (Since 2026-07-02 the Railway CLI walks up to the git root
+  when run inside a repo, uploading the whole workspace instead of the pack;
+  running from outside the repo with explicit flags avoids it.)
 - Model: `gpt-5.5` (`CONCIERGE_MODEL` variable to override).
 - Post-demo: D045 names the revert path — kill switch, then route deletion.
   Productizing any concierge behavior is a new decision-log entry.

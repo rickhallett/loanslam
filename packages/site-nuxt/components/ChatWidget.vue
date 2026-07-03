@@ -108,7 +108,11 @@
                 </div>
               </div>
             </li>
-            <li v-if="isSending" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
+            <li
+              v-if="isSending && streamingMessageId === null"
+              class="message message-assistant thinking-bubble"
+              aria-label="Assistant is typing"
+            >
               <span class="thinking-dots"><span></span><span></span><span></span></span>
             </li>
           </ul>
@@ -122,7 +126,11 @@
             Prototype — conversations are recorded. Please use test details only.
           </p>
 
-          <form class="composer" @submit.prevent="submitDraft">
+          <form
+            class="composer"
+            :data-sending="isSending ? 'true' : undefined"
+            @submit.prevent="submitDraft"
+          >
             <input
               ref="inputEl"
               v-model="draft"
@@ -159,11 +167,7 @@ import type {
   IpocSessionResponse,
   IpocSubmitIntakeResponse,
 } from '../../integrated-poc/shared/ipoc';
-import type {
-  ConciergeMessageResponse,
-  ConciergeSessionResponse,
-  ConciergeStatusResponse,
-} from '../lib/concierge';
+import type { ConciergeSessionResponse, ConciergeStatusResponse } from '../lib/concierge';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
 import { snapshotPage } from '../lib/pageSnapshot';
 
@@ -226,6 +230,9 @@ const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
 const activeTicketId = ref<string | null>(null);
 const isSending = ref(false);
+// dr-002: id of the assistant message a reply is currently streaming into
+// (null when no stream is active — the thinking dots show instead).
+const streamingMessageId = ref<number | null>(null);
 const isChatComplete = ref(false);
 const errorMessage = ref('');
 const draft = ref('');
@@ -236,6 +243,11 @@ let nextId = 0;
 
 function pushMessage(role: ChatMessage['role'], text: string, ui: UiPlan | null = null): void {
   messages.value.push({ id: nextId++, role, text, ui });
+}
+
+function scrollToEnd(): void {
+  const element = scroller.value;
+  if (element) element.scrollTop = element.scrollHeight;
 }
 
 // dc2-003 (D046): the conversation survives full page loads via
@@ -392,20 +404,95 @@ async function ensureConciergeSession(): Promise<string> {
   return session.conversationRef;
 }
 
-async function sendConciergeTurn(message: string): Promise<string> {
+function transcriptForResume(): Array<{ role: 'customer' | 'assistant'; content: string }> {
+  // Text-only replay (dr-001). The current customer turn is already in
+  // messages.value (pushed by submit) and is sent separately as the new
+  // turn, so drop the trailing customer message to avoid double-counting;
+  // the WELCOME line is UI, not a turn.
+  const history = [...messages.value];
+  if (history.at(-1)?.role === 'customer') history.pop();
+  return history
+    .filter((m) => m.text && m.text !== WELCOME)
+    .map((m) => ({ role: m.role, content: m.text }));
+}
+
+// dr-002 (D047): concierge replies stream over SSE. Validation failures
+// (404/429/400) arrive as the response status before any bytes stream, so
+// the dr-001 resurrection path is unchanged. Resolves to the full reply;
+// onText receives the accumulated partial text as deltas arrive.
+async function streamConciergeMessage(
+  ref: string,
+  message: string,
+  resume: boolean,
+  onText: (text: string) => void,
+): Promise<string> {
+  const response = await fetch(`/api/concierge/sessions/${encodeURIComponent(ref)}/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      formState: isApplyRoute.value ? snapshotApplicationForm() : null,
+      pageContext: snapshotPage(route.path),
+      resumeTranscript: resume ? transcriptForResume() : null,
+      stream: true,
+    }),
+  });
+  if (!response.ok || !response.body) {
+    const failure = new Error(`The assistant request failed (${response.status}).`) as Error & {
+      statusCode?: number;
+    };
+    failure.statusCode = response.status;
+    throw failure;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let accumulated = '';
+  let finalMessage: string | null = null;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let boundary = buffer.indexOf('\n\n');
+    while (boundary !== -1) {
+      const frame = buffer.slice(0, boundary);
+      buffer = buffer.slice(boundary + 2);
+      boundary = buffer.indexOf('\n\n');
+      const data = frame.split('\n').find((line) => line.startsWith('data: '));
+      if (!data) continue;
+      const payload = JSON.parse(data.slice(6)) as {
+        delta?: string;
+        done?: boolean;
+        message?: string;
+        error?: string;
+      };
+      if (payload.error) throw new Error(payload.error);
+      if (typeof payload.delta === 'string') {
+        accumulated += payload.delta;
+        onText(accumulated);
+      }
+      if (payload.done) finalMessage = payload.message ?? accumulated;
+    }
+  }
+  if (finalMessage === null) {
+    throw new Error('The assistant reply ended unexpectedly. Please try again.');
+  }
+  return finalMessage;
+}
+
+async function sendConciergeTurn(message: string, onText: (text: string) => void): Promise<string> {
   const ref = await ensureConciergeSession();
-  const result = await $fetch<ConciergeMessageResponse>(
-    `/api/concierge/sessions/${encodeURIComponent(ref)}/messages`,
-    {
-      method: 'POST',
-      body: {
-        message,
-        formState: isApplyRoute.value ? snapshotApplicationForm() : null,
-        pageContext: snapshotPage(route.path),
-      },
-    },
-  );
-  return result.assistant.message;
+  try {
+    return await streamConciergeMessage(ref, message, false, onText);
+  } catch (error) {
+    // dr-001 (D047): the server lost this session (restart/redeploy). Open a
+    // fresh one, replay our transcript as context, and retry the turn once.
+    if ((error as { statusCode?: number }).statusCode !== 404) throw error;
+    conciergeSessionRef.value = null;
+    const freshRef = await ensureConciergeSession();
+    return await streamConciergeMessage(freshRef, message, true, onText);
+  }
 }
 
 function maybeApplyIntro(): void {
@@ -431,8 +518,31 @@ async function submit(
       // Concierge mode (D046): every route except /contact/ (the validated
       // engine keeps the support chat). Page snapshot as context; form
       // snapshot additionally on /apply/. No engine, no telemetry, no UiPlan.
-      const reply = await sendConciergeTurn(trimmed);
-      pushMessage('assistant', reply);
+      // dr-002 (D047): the reply streams into a live message bubble; the
+      // thinking dots yield to it at the first delta.
+      const reply = await sendConciergeTurn(trimmed, (text) => {
+        const streaming =
+          streamingMessageId.value === null
+            ? null
+            : messages.value.find((entry) => entry.id === streamingMessageId.value);
+        if (streaming) {
+          streaming.text = text;
+        } else {
+          pushMessage('assistant', text);
+          streamingMessageId.value = messages.value.at(-1)?.id ?? null;
+        }
+        scrollToEnd();
+      });
+      const streamed =
+        streamingMessageId.value === null
+          ? null
+          : messages.value.find((entry) => entry.id === streamingMessageId.value);
+      if (streamed) {
+        streamed.text = reply;
+      } else {
+        pushMessage('assistant', reply);
+      }
+      streamingMessageId.value = null;
       applyOfferMessageId.value = null;
       handoffOfferMessageId.value = /support team/i.test(reply)
         ? (messages.value.at(-1)?.id ?? null)
@@ -452,6 +562,13 @@ async function submit(
       : null;
     handoffOfferMessageId.value = null;
   } catch (error) {
+    // A reply that errored mid-stream leaves a partial bubble; drop it so
+    // the transcript (and any dr-001 replay of it) holds only whole turns.
+    if (streamingMessageId.value !== null) {
+      const index = messages.value.findIndex((entry) => entry.id === streamingMessageId.value);
+      if (index !== -1) messages.value.splice(index, 1);
+      streamingMessageId.value = null;
+    }
     errorMessage.value =
       error instanceof Error
         ? error.message
@@ -598,7 +715,9 @@ watch([isApplyRoute, isOpen, conciergeAvailable], () => {
 });
 
 watch(
-  () => [messages.value.length, sessionRef.value, conciergeSessionRef.value] as const,
+  // isSending is in the key so the send that finalizes a streamed reply
+  // (text mutation, no length change) still persists the finished turn.
+  () => [messages.value.length, sessionRef.value, conciergeSessionRef.value, isSending.value] as const,
   () => persistState(),
 );
 
