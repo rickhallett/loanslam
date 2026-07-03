@@ -7,8 +7,8 @@ epic: demo-resilience
 campaign: demo-resilience-001
 active_arc: resilience-arc-002
 active_slice: resilience-deploy-01
-active_slice_status: pending
-latest_proof_receipt: artifacts/demo-resilience/dr002-streaming-proof.md
+active_slice_status: completed
+latest_proof_receipt: artifacts/demo-resilience/demo-resilience-001-closeout.md
 branch:
   base: dev (after concierge-probes-001 lands)
   implementation: feature/demo-resilience-01
@@ -58,7 +58,8 @@ arc_001_chain:
 arc_002_chain:
   - id: dr-003-deploy
     slice_label: resilience-deploy-01
-    status: pending
+    status: completed
+    receipt: artifacts/demo-resilience/demo-resilience-001-closeout.md
     depends_on:
       - dr-002-streaming
     summary: Regression, production deploy, live restart-recovery proof,
