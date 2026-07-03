@@ -3,7 +3,7 @@
 ## Scope
 
 This log tracks the implementation slices for
-`docs/prds/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md`
+`docs/prds/closed/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md`
 in the `hell-week-performance-regression` worktree.
 
 ## Section 1: F/I Rubric Audit

@@ -41,8 +41,8 @@ conservative guard semantics. Every step here is order- and behaviour-preserving
   this doc and the code. The registry's `authority` field is where this doctrine
   becomes enforceable rather than a dated note.
 - Complements, does not supersede,
-  `docs/prds/2026-06-21-engine-safety-guard-robustness-spec.md` and
-  `docs/prds/2026-06-20-static-runtime-code-health-audit-prd.md`.
+  `docs/prds/closed/2026-06-21-engine-safety-guard-robustness-spec.md` and
+  `docs/prds/closed/2026-06-20-static-runtime-code-health-audit-prd.md`.
 
 ## Scope
 

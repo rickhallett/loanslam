@@ -2,7 +2,7 @@ version: 1
 title: Demo Concierge 002 Roadmap (site-wide page-aware presence)
 status: closed  # campaign closed 2026-07-02
 updated: 2026-07-02
-source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
+source_agenda: docs/prds/closed/2026-07-02-demo-concierge-campaign-002-card.md
 epic: demo-concierge
 campaign: demo-concierge-002
 active_arc: concierge2-arc-002
@@ -23,7 +23,7 @@ doctrine:
   - CONTEXT.md
   - docs/core-product-decision-log.yaml
   - docs/campaign-workflow-protocol.md
-  - docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
+  - docs/prds/closed/2026-07-02-demo-concierge-campaign-002-card.md
 arc_001_chain:
   # Confident tier (D046): presence, page context, persistence.
   - id: dc2-001-presence

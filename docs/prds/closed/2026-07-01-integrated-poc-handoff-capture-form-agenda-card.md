@@ -24,12 +24,12 @@ not left as an implicit gap.
 
 This card is valid only with these current sources:
 
-- `docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`
 - `docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`
 - `artifacts/integrated-poc/ipoc-golden-path-01-proof.md`
 - `CONTEXT.md`
 - `docs/core-product-decision-log.yaml`
-- `docs/prds/2026-06-30-integrated-poc-reference.md`
+- `docs/prds/closed/2026-06-30-integrated-poc-reference.md`
 - `docs/llm-turn-planner-architecture.md`
 
 ## Good Look

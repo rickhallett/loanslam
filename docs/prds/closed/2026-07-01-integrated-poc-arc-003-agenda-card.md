@@ -40,13 +40,13 @@ Recorded in `docs/core-product-decision-log.yaml`:
 This card is valid only with these current sources:
 
 - `docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`
-- `docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md`
-- `docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md`
 - `artifacts/integrated-poc/ipoc-golden-path-01-proof.md`
 - `artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md`
 - `CONTEXT.md`
 - `docs/core-product-decision-log.yaml`
-- `docs/prds/2026-06-30-integrated-poc-reference.md`
+- `docs/prds/closed/2026-06-30-integrated-poc-reference.md`
 - `docs/llm-turn-planner-architecture.md`
 
 ## Good Look

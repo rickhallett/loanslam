@@ -5,7 +5,7 @@ Status: closed (historical record). Arc closeout receipt:
 Was: green. Full human green-light 2026-07-02 for all four slices with the
 human touchpoint at successful completion of slice 4 (D042 records the
 contract-delta defaults, all vetoable). Batch mechanics as in
-`docs/prds/2026-07-02-site-nuxt-arc-001-agenda-card.md`.
+`docs/prds/closed/2026-07-02-site-nuxt-arc-001-agenda-card.md`.
 
 ## Objective
 

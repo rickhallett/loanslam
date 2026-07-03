@@ -2,7 +2,7 @@ version: 1
 title: Concierge Probes Roadmap (adversarial measurement, not hardening)
 status: closed  # campaign closed 2026-07-02
 updated: 2026-07-02
-source_agenda: docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
+source_agenda: docs/prds/closed/2026-07-02-concierge-probes-campaign-001-card.md
 epic: concierge-probes
 campaign: concierge-probes-001
 active_arc: probes-arc-002
@@ -23,7 +23,7 @@ doctrine:
   - CONTEXT.md
   - docs/core-product-decision-log.yaml
   - docs/campaign-workflow-protocol.md
-  - docs/prds/2026-07-02-concierge-probes-campaign-001-card.md
+  - docs/prds/closed/2026-07-02-concierge-probes-campaign-001-card.md
 arc_001_chain:
   - id: cp-001-battery
     slice_label: probe-battery-01

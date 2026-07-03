@@ -22,7 +22,7 @@ This card is valid only with these current sources:
   `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`
 - Final doctrine:
   `CONTEXT.md`, `docs/core-product-decision-log.yaml`,
-  `docs/prds/2026-06-30-integrated-poc-reference.md`,
+  `docs/prds/closed/2026-06-30-integrated-poc-reference.md`,
   `docs/llm-turn-planner-architecture.md`
 - Transitional deployable surface:
   current demo/review widget-adapter code remains usable until the Integrated

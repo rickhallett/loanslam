@@ -14,7 +14,7 @@ authority:
     - docs/architecture.md
     - docs/llm-turn-planner-architecture.md
     - docs/prds/2026-06-20-site-widget-integration-architecture-prd.md
-    - docs/prds/2026-06-30-integrated-poc-reference.md
+    - docs/prds/closed/2026-06-30-integrated-poc-reference.md
     - data/public-info/loanslam-synthetic-kb.json
 decisions:
   - id: D001
@@ -648,7 +648,7 @@ decisions:
       stakeholder demo, and on what contract?
     accepted_answer: Authorized as the demo-concierge campaign under
       docs/campaign-workflow-protocol.md, card
-      docs/prds/2026-07-02-demo-concierge-campaign-001-card.md, endpoint the
+      docs/prds/closed/2026-07-02-demo-concierge-campaign-001-card.md, endpoint the
       stakeholder demo. This knowingly deviates from three recorded lines,
       demo-only and reversible. (1) Product-frame extension - the chat may
       offer to take a user into the apply journey, introduce the form, and

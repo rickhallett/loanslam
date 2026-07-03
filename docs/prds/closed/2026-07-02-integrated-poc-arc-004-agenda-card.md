@@ -16,7 +16,7 @@ sunset assessment into an executable plan gated on one stakeholder demo.
 
 ## Source Chain
 
-- `docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-arc-003-agenda-card.md`
 - `artifacts/integrated-poc/ipoc-arc-003-closeout.md`
 - `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md`
 - `docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`

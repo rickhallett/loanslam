@@ -274,9 +274,9 @@ just site-build
 
 - [Product brief](./docs/product-brief.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
-- [Integrated POC reference](./docs/prds/2026-06-30-integrated-poc-reference.md)
-- [Integrated POC implementation agenda card](./docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md)
-- [Stakeholder demo safe display boundary](./docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
+- [Integrated POC reference](./docs/prds/closed/2026-06-30-integrated-poc-reference.md)
+- [Integrated POC implementation agenda card](./docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md)
+- [Stakeholder demo safe display boundary](./docs/prds/closed/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
 - [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
 - [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)

@@ -47,7 +47,7 @@ Current worktree state at audit start:
 ```text
 branch: worktree-repo-surface-audit
 head: ec2d172
-dirty: docs/prds/2026-06-20-repository-surface-audit-prd.md untracked
+dirty: docs/prds/closed/2026-06-20-repository-surface-audit-prd.md untracked
 ```
 
 ## Repository Surface Map
