@@ -1,6 +1,8 @@
 # Demo Concierge Campaign 002 Card - 2026-07-02
 
-Status: green. Authorized 2026-07-02 by D046 (risk-split expansion; this is
+Status: closed 2026-07-02 (historical record). Closeout receipt:
+`artifacts/demo-concierge/demo-concierge-002-closeout.md`.
+Was: green. Authorized 2026-07-02 by D046 (risk-split expansion; this is
 the confident tier). Mechanics per `docs/campaign-workflow-protocol.md` and
 the campaign-001 card. Single human checkpoint: campaign closeout, feeding
 the joint UAT round with campaign-003.

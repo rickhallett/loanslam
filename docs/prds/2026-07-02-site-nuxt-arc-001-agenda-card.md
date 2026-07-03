@@ -1,6 +1,8 @@
 # Site Nuxt Arc 001 Agenda Card - 2026-07-02
 
-Status: green. Human green-light given 2026-07-02 (decision log D041).
+Status: closed (historical record). Arc closeout receipt:
+`artifacts/site-nuxt/sitenuxt-arc-001-closeout.md`.
+Was: green. Human green-light given 2026-07-02 (decision log D041).
 Batch-authorized like ipoc-arc-003/004: machine gates between slices,
 per-slice proof receipts, human checkpoint at arc closeout. Shared mechanics
 (labels, gates, receipts) follow

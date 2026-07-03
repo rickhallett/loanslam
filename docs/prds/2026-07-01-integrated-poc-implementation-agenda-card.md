@@ -1,7 +1,8 @@
 # Integrated POC Implementation Agenda Card - 2026-07-01
 
-Status: ready for human green-light. Do not start implementation from this card
-until the human explicitly confirms it is green.
+Status: executed and closed (historical record). Green-light was given and
+the Golden Path Slice chain completed with receipts; see
+`docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`.
 
 ## Objective
 

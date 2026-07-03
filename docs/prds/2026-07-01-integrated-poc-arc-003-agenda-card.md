@@ -1,6 +1,8 @@
 # Integrated POC Arc 003 Agenda Card - 2026-07-01
 
-Status: green. Human green-light was given upfront for the whole arc on
+Status: closed (historical record). Arc closeout receipt:
+`artifacts/integrated-poc/ipoc-arc-003-closeout.md`.
+Was: green. Human green-light was given upfront for the whole arc on
 2026-07-01 (decision log D037/D038). This card authorizes all five slices
 below without per-slice human checkpoints; only the Human Gate section
 interrupts the run.

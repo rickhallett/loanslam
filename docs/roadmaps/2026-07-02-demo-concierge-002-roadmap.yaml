@@ -1,6 +1,6 @@
 version: 1
 title: Demo Concierge 002 Roadmap (site-wide page-aware presence)
-status: active
+status: closed  # campaign closed 2026-07-02
 updated: 2026-07-02
 source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-002-card.md
 epic: demo-concierge
