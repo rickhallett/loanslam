@@ -61,9 +61,9 @@ Co-Authored-By: (the agent's name and attribution byline)
 
 ## Miscellaneous
 
-### Small zsh footgun
+### zsh expansion footguns
 
-Using path as a loop variable clobbered zsh’s $path/$PATH. No repo state changed; I’m rerunning the status scan with a safer variable name.
+- Never use `path` as a shell variable; zsh ties it to `$PATH`, so assigning it clobbers command lookup. Use a prefixed name (`wt_path`):
 
 ```zsh
 while IFS= read -r wt_path; do
@@ -71,3 +71,5 @@ while IFS= read -r wt_path; do
   git -C "$wt_path" status --short --branch
 done < <(git worktree list --porcelain | awk '/^worktree / {print $2}')
 ```
+
+- Quote words starting with `=` (for example `echo '==='`); unquoted, zsh applies `=cmd` filename expansion and the command fails with `== not found`.
