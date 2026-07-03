@@ -767,3 +767,29 @@ decisions:
       staging surface stays frozen pending UAT - the turn log lands on
       dev and rides the next production deploy.
     status: accepted
+  - id: D050
+    date: 2026-07-03
+    topic: Reactive battery campaign (STS v2) authorization
+    question: Do the e2e batteries evolve from predetermined customer
+      turns to reactive trajectory simulation, and on what measurement
+      contract?
+    accepted_answer: Authorized as campaign sts-v2-001 under
+      docs/campaign-workflow-protocol.md, card
+      docs/prds/2026-07-03-sts-v2-campaign-001-card.md, keel
+      docs/prds/2026-07-03-sts-v2-keel-spec.md, endpoint the closeout
+      decision on whether the reactive battery joins the promotion proof
+      bar. The keel (verdict vocabulary, trajectory grading questions,
+      sampler-simulator contract, gold-set lockstep, unchanged hard
+      floor, artifact shapes) is frozen at authorization; simulator
+      prompts, persona wording, and sampling weights are agent discretion
+      within it. Measurement infrastructure only - no engine, prompt,
+      validator, or concierge changes; findings feed the bounded tuning
+      loop as input. Customer role tiered - gpt-5.4-mini for
+      iteration-pool runs, gpt-5.5 for graded receipt-producing runs
+      subject to the arc-001 A/B (a recorded deviation from the default
+      model ladder, which reserves 5.5 for adjudication); judge ladder
+      unchanged, OpenAI only. Customer+judge spend ceilings of $10 per
+      review run and $40 per campaign are stop conditions checked from
+      usage receipts, not estimates. Soak on 5.5 out of scope; stability
+      reported from a single repeat, labelled as such.
+    status: accepted

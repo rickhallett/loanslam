@@ -1,0 +1,117 @@
+version: 1
+title: STS v2 Roadmap (reactive battery - measurement infrastructure only)
+status: active
+updated: 2026-07-03
+source_agenda: docs/prds/2026-07-03-sts-v2-campaign-001-card.md
+epic: sts-v2
+campaign: sts-v2-001
+active_arc: sts2-arc-001
+active_slice: sim-harness-01
+active_slice_status: open
+latest_proof_receipt: null
+branch:
+  base: dev
+  implementation: feature/sts-v2-01
+  worktree: .claude/worktrees/sts-v2-01
+proof_of_work_labels:
+  epic: sts-v2
+  slice: sim-harness-01
+  arc: sts2-arc-001
+  campaign: sts-v2-001
+  human_checkpoint: campaign-closeout
+doctrine:
+  - CONTEXT.md
+  - docs/core-product-decision-log.yaml
+  - docs/campaign-workflow-protocol.md
+  - docs/prds/2026-07-03-sts-v2-campaign-001-card.md
+  - docs/prds/2026-07-03-sts-v2-keel-spec.md
+arc_001_chain:
+  - id: sv2-001-harness
+    slice_label: sim-harness-01
+    status: open
+    receipt: null
+    depends_on: []
+    summary: Initialization sampler (extends the STS v1 generator),
+      customer-agent loop against the live engine, transcript capture,
+      and run artifacts per keel section 5; smoke profile runs end to
+      end with both replay levels; customer-model A/B (one smoke per
+      model) archived with usage receipts confirming the cost ceilings.
+    write_scope:
+      - packages/core/src/
+      - scripts/
+      - justfile
+      - artifacts/phase0/
+    proof_bar:
+      - Smoke run against the live engine with full keel artifacts.
+      - regenerate and regrade both demonstrated.
+      - A/B usage receipts confirm the $10/review-run ceiling is realistic.
+      - just verify green; consistency check green.
+arc_002_chain:
+  - id: sv2-002-judge
+    slice_label: trajectory-judge-01
+    status: pending
+    receipt: null
+    depends_on:
+      - sv2-001-harness
+    summary: Frozen grading questions T1-T6 on the OpenAI ladder; gold set
+      built from arc-001 trajectories (human-labelled or ratified);
+      calibration battery green at the recorded threshold; judged smoke
+      run and dashboard.
+    write_scope:
+      - packages/core/src/
+      - scripts/
+      - justfile
+      - artifacts/phase0/
+    proof_bar:
+      - Calibration green for every grading question before any judged
+        result is reported.
+      - Judged smoke run archived with receipts.
+arc_003_chain:
+  - id: sv2-003-coverage
+    slice_label: coverage-01
+    status: pending
+    receipt: null
+    depends_on:
+      - sv2-002-judge
+    summary: Persona/goal template library incl. the persistent persona;
+      resurrection-seam scenarios (mid-conversation session loss and
+      resume); review profile (60 trajectories) with axis-coverage report
+      and triaged findings; language-posture drafted D-entry delivered.
+    write_scope:
+      - packages/core/src/
+      - scripts/
+      - artifacts/phase0/
+      - docs/
+    proof_bar:
+      - Review run covers every axis value, every v2 persona, and the
+        resurrection seam.
+      - Findings triaged into the STS finding-category pattern.
+arc_004_chain:
+  - id: sv2-004-closeout
+    slice_label: closeout-01
+    status: pending
+    receipt: null
+    depends_on:
+      - sv2-003-coverage
+    summary: Full review-tier judged run plus one stability repeat;
+      closeout report (findings, coverage, judge stability as a
+      single-repeat observation, cost per run from receipts); drafted
+      decisions delivered; consistency check green.
+    write_scope:
+      - scripts/
+      - docs/
+      - artifacts/phase0/
+    proof_bar:
+      - Closeout claims only receipt-backed results.
+      - Cumulative customer+judge spend within the $40 campaign ceiling.
+      - Consistency check green.
+human_gates:
+  - no engine, prompt, validator, or concierge changes (measurement only)
+  - no changes to the hard floor's five dimensions
+  - no multilingual scenarios without an accepted language-posture D-entry
+  - all campaign-protocol irreducible human gates
+stop_conditions:
+  - customer simulator cannot hold persona after bounded prompt iteration
+  - judge calibration cannot reach the recorded threshold
+  - customer+judge spend exceeds $10 on a review run or $40 cumulative
+  - any keel amendment attempted without a dated card amendment
