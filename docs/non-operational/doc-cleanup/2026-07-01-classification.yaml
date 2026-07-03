@@ -226,14 +226,15 @@ decisions:
     action: "Keep."
     reason: "Current Hell Week operator guide."
   - path: "docs/hell-week-measurement-integrity-runway-log-2026-06-20.md"
-    state: LAZY-LOAD
+    state: ARCHIVE
     risk: evidence
-    action: "Keep as historical evidence."
+    action: "Archived 2026-07-03 to docs/non-operational/; it is a work log
+      for a completed PRD, not doctrine."
     reason: "Dated runway log; useful only when reconstructing Hell Week evidence history."
   - path: "docs/hell-week-performance-regression-report-2026-06-20.md"
     state: LAZY-LOAD
     risk: evidence
-    action: "Keep as historical evidence."
+    action: "Moved 2026-07-03 to docs/reports/ with the other reports."
     reason: "Dated performance report; do not load by default."
   - path: "docs/llm-turn-planner-architecture.md"
     state: KEEP
@@ -461,9 +462,11 @@ decisions:
     action: "Keep as historical report."
     reason: "Full repo review report; not first-layer context."
   - path: "docs/reusable-worktree-branch-cicd-protocol.md"
-    state: KEEP
+    state: ARCHIVE
     risk: operations
-    action: "Keep."
+    action: "Archived 2026-07-03 to docs/non-operational/; it is a starter
+      template for other repositories, and its operational content here is
+      carried by AGENTS.md and docs/loanslam-operator/07."
     reason: "Current reusable worktree and promotion protocol."
   - path: "docs/stochastic-test-simulator-guide.md"
     state: KEEP

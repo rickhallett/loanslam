@@ -130,7 +130,7 @@ captured scenario IDs, the three post-malformed-recovery captures regrade to
 ### Conclusion
 
 The tracked report
-`docs/hell-week-performance-regression-report-2026-06-20.md` now states:
+`docs/reports/hell-week-performance-regression-report-2026-06-20.md` now states:
 
 - the old `80/80/79` headline is a measurement artifact;
 - the current deterministic regrade is a sanity check, not product truth;
