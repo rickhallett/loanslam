@@ -13,8 +13,8 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
-- Documentation cleanup is governed by `docs/prds/2026-07-01-documentation-cleanup-agenda-card.md` and the current classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; older cleanup records under `docs/non-operational/doc-cleanup/` are prior art only.
-- Integrated POC implementation starts from `docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md`; do not start from chat context or older reference memos.
+- Documentation cleanup is governed by `docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md` and the current classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; older cleanup records under `docs/non-operational/doc-cleanup/` are prior art only.
+- Integrated POC implementation starts from `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`; do not start from chat context or older reference memos.
 - New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics; completed cards remain historical records).
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
@@ -61,9 +61,9 @@ Co-Authored-By: (the agent's name and attribution byline)
 
 ## Miscellaneous
 
-### Small zsh footgun
+### zsh expansion footguns
 
-Using path as a loop variable clobbered zsh’s $path/$PATH. No repo state changed; I’m rerunning the status scan with a safer variable name.
+- Never use `path` as a shell variable; zsh ties it to `$PATH`, so assigning it clobbers command lookup. Use a prefixed name (`wt_path`):
 
 ```zsh
 while IFS= read -r wt_path; do
@@ -71,3 +71,5 @@ while IFS= read -r wt_path; do
   git -C "$wt_path" status --short --branch
 done < <(git worktree list --porcelain | awk '/^worktree / {print $2}')
 ```
+
+- Quote words starting with `=` (for example `echo '==='`); unquoted, zsh applies `=cmd` filename expansion and the command fails with `== not found`.

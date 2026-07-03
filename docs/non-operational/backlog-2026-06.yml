@@ -12,7 +12,7 @@ items:
       proposals, or retrieved evidence.
     acceptance:
       - A PRD exists at
-        docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md.
+        docs/prds/closed/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md.
       - The demo/review widget consumes a demo response contract, not a full
         ValidatedTurnResult.
       - Demo responses omit raw state, trace, plan, validator reason text,

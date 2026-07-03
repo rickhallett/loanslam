@@ -1,6 +1,8 @@
 # Concierge Probes Campaign 001 Card - 2026-07-02
 
-Status: green. Authorized 2026-07-02 by D047 (measurement, not hardening).
+Status: closed 2026-07-02 (historical record). Closeout receipt:
+`artifacts/concierge-probes/concierge-probes-001-closeout.md`.
+Was: green. Authorized 2026-07-02 by D047 (measurement, not hardening).
 Mechanics per `docs/campaign-workflow-protocol.md`. Single human checkpoint:
 campaign closeout (the scored report + demo-driver guidance).
 

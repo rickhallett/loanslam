@@ -1,6 +1,8 @@
 # Integrated POC Arc 004 Agenda Card - 2026-07-02
 
-Status: green. Human green-light for the deployment arc was given on
+Status: closed (historical record). Arc closeout receipt:
+`artifacts/integrated-poc/ipoc-arc-004-closeout.md`.
+Was: green. Human green-light for the deployment arc was given on
 2026-07-02 (decision log D039/D040) as part of approving the arc-003
 closeout. Batch-authorized like arc-003: machine gates between slices,
 per-slice proof receipts, human checkpoint at arc closeout.
@@ -14,7 +16,7 @@ sunset assessment into an executable plan gated on one stakeholder demo.
 
 ## Source Chain
 
-- `docs/prds/2026-07-01-integrated-poc-arc-003-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-arc-003-agenda-card.md`
 - `artifacts/integrated-poc/ipoc-arc-003-closeout.md`
 - `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md`
 - `docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`

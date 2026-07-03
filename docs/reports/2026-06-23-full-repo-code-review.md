@@ -392,7 +392,7 @@ Build hygiene:
 - Pervasive over-exporting across core/hellweek/lab modules (unnecessary public
   surface, not dead code).
 - A planned contract test for the judge request-builder was never written —
-  `docs/prds/2026-06-21-calibration-foundations-spec.md:88`.
+  `docs/prds/closed/2026-06-21-calibration-foundations-spec.md:88`.
 
 ---
 

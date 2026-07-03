@@ -1,6 +1,8 @@
 # Demo Concierge Campaign 001 Card - 2026-07-02
 
-Status: green. Authorized 2026-07-02 by D045 under
+Status: closed 2026-07-02 (historical record). Closeout receipt:
+`artifacts/demo-concierge/demo-concierge-001-closeout.md`.
+Was: green. Authorized 2026-07-02 by D045 under
 `docs/campaign-workflow-protocol.md` (first campaign under that protocol).
 Single human checkpoint: campaign closeout before the stakeholder demo.
 Endpoint: the stakeholder demo (human event).

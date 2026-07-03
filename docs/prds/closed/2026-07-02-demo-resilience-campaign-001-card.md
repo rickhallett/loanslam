@@ -1,6 +1,8 @@
 # Demo Resilience Campaign 001 Card - 2026-07-02
 
-Status: green. Authorized 2026-07-02 by D047 (confident tier). Mechanics per
+Status: closed 2026-07-03 (historical record). Closeout receipt:
+`artifacts/demo-resilience/demo-resilience-001-closeout.md`.
+Was: green. Authorized 2026-07-02 by D047 (confident tier). Mechanics per
 `docs/campaign-workflow-protocol.md`. Single human checkpoint: campaign
 closeout. Lands on dev and the production surface.
 

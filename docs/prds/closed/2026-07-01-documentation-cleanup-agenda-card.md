@@ -1,6 +1,9 @@
 # Documentation Cleanup Gate Agenda Card - 2026-07-01
 
-Status: ready for execution.
+Status: executed and closed 2026-07-01 (historical record). The gate was
+closed with the committed classification matrix at
+`docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`, which
+remains the current cleanup record.
 
 ## Objective
 

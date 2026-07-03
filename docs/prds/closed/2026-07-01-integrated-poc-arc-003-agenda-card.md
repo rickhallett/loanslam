@@ -1,6 +1,8 @@
 # Integrated POC Arc 003 Agenda Card - 2026-07-01
 
-Status: green. Human green-light was given upfront for the whole arc on
+Status: closed (historical record). Arc closeout receipt:
+`artifacts/integrated-poc/ipoc-arc-003-closeout.md`.
+Was: green. Human green-light was given upfront for the whole arc on
 2026-07-01 (decision log D037/D038). This card authorizes all five slices
 below without per-slice human checkpoints; only the Human Gate section
 interrupts the run.
@@ -38,13 +40,13 @@ Recorded in `docs/core-product-decision-log.yaml`:
 This card is valid only with these current sources:
 
 - `docs/roadmaps/2026-07-01-integrated-poc-roadmap.yaml`
-- `docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md`
-- `docs/prds/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`
+- `docs/prds/closed/2026-07-01-integrated-poc-handoff-capture-form-agenda-card.md`
 - `artifacts/integrated-poc/ipoc-golden-path-01-proof.md`
 - `artifacts/integrated-poc/ipoc-handoff-capture-01-proof.md`
 - `CONTEXT.md`
 - `docs/core-product-decision-log.yaml`
-- `docs/prds/2026-06-30-integrated-poc-reference.md`
+- `docs/prds/closed/2026-06-30-integrated-poc-reference.md`
 - `docs/llm-turn-planner-architecture.md`
 
 ## Good Look

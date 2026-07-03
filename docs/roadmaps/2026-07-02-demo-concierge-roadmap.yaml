@@ -1,8 +1,8 @@
 version: 1
 title: Demo Concierge Roadmap
-status: active
+status: closed  # campaign closed 2026-07-02
 updated: 2026-07-02
-source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
+source_agenda: docs/prds/closed/2026-07-02-demo-concierge-campaign-001-card.md
 epic: demo-concierge
 campaign: demo-concierge-001
 active_arc: concierge-arc-003
@@ -23,7 +23,7 @@ doctrine:
   - CONTEXT.md
   - docs/core-product-decision-log.yaml
   - docs/campaign-workflow-protocol.md
-  - docs/prds/2026-07-02-demo-concierge-campaign-001-card.md
+  - docs/prds/closed/2026-07-02-demo-concierge-campaign-001-card.md
 arc_001_chain:
   # Chat surface reaches /apply/ (plumbing, no new intelligence). D045.
   - id: dc-001-consistency-check

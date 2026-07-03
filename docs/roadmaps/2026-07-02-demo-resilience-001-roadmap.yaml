@@ -1,8 +1,8 @@
 version: 1
 title: Demo Resilience Roadmap (session resurrection + streaming)
-status: active
+status: closed  # campaign closed 2026-07-03
 updated: 2026-07-02
-source_agenda: docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
+source_agenda: docs/prds/closed/2026-07-02-demo-resilience-campaign-001-card.md
 epic: demo-resilience
 campaign: demo-resilience-001
 active_arc: resilience-arc-002
@@ -23,7 +23,7 @@ doctrine:
   - CONTEXT.md
   - docs/core-product-decision-log.yaml
   - docs/campaign-workflow-protocol.md
-  - docs/prds/2026-07-02-demo-resilience-campaign-001-card.md
+  - docs/prds/closed/2026-07-02-demo-resilience-campaign-001-card.md
 arc_001_chain:
   - id: dr-001-resurrection
     slice_label: session-resurrection-01

@@ -197,46 +197,11 @@ and request/message IDs.
 Use live lab sessions when judging user-visible routing behaviour. Static tests are
 useful guardrails, but they are not enough to prove customer-visible flow.
 
-Use Hell Week for broad model-backed safety and routing evidence:
-
-```bash
-just hell-week -- --profile smoke --store-db
-just hell-week-judge -- <run-dir>
-just hell-week -- --from <run-dir> --judge-verdicts <verdicts.json>
-just hell-week-compare -- <baseline-run-dir> <candidate-run-dir>
-just hell-week-stability -- --runs <run1,run2,run3> --set-id <iteration-id> --db "$DATABASE_URL"
-```
-
-Live Hell Week captures preflight `HELL_WEEK_DATABASE_URL`,
-`DEMO_INTERACTION_DATABASE_URL`, or `DATABASE_URL` with a real Postgres query
-before any model calls start.
-
-Deterministic-only reports are capped at `needs_work`; `ship_ready` requires
-merged judge verdicts and safety-floor coverage.
-
-Postgres-backed Hell Week reports are the durable source for replayable evidence.
-Single runs live in `hell_week_runs`, `hell_week_scenarios`,
-`hell_week_turns`, and `hell_week_grades`. Repeated-run stability reports live in
-`hell_week_run_sets`, `hell_week_run_set_members`,
-`hell_week_run_set_scenarios`, and `hell_week_run_set_pairwise_comparisons`.
-Use `core:hell-week -- --from-db <runId>` or
-`core:hell-week-stability -- --from-db <setId>` to regenerate report artifacts
-from Postgres.
-
-```mermaid
-flowchart TD
-  A[Corpus item] --> B[RetrievedMatch]
-  B --> C[Prompt evidence shown to planner]
-  C --> D[TurnPlan proposal]
-  D --> E[Validator decision]
-  E --> F[ValidatedTurnResult.trace]
-  F --> G[Lab UI diagnostics]
-  F --> H[Session dump JSON]
-  F --> I[Simulation JSONL]
-  F --> J[Persona and model comparison reports]
-  F --> K[Route audit artifacts]
-  F --> L[Hell Week reports]
-```
+Use Hell Week for broad model-backed safety and routing evidence. The full
+command surface, receipt semantics (floor-delta), the committed baseline
+anchor, and the Postgres-backed durable reports are documented once in
+[Proof and gates](./docs/loanslam-operator/05-proof-and-gates.md) and the
+[Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md).
 
 ## Development gates
 
@@ -252,13 +217,9 @@ just format-check
 ```
 
 Run them when you need verification. They are not automatically required for every
-docs-only change.
-
-`just source-policy` enforces the Phase 0 TypeScript source convention from the
-decision log: project-local TypeScript imports stay extensionless, while
-third-party package export paths remain allowed to use their published names.
-`just build` includes the same guard before the workspace build; its stdout and
-stderr are part of the verification evidence.
+docs-only change. Gate doctrine, `source-policy` semantics, and the pre-commit
+enforcement layer are documented in
+[Proof and gates](./docs/loanslam-operator/05-proof-and-gates.md).
 
 Do not use `just vercel-build` as a substitute for these local gates. It follows
 the deployment build path and can apply committed Prisma migrations.
@@ -274,9 +235,9 @@ just site-build
 
 - [Product brief](./docs/product-brief.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
-- [Integrated POC reference](./docs/prds/2026-06-30-integrated-poc-reference.md)
-- [Integrated POC implementation agenda card](./docs/prds/2026-07-01-integrated-poc-implementation-agenda-card.md)
-- [Stakeholder demo safe display boundary](./docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
+- [Integrated POC reference](./docs/prds/closed/2026-06-30-integrated-poc-reference.md)
+- [Integrated POC implementation agenda card](./docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md)
+- [Stakeholder demo safe display boundary](./docs/prds/closed/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
 - [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
 - [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)

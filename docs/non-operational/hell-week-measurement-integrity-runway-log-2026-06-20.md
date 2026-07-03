@@ -3,7 +3,7 @@
 ## Scope
 
 This log tracks the implementation slices for
-`docs/prds/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md`
+`docs/prds/closed/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md`
 in the `hell-week-performance-regression` worktree.
 
 ## Section 1: F/I Rubric Audit
@@ -130,7 +130,7 @@ captured scenario IDs, the three post-malformed-recovery captures regrade to
 ### Conclusion
 
 The tracked report
-`docs/hell-week-performance-regression-report-2026-06-20.md` now states:
+`docs/reports/hell-week-performance-regression-report-2026-06-20.md` now states:
 
 - the old `80/80/79` headline is a measurement artifact;
 - the current deterministic regrade is a sanity check, not product truth;

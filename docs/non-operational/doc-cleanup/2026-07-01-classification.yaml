@@ -1,7 +1,7 @@
 version: 1
 cleanup_date: "2026-07-01"
-agenda_card: "docs/prds/2026-07-01-documentation-cleanup-agenda-card.md"
-source_reference: "docs/prds/2026-06-30-integrated-poc-reference.md"
+agenda_card: "docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md"
+source_reference: "docs/prds/closed/2026-06-30-integrated-poc-reference.md"
 inventory:
   tracked_before_cleanup: 92
   visible_before_cleanup: 91
@@ -200,10 +200,11 @@ decisions:
     action: "Keep."
     reason: "Compact evidence index; evidence docs are high-risk to delete."
   - path: "backlog.yml"
-    state: KEEP
+    state: ARCHIVE
     risk: backlog
-    action: "Keep."
-    reason: "Structured backlog context, not prose sprawl."
+    action: "Archived 2026-07-03 to docs/non-operational/backlog-2026-06.yml."
+    reason: "Superseded twice over: item statuses were stale, and roadmaps plus
+      campaign cards replaced the backlog as the execution-order mechanism."
   - path: "docker-compose.postgres.yml"
     state: KEEP
     risk: infra
@@ -225,14 +226,15 @@ decisions:
     action: "Keep."
     reason: "Current Hell Week operator guide."
   - path: "docs/hell-week-measurement-integrity-runway-log-2026-06-20.md"
-    state: LAZY-LOAD
+    state: ARCHIVE
     risk: evidence
-    action: "Keep as historical evidence."
+    action: "Archived 2026-07-03 to docs/non-operational/; it is a work log
+      for a completed PRD, not doctrine."
     reason: "Dated runway log; useful only when reconstructing Hell Week evidence history."
   - path: "docs/hell-week-performance-regression-report-2026-06-20.md"
     state: LAZY-LOAD
     risk: evidence
-    action: "Keep as historical evidence."
+    action: "Moved 2026-07-03 to docs/reports/ with the other reports."
     reason: "Dated performance report; do not load by default."
   - path: "docs/llm-turn-planner-architecture.md"
     state: KEEP
@@ -324,57 +326,57 @@ decisions:
     risk: historical-decision
     action: "Delete after promoting the durable rule to docs/llm-turn-planner-architecture.md."
     reason: "Dated line-number audit should not stay in normal context once the durable evidence rule is in the architecture doc."
-  - path: "docs/prds/2026-06-14-stochastic-test-simulator-prd.md"
+  - path: "docs/prds/closed/2026-06-14-stochastic-test-simulator-prd.md"
     state: LAZY-LOAD
     risk: historical-prd
     action: "Keep as prior art."
     reason: "STS is implemented; doc is not first-layer context."
-  - path: "docs/prds/2026-06-15-structured-signal-routing-prd.md"
+  - path: "docs/prds/closed/2026-06-15-structured-signal-routing-prd.md"
     state: LAZY-LOAD
     risk: historical-prd
     action: "Keep as prior art."
     reason: "Signal routing history; current behavior still needs live evidence."
-  - path: "docs/prds/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md"
+  - path: "docs/prds/closed/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md"
     state: KEEP
     risk: product-safety
     action: "Keep."
     reason: "Current display-boundary safety contract."
-  - path: "docs/prds/2026-06-20-application-flow-site-style-parity-prd.md"
+  - path: "docs/prds/closed/2026-06-20-application-flow-site-style-parity-prd.md"
     state: LAZY-LOAD
     risk: historical-prd
     action: "Keep as prior art."
     reason: "Site/app-flow context; not first-layer Phase 0 engine context."
-  - path: "docs/prds/2026-06-20-customer-facing-agent-acceptance-spec.md"
+  - path: "docs/prds/closed/2026-06-20-customer-facing-agent-acceptance-spec.md"
     state: LAZY-LOAD
     risk: product-spec
     action: "Keep as prior art."
     reason: "Acceptance spec may inform later productisation."
-  - path: "docs/prds/2026-06-20-hell-week-coverage-expansion-spec.md"
+  - path: "docs/prds/closed/2026-06-20-hell-week-coverage-expansion-spec.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Historical verification expansion spec."
-  - path: "docs/prds/2026-06-20-hell-week-judge-trustworthiness-prd.md"
+  - path: "docs/prds/closed/2026-06-20-hell-week-judge-trustworthiness-prd.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Judge trustworthiness history."
-  - path: "docs/prds/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md"
+  - path: "docs/prds/closed/2026-06-20-hell-week-measurement-integrity-sequential-runway-prd.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Measurement runway history."
-  - path: "docs/prds/2026-06-20-hell-week-performance-regression-analysis-prd.md"
+  - path: "docs/prds/closed/2026-06-20-hell-week-performance-regression-analysis-prd.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Performance regression analysis history."
-  - path: "docs/prds/2026-06-20-hellweek-judge-foundation-handoff.md"
+  - path: "docs/prds/closed/2026-06-20-hellweek-judge-foundation-handoff.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as handoff prior art."
     reason: "Historical judge foundation handoff."
-  - path: "docs/prds/2026-06-20-repository-surface-audit-prd.md"
+  - path: "docs/prds/closed/2026-06-20-repository-surface-audit-prd.md"
     state: LAZY-LOAD
     risk: audit-prd
     action: "Keep as prior art."
@@ -384,57 +386,57 @@ decisions:
     risk: architecture-prd
     action: "Keep as prior art until integrated POC supersedes it."
     reason: "Widget-adapter architecture is due for sunset after integrated POC completion."
-  - path: "docs/prds/2026-06-20-static-runtime-code-health-audit-prd.md"
+  - path: "docs/prds/closed/2026-06-20-static-runtime-code-health-audit-prd.md"
     state: LAZY-LOAD
     risk: audit-prd
     action: "Keep as prior art."
     reason: "Runtime code-health audit setup record."
-  - path: "docs/prds/2026-06-20-test-signal-trust-strategy-spec.md"
+  - path: "docs/prds/closed/2026-06-20-test-signal-trust-strategy-spec.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Test signal strategy history."
-  - path: "docs/prds/2026-06-20-website-copy-config-prd.md"
+  - path: "docs/prds/closed/2026-06-20-website-copy-config-prd.md"
     state: LAZY-LOAD
     risk: site-prd
     action: "Keep as prior art."
     reason: "Website copy/config context."
-  - path: "docs/prds/2026-06-21-calibration-foundations-spec.md"
+  - path: "docs/prds/closed/2026-06-21-calibration-foundations-spec.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Calibration history."
-  - path: "docs/prds/2026-06-21-engine-safety-guard-robustness-spec.md"
+  - path: "docs/prds/closed/2026-06-21-engine-safety-guard-robustness-spec.md"
     state: LAZY-LOAD
     risk: safety-spec
     action: "Keep as prior art."
     reason: "Safety-guard robustness history."
-  - path: "docs/prds/2026-06-21-judge-trust-release-candidate-arc-prd.md"
+  - path: "docs/prds/closed/2026-06-21-judge-trust-release-candidate-arc-prd.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "Judge trust release-candidate arc history."
-  - path: "docs/prds/2026-06-21-release-gate-stability-and-demo-readiness-spec.md"
+  - path: "docs/prds/closed/2026-06-21-release-gate-stability-and-demo-readiness-spec.md"
     state: LAZY-LOAD
     risk: release-spec
     action: "Keep as prior art."
     reason: "Release gate stability history."
-  - path: "docs/prds/2026-06-21T090837Z-hell-week-openai-judge-and-safety-runway.md"
+  - path: "docs/prds/closed/2026-06-21T090837Z-hell-week-openai-judge-and-safety-runway.md"
     state: LAZY-LOAD
     risk: verification-spec
     action: "Keep as prior art."
     reason: "OpenAI judge and safety runway history."
-  - path: "docs/prds/2026-06-29-validator-layer-quality-review.md"
+  - path: "docs/prds/closed/2026-06-29-validator-layer-quality-review.md"
     state: LAZY-LOAD
     risk: review-doc
     action: "Keep as prior art."
     reason: "Recent validator-layer review; may guide hardening but not first-layer context."
-  - path: "docs/prds/2026-06-30-integrated-poc-reference.md"
+  - path: "docs/prds/closed/2026-06-30-integrated-poc-reference.md"
     state: KEEP
     risk: current-roadmap
     action: "Keep."
     reason: "Current integrated POC reference and direction."
-  - path: "docs/prds/2026-07-01-documentation-cleanup-agenda-card.md"
+  - path: "docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md"
     state: KEEP
     risk: current-agenda
     action: "Keep."
@@ -460,9 +462,11 @@ decisions:
     action: "Keep as historical report."
     reason: "Full repo review report; not first-layer context."
   - path: "docs/reusable-worktree-branch-cicd-protocol.md"
-    state: KEEP
+    state: ARCHIVE
     risk: operations
-    action: "Keep."
+    action: "Archived 2026-07-03 to docs/non-operational/; it is a starter
+      template for other repositories, and its operational content here is
+      carried by AGENTS.md and docs/loanslam-operator/07."
     reason: "Current reusable worktree and promotion protocol."
   - path: "docs/stochastic-test-simulator-guide.md"
     state: KEEP
@@ -480,10 +484,12 @@ decisions:
     action: "Keep while just review exists."
     reason: "Explicitly framed as legacy review-only surface."
   - path: "qa.yaml"
-    state: KEEP
+    state: ARCHIVE
     risk: verification-config
-    action: "Keep."
-    reason: "Structured QA config."
+    action: "Archived 2026-07-03 to
+      artifacts/phase0/session-investigation-d6d7538c-2026-06-14.yaml."
+    reason: "Not QA config: a single 2026-06-14 live-session investigation.
+      Evidence, not guidance; moved next to its lab-session peers."
   - path: "scripts/hooks/README.md"
     state: KEEP
     risk: tooling-doc

@@ -6,7 +6,7 @@ Active runway, created from the latest Hell Week x3 judged evidence in
 `worktree-hellweek-judge-default`.
 
 This document supersedes the stale "current state" in
-`docs/prds/2026-06-20-customer-facing-agent-acceptance-spec.md`, which was
+`docs/prds/closed/2026-06-20-customer-facing-agent-acceptance-spec.md`, which was
 written before the complete OpenAI-judged x3 run existed.
 
 ## Practical Takeaway
