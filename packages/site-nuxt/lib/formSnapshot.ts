@@ -20,7 +20,20 @@ export function snapshotApplicationForm(): ApplicationFormSnapshot | null {
   for (const element of root.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
     "input[name], select[name]",
   )) {
-    fields[element.name] = element.value;
+    // A checkbox's .value is a constant (usually "on") whether or not it is
+    // ticked, and every radio in a group reports its own .value, so the last
+    // one in the DOM would win. Both need .checked, not .value.
+    if (element.type === "checkbox") {
+      fields[element.name] = (element as HTMLInputElement).checked ? "checked" : "unchecked";
+    } else if (element.type === "radio") {
+      if ((element as HTMLInputElement).checked) {
+        fields[element.name] = element.value;
+      } else if (!(element.name in fields)) {
+        fields[element.name] = "";
+      }
+    } else {
+      fields[element.name] = element.value;
+    }
   }
   return { step, fields };
 }
