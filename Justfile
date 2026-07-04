@@ -125,6 +125,10 @@ core-stochastic *stochastic_flags:
 route-audit *audit_flags:
     @npm --silent run core:route-audit -- {{ audit_flags }}
 
+# Verify the assistant-first contact route finder UX against a running site-nuxt server.
+contact-assistant-proof *proof_flags:
+    @node scripts/contact-assistant-ux-proof.mjs {{ proof_flags }}
+
 # =============================================================================
 # Hell Week Evidence
 # =============================================================================
