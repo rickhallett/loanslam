@@ -10,7 +10,7 @@
     "body": "The assistant can help with applications, repayments, existing loans and complaints. Direct phone, text and email routes remain available below.",
     "assistant": {
       "title": "MAL Loans assistant",
-      "body": "Choose the topic closest to what you need, or start the assistant and type your own question. The assistant will take it one step at a time, and you can ask about anything else too.",
+      "body": "Choose the topic closest to what you need, or start the assistant and type your own question. The assistant will take it one step at a time.",
       "ctaLabel": "Start with the assistant"
     },
     "options": [
