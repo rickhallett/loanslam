@@ -18,11 +18,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s, opacity 0.18s;
+  transition:
+    transform 0.18s,
+    opacity 0.18s;
 }
-#mal-launcher:hover { transform: scale(1.08); }
-#mal-launcher:focus-visible { outline: 3px solid #f7a823; outline-offset: 3px; }
-#mal-launcher .mal-icon { width: 26px; height: 26px; fill: white; }
+#mal-launcher:hover {
+  transform: scale(1.08);
+}
+#mal-launcher:focus-visible {
+  outline: 3px solid #f7a823;
+  outline-offset: 3px;
+}
+#mal-launcher .mal-icon {
+  width: 26px;
+  height: 26px;
+  fill: white;
+}
 
 #mal-panel {
   position: fixed;
@@ -39,16 +50,42 @@
   display: flex;
   transition: opacity 0.15s;
   color: #172026;
-  font-family: Poppins, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family:
+    Poppins,
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   font-size: 14px;
 }
-#mal-panel * { box-sizing: border-box; }
-#mal-panel button, #mal-panel input, #mal-panel textarea { font: inherit; }
-#mal-panel h1, #mal-panel p, #mal-panel ul { font-family: inherit; }
+#mal-panel * {
+  box-sizing: border-box;
+}
+#mal-panel button,
+#mal-panel input,
+#mal-panel textarea {
+  font: inherit;
+}
+#mal-panel h1,
+#mal-panel p,
+#mal-panel ul {
+  font-family: inherit;
+}
 
 @media (max-width: 600px) {
-  #mal-panel { inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; }
-  body.mal-open #mal-launcher { display: none !important; }
+  #mal-panel {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+  }
+  body.mal-open #mal-launcher {
+    display: none !important;
+  }
 }
 
 /* -- widget styles (transformed) -- */
@@ -248,6 +285,21 @@
 #mal-panel .chip:hover {
   background: #1a8787;
   color: #ffffff;
+}
+
+#mal-panel .contact-route-actions {
+  gap: 7px;
+}
+
+#mal-panel .chip-primary {
+  border-color: #f0b429;
+  background: #f0b429;
+  color: #172026;
+}
+
+#mal-panel .chip-primary:hover {
+  background: #d9900f;
+  color: #172026;
 }
 
 #mal-panel .links {
@@ -483,4 +535,3 @@ input:disabled,
     transition: none;
   }
 }
-

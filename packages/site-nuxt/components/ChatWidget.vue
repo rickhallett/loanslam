@@ -1,12 +1,6 @@
 <template>
   <div>
-    <button
-      id="mal-launcher"
-      type="button"
-      :aria-label="isOpen ? 'Close Loans by MAL assistant' : 'Open Loans by MAL assistant'"
-      :aria-expanded="isOpen"
-      @click="togglePanel"
-    >
+    <button id="mal-launcher" type="button" :aria-label="isOpen ? `Close ${chatTitle}` : `Open ${chatTitle}`" :aria-expanded="isOpen" @click="togglePanel">
       <svg v-if="!isOpen" viewBox="0 0 24 24" aria-hidden="true" class="mal-icon">
         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
       </svg>
@@ -15,148 +9,83 @@
       </svg>
     </button>
 
-    <div v-show="isOpen" id="mal-panel" role="dialog" aria-label="MAL Loans assistant">
+    <div v-show="isOpen" id="mal-panel" role="dialog" :aria-label="chatTitle">
       <main class="widget-shell" aria-label="MAL Loans chat widget">
         <section class="chat-panel">
           <header class="chat-header">
             <div>
-              <p class="eyebrow">Website help</p>
-              <h1>MAL Loans assistant</h1>
+              <p class="eyebrow">{{ chatEyebrow }}</p>
+              <h1>{{ chatTitle }}</h1>
               <!-- The two chat surfaces are deliberately distinct (D045/D046);
                    the badge keeps the seam visible to the customer. -->
-              <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status">
-                <span class="mode-pill">Live guide</span> Application guide
-              </p>
-              <p v-else class="chat-status">Support chat</p>
+              <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status"><span class="mode-pill">Live guide</span> Application guide</p>
+              <p v-else class="chat-status">{{ chatStatus }}</p>
             </div>
             <div class="chat-header-actions">
-              <button type="button" title="Start over" aria-label="Start over" @click="reset">
-                &#8635;
-              </button>
-              <button type="button" title="Close" aria-label="Close chat" @click="closePanel">
-                &times;
-              </button>
+              <button type="button" title="Start over" aria-label="Start over" @click="reset">&#8635;</button>
+              <button type="button" title="Close" aria-label="Close chat" @click="closePanel">&times;</button>
             </div>
           </header>
 
           <ul ref="scroller" class="message-list">
-            <li
-              v-for="(message, index) in messages"
-              :key="message.id"
-              :class="['message', message.role === 'customer' ? 'message-user' : 'message-assistant']"
-            >
+            <li v-for="(message, index) in messages" :key="message.id" :class="['message', message.role === 'customer' ? 'message-user' : 'message-assistant']">
               <span class="message-text">{{ message.text }}</span>
-              <div
-                v-if="index === messages.length - 1 && message.role === 'assistant' && message.ui && hasRenderableContent(message.ui)"
-                class="primitive"
-              >
+              <div v-if="index === messages.length - 1 && message.role === 'assistant' && message.ui && hasRenderableContent(message.ui)" class="primitive">
                 <div v-if="message.ui.primitive === 'choice_list'" class="choices">
-                  <button
-                    v-for="choice in message.ui.choices"
-                    :key="choice.id"
-                    class="chip"
-                    type="button"
-                    @click="submit(choice.label)"
-                  >
+                  <button v-for="choice in message.ui.choices" :key="choice.id" class="chip" type="button" @click="submit(choice.label)">
                     {{ choice.label }}
                   </button>
                 </div>
-                <ChatIntakeForm
-                  v-else-if="message.ui.primitive === 'intake_form'"
-                  :key="message.ui.fields.join(',')"
-                  :fields="message.ui.fields"
-                  @submit="onIntakeSubmit"
-                  @cancel="onIntakeCancel"
-                />
-                <div
-                  v-else-if="(message.ui.primitive === 'message' || message.ui.primitive === 'safe_fallback') && message.ui.links.length > 0"
-                  class="links"
-                >
-                  <a
-                    v-for="(link, i) in message.ui.links"
-                    :key="i"
-                    class="link"
-                    :href="linkHref(link)"
-                    target="_blank"
-                    rel="noopener"
-                  >
+                <ChatIntakeForm v-else-if="message.ui.primitive === 'intake_form'" :key="message.ui.fields.join(',')" :fields="message.ui.fields" @submit="onIntakeSubmit" @cancel="onIntakeCancel" />
+                <div v-else-if="(message.ui.primitive === 'message' || message.ui.primitive === 'safe_fallback') && message.ui.links.length > 0" class="links">
+                  <a v-for="(link, i) in message.ui.links" :key="i" class="link" :href="linkHref(link)" target="_blank" rel="noopener">
                     {{ link.label }}
                   </a>
                 </div>
-                <div v-else-if="message.ui.primitive === 'handoff_confirmation'" class="handoff">
-                  Our support team will take it from here.
-                </div>
+                <div v-else-if="message.ui.primitive === 'handoff_confirmation'" class="handoff">Our support team will take it from here.</div>
               </div>
-              <div
-                v-if="index === messages.length - 1 && message.id === applyOfferMessageId"
-                class="primitive"
-              >
+              <div v-if="index === messages.length - 1 && message.id === applyOfferMessageId" class="primitive">
                 <div class="choices">
-                  <button id="mal-apply-nav" class="chip" type="button" @click="goToApply">
-                    Take me to the application
-                  </button>
+                  <button id="mal-apply-nav" class="chip" type="button" @click="goToApply">Take me to the application</button>
                 </div>
               </div>
-              <div
-                v-if="index === messages.length - 1 && message.id === handoffOfferMessageId"
-                class="primitive"
-              >
+              <div v-if="index === messages.length - 1 && message.id === handoffOfferMessageId" class="primitive">
                 <div class="choices">
-                  <button id="mal-handoff-nav" class="chip" type="button" @click="connectSupport">
-                    Connect me with the support team
-                  </button>
+                  <button id="mal-handoff-nav" class="chip" type="button" @click="connectSupport">Connect me with the support team</button>
                 </div>
               </div>
-              <div
-                v-if="index === messages.length - 1 && message.id === navOfferMessageId && navOffer"
-                class="primitive"
-              >
+              <div v-if="index === messages.length - 1 && message.id === navOfferMessageId && navOffer" class="primitive">
                 <div class="choices">
                   <button id="mal-concierge-nav" class="chip" type="button" @click="goToNavOffer">
                     {{ navOffer.label }}
                   </button>
                 </div>
               </div>
+              <div v-if="showContactQuickActions(message, index)" class="primitive">
+                <div class="choices contact-route-actions" aria-label="Contact route shortcuts">
+                  <button class="chip chip-primary" type="button" @click="goToApply">Apply online</button>
+                  <button class="chip" type="button" @click="revealContactRoute('vulnerability')">Repayment support</button>
+                  <button class="chip" type="button" @click="revealContactRoute('handoff')">Existing loan</button>
+                  <button class="chip" type="button" @click="revealContactRoute('general')">New loan team</button>
+                  <button class="chip" type="button" @click="goToComplaints">Complaints</button>
+                </div>
+              </div>
             </li>
-            <li
-              v-if="isSending && streamingMessageId === null"
-              class="message message-assistant thinking-bubble"
-              aria-label="Assistant is typing"
-            >
+            <li v-if="isSending && streamingMessageId === null" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
             </li>
           </ul>
 
-          <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-          <p v-if="isChatComplete" class="terminal-note">
-            This handoff is complete. Refresh or start over to begin a new chat.
+          <p v-if="errorMessage" class="error" role="alert">
+            {{ errorMessage }}
           </p>
+          <p v-if="isChatComplete" class="terminal-note">This handoff is complete. Refresh or start over to begin a new chat.</p>
 
-          <p class="uat-notice uat-notice-composer">
-            Prototype — conversations are recorded. Please use test details only.
-          </p>
+          <p class="uat-notice uat-notice-composer">Prototype — conversations are recorded. Please use test details only.</p>
 
-          <form
-            class="composer"
-            :data-sending="isSending ? 'true' : undefined"
-            @submit.prevent="submitDraft"
-          >
-            <input
-              ref="inputEl"
-              v-model="draft"
-              type="text"
-              placeholder="Type your message…"
-              autocomplete="off"
-              aria-label="Message"
-              :disabled="isChatComplete"
-            />
-            <button
-              class="composer-send"
-              type="submit"
-              :disabled="isSending || isChatComplete || draft.trim().length === 0"
-              aria-label="Send message"
-              @mousedown.prevent
-            >
+          <form class="composer" :data-sending="isSending ? 'true' : undefined" @submit.prevent="submitDraft">
+            <input ref="inputEl" v-model="draft" type="text" placeholder="Type your message…" autocomplete="off" aria-label="Message" :disabled="isChatComplete" />
+            <button class="composer-send" type="submit" :disabled="isSending || isChatComplete || draft.trim().length === 0" aria-label="Send message" @mousedown.prevent>
               <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
                 <path fill="currentColor" d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" />
               </svg>
@@ -169,14 +98,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { DemoDisplayTelemetry, IntakeField, UiPlan } from '@loanslam/contracts';
-import type {
-  IpocSendMessageResponse,
-  IpocSessionResponse,
-  IpocSubmitIntakeResponse,
-} from '../../integrated-poc/shared/ipoc';
+import type { IpocSendMessageResponse, IpocSessionResponse, IpocSubmitIntakeResponse } from '../../integrated-poc/shared/ipoc';
 import type { ConciergeSessionResponse, ConciergeStatusResponse } from '../lib/concierge';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
 import { hasApplicationFormLink, navOfferForReply, type NavOffer } from '../lib/navOffer';
@@ -193,8 +118,9 @@ interface ChatMessage {
   ui?: UiPlan | null;
 }
 
-const WELCOME =
-  "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+const SUPPORT_WELCOME = "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+const ROUTE_FINDER_WELCOME =
+  "Tell me what you need help with and I'll point you to apply online, repayments, existing-loan support, complaints, or the right contact route. You can still call, text, or email the team directly from this page.";
 
 // dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
 // to the segregated concierge route with a snapshot of the form state; the
@@ -204,9 +130,8 @@ const APPLY_INTRO =
   "Here's the application — a few short steps, starting with your details. I can see the form as you fill it in (test details only on this prototype), so if anything's unclear just ask me here.";
 
 // Layout-level surface (D045/D046): the widget is mounted once and present
-// on every route — closed by default, opt-in via the launcher. Only
-// /contact/ keeps its auto-open loader parity. The site-wide launcher is a
-// recorded parity deviation, masked in the harness.
+// on every route, but stays opt-in. On /contact/ the page owns the primary
+// route-finder UI and opens this panel only when the customer asks for help.
 function normalizePath(path: string): string {
   const trimmed = path.replace(/\/+$/, '');
   return trimmed === '' ? '/' : trimmed;
@@ -218,6 +143,9 @@ const isApplyRoute = computed(() => normalizePath(route.path) === '/apply');
 // The surface the next turn will use: concierge everywhere except /contact/
 // (mirrors the routing in submit). Drives the header mode badge.
 const isConciergeMode = computed(() => conciergeAvailable.value && !isContactRoute.value);
+const chatEyebrow = computed(() => (isContactRoute.value ? 'Route finder' : 'Website help'));
+const chatTitle = computed(() => (isContactRoute.value ? 'Find the right team' : 'MAL Loans assistant'));
+const chatStatus = computed(() => (isContactRoute.value ? 'Contact route finder' : 'Support chat'));
 
 // dc-003 (D045): deterministic navigation offer. When a grounded answer's
 // top retrieval match is an apply-journey FAQ item, offer to take the user
@@ -262,6 +190,25 @@ let nextId = 0;
 
 function pushMessage(role: ChatMessage['role'], text: string, ui: UiPlan | null = null): void {
   messages.value.push({ id: nextId++, role, text, ui });
+}
+
+function currentWelcome(): string {
+  return isContactRoute.value ? ROUTE_FINDER_WELCOME : SUPPORT_WELCOME;
+}
+
+function isWelcomeText(text: string): boolean {
+  return text === SUPPORT_WELCOME || text === ROUTE_FINDER_WELCOME;
+}
+
+function ensureContextWelcome(): void {
+  const firstMessage = messages.value[0];
+  if (!firstMessage) {
+    pushMessage('assistant', currentWelcome());
+    return;
+  }
+  if (messages.value.length === 1 && firstMessage.role === 'assistant' && isWelcomeText(firstMessage.text)) {
+    firstMessage.text = currentWelcome();
+  }
 }
 
 function scrollToEnd(): void {
@@ -354,15 +301,7 @@ function emitTelemetry(telemetry: unknown): void {
 
 // Mirrors core/lab/demoDisplay hostContextForState (D044): the coarse
 // session context that promotes the matching contact route card on close.
-const VULNERABLE_FLAGS = new Set([
-  'vulnerability',
-  'distress',
-  'hardship',
-  'accessibility_need',
-  'language_barrier',
-  'legal_threat',
-  'complaint',
-]);
+const VULNERABLE_FLAGS = new Set(['vulnerability', 'distress', 'hardship', 'accessibility_need', 'language_barrier', 'legal_threat', 'complaint']);
 const HANDOFF_ACTIONS = new Set(['request_handoff_intake', 'create_ticket', 'escalate']);
 
 function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
@@ -376,15 +315,18 @@ function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
 }
 
 function replyAlreadyLinksApplication(ui: UiPlan): boolean {
-  return (
-    (ui.primitive === 'message' || ui.primitive === 'safe_fallback') &&
-    hasApplicationFormLink(ui.links)
-  );
+  return (ui.primitive === 'message' || ui.primitive === 'safe_fallback') && hasApplicationFormLink(ui.links);
 }
 
 function goToApply(): void {
   applyOfferMessageId.value = null;
   void navigateTo('/apply/');
+}
+
+function goToComplaints(): void {
+  isOpen.value = false;
+  document.body.classList.remove('mal-open');
+  void navigateTo('/complaints/');
 }
 
 function goToNavOffer(): void {
@@ -405,17 +347,22 @@ function connectSupport(): void {
   });
 }
 
-function contextForTelemetry(
-  telemetry: DemoDisplayTelemetry,
-): 'vulnerability' | 'handoff' | 'general' {
+function revealContactRoute(context: 'general' | 'vulnerability' | 'handoff'): void {
+  storedContext.value = context;
+  closePanel();
+}
+
+function showContactQuickActions(message: ChatMessage, index: number): boolean {
+  if (!isContactRoute.value || index !== messages.value.length - 1) return false;
+  if (message.role !== 'assistant' || isSending.value || isChatComplete.value) return false;
+  return !(message.ui && hasRenderableContent(message.ui));
+}
+
+function contextForTelemetry(telemetry: DemoDisplayTelemetry): 'vulnerability' | 'handoff' | 'general' {
   if (telemetry.safetyFlags.some((flag) => VULNERABLE_FLAGS.has(flag))) {
     return 'vulnerability';
   }
-  if (
-    telemetry.intake.handoffPending ||
-    HANDOFF_ACTIONS.has(telemetry.finalAction) ||
-    telemetry.uiPrimitive === 'handoff_confirmation'
-  ) {
+  if (telemetry.intake.handoffPending || HANDOFF_ACTIONS.has(telemetry.finalAction) || telemetry.uiPrimitive === 'handoff_confirmation') {
     return 'handoff';
   }
   return 'general';
@@ -423,7 +370,9 @@ function contextForTelemetry(
 
 async function ensureSession(): Promise<string> {
   if (sessionRef.value) return sessionRef.value;
-  const session = await $fetch<IpocSessionResponse>('/api/ipoc/sessions', { method: 'POST' });
+  const session = await $fetch<IpocSessionResponse>('/api/ipoc/sessions', {
+    method: 'POST',
+  });
   sessionRef.value = session.conversationRef;
   return session.conversationRef;
 }
@@ -437,28 +386,24 @@ async function ensureConciergeSession(): Promise<string> {
   return session.conversationRef;
 }
 
-function transcriptForResume(): Array<{ role: 'customer' | 'assistant'; content: string }> {
+function transcriptForResume(): Array<{
+  role: 'customer' | 'assistant';
+  content: string;
+}> {
   // Text-only replay (dr-001). The current customer turn is already in
   // messages.value (pushed by submit) and is sent separately as the new
   // turn, so drop the trailing customer message to avoid double-counting;
-  // the WELCOME line is UI, not a turn.
+  // welcome lines are UI, not turns.
   const history = [...messages.value];
   if (history.at(-1)?.role === 'customer') history.pop();
-  return history
-    .filter((m) => m.text && m.text !== WELCOME)
-    .map((m) => ({ role: m.role, content: m.text }));
+  return history.filter((m) => m.text && !isWelcomeText(m.text)).map((m) => ({ role: m.role, content: m.text }));
 }
 
 // dr-002 (D047): concierge replies stream over SSE. Validation failures
 // (404/429/400) arrive as the response status before any bytes stream, so
 // the dr-001 resurrection path is unchanged. Resolves to the full reply;
 // onText receives the accumulated partial text as deltas arrive.
-async function streamConciergeMessage(
-  ref: string,
-  message: string,
-  resume: boolean,
-  onText: (text: string) => void,
-): Promise<string> {
+async function streamConciergeMessage(ref: string, message: string, resume: boolean, onText: (text: string) => void): Promise<string> {
   const response = await fetch(`/api/concierge/sessions/${encodeURIComponent(ref)}/messages`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -542,10 +487,7 @@ function maybeApplyIntro(): void {
   pushMessage('assistant', APPLY_INTRO);
 }
 
-async function submit(
-  text: string,
-  { forceEngine = false }: { forceEngine?: boolean } = {},
-): Promise<void> {
+async function submit(text: string, { forceEngine = false }: { forceEngine?: boolean } = {}): Promise<void> {
   const trimmed = text.trim();
   if (!trimmed || isSending.value || isChatComplete.value) return;
 
@@ -561,10 +503,7 @@ async function submit(
       // dr-002 (D047): the reply streams into a live message bubble; the
       // thinking dots yield to it at the first delta.
       const reply = await sendConciergeTurn(trimmed, (text) => {
-        const streaming =
-          streamingMessageId.value === null
-            ? null
-            : messages.value.find((entry) => entry.id === streamingMessageId.value);
+        const streaming = streamingMessageId.value === null ? null : messages.value.find((entry) => entry.id === streamingMessageId.value);
         if (streaming) {
           streaming.text = text;
         } else {
@@ -573,10 +512,7 @@ async function submit(
         }
         scrollToEnd();
       });
-      const streamed =
-        streamingMessageId.value === null
-          ? null
-          : messages.value.find((entry) => entry.id === streamingMessageId.value);
+      const streamed = streamingMessageId.value === null ? null : messages.value.find((entry) => entry.id === streamingMessageId.value);
       if (streamed) {
         streamed.text = reply;
       } else {
@@ -584,29 +520,18 @@ async function submit(
       }
       streamingMessageId.value = null;
       applyOfferMessageId.value = null;
-      handoffOfferMessageId.value = /support team/i.test(reply)
-        ? (messages.value.at(-1)?.id ?? null)
-        : null;
-      navOffer.value =
-        handoffOfferMessageId.value === null ? navOfferForReply(reply, route.path) : null;
-      navOfferMessageId.value =
-        navOffer.value !== null ? (messages.value.at(-1)?.id ?? null) : null;
+      handoffOfferMessageId.value = /support team/i.test(reply) ? (messages.value.at(-1)?.id ?? null) : null;
+      navOffer.value = handoffOfferMessageId.value === null ? navOfferForReply(reply, route.path) : null;
+      navOfferMessageId.value = navOffer.value !== null ? (messages.value.at(-1)?.id ?? null) : null;
       return;
     }
     const ref = await ensureSession();
-    const result = await $fetch<IpocSendMessageResponse>(
-      `/api/ipoc/sessions/${encodeURIComponent(ref)}/messages`,
-      { method: 'POST', body: { message: trimmed } },
-    );
+    const result = await $fetch<IpocSendMessageResponse>(`/api/ipoc/sessions/${encodeURIComponent(ref)}/messages`, { method: 'POST', body: { message: trimmed } });
     if (result.ticket) activeTicketId.value = result.ticket.id;
     pushMessage('assistant', result.assistant.message, result.assistant.ui);
     emitTelemetry(result.assistant.telemetry);
-    const showApplyOffer =
-      !replyAlreadyLinksApplication(result.assistant.ui) &&
-      applyOfferEligible(result.assistant.telemetry);
-    applyOfferMessageId.value = showApplyOffer
-      ? (messages.value.at(-1)?.id ?? null)
-      : null;
+    const showApplyOffer = !replyAlreadyLinksApplication(result.assistant.ui) && applyOfferEligible(result.assistant.telemetry);
+    applyOfferMessageId.value = showApplyOffer ? (messages.value.at(-1)?.id ?? null) : null;
     handoffOfferMessageId.value = null;
     navOffer.value = null;
     navOfferMessageId.value = null;
@@ -618,10 +543,7 @@ async function submit(
       if (index !== -1) messages.value.splice(index, 1);
       streamingMessageId.value = null;
     }
-    errorMessage.value =
-      error instanceof Error
-        ? error.message
-        : 'Something went wrong reaching the assistant. Please try again.';
+    errorMessage.value = error instanceof Error ? error.message : 'Something went wrong reaching the assistant. Please try again.';
   } finally {
     isSending.value = false;
   }
@@ -640,25 +562,17 @@ async function onIntakeSubmit(values: Record<IntakeField, string>): Promise<void
   isSending.value = true;
 
   try {
-    const result = await $fetch<IpocSubmitIntakeResponse>(
-      `/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/intake`,
-      { method: 'POST', body: { ticketId: activeTicketId.value, fields: values } },
-    );
+    const result = await $fetch<IpocSubmitIntakeResponse>(`/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/intake`, {
+      method: 'POST',
+      body: { ticketId: activeTicketId.value, fields: values },
+    });
     pushMessage('customer', 'Shared my contact details.');
     emitTelemetry(result.telemetry);
     const confirmation = result.messages.at(-1);
-    pushMessage(
-      'assistant',
-      confirmation?.role === 'assistant'
-        ? confirmation.content
-        : 'Thanks — our support team will take it from here.',
-    );
+    pushMessage('assistant', confirmation?.role === 'assistant' ? confirmation.content : 'Thanks — our support team will take it from here.');
     isChatComplete.value = true;
   } catch (error) {
-    errorMessage.value =
-      error instanceof Error
-        ? error.message
-        : 'Something went wrong sharing your details. Please try again.';
+    errorMessage.value = error instanceof Error ? error.message : 'Something went wrong sharing your details. Please try again.';
   } finally {
     isSending.value = false;
   }
@@ -669,16 +583,10 @@ async function onIntakeCancel(): Promise<void> {
   errorMessage.value = '';
 
   try {
-    await $fetch<IpocSessionResponse>(
-      `/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/cancel-handoff`,
-      { method: 'POST' },
-    );
+    await $fetch<IpocSessionResponse>(`/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/cancel-handoff`, { method: 'POST' });
     pushMessage('assistant', 'No problem — ask me anything else about your loan.', null);
   } catch (error) {
-    errorMessage.value =
-      error instanceof Error
-        ? error.message
-        : 'Something went wrong cancelling the handoff. Please try again.';
+    errorMessage.value = error instanceof Error ? error.message : 'Something went wrong cancelling the handoff. Please try again.';
   }
 }
 
@@ -701,7 +609,7 @@ function reset(): void {
   } catch {
     // best-effort
   }
-  pushMessage('assistant', WELCOME);
+  pushMessage('assistant', currentWelcome());
   maybeApplyIntro();
 }
 
@@ -754,9 +662,8 @@ watch(
 );
 
 watch(isContactRoute, (now, prev) => {
-  // Each arrival at /contact/ auto-opens, matching the per-visit loader
-  // behavior the page had when the widget was mounted by the page itself.
-  if (now && !prev) openPanel();
+  ensureContextWelcome();
+  if (!now && prev && isOpen.value) focusInput();
 });
 
 watch([isApplyRoute, isOpen, conciergeAvailable], () => {
@@ -773,16 +680,24 @@ watch(
 );
 
 onMounted(async () => {
-  if (!restoreState()) pushMessage('assistant', WELCOME);
-  // The loader auto-opens the panel once the widget announces ready; the
-  // native panel is ready immediately (deployed-Astro behavior parity).
-  if (isContactRoute.value) openPanel();
+  if (!restoreState()) pushMessage('assistant', currentWelcome());
+  else ensureContextWelcome();
+  window.addEventListener('mal:open-route-finder', handleRouteFinderOpen);
   try {
     const status = await $fetch<ConciergeStatusResponse>('/api/concierge/status');
     conciergeAvailable.value = status.enabled;
   } catch {
     conciergeAvailable.value = false;
   }
+});
+
+function handleRouteFinderOpen(): void {
+  ensureContextWelcome();
+  openPanel();
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mal:open-route-finder', handleRouteFinderOpen);
 });
 </script>
 

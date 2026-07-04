@@ -134,6 +134,26 @@ export interface HomeCopy {
 
 export interface ContactCopy {
   head: PageHead;
+  routeFinder: {
+    overline: string;
+    title: string;
+    body: string;
+    assistant: {
+      title: string;
+      body: string;
+      ctaLabel: string;
+    };
+    options: {
+      id: string;
+      eyebrow: string;
+      title: string;
+      body: string;
+      actionLabel: string;
+      href?: string;
+      reveal?: string;
+      opensAssistant: boolean;
+    }[];
+  };
   channels: {
     type: string;
     eyebrow: string;
@@ -583,10 +603,41 @@ function validateHome(raw: unknown): HomeCopy {
 
 function validateContact(raw: unknown): ContactCopy {
   const root = objectAt(raw, 'contact');
+  const routeFinder = objectAt(root.routeFinder, 'contact.routeFinder');
+  const routeFinderAssistant = objectAt(routeFinder.assistant, 'contact.routeFinder.assistant');
   const channelLabels = objectAt(root.channelLabels, 'contact.channelLabels');
   const debtAdvice = objectAt(root.debtAdvice, 'contact.debtAdvice');
   return {
     head: pageHeadAt(root.head, 'contact.head'),
+    routeFinder: {
+      overline: stringAt(routeFinder.overline, 'contact.routeFinder.overline'),
+      title: stringAt(routeFinder.title, 'contact.routeFinder.title'),
+      body: stringAt(routeFinder.body, 'contact.routeFinder.body'),
+      assistant: {
+        title: stringAt(routeFinderAssistant.title, 'contact.routeFinder.assistant.title'),
+        body: stringAt(routeFinderAssistant.body, 'contact.routeFinder.assistant.body'),
+        ctaLabel: stringAt(routeFinderAssistant.ctaLabel, 'contact.routeFinder.assistant.ctaLabel'),
+      },
+      options: arrayAt(routeFinder.options, 'contact.routeFinder.options').map((item, index) => {
+        const option = objectAt(item, `contact.routeFinder.options[${index}]`);
+        const href = option.href ? hrefAt(option.href, `contact.routeFinder.options[${index}].href`) : undefined;
+        const reveal = option.reveal ? stringAt(option.reveal, `contact.routeFinder.options[${index}].reveal`) : undefined;
+        const opensAssistant = option.opensAssistant === true;
+        if (!href && !reveal && !opensAssistant) {
+          throw new Error(`Invalid site copy at contact.routeFinder.options[${index}]: expected href, reveal, or opensAssistant`);
+        }
+        return {
+          id: stringAt(option.id, `contact.routeFinder.options[${index}].id`),
+          eyebrow: stringAt(option.eyebrow, `contact.routeFinder.options[${index}].eyebrow`),
+          title: stringAt(option.title, `contact.routeFinder.options[${index}].title`),
+          body: stringAt(option.body, `contact.routeFinder.options[${index}].body`),
+          actionLabel: stringAt(option.actionLabel, `contact.routeFinder.options[${index}].actionLabel`),
+          href,
+          reveal,
+          opensAssistant,
+        };
+      }),
+    },
     channels: arrayAt(root.channels, 'contact.channels').map((item, index) => {
       const channel = objectAt(item, `contact.channels[${index}]`);
       return {

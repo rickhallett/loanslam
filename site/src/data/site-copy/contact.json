@@ -1,8 +1,60 @@
 {
   "head": {
     "crumbHtml": "<a href=\"/\">Home</a> / Contact",
-    "title": "Talk to a human",
-    "body": "Our dedicated customer care team is available by phone, text and email."
+    "title": "How can we help?",
+    "body": "Choose the quickest route: apply online, contact the right team, or ask the route finder to point you there."
+  },
+  "routeFinder": {
+    "overline": "Choose the right route",
+    "title": "Start with what you need.",
+    "body": "Most people can act faster from one of these routes. If you are not sure, use the route finder and it will highlight the right contact option.",
+    "assistant": {
+      "title": "Not sure who to contact?",
+      "body": "Tell the route finder what you need help with. It can suggest the right route, then you can still call, text, email, or apply online yourself.",
+      "ctaLabel": "Open route finder"
+    },
+    "options": [
+      {
+        "id": "apply",
+        "eyebrow": "Apply online",
+        "title": "Start or continue an application",
+        "body": "Use the online form if you want a personalised quote or are ready to apply.",
+        "actionLabel": "Apply online",
+        "href": "/apply/"
+      },
+      {
+        "id": "repayment",
+        "eyebrow": "Repayment difficulty",
+        "title": "You are struggling with repayments",
+        "body": "Go straight to the repayment support team if paying is becoming difficult.",
+        "actionLabel": "Show repayment contacts",
+        "reveal": "vulnerability"
+      },
+      {
+        "id": "existing",
+        "eyebrow": "Existing loan",
+        "title": "Update details or settle your loan",
+        "body": "Use the existing-loan route for settlement figures, account updates, or loan support.",
+        "actionLabel": "Show existing-loan contacts",
+        "reveal": "handoff"
+      },
+      {
+        "id": "new-loan",
+        "eyebrow": "New loan question",
+        "title": "You want to ask before applying",
+        "body": "Use the new-loan team for application questions that are not covered by the form.",
+        "actionLabel": "Show new-loan contacts",
+        "reveal": "general"
+      },
+      {
+        "id": "complaints",
+        "eyebrow": "Complaint",
+        "title": "Make or follow up a complaint",
+        "body": "Use the complaints page if something has gone wrong and you want it handled formally.",
+        "actionLabel": "Go to complaints",
+        "href": "/complaints/"
+      }
+    ]
   },
   "channels": [
     {

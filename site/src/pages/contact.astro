@@ -18,14 +18,67 @@ const contact = page('contact');
     </div>
   </div>
 
-  <div class="container section">
+  <div class="container section contact-section">
+    <section class="route-finder reveal" aria-labelledby="route-finder-heading">
+      <div class="route-finder__head">
+        <span class="overline">{contactCopy.routeFinder.overline}</span>
+        <h2 id="route-finder-heading">{contactCopy.routeFinder.title}</h2>
+        <p>{contactCopy.routeFinder.body}</p>
+      </div>
+
+      <div class="route-finder__grid">
+        {
+          contactCopy.routeFinder.options.map((option) => (
+            <article class="route-choice" data-choice={option.id}>
+              <p class="route-choice__kicker">{option.eyebrow}</p>
+              <h3>{option.title}</h3>
+              <p>{option.body}</p>
+              {option.href ? (
+                <a
+                  class:list={[
+                    'route-choice__action',
+                    option.id === 'apply' && 'route-choice__action--primary',
+                  ]}
+                  href={option.href}
+                >
+                  {option.actionLabel}
+                </a>
+              ) : option.reveal ? (
+                <button class="route-choice__action" type="button" data-route-reveal={option.reveal}>
+                  {option.actionLabel}
+                </button>
+              ) : option.opensAssistant ? (
+                <button
+                  class="route-choice__action route-choice__action--assistant"
+                  type="button"
+                  data-route-assistant
+                >
+                  {option.actionLabel}
+                </button>
+              ) : null}
+            </article>
+          ))
+        }
+
+        <aside class="route-assistant" aria-label="Route finder assistant">
+          <p class="route-choice__kicker">Route finder</p>
+          <h3>{contactCopy.routeFinder.assistant.title}</h3>
+          <p>{contactCopy.routeFinder.assistant.body}</p>
+          <button
+            class="route-choice__action route-choice__action--assistant"
+            type="button"
+            data-route-assistant
+          >
+            {contactCopy.routeFinder.assistant.ctaLabel}
+          </button>
+        </aside>
+      </div>
+    </section>
+
     <section class="contact-intro reveal" aria-labelledby="contact-routes-heading">
-      <span class="overline">Choose the right route</span>
-      <h2 id="contact-routes-heading">Tell us what you need help with.</h2>
-      <p>
-        If you are not sure which team you need, open the assistant and it will point you to the
-        right contact route.
-      </p>
+      <span class="overline">Direct contacts</span>
+      <h2 id="contact-routes-heading">Contact the team directly</h2>
+      <p>Call, text, or email the route that matches what you need help with.</p>
     </section>
 
     <div class="contact-routes" id="contact-section" aria-label="Contact routes">
@@ -71,24 +124,174 @@ const contact = page('contact');
       window.malChatConfig = {
         widgetUrl: mode === 'remote' || !isLocal ? location.origin + '/widget/' : 'http://127.0.0.1:5175',
         brandName: 'Loans by MAL',
-        launcherOpenLabel: 'Open Loans by MAL assistant',
-        launcherCloseLabel: 'Close Loans by MAL assistant',
-        panelLabel: 'Loans by MAL assistant',
+        launcherOpenLabel: 'Open Loans by MAL route finder',
+        launcherCloseLabel: 'Close Loans by MAL route finder',
+        panelLabel: 'Loans by MAL route finder',
         launcherColor: '#00879b',
         launcherFocusColor: '#f7a823',
         frostBackground: 'rgba(250, 247, 241, 0.58)',
         panelRadius: '16px',
+        autoOpenOnReady: false,
       };
     })();
+  </script>
+  <script is:inline>
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!(target instanceof Element)) return;
+
+      var revealButton = target.closest('[data-route-reveal]');
+      if (revealButton) {
+        var reveal = revealButton.getAttribute('data-route-reveal');
+        var section = document.getElementById('contact-section');
+        if (section && reveal) {
+          section.setAttribute('data-revealed', reveal);
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      if (target.closest('[data-route-assistant]')) {
+        var launcher = document.getElementById('mal-launcher');
+        if (launcher instanceof HTMLButtonElement) launcher.click();
+      }
+    });
   </script>
   <script is:inline set:html={reviewHostLoader}></script>
   <script is:inline set:html={reviewHostDevtools}></script>
 </Base>
 
 <style is:global>
+  .contact-section {
+    display: grid;
+    gap: clamp(2.6rem, 6vw, 4.4rem);
+  }
+
+  .route-finder {
+    display: grid;
+    gap: clamp(1.25rem, 3vw, 1.8rem);
+  }
+
+  .route-finder__head {
+    max-width: 48rem;
+  }
+
+  .route-finder__head h2 {
+    margin-bottom: 0.55rem;
+  }
+
+  .route-finder__head p {
+    color: var(--body);
+    font-size: 1.08rem;
+  }
+
+  .route-finder__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .route-choice,
+  .route-assistant {
+    display: flex;
+    flex-direction: column;
+    min-height: 15rem;
+    padding: clamp(1.15rem, 2.4vw, 1.45rem);
+    border: 1px solid var(--line-cool);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .route-assistant {
+    background: var(--ink-900);
+    color: var(--on-dark);
+  }
+
+  .route-choice__kicker {
+    margin: 0 0 0.55rem;
+    color: var(--teal-500);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .route-assistant .route-choice__kicker {
+    color: var(--teal-300);
+  }
+
+  .route-choice h3,
+  .route-assistant h3 {
+    margin-bottom: 0.55rem;
+  }
+
+  .route-assistant h3 {
+    color: #fff;
+  }
+
+  .route-choice p,
+  .route-assistant p {
+    color: inherit;
+  }
+
+  .route-choice__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    min-height: 2.6rem;
+    margin-top: auto;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--teal-500);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--teal-500);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .route-choice__action:hover {
+    background: var(--teal-500);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .route-choice__action--primary {
+    border-color: var(--amber-400);
+    background: var(--amber-400);
+    color: var(--ink-950);
+  }
+
+  .route-choice__action--primary:hover {
+    border-color: var(--amber-500);
+    background: var(--amber-500);
+    color: var(--ink-950);
+  }
+
+  .route-choice__action--assistant {
+    border-color: var(--teal-300);
+    background: var(--teal-50);
+    color: var(--ink);
+  }
+
+  .route-assistant .route-choice__action--assistant {
+    background: #fff;
+  }
+
   .contact-intro {
     max-width: 46rem;
-    margin-bottom: 2rem;
+    margin-bottom: -2.4rem;
   }
 
   .contact-intro h2 {
@@ -261,22 +464,24 @@ const contact = page('contact');
     color: var(--amber-400);
   }
 
-  #mal-launcher {
-    animation: launcher-glow 2.8s ease-in-out infinite;
+  @media (max-width: 920px) {
+    .route-finder__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
-  @keyframes launcher-glow {
-    0%,
-    100% {
-      box-shadow:
-        0 4px 20px rgba(4, 33, 41, 0.26),
-        0 0 6px 0 rgba(0, 135, 155, 0.48);
+  @media (max-width: 640px) {
+    .route-finder__grid {
+      grid-template-columns: 1fr;
     }
 
-    50% {
-      box-shadow:
-        0 4px 20px rgba(4, 33, 41, 0.26),
-        0 0 22px 7px rgba(0, 135, 155, 0.16);
+    .route-choice,
+    .route-assistant {
+      min-height: 0;
+    }
+
+    .contact-intro {
+      margin-bottom: -1.8rem;
     }
   }
 
