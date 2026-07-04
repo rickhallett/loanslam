@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import OpenAI from "openai";
 
+import { siteMapLines } from "../../lib/siteMap";
+
 // Demo-concierge surface (D045): a segregated, demo-only route serving
 // apply-journey assistance straight from a frontier OpenAI model. No
 // validator, no grounding rule — guardrails are system-prompt-only by
@@ -105,25 +107,13 @@ exists or where to find something, answer from this list and name the
 matching page. Never say a page on this list does not exist, and never
 say a topic is only covered on the current page when a dedicated page is
 listed here:
-- homepage /
-- application form /apply/
-- FAQs /faq/
-- contact page /contact/
-- Open Banking page /open-banking/ (what Open Banking is, AccountScore, safety)
-- instalment loans page /instalment-loan/ (the product explained)
-- about us /about-us/
-- personal loans guide /about-us/personal-loans/
-- credit score guide /about-us/credit-score/
-- existing customers /existing-customers/
-- extra support /extra-support/ (accessibility and extra help)
-- complaints /complaints/
-- customer login /login/
-- privacy policy /privacy-policy/
-- terms and conditions /terms-and-conditions/
+${siteMapLines()}
 
 When the customer's current page is provided, ground your help in it:
 explain what the page covers, answer questions about its content, and point
-to what is in front of them. On the application form, use the provided form
+to what is in front of them. The page context includes the links and
+buttons actually on the page — when you tell the customer what to click,
+use those exact labels and no others. On the application form, use the provided form
 state — answer about the exact step and fields, acknowledge what they have
 already completed, and point to what comes next. Encourage steady progress
 without pressure.
@@ -191,7 +181,7 @@ export async function runConciergeTurn({
     // Cap defensively; the client already truncates the excerpt.
     input.push({
       role: "developer",
-      content: `Customer's current page: ${JSON.stringify(pageContext).slice(0, 3000)}`,
+      content: `Customer's current page: ${JSON.stringify(pageContext).slice(0, 4500)}`,
     });
   }
 
