@@ -46,19 +46,6 @@
 #mal-panel button, #mal-panel input, #mal-panel textarea { font: inherit; }
 #mal-panel h1, #mal-panel p, #mal-panel ul { font-family: inherit; }
 
-#mal-frost {
-  position: fixed;
-  inset: 0;
-  z-index: 9997;
-  background: rgba(250, 247, 241, 0.58);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-}
-#mal-frost.is-visible { opacity: 1; pointer-events: auto; }
-
 @media (max-width: 600px) {
   #mal-panel { inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; }
   body.mal-open #mal-launcher { display: none !important; }
@@ -114,6 +101,20 @@
   color: #d8e8e1;
   font-size: 12px;
   line-height: 1.35;
+}
+
+#mal-panel .mode-pill {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 8px 2px;
+  border-radius: 999px;
+  background: #f0b429;
+  color: #172026;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  vertical-align: 1px;
 }
 
 #mal-panel .chat-header-actions {
