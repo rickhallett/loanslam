@@ -11,50 +11,49 @@
 
     <div class="container section contact-section">
       <section class="route-finder reveal" aria-labelledby="route-finder-heading">
-        <div class="route-finder__head">
-          <span class="overline">{{ contactCopy.routeFinder.overline }}</span>
-          <h2 id="route-finder-heading">{{ contactCopy.routeFinder.title }}</h2>
-          <p>{{ contactCopy.routeFinder.body }}</p>
-        </div>
-
-        <div class="route-finder__grid">
-          <article v-for="option in contactCopy.routeFinder.options" :key="option.id" class="route-choice" :data-choice="option.id">
-            <p class="route-choice__kicker">{{ option.eyebrow }}</p>
-            <h3>{{ option.title }}</h3>
-            <p>{{ option.body }}</p>
-            <a
-              v-if="option.href"
-              class="route-choice__action"
-              :class="{
-                'route-choice__action--primary': option.id === 'apply',
-              }"
-              :href="option.href"
-            >
-              {{ option.actionLabel }}
-            </a>
-            <button v-else-if="option.reveal" class="route-choice__action" type="button" @click="revealContactRoute(option.reveal)">
-              {{ option.actionLabel }}
-            </button>
-            <button v-else-if="option.opensAssistant" class="route-choice__action route-choice__action--assistant" type="button" @click="openRouteFinder">
-              {{ option.actionLabel }}
-            </button>
-          </article>
-
-          <aside class="route-assistant" aria-label="Route finder assistant">
-            <p class="route-choice__kicker">Route finder</p>
-            <h3>{{ contactCopy.routeFinder.assistant.title }}</h3>
-            <p>{{ contactCopy.routeFinder.assistant.body }}</p>
-            <button class="route-choice__action route-choice__action--assistant" type="button" @click="openRouteFinder">
+        <div class="assistant-first">
+          <div class="assistant-first__copy">
+            <span class="overline">{{ contactCopy.routeFinder.overline }}</span>
+            <h2 id="route-finder-heading">{{ contactCopy.routeFinder.title }}</h2>
+            <p>{{ contactCopy.routeFinder.body }}</p>
+            <button class="assistant-primary-action" type="button" @click="openRouteFinder(contactCopy.routeFinder.assistant.prompt)">
               {{ contactCopy.routeFinder.assistant.ctaLabel }}
             </button>
-          </aside>
+          </div>
+
+          <div class="assistant-console" aria-label="MAL Loans assistant route finder">
+            <div class="assistant-console__chrome">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="assistant-console__body">
+              <p class="assistant-console__kicker">MAL Loans assistant</p>
+              <h3>{{ contactCopy.routeFinder.assistant.title }}</h3>
+              <p class="assistant-console__message">{{ contactCopy.routeFinder.assistant.body }}</p>
+              <div class="assistant-prompts" aria-label="Assistant starting points">
+                <button
+                  v-for="option in contactCopy.routeFinder.options"
+                  :key="option.id"
+                  class="assistant-prompt"
+                  :data-choice="option.id"
+                  type="button"
+                  @click="startAssistantChoice(option)"
+                >
+                  <span>{{ option.eyebrow }}</span>
+                  <strong>{{ option.title }}</strong>
+                  <small>{{ option.body }}</small>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="contact-intro reveal" aria-labelledby="contact-routes-heading">
-        <span class="overline">Direct contacts</span>
-        <h2 id="contact-routes-heading">Contact the team directly</h2>
-        <p>Call, text, or email the route that matches what you need help with.</p>
+        <span class="overline">{{ contactCopy.routeFinder.directContacts.overline }}</span>
+        <h2 id="contact-routes-heading">{{ contactCopy.routeFinder.directContacts.title }}</h2>
+        <p>{{ contactCopy.routeFinder.directContacts.body }}</p>
       </section>
 
       <div class="contact-routes" id="contact-section" aria-label="Contact routes">
@@ -100,22 +99,19 @@
 // telemetry the iframe widget posted (D043).
 import reviewHostDevtools from '../../review-host/public/devtools.js?raw';
 import { page } from '../lib/content';
-import { contactCopy } from '../lib/site-copy';
+import { contactCopy, type ContactCopy } from '../lib/site-copy';
 
 // The iframe loader/devtools are replaced by the native ChatWidget on this
 // page (D042); the Astro contact page keeps its own iframe machinery.
 const contact = page('contact');
+type RouteFinderOption = ContactCopy['routeFinder']['options'][number];
 
-function revealContactRoute(reveal: string | undefined): void {
-  if (!reveal) return;
-  const section = document.getElementById('contact-section');
-  if (!section) return;
-  section.setAttribute('data-revealed', reveal);
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function openRouteFinder(message?: string): void {
+  window.dispatchEvent(new CustomEvent('mal:open-route-finder', { detail: { message } }));
 }
 
-function openRouteFinder(): void {
-  window.dispatchEvent(new CustomEvent('mal:open-route-finder'));
+function startAssistantChoice(option: RouteFinderOption): void {
+  openRouteFinder(option.prompt);
 }
 
 useHead({
@@ -136,316 +132,370 @@ useHead({
 
 <style>
   .contact-section {
-  display: grid;
-  gap: clamp(2.6rem, 6vw, 4.4rem);
+    display: grid;
+    gap: clamp(2.4rem, 5vw, 3.8rem);
   }
 
   .route-finder {
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 1.8rem);
+    display: grid;
   }
 
-  .route-finder__head {
-  max-width: 48rem;
+  .assistant-first {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(22rem, 1.18fr);
+    gap: clamp(1rem, 3vw, 1.6rem);
+    align-items: stretch;
   }
 
-  .route-finder__head h2 {
-  margin-bottom: 0.55rem;
+  .assistant-first__copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 31rem;
+    padding: clamp(1.45rem, 3.4vw, 2.25rem);
+    border-radius: var(--radius);
+    background: var(--ink-900);
+    color: var(--on-dark);
+    box-shadow: var(--shadow-md);
   }
 
-  .route-finder__head p {
-  color: var(--body);
-  font-size: 1.08rem;
+  .assistant-first__copy .overline {
+    color: var(--teal-300);
   }
 
-  .route-finder__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: stretch;
+  .assistant-first__copy h2 {
+    color: #fff;
+    margin-bottom: 0.8rem;
   }
 
-  .route-choice,
-  .route-assistant {
-  display: flex;
-  flex-direction: column;
-  min-height: 15rem;
-  padding: clamp(1.15rem, 2.4vw, 1.45rem);
-  border: 1px solid var(--line-cool);
-  border-radius: var(--radius);
-  background: #fff;
-  box-shadow: var(--shadow-sm);
+  .assistant-first__copy p {
+    max-width: 36rem;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1.08rem;
   }
 
-  .route-assistant {
-  background: var(--ink-900);
-  color: var(--on-dark);
+  .assistant-primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    min-height: 2.9rem;
+    margin-top: 1.4rem;
+    padding: 0.78rem 1.12rem;
+    border: 1px solid var(--amber-400);
+    border-radius: 999px;
+    background: var(--amber-400);
+    color: var(--ink-950);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.1;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.15s ease;
   }
 
-  .route-choice__kicker {
-  margin: 0 0 0.55rem;
-  color: var(--teal-500);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  .assistant-primary-action:hover {
+    border-color: var(--amber-500);
+    background: var(--amber-500);
+    transform: translateY(-1px);
   }
 
-  .route-assistant .route-choice__kicker {
-  color: var(--teal-300);
+  .assistant-console {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line-cool);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow-md);
   }
 
-  .route-choice h3,
-  .route-assistant h3 {
-  margin-bottom: 0.55rem;
+  .assistant-console__chrome {
+    display: flex;
+    gap: 0.42rem;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--line-cool);
+    background: #f7fbf9;
   }
 
-  .route-assistant h3 {
-  color: #fff;
+  .assistant-console__chrome span {
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    background: var(--teal-200);
   }
 
-  .route-choice p,
-  .route-assistant p {
-  color: inherit;
+  .assistant-console__body {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1.15rem, 2.7vw, 1.65rem);
   }
 
-  .route-choice__action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: flex-start;
-  min-height: 2.6rem;
-  margin-top: auto;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--teal-500);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--teal-500);
-  font: inherit;
-  font-size: 0.92rem;
-  font-weight: 800;
-  line-height: 1.1;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-  background 0.15s ease,
-  border-color 0.15s ease,
-  color 0.15s ease,
-  transform 0.15s ease;
+  .assistant-console__kicker {
+    margin: 0;
+    color: var(--teal-500);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
-  .route-choice__action:hover {
-  background: var(--teal-500);
-  color: #fff;
-  transform: translateY(-1px);
+  .assistant-console h3 {
+    margin: -0.45rem 0 0;
   }
 
-  .route-choice__action--primary {
-  border-color: var(--amber-400);
-  background: var(--amber-400);
-  color: var(--ink-950);
+  .assistant-console__message {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    border: 1px solid #d7e5df;
+    border-radius: var(--radius);
+    background: #f2f7f4;
+    color: var(--ink);
+    line-height: 1.55;
   }
 
-  .route-choice__action--primary:hover {
-  border-color: var(--amber-500);
-  background: var(--amber-500);
-  color: var(--ink-950);
+  .assistant-prompts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 
-  .route-choice__action--assistant {
-  border-color: var(--teal-300);
-  background: var(--teal-50);
-  color: var(--ink);
+  .assistant-prompt {
+    display: grid;
+    gap: 0.35rem;
+    min-height: 7.6rem;
+    padding: 0.85rem;
+    border: 1px solid var(--line-cool);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
   }
 
-  .route-assistant .route-choice__action--assistant {
-  background: #fff;
+  .assistant-prompt:hover,
+  .assistant-prompt:focus-visible {
+    border-color: rgba(0, 135, 155, 0.5);
+    box-shadow: 0 14px 32px -26px rgba(0, 135, 155, 0.85);
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  .assistant-prompt span {
+    color: var(--teal-500);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .assistant-prompt strong {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+
+  .assistant-prompt small {
+    color: var(--body);
+    font-size: 0.82rem;
+    line-height: 1.4;
   }
 
   .contact-intro {
-  max-width: 46rem;
-  margin-bottom: -2.4rem;
+    max-width: 42rem;
+    margin-bottom: -1.8rem;
   }
 
   .contact-intro h2 {
-  margin-bottom: 0.55rem;
+    margin-bottom: 0.55rem;
   }
 
   .contact-intro p {
-  color: var(--body);
-  font-size: 1.08rem;
+    color: var(--body);
+    font-size: 1.02rem;
   }
 
   .contact-routes {
-  display: grid;
-  gap: 1rem;
-  max-width: 58rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
   }
 
   .contact-route {
-  position: relative;
-  display: grid;
-  grid-template-columns: clamp(3.8rem, 8vw, 5.5rem) minmax(0, 1fr);
-  gap: clamp(1rem, 3vw, 1.6rem);
-  align-items: start;
-  min-height: 11rem;
-  padding: clamp(1.25rem, 3.5vw, 1.8rem);
-  border: 1px solid var(--line-cool);
-  border-radius: var(--radius);
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-  transition:
-  border-color 0.24s ease,
-  box-shadow 0.24s ease,
-  filter 0.24s ease,
-  opacity 0.24s ease,
-  transform 0.24s ease;
+    position: relative;
+    display: grid;
+    gap: 0.7rem;
+    align-items: start;
+    min-height: 0;
+    padding: clamp(1rem, 2.4vw, 1.25rem);
+    border: 1px solid var(--line-cool);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: var(--shadow-sm);
+    transition:
+      border-color 0.24s ease,
+      box-shadow 0.24s ease,
+      filter 0.24s ease,
+      opacity 0.24s ease,
+      transform 0.24s ease;
   }
 
   .route-index {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(2.4rem, 6vw, 3.7rem);
-  line-height: 1;
-  color: var(--teal-100);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--teal-200);
   }
 
   .route-kicker {
-  margin: 0 0 0.35rem;
-  color: var(--teal-500);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+    margin: 0 0 0.35rem;
+    color: var(--teal-500);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
 
   .route-title {
-  margin-bottom: 0.85rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.05rem;
   }
 
   .channel-list {
-  display: grid;
-  gap: 0.25rem;
-  list-style: none;
-  margin: 0 0 1rem;
-  padding: 0;
+    display: grid;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
   }
 
   .channel-list li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.8rem;
-  padding-block: 0.42rem;
-  border-bottom: 1px solid var(--line-cool);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.8rem;
+    padding-block: 0.42rem;
+    border-bottom: 1px solid var(--line-cool);
   }
 
   .channel-list span {
-  flex: none;
-  width: 3.2rem;
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  padding-top: 0.2rem;
+    flex: none;
+    width: 3.2rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding-top: 0.2rem;
   }
 
   .channel-list a {
-  font-family: var(--font-display);
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--ink);
-  min-width: 0;
-  overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--ink);
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .channel-list a:hover {
-  color: var(--teal-500);
+    color: var(--teal-500);
   }
 
   .debt-advice {
-  max-width: 58rem;
-  margin-top: 2.25rem;
-  padding-top: 1.15rem;
-  border-top: 1px solid var(--line-cool);
-  color: var(--muted);
-  font-size: 0.95rem;
+    max-width: 58rem;
+    margin-top: 0.5rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--line-cool);
+    color: var(--muted);
+    font-size: 0.95rem;
   }
 
   .debt-advice p {
-  margin: 0;
+    margin: 0;
   }
 
   .debt-advice__title {
-  color: var(--ink);
-  font-weight: 800;
+    color: var(--ink);
+    font-weight: 800;
   }
 
   .debt-advice a {
-  color: var(--ink);
-  font-weight: 800;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 3px;
+    color: var(--ink);
+    font-weight: 800;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
   }
 
   .debt-advice a:hover {
-  color: var(--teal-500);
+    color: var(--teal-500);
   }
 
   #contact-section[data-revealed] .contact-route {
-  opacity: 0.42;
-  filter: grayscale(0.22);
+    opacity: 0.42;
+    filter: grayscale(0.22);
   }
 
   #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'],
   #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'],
   #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] {
-  opacity: 1;
-  filter: none;
-  border-color: rgba(0, 135, 155, 0.48);
-  box-shadow: 0 24px 50px -28px rgba(0, 135, 155, 0.7);
-  transform: translateY(-2px);
+    opacity: 1;
+    filter: none;
+    border-color: rgba(0, 135, 155, 0.48);
+    box-shadow: 0 24px 50px -28px rgba(0, 135, 155, 0.7);
+    transform: translateY(-2px);
   }
 
   #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'] .route-title::before,
   #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'] .route-title::before,
   #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] .route-title::before {
-  content: 'Relevant to your query';
-  display: block;
-  margin-bottom: 0.28rem;
-  color: var(--teal-500);
-  font-family: var(--font-body);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+    content: 'Relevant to your query';
+    display: block;
+    margin-bottom: 0.28rem;
+    color: var(--teal-500);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'] .route-index,
   #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'] .route-index,
   #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] .route-index {
-  color: var(--amber-400);
+    color: var(--amber-400);
   }
 
   @media (max-width: 920px) {
-  .route-finder__grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+    .assistant-first,
+    .contact-routes {
+      grid-template-columns: 1fr;
+    }
+
+    .assistant-first__copy {
+      min-height: 0;
+    }
   }
 
   @media (max-width: 640px) {
-  .route-finder__grid {
-  grid-template-columns: 1fr;
-  }
+    .assistant-prompts {
+      grid-template-columns: 1fr;
+    }
 
-  .route-choice,
-  .route-assistant {
-  min-height: 0;
-  }
+    .assistant-prompt {
+      min-height: 0;
+    }
 
-  .contact-intro {
-  margin-bottom: -1.8rem;
-  }
+    .contact-intro {
+      margin-bottom: -1.3rem;
+    }
   }
 
   #sm-devtools {

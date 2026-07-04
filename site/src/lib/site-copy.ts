@@ -142,6 +142,7 @@ export interface ContactCopy {
       title: string;
       body: string;
       ctaLabel: string;
+      prompt: string;
     };
     options: {
       id: string;
@@ -149,10 +150,16 @@ export interface ContactCopy {
       title: string;
       body: string;
       actionLabel: string;
+      prompt: string;
       href?: string;
       reveal?: string;
       opensAssistant: boolean;
     }[];
+    directContacts: {
+      overline: string;
+      title: string;
+      body: string;
+    };
   };
   channels: {
     type: string;
@@ -605,6 +612,7 @@ function validateContact(raw: unknown): ContactCopy {
   const root = objectAt(raw, 'contact');
   const routeFinder = objectAt(root.routeFinder, 'contact.routeFinder');
   const routeFinderAssistant = objectAt(routeFinder.assistant, 'contact.routeFinder.assistant');
+  const directContacts = objectAt(routeFinder.directContacts, 'contact.routeFinder.directContacts');
   const channelLabels = objectAt(root.channelLabels, 'contact.channelLabels');
   const debtAdvice = objectAt(root.debtAdvice, 'contact.debtAdvice');
   return {
@@ -617,6 +625,7 @@ function validateContact(raw: unknown): ContactCopy {
         title: stringAt(routeFinderAssistant.title, 'contact.routeFinder.assistant.title'),
         body: stringAt(routeFinderAssistant.body, 'contact.routeFinder.assistant.body'),
         ctaLabel: stringAt(routeFinderAssistant.ctaLabel, 'contact.routeFinder.assistant.ctaLabel'),
+        prompt: stringAt(routeFinderAssistant.prompt, 'contact.routeFinder.assistant.prompt'),
       },
       options: arrayAt(routeFinder.options, 'contact.routeFinder.options').map((item, index) => {
         const option = objectAt(item, `contact.routeFinder.options[${index}]`);
@@ -632,11 +641,17 @@ function validateContact(raw: unknown): ContactCopy {
           title: stringAt(option.title, `contact.routeFinder.options[${index}].title`),
           body: stringAt(option.body, `contact.routeFinder.options[${index}].body`),
           actionLabel: stringAt(option.actionLabel, `contact.routeFinder.options[${index}].actionLabel`),
+          prompt: stringAt(option.prompt, `contact.routeFinder.options[${index}].prompt`),
           href,
           reveal,
           opensAssistant,
         };
       }),
+      directContacts: {
+        overline: stringAt(directContacts.overline, 'contact.routeFinder.directContacts.overline'),
+        title: stringAt(directContacts.title, 'contact.routeFinder.directContacts.title'),
+        body: stringAt(directContacts.body, 'contact.routeFinder.directContacts.body'),
+      },
     },
     channels: arrayAt(root.channels, 'contact.channels').map((item, index) => {
       const channel = objectAt(item, `contact.channels[${index}]`);

@@ -84,7 +84,7 @@
           <p class="uat-notice uat-notice-composer">Prototype — conversations are recorded. Please use test details only.</p>
 
           <form class="composer" :data-sending="isSending ? 'true' : undefined" @submit.prevent="submitDraft">
-            <input ref="inputEl" v-model="draft" type="text" placeholder="Type your message…" autocomplete="off" aria-label="Message" :disabled="isChatComplete" />
+            <input ref="inputEl" v-model="draft" type="text" name="message" placeholder="Type your message…" autocomplete="off" aria-label="Message" :disabled="isChatComplete" />
             <button class="composer-send" type="submit" :disabled="isSending || isChatComplete || draft.trim().length === 0" aria-label="Send message" @mousedown.prevent>
               <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
                 <path fill="currentColor" d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z" />
@@ -691,9 +691,11 @@ onMounted(async () => {
   }
 });
 
-function handleRouteFinderOpen(): void {
+function handleRouteFinderOpen(event: Event): void {
   ensureContextWelcome();
   openPanel();
+  const message = (event as CustomEvent<{ message?: string }>).detail?.message?.trim();
+  if (message) void submit(message);
 }
 
 onBeforeUnmount(() => {

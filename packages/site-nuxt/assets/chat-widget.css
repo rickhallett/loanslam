@@ -49,6 +49,7 @@
   z-index: 9998;
   display: flex;
   transition: opacity 0.15s;
+  background: #ffffff;
   color: #172026;
   font-family:
     Poppins,
@@ -93,7 +94,7 @@
   display: flex;
   height: 100%;
   overflow: hidden;
-  background: transparent;
+  background: #ffffff;
 }
 
 #mal-panel .chat-panel {

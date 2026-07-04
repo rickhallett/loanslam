@@ -1,60 +1,71 @@
 {
   "head": {
     "crumbHtml": "<a href=\"/\">Home</a> / Contact",
-    "title": "How can we help?",
-    "body": "Choose the quickest route: apply online, contact the right team, or ask the route finder to point you there."
+    "title": "Start with the MAL Loans assistant",
+    "body": "Tell the assistant what you need and it will point you to the right next step, including the right team when a person needs to help."
   },
   "routeFinder": {
-    "overline": "Choose the right route",
-    "title": "Start with what you need.",
-    "body": "Most people can act faster from one of these routes. If you are not sure, use the route finder and it will highlight the right contact option.",
+    "overline": "Recommended first step",
+    "title": "Use the assistant to find the right route.",
+    "body": "The assistant can help with applications, repayments, existing loans and complaints. Direct phone, text and email routes remain available below.",
     "assistant": {
-      "title": "Not sure who to contact?",
-      "body": "Tell the route finder what you need help with. It can suggest the right route, then you can still call, text, email, or apply online yourself.",
-      "ctaLabel": "Open route finder"
+      "title": "MAL Loans assistant",
+      "body": "Start by choosing the topic closest to what you need. The assistant will answer general questions, suggest the next step, or show the right contact route.",
+      "ctaLabel": "Start with the assistant",
+      "prompt": "I need help finding the right route on the Loans by MAL website."
     },
     "options": [
       {
         "id": "apply",
         "eyebrow": "Apply online",
         "title": "Start or continue an application",
-        "body": "Use the online form if you want a personalised quote or are ready to apply.",
-        "actionLabel": "Apply online",
-        "href": "/apply/"
+        "body": "Get help choosing the application form or understanding the first quote steps.",
+        "actionLabel": "Ask assistant",
+        "opensAssistant": true,
+        "prompt": "I want to apply online for a Loans by MAL loan."
       },
       {
         "id": "repayment",
         "eyebrow": "Repayment difficulty",
         "title": "You are struggling with repayments",
-        "body": "Go straight to the repayment support team if paying is becoming difficult.",
-        "actionLabel": "Show repayment contacts",
-        "reveal": "vulnerability"
+        "body": "Tell the assistant you need repayment support and it will show the right route quickly.",
+        "actionLabel": "Ask assistant",
+        "opensAssistant": true,
+        "prompt": "I am struggling with repayments and need help."
       },
       {
         "id": "existing",
         "eyebrow": "Existing loan",
         "title": "Update details or settle your loan",
-        "body": "Use the existing-loan route for settlement figures, account updates, or loan support.",
-        "actionLabel": "Show existing-loan contacts",
-        "reveal": "handoff"
+        "body": "Ask about settlement figures, account updates or support for an existing loan.",
+        "actionLabel": "Ask assistant",
+        "opensAssistant": true,
+        "prompt": "I already have a Loans by MAL loan and need help updating details or settling it."
       },
       {
         "id": "new-loan",
         "eyebrow": "New loan question",
         "title": "You want to ask before applying",
-        "body": "Use the new-loan team for application questions that are not covered by the form.",
-        "actionLabel": "Show new-loan contacts",
-        "reveal": "general"
+        "body": "Check general eligibility, process or product questions before you apply.",
+        "actionLabel": "Ask assistant",
+        "opensAssistant": true,
+        "prompt": "I have a question about taking out a new Loans by MAL loan before I apply."
       },
       {
         "id": "complaints",
         "eyebrow": "Complaint",
         "title": "Make or follow up a complaint",
-        "body": "Use the complaints page if something has gone wrong and you want it handled formally.",
-        "actionLabel": "Go to complaints",
-        "href": "/complaints/"
+        "body": "The assistant can point you to the complaints route and formal next steps.",
+        "actionLabel": "Ask assistant",
+        "opensAssistant": true,
+        "prompt": "I want to make or follow up a complaint."
       }
-    ]
+    ],
+    "directContacts": {
+      "overline": "Prefer direct contact?",
+      "title": "Call, text or email us directly",
+      "body": "If you already know the team you need, these contact routes are still available."
+    }
   },
   "channels": [
     {
