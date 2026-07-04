@@ -3,38 +3,6 @@
    Chrome values mirror site/src/pages/contact.astro malChatConfig + the
    review-host loader.js (D042). */
 
-#mal-launcher {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #00879b;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    transform 0.18s,
-    opacity 0.18s;
-}
-#mal-launcher:hover {
-  transform: scale(1.08);
-}
-#mal-launcher:focus-visible {
-  outline: 3px solid #f7a823;
-  outline-offset: 3px;
-}
-#mal-launcher .mal-icon {
-  width: 26px;
-  height: 26px;
-  fill: white;
-}
-
 #mal-panel {
   position: fixed;
   bottom: 96px;
@@ -57,7 +25,7 @@
     ui-sans-serif,
     system-ui,
     -apple-system,
-    'Segoe UI',
+    "Segoe UI",
     sans-serif;
   font-size: 14px;
 }
@@ -83,9 +51,6 @@
     max-width: none;
     max-height: none;
     border-radius: 0;
-  }
-  body.mal-open #mal-launcher {
-    display: none !important;
   }
 }
 

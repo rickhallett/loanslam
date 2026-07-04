@@ -7,7 +7,7 @@
     </main>
     <SiteFooter />
     <ClientOnly>
-      <ChatWidget />
+      <ChatLauncher />
     </ClientOnly>
   </div>
 </template>

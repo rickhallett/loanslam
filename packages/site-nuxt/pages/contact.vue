@@ -89,19 +89,19 @@
       </aside>
     </div>
   </div>
-  <!-- The ChatWidget is mounted at layout level (app.vue) so chat state
-       survives navigation between /contact/ and /apply/ (D045). -->
+  <!-- The chat launcher is mounted at layout level (app.vue); the full
+       assistant panel loads only after customer intent (D045). -->
 </template>
 
 <script setup lang="ts">
 // The sm-devtools engine-internals panel ships verbatim (gated behind
 // ?devtools=true); the native ChatWidget feeds it the same content-free
-// telemetry the iframe widget posted (D043).
+// telemetry the iframe widget posted after the lazy panel is open (D043).
 import reviewHostDevtools from '../../review-host/public/devtools.js?raw';
 import { page } from '../lib/content';
 import { contactCopy, type ContactCopy } from '../lib/site-copy';
 
-// The iframe loader/devtools are replaced by the native ChatWidget on this
+// The iframe loader/devtools are replaced by the native lazy chat surface on this
 // page (D042); the Astro contact page keeps its own iframe machinery.
 const contact = page('contact');
 type RouteFinderOption = ContactCopy['routeFinder']['options'][number];
