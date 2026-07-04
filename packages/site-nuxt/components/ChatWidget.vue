@@ -107,6 +107,16 @@
                   </button>
                 </div>
               </div>
+              <div
+                v-if="index === messages.length - 1 && message.id === navOfferMessageId && navOffer"
+                class="primitive"
+              >
+                <div class="choices">
+                  <button id="mal-concierge-nav" class="chip" type="button" @click="goToNavOffer">
+                    {{ navOffer.label }}
+                  </button>
+                </div>
+              </div>
             </li>
             <li
               v-if="isSending && streamingMessageId === null"
@@ -169,6 +179,7 @@ import type {
 } from '../../integrated-poc/shared/ipoc';
 import type { ConciergeSessionResponse, ConciergeStatusResponse } from '../lib/concierge';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
+import { navOfferForReply, type NavOffer } from '../lib/navOffer';
 import { snapshotPage } from '../lib/pageSnapshot';
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
@@ -222,6 +233,11 @@ const APPLY_ITEM_IDS = new Set([
 const isOpen = ref(false);
 const applyOfferMessageId = ref<number | null>(null);
 const handoffOfferMessageId = ref<number | null>(null);
+// Concierge navigation offer: a deterministic chip rendered when the reply
+// names a whitelisted site page (lib/navOffer). The handoff offer wins when
+// both match — the difficulty path back to the validated engine comes first.
+const navOffer = ref<NavOffer | null>(null);
+const navOfferMessageId = ref<number | null>(null);
 const conciergeAvailable = ref(false);
 const conciergeSessionRef = ref<string | null>(null);
 const applyIntroDone = ref(false);
@@ -359,6 +375,13 @@ function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
 function goToApply(): void {
   applyOfferMessageId.value = null;
   void navigateTo('/apply/');
+}
+
+function goToNavOffer(): void {
+  const target = navOffer.value;
+  navOffer.value = null;
+  navOfferMessageId.value = null;
+  if (target) void navigateTo(target.path);
 }
 
 // dc-006 (D045): the difficulty path out of concierge mode. When the
@@ -547,6 +570,10 @@ async function submit(
       handoffOfferMessageId.value = /support team/i.test(reply)
         ? (messages.value.at(-1)?.id ?? null)
         : null;
+      navOffer.value =
+        handoffOfferMessageId.value === null ? navOfferForReply(reply, route.path) : null;
+      navOfferMessageId.value =
+        navOffer.value !== null ? (messages.value.at(-1)?.id ?? null) : null;
       return;
     }
     const ref = await ensureSession();
@@ -561,6 +588,8 @@ async function submit(
       ? (messages.value.at(-1)?.id ?? null)
       : null;
     handoffOfferMessageId.value = null;
+    navOffer.value = null;
+    navOfferMessageId.value = null;
   } catch (error) {
     // A reply that errored mid-stream leaves a partial bubble; drop it so
     // the transcript (and any dr-001 replay of it) holds only whole turns.
@@ -644,6 +673,8 @@ function reset(): void {
   errorMessage.value = '';
   applyOfferMessageId.value = null;
   handoffOfferMessageId.value = null;
+  navOffer.value = null;
+  navOfferMessageId.value = null;
   messages.value = [];
   try {
     sessionStorage.removeItem(STORAGE_KEY);

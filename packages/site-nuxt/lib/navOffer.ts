@@ -1,0 +1,53 @@
+// Deterministic navigation offers for concierge replies, mirroring the
+// dc-003/dc-006 quick-action pattern: when the concierge names a site page,
+// the panel renders a one-tap chip to it. The model never navigates; this
+// whitelist is the entire action surface, and the chip is suppressed on the
+// page it points to.
+
+export interface NavOffer {
+  label: string;
+  path: string;
+}
+
+const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
+  {
+    pattern:
+      /application form|apply (?:page|now|online)|start (?:an?|your) application/i,
+    label: "Take me to the application",
+    path: "/apply/",
+  },
+  {
+    pattern: /home ?page/i,
+    label: "Take me to the homepage",
+    path: "/",
+  },
+  {
+    pattern: /\bFAQs?\b/i,
+    label: "Take me to the FAQs",
+    path: "/faq/",
+  },
+  {
+    pattern: /contact (?:page|form)/i,
+    label: "Take me to the contact page",
+    path: "/contact/",
+  },
+];
+
+function normalizePath(routePath: string): string {
+  const trimmed = routePath.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+}
+
+export function navOfferForReply(
+  reply: string,
+  currentPath: string,
+): NavOffer | null {
+  const current = normalizePath(currentPath);
+  for (const offer of NAV_OFFERS) {
+    if (normalizePath(offer.path) === current) continue;
+    if (offer.pattern.test(reply)) {
+      return { label: offer.label, path: offer.path };
+    }
+  }
+  return null;
+}
