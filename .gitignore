@@ -28,6 +28,8 @@ artifacts/
 artifacts/*
 !artifacts/evidence-index/
 !artifacts/evidence-index/*.md
+!artifacts/sts-v2/
+!artifacts/sts-v2/*
 # Committed gate inputs under evidence-index (e.g. baseline.json) stay tracked,
 # but runtime gate receipts written by scripts/floor-delta.ts do not.
 artifacts/evidence-index/floor-delta-latest.json
