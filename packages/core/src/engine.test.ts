@@ -263,6 +263,65 @@ describe("processTurn", () => {
     expect(result.state.handoffPending).toBe(false);
   });
 
+  it("does not convert website page inventory requests into application-link fallbacks", async () => {
+    const plannerInputs: Parameters<TurnPlanner["planTurn"]>[0][] = [];
+    const pricingCorpus: CorpusItem[] = [
+      {
+        id: "personal-price",
+        question: "What APR will I personally get?",
+        serving_mode: "excluded",
+        route_reason:
+          "The soft quote on the first two pages of the application provides this with no impact on the customer's credit score.",
+        links: [
+          {
+            label: "application form",
+            href: "https://apply.loanslam.co.uk/step-one/step-one.html",
+          },
+        ],
+      },
+    ];
+    const planner: TurnPlanner = {
+      async planTurn(input) {
+        plannerInputs.push(input);
+
+        return {
+          action: "fallback",
+          customerMessage:
+            "I cannot list the website pages from the support chat.",
+          ui: {
+            primitive: "safe_fallback",
+            message: "I cannot list the website pages from the support chat.",
+            links: [],
+          },
+          reasonCode: "unsupported_site_inventory",
+          collectedFacts: {},
+          requestedFields: [],
+          grounding: null,
+          safetyFlags: [],
+          traceSummary: "No supported page inventory in the support corpus.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "what pages are on this website",
+      planner,
+      corpus: pricingCorpus,
+      now: new Date("2026-06-13T12:00:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(plannerInputs[0]?.retrievedMatches).toEqual([]);
+    expect(result.finalAction).toBe("fallback");
+    expect(result.ui).toEqual({
+      primitive: "safe_fallback",
+      message: "I cannot list the website pages from the support chat.",
+      links: [],
+    });
+    expect(result.validatorOverrides).toEqual([]);
+  });
+
   it("records successful shadow signal extraction without feeding the planner", async () => {
     const plannerInputs: Parameters<TurnPlanner["planTurn"]>[0][] = [];
     const signalInputs: Parameters<SignalExtractor["extractSignals"]>[0][] = [];

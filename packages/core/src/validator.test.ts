@@ -139,6 +139,29 @@ const excludedMatch: RetrievedMatch = {
   },
 };
 
+const excludedApplicationLinkMatch: RetrievedMatch = {
+  itemId: "personal-price",
+  score: 10,
+  servingMode: "excluded",
+  matchedTerms: ["quote"],
+  item: {
+    id: "personal-price",
+    question: "What APR will I personally get?",
+    serving_mode: "excluded",
+    route_reason: "Personalised pricing must not be served by the bot.",
+    links: [
+      {
+        label: "application form",
+        href: "https://apply.loanslam.co.uk/step-one/step-one.html",
+      },
+      {
+        label: "StepChange",
+        href: "https://www.stepchange.org",
+      },
+    ],
+  },
+};
+
 function plan(overrides: Partial<TurnPlan> = {}): TurnPlan {
   return {
     action: "answer",
@@ -1138,6 +1161,31 @@ describe("validateTurnPlan", () => {
     expect(result.selectedRouteReason).toBe(
       "Personalised pricing must not be served by the bot.",
     );
+  });
+
+  it("drops application links from excluded refusal UI", () => {
+    const result = validateTurnPlan(
+      plan({
+        grounding: {
+          citedItemIds: ["personal-price"],
+          servingMode: "excluded",
+          confidence: "supported",
+        },
+      }),
+      [excludedApplicationLinkMatch],
+      {},
+    );
+
+    expect(result.finalAction).toBe("refuse");
+    expect(result.ui).toMatchObject({
+      primitive: "safe_fallback",
+      links: [
+        {
+          label: "StepChange",
+          href: "https://www.stepchange.org",
+        },
+      ],
+    });
   });
 
   it("forces excluded matches to refusal even when the plan asks a substantive clarification", () => {

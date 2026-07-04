@@ -46,9 +46,17 @@ const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
   },
 ];
 
+const refusalReplyPattern =
+  /\b(?:I cannot answer|I can't answer|I can only help|I'm not able to help|I am not able to help)\b/i;
+const markdownLinkPattern = /\[[^\]]+\]\([^)]+\)/g;
+
 function normalizePath(routePath: string): string {
   const trimmed = routePath.replace(/\/+$/, "");
   return trimmed === "" ? "/" : trimmed;
+}
+
+function offerText(reply: string): string {
+  return reply.replace(markdownLinkPattern, "");
 }
 
 // Exposed for the siteMap drift test: every offer must point at a mapped page.
@@ -58,10 +66,13 @@ export function navOfferForReply(
   reply: string,
   currentPath: string,
 ): NavOffer | null {
+  const text = offerText(reply);
+  if (refusalReplyPattern.test(text)) return null;
+
   const current = normalizePath(currentPath);
   for (const offer of NAV_OFFERS) {
     if (normalizePath(offer.path) === current) continue;
-    if (offer.pattern.test(reply)) {
+    if (offer.pattern.test(text)) {
       return { label: offer.label, path: offer.path };
     }
   }

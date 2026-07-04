@@ -31,6 +31,24 @@ describe("navOfferForReply", () => {
     ).toBeNull();
   });
 
+  it("does not offer navigation from markdown links alone", () => {
+    expect(
+      navOfferForReply(
+        "I can share this link: [application form](https://apply.loanslam.co.uk/step-one/step-one.html)",
+        "/",
+      ),
+    ).toBeNull();
+  });
+
+  it("does not offer application navigation from refusal copy", () => {
+    expect(
+      navOfferForReply(
+        "I cannot answer that in chat. I can signpost general information or pass this to the LoanSlam team. application form",
+        "/",
+      ),
+    ).toBeNull();
+  });
+
   it("prefers the earlier whitelist entry when several pages are named", () => {
     const offer = navOfferForReply(
       "The application form and the FAQs both cover eligibility.",

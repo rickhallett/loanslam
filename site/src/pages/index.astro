@@ -32,7 +32,7 @@ const [featured, ...rest] = posts;
       <div class="quote-card">
         <img class="quote-duck" src="/duck.png" alt="" width="118" height="133" />
         <p class="quote-title">{homeCopy.quote.title}</p>
-        <div class="calc" id="calc" hidden>
+        <div class="calc" id="calc">
           <label>
             <span class="calc-label">{homeCopy.quote.amountLabel}</span>
             <output id="amt-out">{homeCopy.quote.amountDefault}</output>
@@ -215,13 +215,13 @@ const [featured, ...rest] = posts;
   // Progressive enhancement: static representative example without JS;
   // sliders calibrated to it (flat 24.1% p.a. -> £2,500/24mo = £154.38/mo).
   const RATE = 0.241;
-  const calc = document.getElementById('calc')!;
   const amt = document.getElementById('amt') as HTMLInputElement;
   const term = document.getElementById('term') as HTMLInputElement;
   const monthly = document.getElementById('monthly')!;
   const total = document.getElementById('total')!;
   const gbp = (n: number) =>
     n.toLocaleString('en-GB', { style: 'currency', currency: 'GBP' });
+  const roundPennies = (n: number) => Math.round(n * 100) / 100;
 
   function paintTrack(input: HTMLInputElement) {
     const pct =
@@ -229,27 +229,30 @@ const [featured, ...rest] = posts;
     input.style.setProperty('--fill', `${pct}%`);
   }
 
-  function update() {
+  function update({ pulse = true }: { pulse?: boolean } = {}) {
     const principal = Number(amt.value);
     const months = Number(term.value);
     const totalDue = principal + principal * RATE * (months / 12);
+    const monthlyDue = roundPennies(totalDue / months);
+    const roundedTotalDue = roundPennies(monthlyDue * months);
     document.getElementById('amt-out')!.textContent = gbp(principal).replace('.00', '');
     document.getElementById('term-out')!.textContent = `${months} months`;
-    monthly.textContent = gbp(totalDue / months);
-    total.textContent = gbp(totalDue);
-    for (const el of [monthly, total]) {
-      el.classList.remove('pulse');
-      void el.offsetWidth; // restart animation
-      el.classList.add('pulse');
+    monthly.textContent = gbp(monthlyDue);
+    total.textContent = gbp(roundedTotalDue);
+    if (pulse) {
+      for (const el of [monthly, total]) {
+        el.classList.remove('pulse');
+        void el.offsetWidth; // restart animation
+        el.classList.add('pulse');
+      }
     }
     paintTrack(amt);
     paintTrack(term);
   }
 
-  calc.hidden = false;
-  amt.addEventListener('input', update);
-  term.addEventListener('input', update);
-  update();
+  amt.addEventListener('input', () => update());
+  term.addEventListener('input', () => update());
+  update({ pulse: false });
 </script>
 
 <style>

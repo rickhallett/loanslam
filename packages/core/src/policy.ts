@@ -64,6 +64,29 @@ const uiPrimitivesByAction = {
   fallback: ["safe_fallback"],
 } as const satisfies Record<TurnAction, readonly UiPrimitive[]>;
 
+const applicationFormHosts = new Set([
+  "apply.loansbymal.co.uk",
+  "apply.loanslam.co.uk",
+  "applyloansbymal.co.uk",
+]);
+
+function isApplicationFormLink(link: ApprovedLink): boolean {
+  const target = link.url ?? link.href ?? "";
+  try {
+    const parsed = new URL(target);
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+    if (applicationFormHosts.has(host)) return true;
+  } catch {
+    // Non-absolute URLs fall through to the label/path check below.
+  }
+
+  return /application form/i.test(link.label) && /\/apply\/?$/i.test(target);
+}
+
+function excludedSignpostLinks(links: readonly ApprovedLink[]): ApprovedLink[] {
+  return links.filter((link) => !isApplicationFormLink(link));
+}
+
 const forbiddenCredentialTermPattern =
   /\b(sort\s*code|account\s*number|iban|card\s*(number|details)?|cvv|cvc|security\s*(code|answer)|one[-\s]?time\s*(pass)?code|\botp\b|passcode|pin|password|online\s+banking\s+(login|password|credentials)|bank\s+(details?|login|password)|banking\s+app\s+screenshot|payment\s+credentials?)\b/i;
 
@@ -443,7 +466,7 @@ export function buildExcludedCopy(
     ui: {
       primitive: "safe_fallback",
       message: `${customerMessage} ${reason}`,
-      links: [...links],
+      links: excludedSignpostLinks(links),
     },
   };
 }

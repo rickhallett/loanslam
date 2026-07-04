@@ -15,13 +15,13 @@
       </svg>
     </button>
 
-    <div v-show="isOpen" id="mal-panel" role="dialog" aria-label="Loans by MAL assistant">
-      <main class="widget-shell" aria-label="LoanSlam chat widget">
+    <div v-show="isOpen" id="mal-panel" role="dialog" aria-label="MAL Loans assistant">
+      <main class="widget-shell" aria-label="MAL Loans chat widget">
         <section class="chat-panel">
           <header class="chat-header">
             <div>
-              <p class="eyebrow">LoanSlam chat</p>
-              <h1>LoanSlam assistant</h1>
+              <p class="eyebrow">Website help</p>
+              <h1>MAL Loans assistant</h1>
               <!-- The two chat surfaces are deliberately distinct (D045/D046);
                    the badge keeps the seam visible to the customer. -->
               <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status">
@@ -194,7 +194,7 @@ interface ChatMessage {
 }
 
 const WELCOME =
-  "Hi, I'm the LoanSlam assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+  "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
 
 // dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
 // to the segregated concierge route with a snapshot of the form state; the
@@ -663,7 +663,7 @@ async function onIntakeCancel(): Promise<void> {
       `/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/cancel-handoff`,
       { method: 'POST' },
     );
-    pushMessage('assistant', 'No problem — ask me anything else about your LoanSlam loan.', null);
+    pushMessage('assistant', 'No problem — ask me anything else about your loan.', null);
   } catch (error) {
     errorMessage.value =
       error instanceof Error

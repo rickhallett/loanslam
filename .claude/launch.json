@@ -1,0 +1,22 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site-nuxt-built",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/worktrees/reports-route-01/packages/site-nuxt/.output/server/index.mjs"
+      ],
+      "port": 4381
+    },
+    {
+      "name": "site-nuxt-nav-offer-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd .claude/worktrees/concierge-nav-offer && just secrets-run local -- ./node_modules/.bin/nuxt dev packages/site-nuxt --host localhost --port 3642"
+      ],
+      "port": 3642
+    }
+  ]
+}
