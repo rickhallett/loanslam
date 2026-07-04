@@ -26,6 +26,19 @@ const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
     label: "Take me to the FAQs",
     path: "/faq/",
   },
+  // Page-anchored on purpose: "Open Banking" and "instalment loans" appear
+  // constantly in ordinary product copy; only an explicit page mention
+  // should offer navigation.
+  {
+    pattern: /open banking page/i,
+    label: "Take me to the Open Banking page",
+    path: "/open-banking/",
+  },
+  {
+    pattern: /instalment loans? page/i,
+    label: "Take me to the instalment loans page",
+    path: "/instalment-loan/",
+  },
   {
     pattern: /contact (?:page|form)/i,
     label: "Take me to the contact page",

@@ -498,7 +498,10 @@ async function streamConciergeMessage(
       if (payload.done) finalMessage = payload.message ?? accumulated;
     }
   }
-  if (finalMessage === null) {
+  if (finalMessage === null || finalMessage.trim() === '') {
+    // An empty final message means the model produced no visible text
+    // (e.g. its output budget went entirely on reasoning); surface an error
+    // instead of a silent turn.
     throw new Error('The assistant reply ended unexpectedly. Please try again.');
   }
   return finalMessage;
