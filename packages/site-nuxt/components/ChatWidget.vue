@@ -25,9 +25,9 @@
               <!-- The two chat surfaces are deliberately distinct (D045/D046);
                    the badge keeps the seam visible to the customer. -->
               <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status">
-                <span class="mode-pill">Experimental</span> Concierge site guide
+                <span class="mode-pill">Live guide</span> Application guide
               </p>
-              <p v-else class="chat-status">Prototype support chat</p>
+              <p v-else class="chat-status">Support chat</p>
             </div>
             <div class="chat-header-actions">
               <button type="button" title="Start over" aria-label="Start over" @click="reset">
