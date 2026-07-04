@@ -1,10 +1,5 @@
 <template>
   <div>
-    <!-- The frost exists to obscure the contact page's phone numbers and
-         focus attention on the assistant; on every other route the page
-         stays readable behind the open panel. -->
-    <div id="mal-frost" :class="{ 'is-visible': isOpen && isContactRoute }" @click="closePanel" />
-
     <button
       id="mal-launcher"
       type="button"
@@ -27,7 +22,12 @@
             <div>
               <p class="eyebrow">LoanSlam chat</p>
               <h1>LoanSlam assistant</h1>
-              <p class="chat-status">Prototype support chat</p>
+              <!-- The two chat surfaces are deliberately distinct (D045/D046);
+                   the badge keeps the seam visible to the customer. -->
+              <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status">
+                <span class="mode-pill">Experimental</span> Concierge site guide
+              </p>
+              <p v-else class="chat-status">Prototype support chat</p>
             </div>
             <div class="chat-header-actions">
               <button type="button" title="Start over" aria-label="Start over" @click="reset">
@@ -215,6 +215,9 @@ function normalizePath(path: string): string {
 const route = useRoute();
 const isContactRoute = computed(() => normalizePath(route.path) === '/contact');
 const isApplyRoute = computed(() => normalizePath(route.path) === '/apply');
+// The surface the next turn will use: concierge everywhere except /contact/
+// (mirrors the routing in submit). Drives the header mode badge.
+const isConciergeMode = computed(() => conciergeAvailable.value && !isContactRoute.value);
 
 // dc-003 (D045): deterministic navigation offer. When a grounded answer's
 // top retrieval match is an apply-journey FAQ item, offer to take the user
