@@ -142,7 +142,6 @@ export interface ContactCopy {
       title: string;
       body: string;
       ctaLabel: string;
-      prompt: string;
     };
     options: {
       id: string;
@@ -150,7 +149,6 @@ export interface ContactCopy {
       title: string;
       body: string;
       actionLabel: string;
-      prompt: string;
       href?: string;
       reveal?: string;
       opensAssistant: boolean;
@@ -625,7 +623,6 @@ function validateContact(raw: unknown): ContactCopy {
         title: stringAt(routeFinderAssistant.title, 'contact.routeFinder.assistant.title'),
         body: stringAt(routeFinderAssistant.body, 'contact.routeFinder.assistant.body'),
         ctaLabel: stringAt(routeFinderAssistant.ctaLabel, 'contact.routeFinder.assistant.ctaLabel'),
-        prompt: stringAt(routeFinderAssistant.prompt, 'contact.routeFinder.assistant.prompt'),
       },
       options: arrayAt(routeFinder.options, 'contact.routeFinder.options').map((item, index) => {
         const option = objectAt(item, `contact.routeFinder.options[${index}]`);
@@ -641,7 +638,6 @@ function validateContact(raw: unknown): ContactCopy {
           title: stringAt(option.title, `contact.routeFinder.options[${index}].title`),
           body: stringAt(option.body, `contact.routeFinder.options[${index}].body`),
           actionLabel: stringAt(option.actionLabel, `contact.routeFinder.options[${index}].actionLabel`),
-          prompt: stringAt(option.prompt, `contact.routeFinder.options[${index}].prompt`),
           href,
           reveal,
           opensAssistant,

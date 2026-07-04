@@ -10,9 +10,8 @@
     "body": "The assistant can help with applications, repayments, existing loans and complaints. Direct phone, text and email routes remain available below.",
     "assistant": {
       "title": "MAL Loans assistant",
-      "body": "Start by choosing the topic closest to what you need. The assistant will answer general questions, suggest the next step, or show the right contact route.",
-      "ctaLabel": "Start with the assistant",
-      "prompt": "I need help finding the right route on the Loans by MAL website."
+      "body": "Choose the topic closest to what you need, or start the assistant and type your own question. The assistant will take it one step at a time, and you can ask about anything else too.",
+      "ctaLabel": "Start with the assistant"
     },
     "options": [
       {
@@ -21,8 +20,7 @@
         "title": "Start or continue an application",
         "body": "Get help choosing the application form or understanding the first quote steps.",
         "actionLabel": "Ask assistant",
-        "opensAssistant": true,
-        "prompt": "I want to apply online for a Loans by MAL loan."
+        "opensAssistant": true
       },
       {
         "id": "repayment",
@@ -30,8 +28,7 @@
         "title": "You are struggling with repayments",
         "body": "Tell the assistant you need repayment support and it will show the right route quickly.",
         "actionLabel": "Ask assistant",
-        "opensAssistant": true,
-        "prompt": "I am struggling with repayments and need help."
+        "opensAssistant": true
       },
       {
         "id": "existing",
@@ -39,8 +36,7 @@
         "title": "Update details or settle your loan",
         "body": "Ask about settlement figures, account updates or support for an existing loan.",
         "actionLabel": "Ask assistant",
-        "opensAssistant": true,
-        "prompt": "I already have a Loans by MAL loan and need help updating details or settling it."
+        "opensAssistant": true
       },
       {
         "id": "new-loan",
@@ -48,8 +44,7 @@
         "title": "You want to ask before applying",
         "body": "Check general eligibility, process or product questions before you apply.",
         "actionLabel": "Ask assistant",
-        "opensAssistant": true,
-        "prompt": "I have a question about taking out a new Loans by MAL loan before I apply."
+        "opensAssistant": true
       },
       {
         "id": "complaints",
@@ -57,8 +52,7 @@
         "title": "Make or follow up a complaint",
         "body": "The assistant can point you to the complaints route and formal next steps.",
         "actionLabel": "Ask assistant",
-        "opensAssistant": true,
-        "prompt": "I want to make or follow up a complaint."
+        "opensAssistant": true
       }
     ],
     "directContacts": {

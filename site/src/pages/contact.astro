@@ -29,7 +29,6 @@ const contact = page('contact');
             class="assistant-primary-action"
             type="button"
             data-route-assistant
-            data-route-prompt={contactCopy.routeFinder.assistant.prompt}
           >
             {contactCopy.routeFinder.assistant.ctaLabel}
           </button>
@@ -53,7 +52,6 @@ const contact = page('contact');
                     type="button"
                     data-choice={option.id}
                     data-route-assistant
-                    data-route-prompt={option.prompt}
                   >
                     <span>{option.eyebrow}</span>
                     <strong>{option.title}</strong>

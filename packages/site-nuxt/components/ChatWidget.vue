@@ -61,15 +61,6 @@
                   </button>
                 </div>
               </div>
-              <div v-if="showContactQuickActions(message, index)" class="primitive">
-                <div class="choices contact-route-actions" aria-label="Contact route shortcuts">
-                  <button class="chip chip-primary" type="button" @click="goToApply">Apply online</button>
-                  <button class="chip" type="button" @click="revealContactRoute('vulnerability')">Repayment support</button>
-                  <button class="chip" type="button" @click="revealContactRoute('handoff')">Existing loan</button>
-                  <button class="chip" type="button" @click="revealContactRoute('general')">New loan team</button>
-                  <button class="chip" type="button" @click="goToComplaints">Complaints</button>
-                </div>
-              </div>
             </li>
             <li v-if="isSending && streamingMessageId === null" class="message message-assistant thinking-bubble" aria-label="Assistant is typing">
               <span class="thinking-dots"><span></span><span></span><span></span></span>
@@ -118,9 +109,19 @@ interface ChatMessage {
   ui?: UiPlan | null;
 }
 
+interface RouteFinderTopic {
+  eyebrow?: string;
+  title: string;
+}
+
 const SUPPORT_WELCOME = "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
-const ROUTE_FINDER_WELCOME =
+const LEGACY_ROUTE_FINDER_WELCOME =
   "Tell me what you need help with and I'll point you to apply online, repayments, existing-loan support, complaints, or the right contact route. You can still call, text, or email the team directly from this page.";
+const CONTACT_AVAILABILITY_NOTE = 'You can also ask me any other Loans by MAL question here.';
+const CONTACT_COMPLETE_AVAILABILITY_NOTE = 'If you have another question, start over and I can help with that too.';
+const CONTACT_CLOSE_REVEAL_ENABLED = false;
+const ROUTE_FINDER_WELCOME =
+  `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${CONTACT_AVAILABILITY_NOTE}`;
 
 // dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
 // to the segregated concierge route with a snapshot of the form state; the
@@ -197,7 +198,7 @@ function currentWelcome(): string {
 }
 
 function isWelcomeText(text: string): boolean {
-  return text === SUPPORT_WELCOME || text === ROUTE_FINDER_WELCOME;
+  return text === SUPPORT_WELCOME || text === ROUTE_FINDER_WELCOME || text === LEGACY_ROUTE_FINDER_WELCOME;
 }
 
 function ensureContextWelcome(): void {
@@ -209,6 +210,24 @@ function ensureContextWelcome(): void {
   if (messages.value.length === 1 && firstMessage.role === 'assistant' && isWelcomeText(firstMessage.text)) {
     firstMessage.text = currentWelcome();
   }
+}
+
+function withContactAvailability(text: string): string {
+  if (!isContactRoute.value || text.includes(CONTACT_AVAILABILITY_NOTE) || text.includes(CONTACT_COMPLETE_AVAILABILITY_NOTE)) {
+    return text;
+  }
+  return `${text}\n\n${CONTACT_AVAILABILITY_NOTE}`;
+}
+
+function topicPrimerText(topic: RouteFinderTopic): string {
+  const topicLabel = topic.title.trim();
+  return withContactAvailability(`Okay - let's start with "${topicLabel}". Tell me what you need help with and I'll take it one step at a time.`);
+}
+
+function pushTopicPrimer(topic: RouteFinderTopic): void {
+  const primer = topicPrimerText(topic);
+  if (messages.value.at(-1)?.role === 'assistant' && messages.value.at(-1)?.text === primer) return;
+  pushMessage('assistant', primer);
 }
 
 function scrollToEnd(): void {
@@ -323,12 +342,6 @@ function goToApply(): void {
   void navigateTo('/apply/');
 }
 
-function goToComplaints(): void {
-  isOpen.value = false;
-  document.body.classList.remove('mal-open');
-  void navigateTo('/complaints/');
-}
-
 function goToNavOffer(): void {
   const target = navOffer.value;
   navOffer.value = null;
@@ -345,17 +358,6 @@ function connectSupport(): void {
   void submit("I'd like to talk to a person about my loan application, please.", {
     forceEngine: true,
   });
-}
-
-function revealContactRoute(context: 'general' | 'vulnerability' | 'handoff'): void {
-  storedContext.value = context;
-  closePanel();
-}
-
-function showContactQuickActions(message: ChatMessage, index: number): boolean {
-  if (!isContactRoute.value || index !== messages.value.length - 1) return false;
-  if (message.role !== 'assistant' || isSending.value || isChatComplete.value) return false;
-  return !(message.ui && hasRenderableContent(message.ui));
 }
 
 function contextForTelemetry(telemetry: DemoDisplayTelemetry): 'vulnerability' | 'handoff' | 'general' {
@@ -528,7 +530,7 @@ async function submit(text: string, { forceEngine = false }: { forceEngine?: boo
     const ref = await ensureSession();
     const result = await $fetch<IpocSendMessageResponse>(`/api/ipoc/sessions/${encodeURIComponent(ref)}/messages`, { method: 'POST', body: { message: trimmed } });
     if (result.ticket) activeTicketId.value = result.ticket.id;
-    pushMessage('assistant', result.assistant.message, result.assistant.ui);
+    pushMessage('assistant', withContactAvailability(result.assistant.message), result.assistant.ui);
     emitTelemetry(result.assistant.telemetry);
     const showApplyOffer = !replyAlreadyLinksApplication(result.assistant.ui) && applyOfferEligible(result.assistant.telemetry);
     applyOfferMessageId.value = showApplyOffer ? (messages.value.at(-1)?.id ?? null) : null;
@@ -569,7 +571,10 @@ async function onIntakeSubmit(values: Record<IntakeField, string>): Promise<void
     pushMessage('customer', 'Shared my contact details.');
     emitTelemetry(result.telemetry);
     const confirmation = result.messages.at(-1);
-    pushMessage('assistant', confirmation?.role === 'assistant' ? confirmation.content : 'Thanks — our support team will take it from here.');
+    pushMessage(
+      'assistant',
+      `${confirmation?.role === 'assistant' ? confirmation.content : 'Thanks — our support team will take it from here.'}\n\n${CONTACT_COMPLETE_AVAILABILITY_NOTE}`,
+    );
     isChatComplete.value = true;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Something went wrong sharing your details. Please try again.';
@@ -584,7 +589,7 @@ async function onIntakeCancel(): Promise<void> {
 
   try {
     await $fetch<IpocSessionResponse>(`/api/ipoc/sessions/${encodeURIComponent(sessionRef.value)}/cancel-handoff`, { method: 'POST' });
-    pushMessage('assistant', 'No problem — ask me anything else about your loan.', null);
+    pushMessage('assistant', withContactAvailability('No problem - ask me anything else about your loan.'), null);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Something went wrong cancelling the handoff. Please try again.';
   }
@@ -622,13 +627,16 @@ function openPanel(): void {
   document.body.classList.add('mal-open');
   // Highlights belong to the closed state (loader parity): clear any reveal
   // while the assistant is open.
-  document.getElementById('contact-section')?.removeAttribute('data-revealed');
+  if (CONTACT_CLOSE_REVEAL_ENABLED) {
+    document.getElementById('contact-section')?.removeAttribute('data-revealed');
+  }
   focusInput();
 }
 
 function closePanel(): void {
   isOpen.value = false;
   document.body.classList.remove('mal-open');
+  if (!CONTACT_CLOSE_REVEAL_ENABLED) return;
   // Loader parity: re-apply the stored context on close and bring the
   // promoted contact route card into view.
   if (storedContext.value !== null) {
@@ -694,8 +702,8 @@ onMounted(async () => {
 function handleRouteFinderOpen(event: Event): void {
   ensureContextWelcome();
   openPanel();
-  const message = (event as CustomEvent<{ message?: string }>).detail?.message?.trim();
-  if (message) void submit(message);
+  const topic = (event as CustomEvent<{ topic?: RouteFinderTopic }>).detail?.topic;
+  if (topic?.title) pushTopicPrimer(topic);
 }
 
 onBeforeUnmount(() => {

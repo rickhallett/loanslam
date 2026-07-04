@@ -288,21 +288,6 @@
   color: #ffffff;
 }
 
-#mal-panel .contact-route-actions {
-  gap: 7px;
-}
-
-#mal-panel .chip-primary {
-  border-color: #f0b429;
-  background: #f0b429;
-  color: #172026;
-}
-
-#mal-panel .chip-primary:hover {
-  background: #d9900f;
-  color: #172026;
-}
-
 #mal-panel .links {
   display: flex;
   flex-wrap: wrap;

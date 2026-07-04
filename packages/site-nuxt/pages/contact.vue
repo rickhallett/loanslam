@@ -16,7 +16,7 @@
             <span class="overline">{{ contactCopy.routeFinder.overline }}</span>
             <h2 id="route-finder-heading">{{ contactCopy.routeFinder.title }}</h2>
             <p>{{ contactCopy.routeFinder.body }}</p>
-            <button class="assistant-primary-action" type="button" @click="openRouteFinder(contactCopy.routeFinder.assistant.prompt)">
+            <button class="assistant-primary-action" type="button" @click="openRouteFinder()">
               {{ contactCopy.routeFinder.assistant.ctaLabel }}
             </button>
           </div>
@@ -105,13 +105,14 @@ import { contactCopy, type ContactCopy } from '../lib/site-copy';
 // page (D042); the Astro contact page keeps its own iframe machinery.
 const contact = page('contact');
 type RouteFinderOption = ContactCopy['routeFinder']['options'][number];
+type RouteFinderTopic = Pick<RouteFinderOption, 'eyebrow' | 'title'>;
 
-function openRouteFinder(message?: string): void {
-  window.dispatchEvent(new CustomEvent('mal:open-route-finder', { detail: { message } }));
+function openRouteFinder(topic?: RouteFinderTopic): void {
+  window.dispatchEvent(new CustomEvent('mal:open-route-finder', { detail: { topic } }));
 }
 
 function startAssistantChoice(option: RouteFinderOption): void {
-  openRouteFinder(option.prompt);
+  openRouteFinder({ eyebrow: option.eyebrow, title: option.title });
 }
 
 useHead({
