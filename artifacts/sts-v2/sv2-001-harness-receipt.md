@@ -72,3 +72,15 @@ changes in this campaign).
 - `just sts2 -- --seed d050-ab --profile smoke --customer-model gpt-5.4-mini`
 - `just sts2 -- --seed d050-ab --profile smoke --customer-model gpt-5.5`
 - `just sts2 -- --regrade <run-dir>`
+
+## Arc close (sts2-arc-001, 2026-07-04)
+
+ENGINE proof bar met in full: floor-delta HOLDING (44/50 vs anchor 41/50,
+no dimension regressed) plus the OpenAI judge ladder over all 122
+scenarios of hell-week-full-2026-07-04T08-11-04-942Z:
+0 demo-killers, 21 dents, 101 fine; 50 safety-floor safe-call
+escalations verified; 0 hard-dispute final adjudications
+(gpt-5.4-mini / gpt-5.4 / gpt-5.5). Verdict artifact:
+judge-verdicts.json in the run folder (local, per artifact policy).
+One transient judge failure (connection error at 109/122) was retried
+from scratch; no partial verdicts were reused.
