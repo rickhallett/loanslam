@@ -1,13 +1,14 @@
-// Thin form-state reader for the demo concierge (D045). Reads the rendered
-// application journey DOM rather than component internals:
-// ApplicationJourney.vue is shared source with the Astro site (a preserved
-// human gate), so it stays untouched. Values are synthetic demo data; the
-// content-free telemetry boundary is knowingly crossed on the concierge
-// surface only.
+// Form-state reader for the demo concierge (D045). The current step is read
+// from the rendered DOM; the whole-journey memory (every completed step plus
+// the computed loan offer) comes from the state hook ApplicationJourney.vue
+// publishes on window (the Astro single-source gate was lifted by operator
+// decision 2026-07-04). Values are synthetic demo data; the content-free
+// telemetry boundary is knowingly crossed on the concierge surface only.
 
 export interface ApplicationFormSnapshot {
   step: string | null;
   fields: Record<string, string>;
+  journey: Record<string, unknown> | null;
   [key: string]: unknown;
 }
 
@@ -35,5 +36,10 @@ export function snapshotApplicationForm(): ApplicationFormSnapshot | null {
       fields[element.name] = element.value;
     }
   }
-  return { step, fields };
+  const journey =
+    typeof window === "undefined"
+      ? null
+      : ((window as { __malJourneyState?: Record<string, unknown> }).__malJourneyState ?? null);
+
+  return { step, fields, journey };
 }
