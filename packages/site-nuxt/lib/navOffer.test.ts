@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { navOfferForReply } from "./navOffer";
+import { hasApplicationFormLink, navOfferForReply } from "./navOffer";
 
 describe("navOfferForReply", () => {
   it("offers the application when the reply names the application form", () => {
@@ -85,5 +85,32 @@ describe("navOfferForReply", () => {
         "/open-banking/",
       ),
     ).toBeNull();
+  });
+});
+
+describe("hasApplicationFormLink", () => {
+  it("detects rendered application form links", () => {
+    expect(
+      hasApplicationFormLink([
+        {
+          label: "application form",
+          href: "https://apply.loanslam.co.uk/step-one/step-one.html",
+        },
+      ]),
+    ).toBe(true);
+  });
+
+  it("detects internal apply links with apply labels", () => {
+    expect(
+      hasApplicationFormLink([{ label: "Apply now", url: "/apply/" }]),
+    ).toBe(true);
+  });
+
+  it("ignores unrelated signpost links", () => {
+    expect(
+      hasApplicationFormLink([
+        { label: "MoneyHelper", url: "https://www.moneyhelper.org.uk/" },
+      ]),
+    ).toBe(false);
   });
 });

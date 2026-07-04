@@ -179,7 +179,7 @@ import type {
 } from '../../integrated-poc/shared/ipoc';
 import type { ConciergeSessionResponse, ConciergeStatusResponse } from '../lib/concierge';
 import { snapshotApplicationForm } from '../lib/formSnapshot';
-import { navOfferForReply, type NavOffer } from '../lib/navOffer';
+import { hasApplicationFormLink, navOfferForReply, type NavOffer } from '../lib/navOffer';
 import { snapshotPage } from '../lib/pageSnapshot';
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
@@ -373,6 +373,13 @@ function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
   if (normalizePath(route.path) === '/apply') return false;
   const top = telemetry.retrieval.matches[0];
   return top !== undefined && APPLY_ITEM_IDS.has(top.itemId);
+}
+
+function replyAlreadyLinksApplication(ui: UiPlan): boolean {
+  return (
+    (ui.primitive === 'message' || ui.primitive === 'safe_fallback') &&
+    hasApplicationFormLink(ui.links)
+  );
 }
 
 function goToApply(): void {
@@ -594,7 +601,10 @@ async function submit(
     if (result.ticket) activeTicketId.value = result.ticket.id;
     pushMessage('assistant', result.assistant.message, result.assistant.ui);
     emitTelemetry(result.assistant.telemetry);
-    applyOfferMessageId.value = applyOfferEligible(result.assistant.telemetry)
+    const showApplyOffer =
+      !replyAlreadyLinksApplication(result.assistant.ui) &&
+      applyOfferEligible(result.assistant.telemetry);
+    applyOfferMessageId.value = showApplyOffer
       ? (messages.value.at(-1)?.id ?? null)
       : null;
     handoffOfferMessageId.value = null;

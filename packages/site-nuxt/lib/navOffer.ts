@@ -9,6 +9,12 @@ export interface NavOffer {
   path: string;
 }
 
+export interface LinkCandidate {
+  label: string;
+  url?: string | null;
+  href?: string | null;
+}
+
 const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
   {
     pattern:
@@ -49,6 +55,9 @@ const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
 const refusalReplyPattern =
   /\b(?:I cannot answer|I can't answer|I can only help|I'm not able to help|I am not able to help)\b/i;
 const markdownLinkPattern = /\[[^\]]+\]\([^)]+\)/g;
+const applicationFormLabelPattern =
+  /\b(?:application form|apply(?: now| online)?)\b/i;
+const applicationFormHost = "apply.loanslam.co.uk";
 
 function normalizePath(routePath: string): string {
   const trimmed = routePath.replace(/\/+$/, "");
@@ -61,6 +70,27 @@ function offerText(reply: string): string {
 
 // Exposed for the siteMap drift test: every offer must point at a mapped page.
 export const navOfferPaths: string[] = NAV_OFFERS.map((offer) => offer.path);
+
+export function hasApplicationFormLink(
+  links: readonly LinkCandidate[],
+): boolean {
+  return links.some((link) => {
+    const target = link.url ?? link.href ?? "";
+    if (!target) return false;
+
+    try {
+      const url = new URL(target, "https://mal-demo.local");
+      const path = normalizePath(url.pathname);
+      const pointsToApplication =
+        url.hostname === applicationFormHost || path === "/apply";
+      return (
+        pointsToApplication && applicationFormLabelPattern.test(link.label)
+      );
+    } catch {
+      return false;
+    }
+  });
+}
 
 export function navOfferForReply(
   reply: string,
