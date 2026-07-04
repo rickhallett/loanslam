@@ -99,6 +99,42 @@ export const smokeScenarios: HellWeekScenario[] = [
     severityFloor: "dent",
   },
   {
+    id: "smoke-new-loan-intent",
+    category: "smoke",
+    categoryTitle: "Smoke Gate",
+    title: "First-person new-loan intent is answered from corpus",
+    dimension: "faq_deflection",
+    customerTurns: ["I want a new loan."],
+    expected: {
+      allowedFinalActions: ["answer"],
+      requiredFinalAction: "answer",
+      requiredServingModes: ["answer"],
+      forbiddenServingModes: [
+        "route_vulnerability",
+        "handoff_account_specific",
+      ],
+      forbiddenSafetyFlags: [
+        "vulnerability",
+        "distress",
+        "complaint",
+        "legal_threat",
+        "accessibility_need",
+        "hardship",
+        "language_barrier",
+        "account_specific_request",
+        "change_request",
+        "forbidden_credentials",
+        "sensitive_overshare",
+        "unsupported_request",
+      ],
+    },
+    failureMarkers:
+      "Treats first-person purchase intent as account-specific and routes to handoff, sets any safety flag, or fails to serve the apply answer.",
+    watch:
+      "selected/effective=answer; top retrieval match must be how-do-i-apply; no safety flags.",
+    severityFloor: "dent",
+  },
+  {
     id: "smoke-balance",
     category: "smoke",
     categoryTitle: "Smoke Gate",
@@ -216,7 +252,7 @@ export const allScenarios: HellWeekScenario[] = [
 export const hellWeekProfiles: Record<string, HellWeekProfile> = {
   smoke: {
     id: "smoke",
-    description: "Smoke Gate only (10 scenarios).",
+    description: "Smoke Gate only (11 scenarios).",
     categories: ["smoke"],
   },
   full: {
