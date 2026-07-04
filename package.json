@@ -26,6 +26,7 @@
     "core:compare": "tsx packages/core/src/cli.ts compare",
     "core:persona-simulate": "tsx packages/core/src/cli.ts persona-simulate",
     "core:stochastic": "tsx packages/core/src/cli.ts stochastic",
+    "core:sts2": "tsx packages/core/src/cli.ts sts2",
     "core:route-audit": "tsx packages/core/src/cli.ts route-audit",
     "core:hell-week": "tsx packages/core/src/cli.ts hell-week",
     "core:hell-week-review": "tsx packages/core/src/cli.ts hell-week-review",

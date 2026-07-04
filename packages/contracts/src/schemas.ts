@@ -5,3 +5,4 @@
 // imports from `schemas.runtime`, never the reverse.
 export * from "./schemas.runtime";
 export * from "./schemas.eval";
+export * from "./schemas.sts2";

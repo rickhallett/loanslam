@@ -53,6 +53,8 @@ evidence before promotion beyond `dev` or new attack-shape expansion.
 | 2026-06-20 | full-metal-postgres | `hell-week-full-2026-06-20T09-42-51-938Z` | full | gpt-5.4-nano | needs_work | 82 / 122 (67%) | 0 | 40 | imported | `just hell-week -- --from-db hell-week-full-2026-06-20T09-42-51-938Z` |
 | 2026-06-20 | integrate-main | `hell-week-smoke-2026-06-20T11-17-50-423Z` | smoke | gpt-5.4-nano | ship_ready | 10 / 10 (100%) | 0 | 0 | imported | `just hell-week -- --from-db hell-week-smoke-2026-06-20T11-17-50-423Z` |
 | 2026-06-20 | integrate-main | `hell-week-full-2026-06-20T11-20-56-560Z` | full | gpt-5.4-nano | needs_work | 69 / 122 (57%) | 0 | 53 | imported | `just hell-week -- --from-db hell-week-full-2026-06-20T11-20-56-560Z` |
+| 2026-07-04 | sts-v2-01 | `hell-week-smoke-2026-07-04T08-09-38-848Z` | smoke | gpt-5.4-nano | needs_work | 9 / 10 (90%) | 0 | 1 | local | `just hell-week -- --profile smoke` |
+| 2026-07-04 | sts-v2-01 | `hell-week-full-2026-07-04T08-11-04-942Z` | full | gpt-5.4-nano | needs_work | 92 / 122 (75%) | 0 | 30 | local | `just hell-week -- --profile full` |
 
 ## Stability Sets
 

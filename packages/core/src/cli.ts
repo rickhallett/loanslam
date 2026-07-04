@@ -6,8 +6,10 @@ import { stdin as input, stdout as output } from "node:process";
 
 import {
   stochasticProfileSchema,
+  sts2ProfileSchema,
   type ConversationState,
   type StochasticProfile,
+  type Sts2Profile,
   type TurnPlanner,
 } from "@loanslam/contracts";
 
@@ -32,6 +34,11 @@ import {
 } from "./simulation/personaRunner";
 import { buildPersonaReport } from "./simulation/personaReport";
 import { runStochasticTestSimulator } from "./stochastic/runner";
+import {
+  regradeSts2Run,
+  runSts2Simulator,
+  type RunSts2SimulatorResult,
+} from "./sts2/runner";
 import { buildRouteAuditArtifacts } from "./routeAudit";
 import {
   executeHellWeek,
@@ -144,6 +151,10 @@ export async function runCli(
 
     if (command === "stochastic") {
       return await runStochasticSimulation(rest, env, plannerFactory);
+    }
+
+    if (command === "sts2") {
+      return await runSts2Command(rest, env, plannerFactory);
     }
 
     if (command === "route-audit") {
@@ -426,6 +437,206 @@ async function runStochasticSimulation(
   }
 
   return ok(stochasticRunText(result.run));
+}
+
+const defaultSts2CustomerModel = "gpt-5.4-mini";
+
+interface Sts2CliArgs {
+  help: boolean;
+  json: boolean;
+  seed?: string;
+  profile?: Sts2Profile;
+  initPath?: string;
+  customerModel?: string;
+  outputDir?: string;
+  regradeDir?: string;
+}
+
+async function runSts2Command(
+  args: string[],
+  env: CliEnv,
+  plannerFactory: PlannerFactory,
+): Promise<CliResult> {
+  const options = parseSts2Args(args);
+
+  if (options.help) {
+    return ok(sts2HelpText());
+  }
+
+  if (options.regradeDir !== undefined) {
+    return ok(sts2RunText(regradeSts2Run(options.regradeDir), options.json));
+  }
+
+  const plannerConfig = loadOpenAiPlannerConfig(env);
+  const customerModel =
+    options.customerModel ??
+    env.STS2_CUSTOMER_MODEL?.trim() ??
+    defaultSts2CustomerModel;
+
+  const result = await runSts2Simulator({
+    ...(options.seed !== undefined ? { seed: options.seed } : {}),
+    ...(options.profile !== undefined ? { profile: options.profile } : {}),
+    ...(options.initPath !== undefined
+      ? { scenarioPath: options.initPath }
+      : {}),
+    ...(options.outputDir !== undefined
+      ? { outputDir: options.outputDir }
+      : {}),
+    corpus: loadCorpusFromFile().items,
+    planner: plannerFactory(),
+    ...signalExtractorInput(createSignalExtractor(env)),
+    customerConfig: {
+      apiKey: plannerConfig.apiKey,
+      model: customerModel,
+    },
+  });
+
+  return ok(sts2RunText(result, options.json));
+}
+
+function sts2RunText(result: RunSts2SimulatorResult, json: boolean): string {
+  if (json) {
+    return JSON.stringify({
+      runId: result.report.runId,
+      seed: result.report.seed,
+      profile: result.report.profile,
+      customerModel: result.report.customerModel,
+      verdict: result.report.verdict,
+      trajectories: result.report.trajectories.length,
+      estimatedCostUsd: result.report.usage.estimatedCostUsd,
+      runDir: result.paths.runDir,
+      replay: result.report.replay,
+    });
+  }
+
+  const endReasons = result.trajectories.reduce<Record<string, number>>(
+    (counts, trajectory) => {
+      counts[trajectory.endReason] = (counts[trajectory.endReason] ?? 0) + 1;
+      return counts;
+    },
+    {},
+  );
+
+  return [
+    `STS v2 run ${result.report.runId} (${result.report.profile}, seed ${result.report.seed})`,
+    `Customer model: ${result.report.customerModel}; planner: ${result.report.plannerModel}`,
+    `Trajectories: ${result.trajectories.length}; end reasons: ${Object.entries(
+      endReasons,
+    )
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([reason, count]) => `${reason} ${count}`)
+      .join(", ")}`,
+    `Customer usage: ${result.report.usage.calls} calls, est. $${result.report.usage.estimatedCostUsd.toFixed(4)}`,
+    `Verdict: ${result.report.verdict} (judge pass arrives with sts2-arc-002)`,
+    `Artifacts: ${result.paths.runDir}`,
+    `Regenerate: ${result.report.replay.regenerateCommand}`,
+    `Regrade:    ${result.report.replay.regradeCommand}`,
+  ].join("\n");
+}
+
+function parseSts2Args(args: string[]): Sts2CliArgs {
+  const normalizedArgs = stripOptionSeparator(args);
+  const parsed: Sts2CliArgs = {
+    help: false,
+    json: false,
+  };
+
+  for (let index = 0; index < normalizedArgs.length; index += 1) {
+    const arg = normalizedArgs[index];
+
+    switch (arg) {
+      case "--help":
+      case "-h":
+        parsed.help = true;
+        break;
+      case "--json":
+        parsed.json = true;
+        break;
+      case "--seed":
+        parsed.seed = readRequiredOptionValue(normalizedArgs, index, "--seed");
+        index += 1;
+        break;
+      case "--profile": {
+        const profile = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--profile",
+        );
+        const profileResult = sts2ProfileSchema.safeParse(profile);
+
+        if (!profileResult.success) {
+          throw new Error("--profile must be one of smoke, review, or soak.");
+        }
+
+        parsed.profile = profileResult.data;
+        index += 1;
+        break;
+      }
+      case "--init":
+        parsed.initPath = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--init",
+        );
+        index += 1;
+        break;
+      case "--customer-model":
+        parsed.customerModel = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--customer-model",
+        );
+        index += 1;
+        break;
+      case "--output-dir":
+        parsed.outputDir = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--output-dir",
+        );
+        index += 1;
+        break;
+      case "--regrade":
+        parsed.regradeDir = readRequiredOptionValue(
+          normalizedArgs,
+          index,
+          "--regrade",
+        );
+        index += 1;
+        break;
+      default:
+        throw new Error(`Unknown sts2 option: ${arg}`);
+    }
+  }
+
+  return parsed;
+}
+
+function sts2HelpText(): string {
+  return [
+    "LoanSlam STS v2 reactive simulator (campaign sts-v2-001)",
+    "",
+    "Goal-driven, persona-bound customers played by an OpenAI model against",
+    "the live processTurn engine, turn by turn. Initializations are seeded",
+    "and replayable; turn content is live. Keel:",
+    "docs/prds/2026-07-03-sts-v2-keel-spec.md",
+    "",
+    "Usage:",
+    "  sts2 [--seed <seed>] [--profile smoke|review|soak]",
+    "       [--init <scenarioPath>] [--customer-model <model>]",
+    "       [--output-dir <dir>] [--json]",
+    "  sts2 --regrade <run-dir>",
+    "",
+    "Options:",
+    "  --seed            Run seed (defaults to a timestamp token)",
+    "  --profile         smoke 12 | review 60 | soak 180 trajectories",
+    "  --init            Regenerate a single initialization by scenarioPath",
+    `  --customer-model  Customer role model (default ${defaultSts2CustomerModel}; graded runs use gpt-5.5 per D050)`,
+    "  --regrade         Rebuild report from a persisted run directory",
+    "  --json            Machine-readable result line",
+    "",
+    "Env: OPENAI_API_KEY (required), STS2_CUSTOMER_MODEL (optional default).",
+  ].join("\n");
 }
 
 function runRouteAudit(args: string[]): CliResult {
@@ -1639,6 +1850,7 @@ function helpText(): string {
     "  compare [--output <path>]         Write a model comparison report",
     "  persona-simulate                  Run the persona scenario suite",
     "  stochastic                        Run the StochasticTestSimulator",
+    "  sts2                              Run the STS v2 reactive simulator",
     "  route-audit <run-folder>          Write route-audit JSON and Markdown",
     "  hell-week [--profile full|smoke]  Run the Hell Week gauntlet and write an HTML dashboard",
     "  hell-week-review                  Run full battery -> ladder judge -> regrade",

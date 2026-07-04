@@ -121,6 +121,10 @@ core-persona-simulate *persona_flags:
 core-stochastic *stochastic_flags:
     @npm --silent run core:stochastic -- {{ stochastic_flags }}
 
+# Run the STS v2 reactive simulator, e.g. -- --profile smoke --seed <value>; also -- --regrade <run-dir>
+sts2 *sts2_flags:
+    @npm --silent run core:sts2 -- {{ sts2_flags }}
+
 # Generate a route audit from a completed lab API run folder.
 route-audit *audit_flags:
     @npm --silent run core:route-audit -- {{ audit_flags }}
