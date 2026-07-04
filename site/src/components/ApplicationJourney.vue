@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watchEffect } from 'vue';
 import { applicationJourneyCopy } from '../lib/site-copy';
 
 const copy = applicationJourneyCopy;
@@ -126,6 +126,35 @@ const offerRows = computed(() => {
 const progressWidth = computed(() => {
   if (steps.length <= 1) return '0%';
   return `${(activeStep.value / (steps.length - 1)) * 100}%`;
+});
+
+// Journey-memory hook for the site concierge (operator decision 2026-07-04:
+// the Astro single-source gate is lifted). Publishes the whole journey's
+// state — including the computed offer — so the assistant can answer about
+// earlier steps after the customer moves on. Bank and card credentials are
+// reduced to presence flags: credentials never enter chat context, synthetic
+// or not.
+watchEffect(() => {
+  if (typeof window === 'undefined') return;
+  window.__malJourneyState = {
+    step: activeStep.value + 1,
+    stepCount: steps.length,
+    stepTitle: current.value?.title ?? '',
+    applicant: { ...applicant },
+    loan: { ...loan },
+    offer: Object.fromEntries(offerRows.value),
+    documents: { ...documents },
+    signatureSigned: signature.value.trim() !== '',
+    agreementAccepted: agreementAccepted.value,
+    bank: {
+      accountHolder: bank.accountHolder,
+      accountHolderConfirmed: bank.accountHolderConfirmed,
+      multiAuthoriser: bank.multiAuthoriser,
+      detailsProvided: bank.accountNumber.trim() !== '' || bank.sort1.trim() !== '',
+    },
+    affordability: { ...affordability },
+    card: { provided: card.number.trim() !== '', skipped: card.skipped },
+  };
 });
 
 const firstRepaymentHtml = computed(() =>

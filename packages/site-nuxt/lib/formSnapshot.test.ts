@@ -45,7 +45,19 @@ describe("snapshotApplicationForm", () => {
     expect(snapshotApplicationForm()).toEqual({
       step: "Step 1 of 9",
       fields: { firstName: "Priya", monthlyIncome: "2600", employmentStatus: "" },
+      journey: null,
     });
+  });
+
+  it("carries the published journey state when the hook is present", () => {
+    stubDocument([{ name: "signature", value: "", type: "text" }]);
+    const journey = {
+      step: 4,
+      stepTitle: "Read and sign",
+      offer: { "Loan advance": "£2,500.00" },
+    };
+    vi.stubGlobal("window", { __malJourneyState: journey });
+    expect(snapshotApplicationForm()?.journey).toEqual(journey);
   });
 
   it("reports checkbox state from .checked, never the constant .value", () => {
