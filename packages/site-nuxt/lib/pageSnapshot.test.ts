@@ -25,6 +25,7 @@ function stubDocument({
   headings = [] as StubElement[],
   anchors = [] as StubElement[],
   buttons = [] as StubElement[],
+  navAnchors = [] as StubElement[],
   text = "",
 } = {}) {
   const main = {
@@ -36,9 +37,16 @@ function stubDocument({
       return [];
     },
   };
+  const header = {
+    querySelectorAll: (selector: string) => (selector === "a[href]" ? navAnchors : []),
+  };
   vi.stubGlobal("document", {
     title: "Stub title",
-    querySelector: (selector: string) => (selector === "main#main" ? main : null),
+    querySelector: (selector: string) => {
+      if (selector === "main#main") return main;
+      if (selector === "header") return header;
+      return null;
+    },
   });
 }
 
@@ -85,6 +93,22 @@ describe("snapshotPage", () => {
       ],
     });
     expect(snapshotPage("/").buttons).toEqual(["Continue", "Get my quote"]);
+  });
+
+  it("collects the header nav separately from body links", () => {
+    stubDocument({
+      navAnchors: [
+        anchor("Open Banking", "/open-banking/"),
+        anchor("Login", "/login/"),
+      ],
+      anchors: [anchor("Apply now", "/apply/")],
+    });
+    const snapshot = snapshotPage("/");
+    expect(snapshot.nav).toEqual([
+      { label: "Open Banking", href: "/open-banking/" },
+      { label: "Login", href: "/login/" },
+    ]);
+    expect(snapshot.links).toEqual([{ label: "Apply now", href: "/apply/" }]);
   });
 
   it("returns empty inventories without a main element", () => {
