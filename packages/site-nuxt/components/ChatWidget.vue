@@ -489,12 +489,16 @@ async function streamConciergeMessage(
       if (!data) continue;
       const payload = JSON.parse(data.slice(6)) as {
         delta?: string;
+        text?: string;
         done?: boolean;
         message?: string;
         error?: string;
       };
       if (payload.error) throw new Error(payload.error);
-      if (typeof payload.delta === 'string') {
+      if (typeof payload.text === 'string') {
+        accumulated = payload.text;
+        onText(accumulated);
+      } else if (typeof payload.delta === 'string') {
         accumulated += payload.delta;
         onText(accumulated);
       }

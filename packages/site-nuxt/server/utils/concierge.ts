@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import OpenAI from "openai";
 
 import { siteMapLines } from "../../lib/siteMap";
+import { normalizePublicOrigin, rewriteDisplayedSiteUrls } from "../../lib/siteUrls";
 
 // Demo-concierge surface (D045): a segregated, demo-only route serving
 // apply-journey assistance straight from a frontier OpenAI model. No
@@ -111,6 +112,9 @@ ${siteMapLines()}
 These are relative paths on this prototype site. Never write out full
 web addresses or invent a domain name — refer to pages by name and let
 the customer use the button the panel shows.
+If the customer explicitly asks for a web address, use only the current
+site origin provided by the server and a relative path from the site map.
+Never use source, scraped, legacy, or Loans by MAL hostnames.
 
 When the customer's current page is provided, ground your help in it:
 explain what the page covers, answer questions about its content, and point
@@ -155,6 +159,7 @@ export async function runConciergeTurn({
   formState,
   pageContext,
   resumeTranscript,
+  publicOrigin,
   onDelta,
 }: {
   session: ConciergeSession;
@@ -162,6 +167,7 @@ export async function runConciergeTurn({
   formState?: Record<string, unknown> | null;
   pageContext?: Record<string, unknown> | null;
   resumeTranscript?: Array<{ role: "customer" | "assistant"; content: string }> | null;
+  publicOrigin?: string | null;
   // dr-002 (D047): when provided, the reply streams and each text delta is
   // forwarded as it arrives; the returned string is still the full reply.
   onDelta?: (delta: string) => void;
@@ -183,6 +189,14 @@ export async function runConciergeTurn({
       role: entry.role === "customer" ? "user" : "assistant",
       content: entry.content,
     }));
+
+  const displayOrigin = publicOrigin ? normalizePublicOrigin(publicOrigin) : null;
+  if (displayOrigin) {
+    input.push({
+      role: "developer",
+      content: `Current public site origin: ${displayOrigin}. If the customer explicitly asks for a URL, combine this exact origin only with paths from the site map.`,
+    });
+  }
 
   if (pageContext && Object.keys(pageContext).length > 0) {
     // Cap defensively; the client already truncates the excerpt.
@@ -237,6 +251,10 @@ export async function runConciergeTurn({
     // stream error frame (or a 500 on the JSON path) so the panel shows a
     // retryable error instead of nothing.
     throw new Error("The concierge model returned an empty reply.");
+  }
+
+  if (displayOrigin) {
+    reply = rewriteDisplayedSiteUrls(reply, displayOrigin);
   }
 
   session.messages.push({ role: "assistant", content: reply });

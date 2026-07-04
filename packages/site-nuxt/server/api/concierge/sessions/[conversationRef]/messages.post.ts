@@ -1,4 +1,4 @@
-import { createError, getRequestIP, readBody, setResponseHeaders } from "h3";
+import { createError, getRequestIP, getRequestURL, readBody, setResponseHeaders } from "h3";
 
 import {
   conciergeEnabled,
@@ -6,6 +6,7 @@ import {
   getConciergeSession,
   runConciergeTurn,
 } from "../../../../utils/concierge";
+import { rewriteDisplayedSiteUrls } from "../../../../../lib/siteUrls";
 
 interface ConciergeMessageRequest {
   message?: unknown;
@@ -61,11 +62,17 @@ export default defineEventHandler(async (event) => {
         .map((entry) => ({ role: entry.role, content: entry.content }))
     : null;
 
+  const publicOrigin = getRequestURL(event, {
+    xForwardedHost: true,
+    xForwardedProto: true,
+  }).origin;
+
   const turn = {
     session,
     message,
     formState: asObject(body.formState),
     pageContext: asObject(body.pageContext),
+    publicOrigin,
     resumeTranscript,
   };
 
@@ -85,9 +92,15 @@ export default defineEventHandler(async (event) => {
     return new ReadableStream({
       async start(controller) {
         try {
+          let rawReply = "";
           const reply = await runConciergeTurn({
             ...turn,
-            onDelta: (delta) => controller.enqueue(frame({ delta })),
+            onDelta: (delta) => {
+              rawReply += delta;
+              controller.enqueue(
+                frame({ text: rewriteDisplayedSiteUrls(rawReply, publicOrigin) }),
+              );
+            },
           });
           controller.enqueue(frame({ done: true, conversationRef, message: reply }));
         } catch {
