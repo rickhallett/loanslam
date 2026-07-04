@@ -44,4 +44,28 @@ describe("navOfferForReply", () => {
       navOfferForReply("Happy to explain how our instalment loans work.", "/"),
     ).toBeNull();
   });
+
+  it("offers page-anchored destinations only on explicit page mentions", () => {
+    expect(
+      navOfferForReply("Our loans are powered by Open Banking.", "/"),
+    ).toBeNull();
+    expect(
+      navOfferForReply("The Open Banking page explains how it works.", "/"),
+    ).toEqual({
+      label: "Take me to the Open Banking page",
+      path: "/open-banking/",
+    });
+    expect(
+      navOfferForReply("The instalment loans page covers the product.", "/"),
+    ).toEqual({
+      label: "Take me to the instalment loans page",
+      path: "/instalment-loan/",
+    });
+    expect(
+      navOfferForReply(
+        "The Open Banking page explains how it works.",
+        "/open-banking/",
+      ),
+    ).toBeNull();
+  });
 });

@@ -96,6 +96,31 @@ prototype site and every detail the customer enters is synthetic test data.
 Voice: warm, plain UK English, concise. Two or three short sentences per
 reply unless the question genuinely needs more. No emojis.
 
+The chat panel renders plain text only — it does not format markdown. Never
+use asterisks, headings, code blocks, or markdown list syntax. If you need a
+list, write short plain lines each starting with a dash.
+
+This is the complete site map. When the customer asks whether a page
+exists or where to find something, answer from this list and name the
+matching page. Never say a page on this list does not exist, and never
+say a topic is only covered on the current page when a dedicated page is
+listed here:
+- homepage /
+- application form /apply/
+- FAQs /faq/
+- contact page /contact/
+- Open Banking page /open-banking/ (what Open Banking is, AccountScore, safety)
+- instalment loans page /instalment-loan/ (the product explained)
+- about us /about-us/
+- personal loans guide /about-us/personal-loans/
+- credit score guide /about-us/credit-score/
+- existing customers /existing-customers/
+- extra support /extra-support/ (accessibility and extra help)
+- complaints /complaints/
+- customer login /login/
+- privacy policy /privacy-policy/
+- terms and conditions /terms-and-conditions/
+
 When the customer's current page is provided, ground your help in it:
 explain what the page covers, answer questions about its content, and point
 to what is in front of them. On the application form, use the provided form
@@ -103,12 +128,12 @@ state — answer about the exact step and fields, acknowledge what they have
 already completed, and point to what comes next. Encourage steady progress
 without pressure.
 
-When you name one of the site's pages — the application form, the
-homepage, the FAQs, or the contact page — the chat panel shows the
-customer a one-tap button that takes them there. So never say you cannot
-navigate or can only guide: name the right page and invite them to use
-the button. If the customer wants a new loan or wants to apply, point
-them to the application form.
+When you name the application form, the homepage, the FAQs, the contact
+page, the Open Banking page, or the instalment loans page, the chat panel
+shows the customer a one-tap button that takes them there. So never say
+you cannot navigate or can only guide: name the right page and invite
+them to use the button. If the customer wants a new loan or wants to
+apply, point them to the application form.
 
 Never promise or predict an application outcome, approval, eligibility
 decision, rate, or timescale, and never present yourself as making lending
@@ -177,13 +202,18 @@ export async function runConciergeTurn({
     });
   }
 
+  // Reasoning effort stays low and the output budget generous: on a
+  // reasoning model a small max_output_tokens can be consumed entirely by
+  // deliberation (observed on "use javascript" pressure turns), which
+  // surfaced as empty or mid-sentence replies in the panel.
   let reply: string;
   if (onDelta) {
     const stream = await getClient().responses.create({
       model: conciergeModel(),
       instructions: CONCIERGE_INSTRUCTIONS,
       input,
-      max_output_tokens: 400,
+      reasoning: { effort: "low" },
+      max_output_tokens: 1200,
       stream: true,
     });
     let full = "";
@@ -199,9 +229,17 @@ export async function runConciergeTurn({
       model: conciergeModel(),
       instructions: CONCIERGE_INSTRUCTIONS,
       input,
-      max_output_tokens: 400,
+      reasoning: { effort: "low" },
+      max_output_tokens: 1200,
     });
     reply = response.output_text.trim();
+  }
+
+  if (reply === "") {
+    // Do not record a silent turn; the route handler converts this into the
+    // stream error frame (or a 500 on the JSON path) so the panel shows a
+    // retryable error instead of nothing.
+    throw new Error("The concierge model returned an empty reply.");
   }
 
   session.messages.push({ role: "assistant", content: reply });
