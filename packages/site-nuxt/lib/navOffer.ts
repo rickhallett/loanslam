@@ -51,6 +51,9 @@ function normalizePath(routePath: string): string {
   return trimmed === "" ? "/" : trimmed;
 }
 
+// Exposed for the siteMap drift test: every offer must point at a mapped page.
+export const navOfferPaths: string[] = NAV_OFFERS.map((offer) => offer.path);
+
 export function navOfferForReply(
   reply: string,
   currentPath: string,
