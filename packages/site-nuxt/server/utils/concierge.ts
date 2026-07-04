@@ -32,9 +32,21 @@ export function conciergeEnabled(): boolean {
 
 // Fixed-window per-IP rate limit (dc-007): exposure control for the public
 // URL — protects the OpenAI budget, not the content (D045). Counted before
-// body validation so hammering costs no model calls.
+// body validation so hammering costs no model calls. Defaults are sized for
+// a stakeholder reveal where up to four demos may share one venue IP
+// (4x the original single-user budget); tune per deploy via the env vars
+// without repacking.
 const RATE_WINDOW_MS = 5 * 60_000;
-const RATE_LIMITS = { sessions: 10, messages: 30 } as const;
+
+function rateLimitFromEnv(name: string, fallback: number): number {
+  const parsed = Number.parseInt(process.env[name] ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const RATE_LIMITS = {
+  sessions: rateLimitFromEnv("CONCIERGE_RATE_SESSIONS", 40),
+  messages: rateLimitFromEnv("CONCIERGE_RATE_MESSAGES", 120),
+};
 const rateBuckets = new Map<string, { windowStart: number; count: number }>();
 
 export function conciergeRateLimitExceeded(

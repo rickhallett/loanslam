@@ -47,8 +47,10 @@ Rehearse before the demo (the exact choreography above, headless):
   guardrails are a system-prompt no-promises instruction plus voice. It is
   deliberately not compliance-hardened — that is a recorded, temporary
   decision with a named revert path, not an oversight.
-- Exposure controls, not content controls: per-IP rate limits (10 sessions /
-  30 messages per 5 minutes) and a kill switch.
+- Exposure controls, not content controls: per-IP rate limits (40 sessions /
+  120 messages per 5 minutes — sized for up to four stakeholders sharing one
+  venue IP; override with `CONCIERGE_RATE_SESSIONS` / `CONCIERGE_RATE_MESSAGES`
+  service variables) and a kill switch.
 - Sessions are in-memory server-side, but a redeploy no longer shows: the
   widget reseeds a fresh session from its own transcript and continues
   (demo-resilience-001, proven live with a mid-conversation redeploy).
