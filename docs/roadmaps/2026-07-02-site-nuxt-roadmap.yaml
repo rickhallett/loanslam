@@ -75,7 +75,7 @@ arc_001_chain:
     slice_label: site-nuxt-deploy-01
     status: completed
     receipt: artifacts/site-nuxt/parity-sn005-live/parity-report.json
-    live_url: https://loanslam-site-nuxt-production.up.railway.app
+    live_url: https://mal-demo.up.railway.app
     depends_on:
       - sn-004-apply
     summary: Railway service loanslam-site-nuxt, live URL, live parity spot-check, closeout.
@@ -131,7 +131,7 @@ arc_002_chain:
     slice_label: sitenuxt-chat-deploy-01
     status: completed
     receipt: artifacts/site-nuxt/sitenuxt-chat-deploy-01-browser.png
-    live_url: https://loanslam-site-nuxt-production.up.railway.app/contact/
+    live_url: https://mal-demo.up.railway.app/contact/
     depends_on:
       - sn-008-chat-proof
     summary: Secrets sync, deploy, live behavior proof, closeout, human report.

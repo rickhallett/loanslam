@@ -1,6 +1,6 @@
 # Demo Concierge Runbook
 
-Live URL: https://loanslam-site-nuxt-production.up.railway.app/contact/
+Live URL: https://mal-demo.up.railway.app/contact/
 
 The apply-journey concierge demo (campaign demo-concierge-001, D045). A
 stakeholder can run this cold in about four minutes. Everything entered is
@@ -8,8 +8,11 @@ synthetic test data on a prototype site.
 
 ## The demo, step by step
 
-1. **Open /contact/.** The assistant opens automatically — this is the
-   existing validated support chat (grounded answers, safe handoffs).
+1. **Open /contact/.** The page now starts with the assistant route finder.
+   Click **Start with the assistant** to open the chat panel. This starts in
+   the existing validated support chat (grounded answers, safe handoffs); the
+   topic buttons on the page only prime the conversation and must not jump
+   straight to contact capture.
 2. **Ask an apply question.** Type "How do I apply for a loan?" The grounded
    FAQ answer arrives with a quick action: **Take me to the application**.
 3. **Click it.** The site navigates to the application form; the chat stays
@@ -36,6 +39,9 @@ Rehearse before the demo (the exact choreography above, headless):
 - One assistant across the whole journey: deflection and safe handoffs on
   the support side, full-intelligence form help on the apply side, and every
   transition is a visible, deliberate seam.
+- The contact page is assistant-first, but it is still the validated engine
+  surface. It can answer grounded support questions and route safely; it does
+  not receive the DOM/page snapshot that concierge mode receives.
 - The concierge sees the form as the customer fills it — answers name the
   step, the entered values, and what's left.
 - The validated engine still owns anything account-shaped: account questions

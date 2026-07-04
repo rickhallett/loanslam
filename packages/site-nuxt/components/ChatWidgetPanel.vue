@@ -264,6 +264,7 @@ import {
   navOfferForReply,
   type NavOffer,
 } from "../lib/navOffer";
+import { normalizeDemoBrandText } from "../lib/brandText";
 import { snapshotPage } from "../lib/pageSnapshot";
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
@@ -464,14 +465,15 @@ function ensureContextWelcome(): void {
 }
 
 function withContactAvailability(text: string): string {
+  const normalizedText = normalizeDemoBrandText(text);
   if (
     !isContactRoute.value ||
-    text.includes(CONTACT_AVAILABILITY_NOTE) ||
-    text.includes(CONTACT_COMPLETE_AVAILABILITY_NOTE)
+    normalizedText.includes(CONTACT_AVAILABILITY_NOTE) ||
+    normalizedText.includes(CONTACT_COMPLETE_AVAILABILITY_NOTE)
   ) {
-    return text;
+    return normalizedText;
   }
-  return `${text}\n\n${CONTACT_AVAILABILITY_NOTE}`;
+  return `${normalizedText}\n\n${CONTACT_AVAILABILITY_NOTE}`;
 }
 
 function topicPrimerText(topic: RouteFinderTopic): string {
@@ -541,7 +543,10 @@ function restoreState(): boolean {
     messages.value = saved.messages.map((entry) => ({
       id: nextId++,
       role: entry.role,
-      text: entry.text,
+      text:
+        entry.role === "assistant"
+          ? normalizeDemoBrandText(entry.text)
+          : entry.text,
       ui: null,
     }));
     sessionRef.value = saved.sessionRef ?? null;
@@ -827,6 +832,7 @@ async function submit(
       // dr-002 (D047): the reply streams into a live message bubble; the
       // thinking dots yield to it at the first delta.
       const reply = await sendConciergeTurn(trimmed, (text) => {
+        const displayText = normalizeDemoBrandText(text);
         const streaming =
           streamingMessageId.value === null
             ? null
@@ -834,13 +840,14 @@ async function submit(
                 (entry) => entry.id === streamingMessageId.value,
               );
         if (streaming) {
-          streaming.text = text;
+          streaming.text = displayText;
         } else {
-          pushMessage("assistant", text);
+          pushMessage("assistant", displayText);
           streamingMessageId.value = messages.value.at(-1)?.id ?? null;
         }
         scrollToEnd();
       });
+      const displayReply = normalizeDemoBrandText(reply);
       const streamed =
         streamingMessageId.value === null
           ? null
@@ -848,18 +855,18 @@ async function submit(
               (entry) => entry.id === streamingMessageId.value,
             );
       if (streamed) {
-        streamed.text = reply;
+        streamed.text = displayReply;
       } else {
-        pushMessage("assistant", reply);
+        pushMessage("assistant", displayReply);
       }
       streamingMessageId.value = null;
       applyOfferMessageId.value = null;
-      handoffOfferMessageId.value = /support team/i.test(reply)
+      handoffOfferMessageId.value = /support team/i.test(displayReply)
         ? (messages.value.at(-1)?.id ?? null)
         : null;
       navOffer.value =
         handoffOfferMessageId.value === null
-          ? navOfferForReply(reply, route.path)
+          ? navOfferForReply(displayReply, route.path)
           : null;
       navOfferMessageId.value =
         navOffer.value !== null ? (messages.value.at(-1)?.id ?? null) : null;
@@ -936,9 +943,13 @@ async function onIntakeSubmit(
     pushMessage("customer", "Shared my contact details.");
     emitTelemetry(result.telemetry);
     const confirmation = result.messages.at(-1);
+    const confirmationText =
+      confirmation?.role === "assistant"
+        ? normalizeDemoBrandText(confirmation.content)
+        : "Thanks — our support team will take it from here.";
     pushMessage(
       "assistant",
-      `${confirmation?.role === "assistant" ? confirmation.content : "Thanks — our support team will take it from here."}\n\n${CONTACT_COMPLETE_AVAILABILITY_NOTE}`,
+      `${confirmationText}\n\n${CONTACT_COMPLETE_AVAILABILITY_NOTE}`,
     );
     isChatComplete.value = true;
   } catch (error) {

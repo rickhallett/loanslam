@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { chromium } from "playwright-core";
 
 const [
-  base = "https://loanslam-site-nuxt-production.up.railway.app",
+  base = "https://mal-demo.up.railway.app",
   outDir = "artifacts/demo-resilience/dr003-live-restart",
 ] = process.argv.slice(2);
 const restartCmd =

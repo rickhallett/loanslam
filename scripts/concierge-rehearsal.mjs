@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { chromium } from "playwright-core";
 
 const [
-  base = "https://loanslam-site-nuxt-production.up.railway.app",
+  base = "https://mal-demo.up.railway.app",
   outDir = "artifacts/demo-concierge/rehearsal",
 ] = process.argv.slice(2);
 mkdirSync(outDir, { recursive: true });
@@ -67,6 +67,7 @@ page.on("response", async (response) => {
 
 // Beat 1: support chat answers the apply question and offers the journey.
 await page.goto(`${base}/contact/`, { waitUntil: "networkidle" });
+await page.click(".assistant-primary-action");
 await page.waitForSelector("#mal-panel", { state: "visible", timeout: 15000 });
 await say(page, "How do I apply for a loan?");
 await page.waitForSelector("#mal-apply-nav", { state: "visible", timeout: 15000 });
