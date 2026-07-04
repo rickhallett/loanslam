@@ -129,6 +129,10 @@ route-audit *audit_flags:
 contact-assistant-proof *proof_flags:
     @node scripts/contact-assistant-ux-proof.mjs {{ proof_flags }}
 
+# Verify the concierge/engine seam (badges, header temperature, transcript dividers) against a running site-nuxt server.
+seam-walk-proof *proof_flags:
+    @node scripts/seam-walk-proof.mjs {{ proof_flags }}
+
 # =============================================================================
 # Hell Week Evidence
 # =============================================================================

@@ -1,5 +1,11 @@
 <template>
-  <div v-show="isOpen" id="mal-panel" role="dialog" :aria-label="chatTitle">
+  <div
+    v-show="isOpen"
+    id="mal-panel"
+    role="dialog"
+    :aria-label="chatTitle"
+    :data-mode="seamMode"
+  >
     <main class="widget-shell" aria-label="MAL Loans chat widget">
       <section class="chat-panel">
         <header class="chat-header">
@@ -7,11 +13,37 @@
             <p class="eyebrow">{{ chatEyebrow }}</p>
             <h1>{{ chatTitle }}</h1>
             <!-- The two chat surfaces are deliberately distinct (D045/D046);
-                 the badge keeps the seam visible to the customer. -->
-            <p v-if="isConciergeMode" id="mal-mode-badge" class="chat-status">
-              <span class="mode-pill">Live guide</span> Application guide
+                 both brains are named and badged so the seam stays visible. -->
+            <p id="mal-mode-badge" class="chat-status">
+              <span class="mode-pill">
+                <svg
+                  v-if="seamMode === 'concierge'"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  width="10"
+                  height="10"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  width="10"
+                  height="10"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M12 2l8 3.5V11c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5.5z"
+                  />
+                </svg>
+                {{ modeName }}
+              </span>
+              {{ chatStatus }}
             </p>
-            <p v-else class="chat-status">{{ chatStatus }}</p>
           </div>
           <div class="chat-header-actions">
             <button
@@ -37,12 +69,7 @@
           <li
             v-for="(message, index) in messages"
             :key="message.id"
-            :class="[
-              'message',
-              message.role === 'customer'
-                ? 'message-user'
-                : 'message-assistant',
-            ]"
+            :class="['message', messageClass(message)]"
           >
             <span class="message-text">{{ message.text }}</span>
             <div
@@ -245,7 +272,7 @@ import { snapshotPage } from "../lib/pageSnapshot";
 
 interface ChatMessage {
   id: number;
-  role: "customer" | "assistant";
+  role: "customer" | "assistant" | "seam";
   text: string;
   ui?: UiPlan | null;
 }
@@ -269,12 +296,19 @@ const SUPPORT_WELCOME =
   "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
 const LEGACY_ROUTE_FINDER_WELCOME =
   "Tell me what you need help with and I'll point you to apply online, repayments, existing-loan support, complaints, or the right contact route. You can still call, text, or email the team directly from this page.";
-const CONTACT_AVAILABILITY_NOTE =
+// Scoped to what the engine actually does (FAQ answers plus routing to the
+// right team); the earlier open-ended "any question" invite oversold the
+// guarded surface. The legacy string stays only so restored transcripts
+// written before the change still parse as welcomes.
+const LEGACY_CONTACT_AVAILABILITY_NOTE =
   "You can also ask me any other Loans by MAL question here.";
+const CONTACT_AVAILABILITY_NOTE =
+  "You can also ask me about our loans and how we work. Anything account-specific, I'll route to the right team.";
 const CONTACT_COMPLETE_AVAILABILITY_NOTE =
   "If you have another question, start over and I can help with that too.";
 const CONTACT_CLOSE_REVEAL_ENABLED = false;
 const ROUTE_FINDER_WELCOME = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${CONTACT_AVAILABILITY_NOTE}`;
+const LEGACY_ROUTE_FINDER_WELCOME_V2 = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${LEGACY_CONTACT_AVAILABILITY_NOTE}`;
 
 // dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
 // to the segregated concierge route with a snapshot of the form state; the
@@ -306,8 +340,20 @@ const chatEyebrow = computed(() =>
 const chatTitle = computed(() =>
   isContactRoute.value ? "Find the right team" : "MAL Loans assistant",
 );
-const chatStatus = computed(() =>
-  isContactRoute.value ? "Contact route finder" : "Support chat",
+// The brain the badge reports: the last announced serving brain when a
+// conversation is live (kept in sync by noteSeamBrain, including the
+// forceEngine handoff), falling back to the route-derived surface. Keeps the
+// badge and the seam dividers telling one story.
+const activeBrain = computed(
+  () => lastSeamBrain.value ?? (isConciergeMode.value ? "concierge" : "engine"),
+);
+const chatStatus = computed(() => {
+  if (activeBrain.value === "concierge") return "Can see the page you're on";
+  return isContactRoute.value ? "Contact route finder" : "Support chat";
+});
+const seamMode = computed(() => activeBrain.value);
+const modeName = computed(() =>
+  activeBrain.value === "concierge" ? "Live guide" : "Guided support",
 );
 
 // dc-003 (D045): deterministic navigation offer. When a grounded answer's
@@ -358,6 +404,37 @@ function pushMessage(
   messages.value.push({ id: nextId++, role, text, ui });
 }
 
+// Seam dividers: a system line in the transcript whenever the serving brain
+// changes, so the customer sees the routing flip instead of inferring it.
+// Divider lines are ephemeral — never persisted, never replayed into either
+// brain's history — but the last announced brain IS persisted, so a flip
+// still announces after full-page (header-link) navigation. Announced only
+// once a real conversation exists.
+const SEAM_TO_CONCIERGE =
+  "Handing you to the Live guide — it can see the page you're on.";
+const SEAM_TO_ENGINE = "Connecting you to Guided support.";
+const lastSeamBrain = ref<"engine" | "concierge" | null>(null);
+
+function noteSeamBrain(brain: "engine" | "concierge"): void {
+  if (lastSeamBrain.value === brain) return;
+  const announce =
+    lastSeamBrain.value !== null &&
+    messages.value.some((entry) => entry.role === "customer");
+  lastSeamBrain.value = brain;
+  if (announce) {
+    pushMessage(
+      "seam",
+      brain === "concierge" ? SEAM_TO_CONCIERGE : SEAM_TO_ENGINE,
+    );
+  }
+}
+
+function messageClass(message: ChatMessage): string {
+  if (message.role === "customer") return "message-user";
+  if (message.role === "seam") return "message-seam";
+  return "message-assistant";
+}
+
 function currentWelcome(): string {
   return isContactRoute.value ? ROUTE_FINDER_WELCOME : SUPPORT_WELCOME;
 }
@@ -366,7 +443,8 @@ function isWelcomeText(text: string): boolean {
   return (
     text === SUPPORT_WELCOME ||
     text === ROUTE_FINDER_WELCOME ||
-    text === LEGACY_ROUTE_FINDER_WELCOME
+    text === LEGACY_ROUTE_FINDER_WELCOME ||
+    text === LEGACY_ROUTE_FINDER_WELCOME_V2
   );
 }
 
@@ -428,12 +506,15 @@ function persistState(): void {
     sessionStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
-        messages: messages.value.map(({ role, text }) => ({ role, text })),
+        messages: messages.value
+          .filter((entry) => entry.role !== "seam")
+          .map(({ role, text }) => ({ role, text })),
         sessionRef: sessionRef.value,
         conciergeSessionRef: conciergeSessionRef.value,
         activeTicketId: activeTicketId.value,
         applyIntroDone: applyIntroDone.value,
         storedContext: storedContext.value,
+        lastSeamBrain: lastSeamBrain.value,
         isChatComplete: isChatComplete.value,
       }),
     );
@@ -453,6 +534,7 @@ function restoreState(): boolean {
       activeTicketId?: string | null;
       applyIntroDone?: boolean;
       storedContext?: typeof storedContext.value;
+      lastSeamBrain?: "engine" | "concierge" | null;
       isChatComplete?: boolean;
     };
     if (!saved.messages || saved.messages.length === 0) return false;
@@ -467,6 +549,7 @@ function restoreState(): boolean {
     activeTicketId.value = saved.activeTicketId ?? null;
     applyIntroDone.value = saved.applyIntroDone ?? false;
     storedContext.value = saved.storedContext ?? null;
+    lastSeamBrain.value = saved.lastSeamBrain ?? null;
     isChatComplete.value = saved.isChatComplete ?? false;
     return true;
   } catch {
@@ -610,7 +693,10 @@ function transcriptForResume(): Array<{
   const history = [...messages.value];
   if (history.at(-1)?.role === "customer") history.pop();
   return history
-    .filter((m) => m.text && !isWelcomeText(m.text))
+    .filter(
+      (m): m is ChatMessage & { role: "customer" | "assistant" } =>
+        m.role !== "seam" && m.text.length > 0 && !isWelcomeText(m.text),
+    )
     .map((m) => ({ role: m.role, content: m.text }));
 }
 
@@ -725,11 +811,16 @@ async function submit(
   if (!trimmed || isSending.value || isChatComplete.value) return;
 
   errorMessage.value = "";
+  const usesConcierge =
+    !forceEngine && !isContactRoute.value && conciergeAvailable.value;
+  // Announce a brain switch before the turn it applies to (covers the
+  // forceEngine handoff, which flips brains without a route change).
+  noteSeamBrain(usesConcierge ? "concierge" : "engine");
   pushMessage("customer", trimmed);
   isSending.value = true;
 
   try {
-    if (!forceEngine && !isContactRoute.value && conciergeAvailable.value) {
+    if (usesConcierge) {
       // Concierge mode (D046): every route except /contact/ (the validated
       // engine keeps the support chat). Page snapshot as context; form
       // snapshot additionally on /apply/. No engine, no telemetry, no UiPlan.
@@ -897,6 +988,7 @@ function reset(): void {
   handoffOfferMessageId.value = null;
   navOffer.value = null;
   navOfferMessageId.value = null;
+  lastSeamBrain.value = null;
   messages.value = [];
   try {
     sessionStorage.removeItem(STORAGE_KEY);
@@ -958,6 +1050,12 @@ watch(
 watch(isContactRoute, (now, prev) => {
   ensureContextWelcome();
   if (!now && prev && isOpen.value) focusInput();
+});
+
+watch(isConciergeMode, (now) => {
+  // Seam divider on navigation: the moment the serving surface flips, say so
+  // in the transcript (before any arrival intro from the new brain).
+  noteSeamBrain(now ? "concierge" : "engine");
 });
 
 watch([isApplyRoute, isOpen, conciergeAvailable], () => {

@@ -29,7 +29,8 @@ const executablePath = join(
   "MacOS",
   "Google Chrome for Testing",
 );
-const availabilityNote = "You can also ask me any other Loans by MAL question here.";
+const availabilityNote =
+  "You can also ask me about our loans and how we work. Anything account-specific, I'll route to the right team.";
 
 const results = [];
 const check = (id, ok, detail = "") => {
@@ -45,7 +46,8 @@ async function newContactPage() {
     window.sessionStorage.clear();
   });
   await page.goto(`${nuxtBase}/contact/`, { waitUntil: "networkidle" });
-  await page.waitForSelector("#mal-panel", { state: "attached", timeout: 10000 });
+  // The panel is lazy-loaded (perf commit 19f77dc): #mal-panel is not in the
+  // DOM until the widget is first opened, so only the launcher is awaited here.
   await page.waitForSelector("#mal-launcher", { state: "visible", timeout: 10000 });
   return page;
 }
@@ -122,7 +124,11 @@ try {
       await page.getByRole("heading", { name: "Start with the MAL Loans assistant" }).isVisible(),
       "assistant-first hero is visible",
     );
-    check("contact-panel-closed", !(await page.isVisible("#mal-panel")), "widget is opt-in on arrival");
+    check(
+      "contact-panel-closed",
+      !(await page.isVisible("#mal-panel")),
+      "widget is opt-in on arrival (panel not mounted until opened)",
+    );
     check("contact-launcher-visible", await page.isVisible("#mal-launcher"), "launcher remains available");
     await page.close();
   }
@@ -139,6 +145,19 @@ try {
       `${state.customerMessages.length} customer turns`,
     );
     check("primary-availability-copy", firstAssistant.includes(availabilityNote), firstAssistant.slice(0, 180));
+    const badge = await page.evaluate(() => ({
+      text:
+        document
+          .querySelector("#mal-mode-badge")
+          ?.textContent?.replace(/\s+/g, " ")
+          .trim() ?? "",
+      mode: document.querySelector("#mal-panel")?.getAttribute("data-mode") ?? "",
+    }));
+    check(
+      "primary-engine-mode-badge",
+      badge.mode === "engine" && badge.text.includes("Guided support"),
+      `${badge.mode}: ${badge.text}`,
+    );
     check("primary-no-capture", !state.hasCaptureFields, state.intakeLabels.join(", "));
     check("primary-no-route-shortcuts", !state.hasOldRouteShortcutMenu, state.choiceGroups.join(" | "));
     writeFileSync(join(outDir, "primary-open.png"), await page.screenshot({ fullPage: false }));

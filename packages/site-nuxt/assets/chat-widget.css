@@ -107,7 +107,9 @@
 }
 
 #mal-panel .mode-pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin-right: 6px;
   padding: 1px 8px 2px;
   border-radius: 999px;
@@ -433,6 +435,86 @@ input:disabled,
 #mal-panel textarea:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* ── Brain seam (D045/D046 made visible) ─────────────────── */
+/* Engine ("Guided support") keeps the steel chrome above; concierge
+   ("Live guide") warms the whole header so the routing flip is unmissable
+   even across a meeting-room projector. */
+#mal-panel[data-mode="engine"] .mode-pill {
+  background: #1a8787;
+  color: #ffffff;
+}
+
+#mal-panel[data-mode="concierge"] .chat-header {
+  background: #f0b429;
+  color: #172026;
+}
+
+#mal-panel[data-mode="concierge"] .eyebrow {
+  color: #6b4e0e;
+}
+
+#mal-panel[data-mode="concierge"] .chat-status {
+  color: #3c3111;
+}
+
+#mal-panel[data-mode="concierge"] .chat-header-actions button {
+  background: rgb(23 32 38 / 10%);
+  color: #172026;
+}
+
+#mal-panel[data-mode="concierge"] .chat-header-actions button:hover,
+#mal-panel[data-mode="concierge"] .chat-header-actions button:focus-visible {
+  background: rgb(23 32 38 / 18%);
+  outline-color: rgb(23 32 38 / 35%);
+}
+
+#mal-panel[data-mode="concierge"] .mode-pill {
+  background: #172026;
+  color: #f0b429;
+}
+
+#mal-panel[data-mode="concierge"] .composer-send {
+  background: #f0b429;
+  color: #172026;
+}
+
+#mal-panel[data-mode="concierge"] .composer-send:hover:not(:disabled),
+#mal-panel[data-mode="concierge"] .composer-send:focus-visible:not(:disabled) {
+  outline-color: rgb(240 180 41 / 35%);
+}
+
+/* Seam divider: the transcript records the handoff between brains. */
+#mal-panel .message-seam {
+  flex-direction: row;
+  align-items: center;
+  align-self: stretch;
+  gap: 10px;
+  max-width: none;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #69797a;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+#mal-panel .message-seam::before,
+#mal-panel .message-seam::after {
+  content: "";
+  flex: 1 1 24px;
+  height: 1px;
+  background: #cbd9d5;
+}
+
+#mal-panel .message-seam .message-text {
+  max-width: 75%;
+  text-align: center;
+  white-space: normal;
 }
 
 /* ── Motion ─────────────────────────────────────────────── */
