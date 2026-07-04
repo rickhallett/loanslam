@@ -294,7 +294,7 @@ const emit = defineEmits<{
 }>();
 
 const SUPPORT_WELCOME =
-  "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans and point you to the right team for anything account-specific. How can I help?";
+  "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans, read the page you're on, help you navigate the site, and point you to the right team for anything account-specific. How can I help?";
 const LEGACY_ROUTE_FINDER_WELCOME =
   "Tell me what you need help with and I'll point you to apply online, repayments, existing-loan support, complaints, or the right contact route. You can still call, text, or email the team directly from this page.";
 // Scoped to what the engine actually does (FAQ answers plus routing to the
