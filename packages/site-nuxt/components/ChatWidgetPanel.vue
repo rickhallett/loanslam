@@ -311,6 +311,16 @@ import {
 } from "../lib/navOffer";
 import { normalizeDemoBrandText } from "../lib/brandText";
 import { snapshotPage } from "../lib/pageSnapshot";
+import {
+  CONTACT_COMPLETE_AVAILABILITY_NOTE,
+  LEGACY_ROUTE_FINDER_WELCOME,
+  LEGACY_ROUTE_FINDER_WELCOME_V2,
+  ROUTE_FINDER_WELCOME,
+  SUPPORT_WELCOME,
+  assistantCopySurfaceForTurn,
+  contactTopicPrimerText,
+  formatAssistantCopy,
+} from "../lib/assistantCopy";
 
 // Native port of the review-widget chat (WidgetApp.vue) over the ipoc
 // surface: same texts, same UiPlan rendering, same interaction rules (D042).
@@ -338,23 +348,7 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const SUPPORT_WELCOME =
-  "Hi, I'm the MAL Loans assistant. I can answer general questions about our loans, read the page you're on, help you navigate the site, and point you to the right team for anything account-specific. How can I help?";
-const LEGACY_ROUTE_FINDER_WELCOME =
-  "Tell me what you need help with and I'll point you to apply online, repayments, existing-loan support, complaints, or the right contact route. You can still call, text, or email the team directly from this page.";
-// Scoped to what the engine actually does (FAQ answers plus routing to the
-// right team); the earlier open-ended "any question" invite oversold the
-// guarded surface. The legacy string stays only so restored transcripts
-// written before the change still parse as welcomes.
-const LEGACY_CONTACT_AVAILABILITY_NOTE =
-  "You can also ask me any other Loans by MAL question here.";
-const CONTACT_AVAILABILITY_NOTE =
-  "You can also ask me about our loans and how we work. Anything account-specific, I'll route to the right team.";
-const CONTACT_COMPLETE_AVAILABILITY_NOTE =
-  "If you have another question, start over and I can help with that too.";
 const CONTACT_CLOSE_REVEAL_ENABLED = false;
-const ROUTE_FINDER_WELCOME = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${CONTACT_AVAILABILITY_NOTE}`;
-const LEGACY_ROUTE_FINDER_WELCOME_V2 = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${LEGACY_CONTACT_AVAILABILITY_NOTE}`;
 
 // dc-005 (D045): concierge mode on the apply journey. On /apply/, turns go
 // to the segregated concierge route with a snapshot of the form state; the
@@ -538,23 +532,8 @@ function ensureContextWelcome(): void {
   }
 }
 
-function withContactAvailability(text: string): string {
-  const normalizedText = normalizeDemoBrandText(text);
-  if (
-    !isContactRoute.value ||
-    normalizedText.includes(CONTACT_AVAILABILITY_NOTE) ||
-    normalizedText.includes(CONTACT_COMPLETE_AVAILABILITY_NOTE)
-  ) {
-    return normalizedText;
-  }
-  return `${normalizedText}\n\n${CONTACT_AVAILABILITY_NOTE}`;
-}
-
 function topicPrimerText(topic: RouteFinderTopic): string {
-  const topicLabel = topic.title.trim();
-  return withContactAvailability(
-    `Okay - let's start with "${topicLabel}". Tell me what you need help with and I'll take it one step at a time.`,
-  );
+  return contactTopicPrimerText(topic.title);
 }
 
 function pushTopicPrimer(topic: RouteFinderTopic): void {
@@ -964,7 +943,15 @@ async function submit(
     if (result.ticket) activeTicketId.value = result.ticket.id;
     pushMessage(
       "assistant",
-      withContactAvailability(result.assistant.message),
+      formatAssistantCopy(result.assistant.message, {
+        isContactRoute: isContactRoute.value,
+        surface: assistantCopySurfaceForTurn({
+          finalAction: result.assistant.finalAction,
+          safetyFlags: result.assistant.safetyFlags,
+          uiPrimitive: result.assistant.ui.primitive,
+          message: result.assistant.message,
+        }),
+      }),
       result.assistant.ui,
     );
     emitTelemetry(result.assistant.telemetry);
@@ -1057,8 +1044,12 @@ async function onIntakeCancel(): Promise<void> {
     );
     pushMessage(
       "assistant",
-      withContactAvailability(
+      formatAssistantCopy(
         "No problem - ask me anything else about your loan.",
+        {
+          isContactRoute: isContactRoute.value,
+          surface: "handoff_cancel",
+        },
       ),
       null,
     );
