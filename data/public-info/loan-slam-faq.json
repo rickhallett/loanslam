@@ -33,11 +33,11 @@
       "section": "Application Questions",
       "question": "How much interest will I pay?",
       "answer_text": "Our Annual Percentage Rate (APR) ranges from 22.0% to 93.8% , and is determined by factors such as your credit profile, recent credit history, and chosen repayment term. The rate presented to you will be tailored to reflect your specific financial situation. You can obtain a personalised quote without impacting your credit score by completing the first 2 pages of our online application form .",
-      "answer_html": "<p>Our Annual Percentage Rate (APR) ranges from <strong>22.0%</strong> to <strong>93.8%</strong>, and is determined by factors such as your credit profile, recent credit history, and chosen repayment term. The rate presented to you will be tailored to reflect your specific financial situation.</p><p>You can obtain a personalised quote without impacting your credit score by completing the first 2 pages of our online <a href=\"https://apply.loanslam.co.uk/step-one/step-one.html\">application form</a>.</p>",
+      "answer_html": "<p>Our Annual Percentage Rate (APR) ranges from <strong>22.0%</strong> to <strong>93.8%</strong>, and is determined by factors such as your credit profile, recent credit history, and chosen repayment term. The rate presented to you will be tailored to reflect your specific financial situation.</p><p>You can obtain a personalised quote without impacting your credit score by completing the first 2 pages of our online <a href=\"/apply/\">application form</a>.</p>",
       "links": [
         {
           "label": "application form",
-          "href": "https://apply.loanslam.co.uk/step-one/step-one.html"
+          "href": "/apply/"
         }
       ]
     },
