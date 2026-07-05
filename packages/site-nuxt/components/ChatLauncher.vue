@@ -3,21 +3,27 @@
     <button
       id="mal-launcher"
       type="button"
+      :class="{ 'is-open': isOpen }"
       :aria-label="isOpen ? `Close ${chatTitle}` : `Open ${chatTitle}`"
       :aria-expanded="isOpen"
       @click="togglePanel"
     >
+      <!-- Both icons stay mounted so open/close reads as one morphing
+           control (crossfade + quarter turn) instead of a hard swap. -->
       <svg
-        v-if="!isOpen"
         viewBox="0 0 24 24"
         aria-hidden="true"
-        class="mal-icon"
+        class="mal-icon mal-icon-chat"
       >
         <path
           d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
         />
       </svg>
-      <svg v-else viewBox="0 0 24 24" aria-hidden="true" class="mal-icon">
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        class="mal-icon mal-icon-close"
+      >
         <path
           d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
         />

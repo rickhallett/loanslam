@@ -10,6 +10,15 @@
       "port": 4381
     },
     {
+      "name": "site-nuxt-root-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "just secrets-run local -- ./node_modules/.bin/nuxt dev packages/site-nuxt --host localhost --port 3646"
+      ],
+      "port": 3646
+    },
+    {
       "name": "site-nuxt-nav-offer-dev",
       "runtimeExecutable": "bash",
       "runtimeArgs": [

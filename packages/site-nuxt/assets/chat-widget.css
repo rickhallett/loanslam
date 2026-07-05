@@ -11,12 +11,15 @@
   height: 700px;
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 120px);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgb(18 52 59 / 8%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 16px 48px rgba(0, 0, 0, 0.18);
   z-index: 9998;
   display: flex;
-  transition: opacity 0.15s;
+  transform-origin: bottom right;
   background: #ffffff;
   color: #172026;
   font-family:
@@ -43,6 +46,27 @@
   font-family: inherit;
 }
 
+/* Open/minimise motion (Vue <Transition name="mal-panel"> around v-show):
+   the panel grows out of the launcher corner on enter and drops away faster
+   on leave — asymmetric timing on purpose. */
+.mal-panel-enter-active {
+  transition:
+    opacity 0.26s cubic-bezier(0.2, 0.8, 0.3, 1),
+    transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.mal-panel-leave-active {
+  transition:
+    opacity 0.16s ease-in,
+    transform 0.16s ease-in;
+}
+
+.mal-panel-enter-from,
+.mal-panel-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
 @media (max-width: 600px) {
   #mal-panel {
     inset: 0;
@@ -51,6 +75,21 @@
     max-width: none;
     max-height: none;
     border-radius: 0;
+    border: 0;
+    transform-origin: bottom center;
+  }
+
+  /* Fullscreen on mobile: enter/leave as a bottom sheet instead. */
+  .mal-panel-enter-active {
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  .mal-panel-enter-from,
+  .mal-panel-leave-to {
+    opacity: 0;
+    transform: translateY(100%);
   }
 }
 
@@ -70,7 +109,6 @@
   overflow: hidden;
   background: #ffffff;
   font-size: 14px;
-  animation: panel-in 0.24s cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -82,6 +120,11 @@
   padding: 16px 18px;
   background: #12343b;
   color: #ffffff;
+  /* The engine<->concierge flip animates so the handover reads as a
+     deliberate moment rather than a repaint glitch (D045/D046). */
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
 }
 
 #mal-panel .eyebrow {
@@ -91,6 +134,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition: color 0.35s ease;
 }
 
 #mal-panel .chat-header h1 {
@@ -104,6 +148,7 @@
   color: #d8e8e1;
   font-size: 12px;
   line-height: 1.35;
+  transition: color 0.35s ease;
 }
 
 #mal-panel .mode-pill {
@@ -120,6 +165,8 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   vertical-align: 1px;
+  /* Keyed on the serving brain, so the pop replays on every flip. */
+  animation: pill-pop 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
 #mal-panel .chat-header-actions {
@@ -162,6 +209,21 @@
   padding: 20px 18px;
   overflow-y: auto;
   list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: #b8c7ce transparent;
+}
+
+#mal-panel .message-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#mal-panel .message-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #b8c7ce;
+}
+
+#mal-panel .message-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 #mal-panel .message {
@@ -170,7 +232,7 @@
   gap: 10px;
   max-width: min(88%, 420px);
   padding: 11px 13px;
-  border-radius: 10px;
+  border-radius: 16px;
   line-height: 1.45;
   overflow-wrap: anywhere;
   box-shadow: 0 1px 2px rgb(18 31 38 / 5%);
@@ -178,21 +240,51 @@
 }
 
 #mal-panel .message-assistant {
+  position: relative;
   align-self: flex-start;
+  /* The avatar gutter comes out of the bubble budget so long assistant
+     replies never push the list into horizontal overflow. */
+  max-width: min(calc(88% - 34px), 420px);
+  margin-left: 34px;
   border: 1px solid #d7e5df;
+  border-bottom-left-radius: 6px;
   background: #f2f7f4;
   color: #172026;
 }
 
 #mal-panel .message-user {
   align-self: flex-end;
+  border-bottom-right-radius: 6px;
   background: #1a8787;
   color: #ffffff;
   transform-origin: bottom right;
 }
 
+/* Duck mascot marks the start of each assistant run. */
+#mal-panel .assistant-avatar {
+  position: absolute;
+  left: -34px;
+  bottom: 2px;
+  width: 26px;
+  height: 29px;
+  object-fit: contain;
+}
+
 #mal-panel .message-text {
   white-space: pre-wrap;
+}
+
+/* Blinking caret while a concierge reply streams in. */
+#mal-panel .message-streaming .message-text::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: 0.7;
+  animation: caret-blink 1s step-end infinite;
 }
 
 #mal-panel .thinking-bubble {
@@ -246,13 +338,35 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background 0.12s,
-    color 0.12s;
+    background 0.15s,
+    color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+  animation: message-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+/* Chips arrive with a slight stagger. */
+#mal-panel .choices .chip:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+#mal-panel .choices .chip:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+#mal-panel .choices .chip:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+#mal-panel .choices .chip:nth-child(n + 5) {
+  animation-delay: 0.2s;
 }
 
 #mal-panel .chip:hover {
   background: #1a8787;
   color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgb(18 31 38 / 14%);
 }
 
 #mal-panel .links {
@@ -365,13 +479,14 @@
 
 #mal-panel .uat-notice {
   margin: 0;
-  color: #69797a;
-  font-size: 11px;
+  color: #8a9899;
+  font-size: 10px;
   line-height: 1.35;
+  text-align: center;
 }
 
 #mal-panel .uat-notice-composer {
-  padding: 0 18px 10px;
+  padding: 0 18px 8px;
 }
 
 /* ── Composer ───────────────────────────────────────────── */
@@ -415,7 +530,9 @@
   cursor: pointer;
   transition:
     transform 0.12s,
-    filter 0.12s;
+    filter 0.12s,
+    background-color 0.35s ease,
+    color 0.35s ease;
 }
 
 .composer-send:hover:not(:disabled),
@@ -518,17 +635,6 @@ input:disabled,
 }
 
 /* ── Motion ─────────────────────────────────────────────── */
-@keyframes panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @keyframes message-in {
   from {
     opacity: 0;
@@ -551,10 +657,36 @@ input:disabled,
   }
 }
 
+@keyframes pill-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .chat-panel,
   .message,
-  #mal-panel .identity-form {
+  #mal-panel .identity-form,
+  #mal-panel .chip,
+  #mal-panel .mode-pill,
+  #mal-panel .message-streaming .message-text::after {
     animation: none;
   }
 
@@ -562,8 +694,14 @@ input:disabled,
     animation: none;
   }
 
+  .mal-panel-enter-active,
+  .mal-panel-leave-active,
   .composer input,
   .composer-send,
+  #mal-panel .chat-header,
+  #mal-panel .eyebrow,
+  #mal-panel .chat-status,
+  #mal-panel .chip,
   #mal-panel .identity-form button {
     transition: none;
   }

@@ -24,15 +24,49 @@
   transform: scale(1.08);
 }
 
+#mal-launcher:active {
+  transform: scale(0.92);
+}
+
 #mal-launcher:focus-visible {
   outline: 3px solid #f7a823;
   outline-offset: 3px;
 }
 
+/* Open/close icons crossfade with a quarter turn so the pair reads as one
+   morphing control rather than a hard swap. */
 #mal-launcher .mal-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
   width: 26px;
   height: 26px;
   fill: white;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+#mal-launcher .mal-icon-close {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+#mal-launcher.is-open .mal-icon-chat {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+#mal-launcher.is-open .mal-icon-close {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mal-launcher,
+  #mal-launcher .mal-icon {
+    transition: none;
+  }
 }
 
 @media (max-width: 600px) {
