@@ -222,6 +222,124 @@ interface ReportSummary {
   uxQuality: CompareReport["uxQuality"];
 }
 
+interface RequiredComparabilityRow {
+  field: HellWeekComparabilityField;
+  value: (report: CompareReport) => string;
+  message: string;
+}
+
+interface OptionalComparabilityRow {
+  field: HellWeekComparabilityField;
+  value: (report: CompareReport) => string | undefined;
+  message: string;
+}
+
+const runMetadataComparabilityRows: RequiredComparabilityRow[] = [
+  {
+    field: "profile",
+    value: (report) => report.profile,
+    message: "Profiles differ; pass movement may reflect a different battery.",
+  },
+  {
+    field: "planner_provider",
+    value: (report) => report.planner.provider,
+    message: "Planner providers differ.",
+  },
+  {
+    field: "planner_model",
+    value: (report) => report.planner.model,
+    message: "Planner models differ.",
+  },
+  {
+    field: "planner_prompt",
+    value: (report) => report.planner.promptVersion,
+    message: "Planner prompt versions differ.",
+  },
+  {
+    field: "signal_enabled",
+    value: (report) => String(report.signalExtractor.enabled),
+    message: "Signal-extractor enabled state differs.",
+  },
+  {
+    field: "signal_model",
+    value: (report) => report.signalExtractor.model ?? "none",
+    message: "Signal-extractor models differ.",
+  },
+  {
+    field: "signal_prompt",
+    value: (report) => report.signalExtractor.promptVersion ?? "none",
+    message: "Signal-extractor prompt versions differ.",
+  },
+  {
+    field: "policy_version",
+    value: (report) => report.policyVersion,
+    message: "Policy versions differ.",
+  },
+  {
+    field: "judged_state",
+    value: (report) => (report.judged ? "judged" : "deterministic_only"),
+    message: "Judged state differs.",
+  },
+];
+
+const judgeMetadataComparabilityRows: OptionalComparabilityRow[] = [
+  {
+    field: "judge_artifact_schema",
+    value: (report) => optionalString(report.judge?.artifactSchemaVersion),
+    message: "Judge artifact schema versions differ.",
+  },
+  {
+    field: "judge_provider",
+    value: (report) => report.judge?.provider,
+    message: "Judge providers differ.",
+  },
+  {
+    field: "judge_mode",
+    value: (report) => report.judge?.mode,
+    message: "Judge modes differ.",
+  },
+  {
+    field: "judge_model",
+    value: (report) => report.judge?.model,
+    message: "Judge models differ.",
+  },
+  {
+    field: "judge_verifier_model",
+    value: (report) => report.judge?.verifierModel,
+    message: "Judge verifier models differ.",
+  },
+  {
+    field: "judge_final_model",
+    value: (report) => report.judge?.finalAdjudicatorModel,
+    message: "Judge final-adjudicator models differ.",
+  },
+  {
+    field: "judge_tool",
+    value: (report) => report.judge?.tool,
+    message: "Judge tools differ.",
+  },
+  {
+    field: "judge_prompt",
+    value: (report) => report.judge?.promptVersion,
+    message: "Judge prompt versions differ.",
+  },
+  {
+    field: "judge_rubric_hash",
+    value: (report) => report.judge?.rubricHash,
+    message: "Judge rubric hashes differ.",
+  },
+  {
+    field: "judge_scenario_count",
+    value: (report) => optionalString(report.judge?.scenarioCount),
+    message: "Judge scenario counts differ.",
+  },
+  {
+    field: "judge_verdict_count",
+    value: (report) => optionalString(report.judge?.verdictCount),
+    message: "Judge verdict counts differ.",
+  },
+];
+
 export function compareHellWeekReportsFromPaths(
   baselineInput: string,
   candidateInput: string,
@@ -518,12 +636,14 @@ function buildComparabilityWarnings({
   const before = baseline.report;
   const after = candidate.report;
 
-  addWarning(warnings, {
-    field: "profile",
-    baseline: before.profile,
-    candidate: after.profile,
-    message: "Profiles differ; pass movement may reflect a different battery.",
-  });
+  addRequiredComparabilityRows(
+    warnings,
+    runMetadataComparabilityRows.slice(0, 1),
+    {
+      before,
+      after,
+    },
+  );
 
   if (scenarioSetChanged) {
     warnings.push({
@@ -535,122 +655,50 @@ function buildComparabilityWarnings({
     });
   }
 
-  addWarning(warnings, {
-    field: "planner_provider",
-    baseline: before.planner.provider,
-    candidate: after.planner.provider,
-    message: "Planner providers differ.",
-  });
-  addWarning(warnings, {
-    field: "planner_model",
-    baseline: before.planner.model,
-    candidate: after.planner.model,
-    message: "Planner models differ.",
-  });
-  addWarning(warnings, {
-    field: "planner_prompt",
-    baseline: before.planner.promptVersion,
-    candidate: after.planner.promptVersion,
-    message: "Planner prompt versions differ.",
-  });
-  addWarning(warnings, {
-    field: "signal_enabled",
-    baseline: String(before.signalExtractor.enabled),
-    candidate: String(after.signalExtractor.enabled),
-    message: "Signal-extractor enabled state differs.",
-  });
-  addWarning(warnings, {
-    field: "signal_model",
-    baseline: before.signalExtractor.model ?? "none",
-    candidate: after.signalExtractor.model ?? "none",
-    message: "Signal-extractor models differ.",
-  });
-  addWarning(warnings, {
-    field: "signal_prompt",
-    baseline: before.signalExtractor.promptVersion ?? "none",
-    candidate: after.signalExtractor.promptVersion ?? "none",
-    message: "Signal-extractor prompt versions differ.",
-  });
-  addWarning(warnings, {
-    field: "policy_version",
-    baseline: before.policyVersion,
-    candidate: after.policyVersion,
-    message: "Policy versions differ.",
-  });
-  addWarning(warnings, {
-    field: "judged_state",
-    baseline: before.judged ? "judged" : "deterministic_only",
-    candidate: after.judged ? "judged" : "deterministic_only",
-    message: "Judged state differs.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_artifact_schema",
-    baseline: optionalString(before.judge?.artifactSchemaVersion),
-    candidate: optionalString(after.judge?.artifactSchemaVersion),
-    message: "Judge artifact schema versions differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_provider",
-    baseline: before.judge?.provider,
-    candidate: after.judge?.provider,
-    message: "Judge providers differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_mode",
-    baseline: before.judge?.mode,
-    candidate: after.judge?.mode,
-    message: "Judge modes differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_model",
-    baseline: before.judge?.model,
-    candidate: after.judge?.model,
-    message: "Judge models differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_verifier_model",
-    baseline: before.judge?.verifierModel,
-    candidate: after.judge?.verifierModel,
-    message: "Judge verifier models differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_final_model",
-    baseline: before.judge?.finalAdjudicatorModel,
-    candidate: after.judge?.finalAdjudicatorModel,
-    message: "Judge final-adjudicator models differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_tool",
-    baseline: before.judge?.tool,
-    candidate: after.judge?.tool,
-    message: "Judge tools differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_prompt",
-    baseline: before.judge?.promptVersion,
-    candidate: after.judge?.promptVersion,
-    message: "Judge prompt versions differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_rubric_hash",
-    baseline: before.judge?.rubricHash,
-    candidate: after.judge?.rubricHash,
-    message: "Judge rubric hashes differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_scenario_count",
-    baseline: optionalString(before.judge?.scenarioCount),
-    candidate: optionalString(after.judge?.scenarioCount),
-    message: "Judge scenario counts differ.",
-  });
-  addOptionalWarning(warnings, {
-    field: "judge_verdict_count",
-    baseline: optionalString(before.judge?.verdictCount),
-    candidate: optionalString(after.judge?.verdictCount),
-    message: "Judge verdict counts differ.",
+  addRequiredComparabilityRows(
+    warnings,
+    runMetadataComparabilityRows.slice(1),
+    {
+      before,
+      after,
+    },
+  );
+  addOptionalComparabilityRows(warnings, judgeMetadataComparabilityRows, {
+    before,
+    after,
   });
 
   return warnings;
+}
+
+function addRequiredComparabilityRows(
+  warnings: HellWeekComparabilityWarning[],
+  rows: readonly RequiredComparabilityRow[],
+  reports: { before: CompareReport; after: CompareReport },
+): void {
+  for (const row of rows) {
+    addWarning(warnings, {
+      field: row.field,
+      baseline: row.value(reports.before),
+      candidate: row.value(reports.after),
+      message: row.message,
+    });
+  }
+}
+
+function addOptionalComparabilityRows(
+  warnings: HellWeekComparabilityWarning[],
+  rows: readonly OptionalComparabilityRow[],
+  reports: { before: CompareReport; after: CompareReport },
+): void {
+  for (const row of rows) {
+    addOptionalWarning(warnings, {
+      field: row.field,
+      baseline: row.value(reports.before),
+      candidate: row.value(reports.after),
+      message: row.message,
+    });
+  }
 }
 
 function addWarning(
