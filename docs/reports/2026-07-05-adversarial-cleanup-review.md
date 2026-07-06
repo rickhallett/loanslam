@@ -65,10 +65,23 @@ The repo was reviewed in these coherent chunks:
 - `railway.json` currently runs `npm run railway-build`, and that root script
   builds and serves Astro `site/dist`, while Nuxt docs/roadmaps describe
   `packages/site-nuxt` as the current site surface.
+- Follow-up Railway CLI inventory on 2026-07-06 found `loanslam-site-nuxt` as
+  the only deployment that should remain live, plus whatever dependencies it
+  actually needs. Other current Railway services are decommission candidates:
+  `loanslam-site`, `loanslam-site-nuxt-staging`, and `loanslam-ipoc`.
+  `Postgres` should be treated as a dependency to verify before any retirement
+  action, not as an app deployment to keep by default.
+- The current `loanslam-site-nuxt` deployment uses a prebuilt Nuxt/Nitro
+  artifact with Railway `RAILPACK` and `npm start`; it does not use the root
+  `railway-build` / `railway-start` Astro path.
 - With `site/dist` temporarily hidden, `npm --workspace @loanslam/site-nuxt run
   build` completed successfully. Nuxt does not require the Astro build output.
   It does still import `site/src` data/components/styles and `site/public`
   assets directly.
+- `justfile` is 405 lines and exposes 58 public recipes through `just --summary`.
+  It still advertises Astro `site-dev` / `site-build` / `site-preview` recipes,
+  but this checkout does not expose a `site-nuxt-dev` recipe even though
+  `loanslam-site-nuxt` is now the only keeper deployment.
 
 ## P0 Candidate / P1
 
@@ -145,25 +158,48 @@ identifiers and creates a misleading "source of truth" outside the application.
 and move raw captures/screenshots to an explicitly quarantined local archive if
 they must be retained.
 
-### 5. Astro build/deploy path is deletable, but production config still points at it
+### 5. Only `loanslam-site-nuxt` should remain, but old Railway surfaces still look active
 
 **Priority:** P1
 
-**Evidence:** `railway.json` runs root `railway-build`; `package.json`
-`railway-build` uses `npm --prefix site run build`, then `railway-start` serves
-`site/dist`. Meanwhile the Nuxt roadmap and recent operator memory treat
-`packages/site-nuxt` as the current site surface. A direct check with
+**Evidence:** `railway service list --json` in project
+`loanslam-staging-site`, environment `production`, shows these current app
+services:
+
+- keeper: `loanslam-site-nuxt` at `https://mal-demo.up.railway.app`, deployed
+  from the generated Nuxt/Nitro artifact with `npm start`.
+- decommission candidates: `loanslam-site`,
+  `loanslam-site-nuxt-staging`, and `loanslam-ipoc`.
+
+The `loanslam-site` service still uses root `railway.json`, which runs
+`npm run railway-build`; `package.json` `railway-build` uses
+`npm --prefix site run build`, then `railway-start` serves `site/dist`.
+Meanwhile the live keeper surface is `packages/site-nuxt`. A direct check with
 `site/dist` hidden confirmed the Nuxt build does not depend on Astro build
 output.
 
-**Why it matters:** the Astro build/deploy path is now cleanup debt, but the
-current production config still points at it. Operators can deploy, verify, or
-delete the wrong surface unless the cutover is explicit.
+**Why it matters:** stale Railway services, deployment configs, and runbooks can
+make operators deploy, verify, or preserve the wrong surface. The problem is no
+longer "switch production to Nuxt" in the abstract; the keeper deployment is
+already `loanslam-site-nuxt`. The cleanup task is to remove or quarantine every
+other deploy path and every doc that still presents those paths as live.
 
-**Recommendation:** schedule deletion of the Astro build/deploy path as part of
-cleanup after switching root/Railway build-start scripts to the Nuxt output.
-Do not delete the whole `site/` source tree in the same step: Nuxt still imports
-`site/src` and `site/public` directly.
+**Recommendation:** add an explicit Railway decommission slice:
+
+1. Keep `loanslam-site-nuxt` and its proven dependencies only.
+2. Confirm whether Railway `Postgres` is required by the live
+   `loanslam-site-nuxt` runtime or proof/logging path before touching it.
+3. Decommission `loanslam-site`, `loanslam-site-nuxt-staging`, and
+   `loanslam-ipoc` after capturing a final inventory receipt.
+4. Delete or quarantine their deployment configs and helper scripts, including
+   root `railway.json`, root `railway-build` / `railway-start`, and standalone
+   IPOC deploy packaging if no retained workflow needs it.
+5. Update or close docs that mention those services as active surfaces, including
+   runbooks, roadmaps, PRDs, and decision-log follow-ups.
+
+Do not delete the whole `site/` source tree or `packages/integrated-poc` source
+in the same step: Nuxt still imports `site/src`, `site/public`, and IPOC server
+modules directly.
 
 ### 6. Hell Week judge coverage can produce false confidence
 
@@ -345,6 +381,37 @@ deployment states inconsistently.
 Astro production status, Nuxt status, review/demo hosts, IPOC, lab, and proof
 commands.
 
+### 19a. `justfile` has become an overgrown operator surface
+
+**Priority:** P1
+
+**Evidence:** the Loanslam operator skill treats `justfile` as the real control
+surface, but the current file is 405 lines and `just --summary` exposes 58
+recipes. The list mixes essential gates (`self-gate`, `gate-slice`,
+`branch-risk`, `floor-delta`), deep CLI pass-throughs (`core-*`, multiple
+Hell Week subcommands, demo-log readers), retired or non-keeper surfaces
+(`site-dev` / `site-build` / `site-preview` for Astro, `review`, `demo`,
+Vercel build wrappers), and local app launchers. It also lacks a first-class
+`site-nuxt-dev` target in this checkout while `loanslam-site-nuxt` is the only
+deployment that should remain active.
+
+**Why it matters:** the repo's operator front door now presents old surfaces as
+equally important to current proof commands. That makes command choice noisy,
+encourages agents to run the wrong site or deployment path, and undermines the
+cleanup direction that only `loanslam-site-nuxt` and its dependencies matter.
+
+**Recommendation:** reduce `justfile` to operational essentials and move
+specialized or historical wrappers back to `package.json`, scripts, or docs.
+Keep a short, explicit allowlist: orientation (`status-snapshot`), branch/slice
+gates (`branch-risk`, `gate-slice`, `self-gate`, `slice-new`), proof receipts
+(`hell-week`, `hell-week-judge`, `floor-delta`, `digest`,
+`checkpoint-packet`), current site operation (`site-nuxt-dev`, Nuxt build/pack
+or deploy-prep only), report generation (`reports-build -- --check`), and
+secret operations that remain active for the keeper deployment. Demote or
+delete Astro site recipes, non-keeper deployment recipes, legacy review/demo
+launchers, raw `core-*` pass-throughs, Vercel wrappers, and rarely used
+inspection helpers unless an active runbook names them as mandatory.
+
 ### 20. Default runtime corpus is synthetic but treated like real public info
 
 **Priority:** P1
@@ -459,7 +526,8 @@ contain duplicate/stale copy and links.
 **Recommendation:** make this the second phase of Astro cleanup: migrate the
 needed source data/components/styles/assets into `packages/site-nuxt` or a small
 shared package, then delete the remaining Astro source. Until then, only the
-Astro build/deploy path is ready to schedule for deletion.
+Astro build/deploy path and non-keeper Railway service/config references are
+ready to schedule for deletion.
 
 ### 29. Concierge site map omits live routes and hidden routes remain routable
 
@@ -608,6 +676,13 @@ they do not drift across worktrees.
 - The whole `site/` source tree: Nuxt still imports `site/src` and `site/public`
   directly. The Astro build output and Astro deployment scripts can be scheduled
   for deletion, but source/content/assets need a migration step first.
+- `packages/integrated-poc` source: `loanslam-site-nuxt` imports IPOC server
+  modules directly. The standalone `loanslam-ipoc` Railway deployment,
+  deployment pack, and active-service docs are decommission candidates, but the
+  shared source is not a burn target until Nuxt owns or replaces those imports.
+- Railway `Postgres`: keep only if confirmed as a dependency of
+  `loanslam-site-nuxt` runtime behavior, proof capture, or logging. Otherwise
+  include it in the decommission plan after an explicit dependency check.
 - `site` content JSON and `site/public`: keep until Nuxt owns or shares those
   inputs from a non-Astro location.
 - `scripts/contact-chat-parity.mjs`, `sitenuxt-chat-battery.mjs`, and
@@ -631,10 +706,17 @@ they do not drift across worktrees.
 ### Pack 2: Production and proof safety
 
 1. Make production redeploy proof opt-in.
-2. Switch Railway/root build-start scripts from Astro `site/dist` to Nuxt output,
-   then schedule the Astro build/deploy path for deletion.
-3. Add active site/IPOC paths to branch-risk.
-4. Add report check to the appropriate verification path.
+2. Treat `loanslam-site-nuxt` as the only keeper deployment; inventory its
+   dependencies and confirm whether Railway `Postgres` is still required.
+3. Decommission `loanslam-site`, `loanslam-site-nuxt-staging`, and
+   `loanslam-ipoc`, including Railway services, domains, variables/config
+   pointers, and generated deploy packs after final receipts are captured.
+4. Delete or quarantine root `railway.json`, root `railway-build` /
+   `railway-start`, standalone IPOC deploy scripts, and docs that still present
+   retired Railway services as active.
+5. Add active site paths to branch-risk and update proof requirements around the
+   single keeper deployment.
+6. Add report check to the appropriate verification path.
 
 ### Pack 3: False-confidence gates
 
@@ -658,6 +740,19 @@ they do not drift across worktrees.
 3. CLI config helpers.
 4. Lab server dispatch helper.
 5. IPOC telemetry/session helpers.
+
+### Pack 6: Operator surface diet
+
+1. Write a `justfile` essentials allowlist before deleting recipes.
+2. Keep only current orientation, gate, proof, secrets, report, and
+   `loanslam-site-nuxt` operations at the top-level `just` surface.
+3. Move rare raw CLI wrappers and historical proof tools to package scripts,
+   direct script invocation, or archived runbooks.
+4. Delete or quarantine Astro, non-keeper Railway deployment, Vercel, legacy
+   review/demo, and stale local-app recipes after confirming no active runbook
+   still depends on them.
+5. Update `docs/loanslam-operator/`, README/front-door docs, and cleanup
+   references so `just --list` and the docs agree.
 
 ## First Safe Slice
 
