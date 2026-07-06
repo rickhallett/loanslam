@@ -461,28 +461,25 @@ function summarizeRetrievedItem(
 
 function classifyAuditRow(row: RouteAuditRow): RouteAuditFinding[] {
   const findings: RouteAuditFinding[] = [];
-  const hasStateCarryoverSignal =
+  const hasRawStateCarryoverSignal =
+    row.stateHandoffPending === true ||
+    row.stateSafetyFlags.some((flag) => stateCarryoverFlags.has(flag));
+  const hasCurrentCarryoverSignal =
     row.handoffPending === true ||
     row.safetyFlags.some((flag) => stateCarryoverFlags.has(flag));
-  const hasUnsplitStateCarryover =
-    row.stateHandoffPending === true &&
-    row.handoffPending === true &&
-    row.stateSafetyFlags.some((flag) => stateCarryoverFlags.has(flag)) &&
-    row.stateSafetyFlags.every((flag) => row.safetyFlags.includes(flag));
   const hasHumanSupportSignal = row.safetyFlags.some((flag) =>
     humanSupportSignals.has(flag),
   );
 
   if (
     row.routeForScoring === "answer" &&
-    hasStateCarryoverSignal &&
-    hasUnsplitStateCarryover
+    (hasRawStateCarryoverSignal || hasCurrentCarryoverSignal)
   ) {
     findings.push({
       source: "state_leak",
       code: "state_leak.carryover_on_answer",
       detail:
-        "The turn scores as an answer but still carries handoff state or account/change flags.",
+        "The turn scores as an answer but raw or current state still carries handoff state or account/change flags.",
     });
   }
 

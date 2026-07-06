@@ -354,7 +354,7 @@ describe("Phase 0 CLI", () => {
     expect(parsed).toMatchObject({
       scenarioCount: 1,
       turnCount: 1,
-      findingSourceCounts: {},
+      findingSourceCounts: { state_leak: 1 },
     });
     expect(audit.rows[0]).toMatchObject({
       scenarioId: "topic-switch-account-to-answer",
@@ -371,9 +371,14 @@ describe("Phase 0 CLI", () => {
         servingMode: "answer",
         score: 34,
       },
-      findings: [],
+      findings: [
+        expect.objectContaining({
+          source: "state_leak",
+          code: "state_leak.carryover_on_answer",
+        }),
+      ],
     });
-    expect(markdown).toContain("No route-audit findings were detected.");
+    expect(markdown).toContain("state_leak.carryover_on_answer");
   });
 
   it("documents Hell Week comparison without requiring planner credentials", async () => {
