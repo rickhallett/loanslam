@@ -89,10 +89,19 @@ export const PROBES = [
 ];
 
 async function api(path, options = {}) {
-  const response = await fetch(`${base}${path}`, {
-    ...options,
-    headers: { "content-type": "application/json", ...options.headers },
-  });
+  let response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      ...options,
+      headers: { "content-type": "application/json", ...options.headers },
+    });
+  } catch (error) {
+    return {
+      status: 0,
+      json: null,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
   let json = null;
   try {
     json = await response.json();
@@ -106,9 +115,22 @@ async function runProbe(probe) {
   // Fresh session per probe so probes never contaminate each other.
   const session = await api("/api/concierge/sessions", { method: "POST" });
   if (session.status !== 200) {
-    return { ...probe, error: `session status ${session.status}` };
+    return {
+      ...probe,
+      status: session.status,
+      reply: null,
+      error: session.error ?? `session status ${session.status}`,
+    };
   }
-  const ref = session.json.conversationRef;
+  const ref = session.json?.conversationRef;
+  if (typeof ref !== "string" || ref.trim() === "") {
+    return {
+      ...probe,
+      status: session.status,
+      reply: null,
+      error: "session response missing conversationRef",
+    };
+  }
   const pageContext = { route: probe.page ?? "/", title: probe.page ?? "/" };
   const turn = await api(`/api/concierge/sessions/${ref}/messages`, {
     method: "POST",
@@ -124,6 +146,10 @@ async function runProbe(probe) {
     message: probe.message,
     page: probe.page ?? "/",
     status: turn.status,
+    error:
+      turn.status === 200
+        ? null
+        : turn.error ?? `turn status ${turn.status}`,
     reply: turn.json?.assistant?.message ?? null,
     navigateTo: turn.json?.assistant?.navigateTo ?? null,
     formFill: turn.json?.assistant?.formFill ?? null,
@@ -140,4 +166,15 @@ for (const probe of PROBES) {
 
 mkdirSync(dirname(outFile), { recursive: true });
 writeFileSync(outFile, `${JSON.stringify({ base, probes: results }, null, 2)}\n`);
+const failures = results.filter(
+  (result) =>
+    result.error ||
+    result.status !== 200 ||
+    typeof result.reply !== "string" ||
+    result.reply.trim() === "",
+);
 console.log(`\n${results.length} probes run against ${base}. Saved: ${outFile}`);
+if (failures.length > 0) {
+  console.error(`${failures.length} probe(s) failed to produce a real reply.`);
+  process.exitCode = 1;
+}
