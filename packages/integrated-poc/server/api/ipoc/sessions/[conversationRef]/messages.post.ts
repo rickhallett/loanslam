@@ -3,13 +3,16 @@ import { createError, readBody } from "h3";
 import type {
   IpocSendMessageRequest,
   IpocSendMessageResponse,
-} from "../../../../../shared/ipoc";
+} from "../../../../domains/ipoc/models/ipoc.model";
 import {
   IpocEngineConfigurationError,
   maybeBuildTicketFromTurn,
   runIpocTurn,
 } from "../../../../utils/engineAdapter";
-import { appendMessage, saveIpocTicket } from "../../../../utils/ipocStore";
+import {
+  appendMessage,
+  saveIpocTicket,
+} from "../../../../domains/ipoc/stores/ipocSession.store";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 import { buildIpocTelemetry } from "../../../../utils/turnTelemetry";
 

@@ -1,4 +1,4 @@
-import { createIpocSession } from "../../utils/ipocStore";
+import { createIpocSession } from "../../domains/ipoc/stores/ipocSession.store";
 
 export default defineEventHandler(() => {
   const session = createIpocSession();

@@ -11,8 +11,8 @@ import {
 } from "@loanslam/core/planners/config";
 import { OpenAiTurnPlanner } from "@loanslam/core/planners/openai";
 
-import type { IpocTicket } from "../../shared/ipoc";
-import type { IpocSession } from "./ipocStore";
+import type { IpocTicket } from "../domains/ipoc/models/ipoc.model";
+import type { IpocSession } from "../domains/ipoc/stores/ipocSession.store";
 
 // The dev server runs with cwd=packages/integrated-poc; the built Nitro
 // output runs from the repo root or a deploy artifact directory. Resolve the

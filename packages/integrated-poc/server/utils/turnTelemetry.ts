@@ -4,7 +4,7 @@ import type {
   ValidatedTurnResult,
 } from "@loanslam/contracts";
 
-import { ipocHandoffFields } from "../../shared/ipoc";
+import { ipocHandoffFields } from "../domains/ipoc/models/ipoc.model";
 
 // Content-free decision telemetry for the sm-devtools stakeholder panel.
 // Mirrors core/src/lab/demoDisplay.ts telemetryForTurnResult /

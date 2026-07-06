@@ -1,7 +1,7 @@
 import { cancelHandoff } from "@loanslam/core/engine";
 
-import type { IpocSessionResponse } from "../../../../../shared/ipoc";
-import { appendMessage } from "../../../../utils/ipocStore";
+import type { IpocSessionResponse } from "../../../../domains/ipoc/models/ipoc.model";
+import { appendMessage } from "../../../../domains/ipoc/stores/ipocSession.store";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 // Mirrors the demo API's cancel-handoff semantics (D042): the engine's own

@@ -4,11 +4,11 @@ import type {
   IpocAdminTicketResponse,
   IpocTicketStatus,
   IpocUpdateTicketStatusRequest,
-} from "../../../../../../shared/ipoc";
+} from "../../../../../domains/ipoc/models/ipoc.model";
 import {
   getIpocAdminTicket,
   updateIpocTicketStatus,
-} from "../../../../../utils/ipocStore";
+} from "../../../../../domains/ipoc/stores/ipocSession.store";
 
 const validStatuses: IpocTicketStatus[] = [
   "open",
