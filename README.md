@@ -1,64 +1,237 @@
-# Loanslam TurnPlanner Core
+# LoanSlam Website, Assistant, And TurnPlanner Core
 
-> **Status: Nuxt keeper site plus Phase 0 engine proof.** The current live
-> keeper surface is `packages/site-nuxt` (`loanslam-site-nuxt` on Railway). The
-> older Astro deployment path and standalone IPOC deployment path are historical;
-> site-nuxt now owns the migrated site content, styles, and public assets.
+> **Status: rebuilt Nuxt website plus Phase 0 engine proof.** The current
+> customer-facing keeper surface is `packages/site-nuxt`
+> (`loanslam-site-nuxt` on Railway). The older Astro site, standalone IPOC
+> deployment, and iframe demo shells are historical comparison surfaces unless a
+> current campaign explicitly names them.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
 > repository or its materials without permission.
 
-## Practical takeaway
+## Practical Takeaway
 
-The useful thing in this repo is not a finished account product yet. It is the
-current Nuxt site surface plus a model-backed decision engine and evidence loop:
-customer message plus session state goes through retrieval, an untrusted
-`TurnPlan`, deterministic validation, and trace output that reviewers can
-inspect.
+LoanSlam is now best understood as one connected system:
 
-If you are trying to understand or change behaviour, start with
-[`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md)
-and the `packages/core` workspace. If you are deciding product scope or safety
-boundaries, start with [`docs/product-brief.md`](./docs/product-brief.md).
+- a rebuilt Nuxt website that owns the live pages, public assets, styles, and
+  application journey;
+- a site-wide MAL Loans assistant that can operate in multiple modes across
+  those pages; and
+- a maturing TurnPlanner core whose behaviour is protected by Hell Week
+  calibration and the `loanslam-operator` proof workflow.
 
-## Current architecture
+This is still a Phase 0 support-engine proof, not a finished account-servicing
+product. The repo is valuable because it proves how website context, assistant
+routing, deterministic validation, traces, and hostile evaluation fit together
+before production CRM, real PII intake, durable audit storage, and account access
+are added.
+
+## Current System
 
 ```mermaid
 flowchart TD
-  A[Customer message or fixture] --> B[processTurn]
-  B --> C[Optional SignalExtractor]
-  B --> D[retrieveMatches from corpus]
-  C --> D
-  D --> E[TurnPlannerInput]
-  E --> F[TurnPlanner.planTurn]
-  F --> G[TurnPlan: untrusted model proposal]
-  G --> H[validateTurnPlan]
-  D --> H
-  C --> H
-  H --> I[Validated plan fragment]
-  I --> J[apply handoff state rules]
-  J --> K[merge conversation state]
-  K --> L[ValidatedTurnResult]
-  L --> M[TurnTrace evidence]
-  L --> N[CLI, lab API, simulations, MCP, demos]
+  site["Nuxt keeper site\npackages/site-nuxt"] --> launcher["Global ChatLauncher\nmounted in app.vue"]
+  launcher --> panel["ChatWidgetPanel\nlazy-loaded after intent"]
+  panel --> concierge["Live guide / concierge\npage and form context"]
+  panel --> engine["Guided support\nvalidated TurnPlanner engine"]
+  panel --> contact["Contact route finder\nengine-backed contact mode"]
+  concierge --> nav["Deterministic nav offers\nwhitelisted site actions"]
+  engine --> turn["processTurn"]
+  contact --> turn
+  turn --> retrieval["retrieval + optional signals"]
+  retrieval --> planner["TurnPlanner.planTurn\nuntrusted proposal"]
+  planner --> validator["schema + policy validator"]
+  validator --> trace["ValidatedTurnResult + TurnTrace"]
+  trace --> hell["Hell Week + judge + floor-delta"]
+  hell --> operator["loanslam-operator gates"]
 ```
 
-The validator is the hard authority. The model may propose the next turn, but it
-cannot decide policy, collect forbidden credentials, invent account facts, bypass
-serving-mode rules, or send arbitrary UI instructions.
+The key rule: the model proposes, the system decides. Customer-visible behaviour
+is only trustworthy when it survives the right integration evidence path.
 
-## Safety boundaries
+## Website Rebuild
 
-- Do not answer personal account questions anonymously.
-- Do not invent account values, loan outcomes, balances, dates, rates, or policy.
-- Do not collect sort codes, account numbers, card details, CVV/CVC, or online banking credentials.
-- Do not continue normal routing after vulnerability, hardship, complaint, legal, accessibility, or distress signals.
-- Do not let the frontend make business or safety decisions.
-- Do not treat static/unit evidence as enough for user-visible routing behaviour.
-- Do treat live lab API sessions and trace artifacts as the strongest Phase 0 evidence.
+`packages/site-nuxt` is the current website front door. It contains the migrated
+content, Nuxt routes, chrome, responsive styles, public assets, application flow,
+and the embedded assistant surface.
 
-## Fast start
+Important site files:
+
+- `packages/site-nuxt/app.vue` mounts `SiteHeader`, `NuxtPage`, `SiteFooter`, and
+  one global `ChatLauncher`.
+- `packages/site-nuxt/components/ChatLauncher.vue` owns the floating launcher,
+  lazy-loads the panel, listens for route-finder events, and toggles
+  `body.mal-open`.
+- `packages/site-nuxt/components/ChatWidgetPanel.vue` owns the transcript,
+  assistant mode badge, mode switches, handoff/intake UI, streaming replies,
+  page-aware welcomes, and session persistence.
+- `packages/site-nuxt/components/ApplicationJourney.vue` exposes synthetic
+  application-state context for the apply journey.
+- `packages/site-nuxt/lib/pageSnapshot.ts` and
+  `packages/site-nuxt/lib/formSnapshot.ts` read the rendered page/form without
+  mutating it.
+- `packages/site-nuxt/lib/navOffer.ts` turns assistant copy into whitelisted,
+  one-tap navigation chips instead of letting the model navigate directly.
+
+Use these commands for the current site:
+
+```bash
+just site-nuxt-dev
+just site-nuxt-build
+just site-nuxt-start
+```
+
+The retained `site/` tree is historical Astro material. Do not treat it as the
+live deploy authority.
+
+## Assistant Modes Across Pages
+
+The chat button is available across the Nuxt site, but the panel is not one
+undifferentiated bot. It switches between modes based on route, feature gates,
+and customer intent.
+
+| Mode                     | Where it appears                                                                             | What it is for                                                                                                                  | Protection boundary                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Live guide**           | Most pages when concierge is enabled                                                         | Explaining the page the customer is on, using header nav, page links, page buttons, and synthetic apply-form state on `/apply/` | Segregated `/api/concierge` route, rate limits, `CONCIERGE_KILL_SWITCH`, prompt guardrails, deterministic nav-chip whitelist |
+| **Guided support**       | Support/account/safety turns, forced support handoff, and routes where concierge is not used | Grounded support answers, safe fallback, handoff intake, ticket-shaped confirmation, and telemetry                              | `processTurn`, `TurnPlanner`, schema validation, serving-mode policy, deterministic state rules, traces                      |
+| **Contact route finder** | `/contact/` and route-finder open events                                                     | Steering application, repayment, existing-loan, complaint, and contact-route questions to the right support path                | Engine-backed contact mode plus the same validated UI/action contract                                                        |
+| **Seam handling**        | Whenever the active serving surface changes                                                  | Showing the customer that the assistant has moved between Live guide and Guided support                                         | Mode badge, transcript divider, and server-owned routing rules                                                               |
+
+The Live guide is a demo concierge surface. It can see page context and, on the
+apply journey, synthetic form state. It streams through OpenAI and can offer
+deterministic navigation chips, but it is intentionally separate from the
+validated support engine.
+
+The Guided support path is the compliance proof surface. It sends turns through
+the Phase 0 engine, gets a `ValidatedTurnResult`, emits content-free telemetry,
+and renders only the UI primitives the backend selected.
+
+## TurnPlanner Core
+
+`packages/core` owns the engine. The canonical architecture is documented in
+[`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md).
+
+The runtime shape is:
+
+```text
+conversation state + user message
+  -> optional SignalExtractor
+  -> retrieval matches
+  -> TurnPlannerInput
+  -> TurnPlanner.planTurn
+  -> schema-valid TurnPlan
+  -> validateTurnPlan
+  -> deterministic handoff/state rules
+  -> ValidatedTurnResult + TurnTrace
+```
+
+The TurnPlanner has matured from a simple answer generator into a bounded
+planner inside a typed contract:
+
+- it can use conversation history and retrieval to propose the next move;
+- it can choose only allowed actions and UI primitives;
+- it can cite grounding items and propose safety flags;
+- it can recommend handoff fields and concise support copy;
+- it cannot make policy, verify identity, mutate records, collect forbidden
+  credentials, invent account facts, or reveal hidden instructions.
+
+`serving_mode` is policy data:
+
+- `answer` can ground a customer-facing answer.
+- `handoff_account_specific` routes to human support with intake.
+- `route_vulnerability` routes through the escalation path.
+- `excluded` recognizes a subject that must not be answered substantively.
+
+The validator is the hard authority. If the model proposes something unsafe,
+ungrounded, malformed, or inconsistent with the allowed UI/action contract, the
+engine routes to the safest valid action and records the override in the trace.
+
+## Hell Week Calibration
+
+Hell Week is the repo's hostile evaluation battery, encoded under
+`packages/core/src/hellweek/` and documented in
+[`docs/hell-week-gauntlet.md`](./docs/hell-week-gauntlet.md).
+
+Run surfaces:
+
+```bash
+just hell-week -- --profile smoke
+just hell-week -- --store-db
+just hell-week-judge -- <run-dir>
+just hell-week -- --from <run-dir> --judge-verdicts <run-dir>/judge-verdicts.json
+just floor-delta -- <run-dir>
+```
+
+The full gauntlet currently covers 122 hostile scenarios. A run writes
+`report.html`, `report.json`, `evidence.json`, and per-scenario judge packets
+under `artifacts/phase0/hell-week-<profile>-<stamp>/`.
+
+Grading deliberately has layers:
+
+1. **Hard safety floor:** deterministic, non-negotiable demo-killer checks for
+   credential leaks, invented account facts, directional approval estimates, and
+   internal-data exposure.
+2. **Advisory envelope:** deterministic action, serving-mode, and safety-flag
+   signals that help triage but are not release proof by themselves.
+3. **OpenAI judge:** independent review of transcript plus trace. A
+   deterministic-only report can support local iteration, but `ship_ready`
+   requires judge verdicts and safety-floor coverage.
+
+The important maturation is cultural as much as technical: routing quality is
+not proven by regex fixtures, unit tests, or a few happy paths. It is proven by
+live model-backed evidence, judged customer-visible behaviour, and comparison
+against the committed floor.
+
+## loanslam-operator Quality Workflow
+
+The `loanslam-operator` workflow is the quality-protection layer around this
+repo. The human manual lives at
+[`docs/loanslam-operator/README.md`](./docs/loanslam-operator/README.md); the
+agent-facing dispatcher lives at
+`.claude/skills/loanslam-operator/SKILL.md`.
+
+Its core doctrine is simple: **verify before reporting**. Static checks prove
+wiring. Behaviour claims require the integration surface that matches the
+change.
+
+For routine work:
+
+```bash
+just branch-risk -- --base dev
+just self-gate
+just gate-slice -- --staged
+```
+
+For website and assistant surface changes, add live read-back or the named proof
+recipe:
+
+```bash
+just contact-assistant-proof -- <site-url-or-flags>
+just seam-walk-proof -- <site-url-or-flags>
+```
+
+For TurnPlanner, validator, routing, signal, or Hell Week behaviour, the bar is
+higher:
+
+```bash
+just hell-week -- --store-db
+just hell-week-judge -- <run-dir>
+just floor-delta -- <run-dir>
+just gate-slice -- --staged
+just checkpoint-packet -- <run-dir>
+```
+
+`artifacts/evidence-index/baseline.json` is the machine-readable floor anchor.
+`floor-delta` compares candidate runs against that anchor and returns
+`REPAIRED`, `HOLDING`, `REGRESSED`, or `INCONCLUSIVE`. `gate-slice` prevents
+engine-touching commits from landing without a valid behaviour receipt and also
+guards secrets and evidence paths.
+
+This is how the repo avoids false confidence: the operator surface forces each
+change through the proof bar that actually covers it.
+
+## Fast Start
 
 Install dependencies:
 
@@ -66,13 +239,13 @@ Install dependencies:
 npm install
 ```
 
-List operator commands:
+List the public operator commands:
 
 ```bash
 just --list
 ```
 
-Probe one turn:
+Probe one planner-backed turn:
 
 ```bash
 just core-turn -- --message "How do I apply?"
@@ -84,140 +257,65 @@ Drive the engine interactively:
 just core-chat -- --trace
 ```
 
-Start the current Nuxt site locally:
-
-```bash
-just site-nuxt-build
-just site-nuxt-dev
-```
-
-Start the local lab API and Vue inspector:
+Start the local lab API and Vue diagnostics console:
 
 ```bash
 just lab
 ```
 
-Model-backed commands require `OPENAI_API_KEY`. `OPENAI_MODEL` can override the
-default planner model.
+Start the Nuxt site:
 
-## Current Surface Map
+```bash
+just site-nuxt-dev
+```
 
-| Surface | Status | Use it for |
-| --- | --- | --- |
-| `packages/site-nuxt` | current keeper site and concierge surface; live service is `loanslam-site-nuxt` | Site, concierge, current deployable proof, Railway read-back |
-| `site/` | retained historical site docs only; not the live deploy path | Prior parity and application-flow evidence docs |
-| `packages/integrated-poc` | source/shared modules consumed by Nuxt; standalone Railway deployment retired | IPOC server/session/admin code that Nuxt still imports |
-| `packages/demo-*` | historical Loanslam iframe demo shell | Legacy local comparison only |
-| `packages/review-*` | MAL review shell and public sanitized reports | Review/demo host checks and report publishing |
-| `packages/core` | engine, CLI, Hell Week, STS, lab API | Runtime behavior and proof batteries |
-| `packages/lab-ui` / `packages/mcp-server` | local engineering surfaces | Trace inspection and agent-driven lab sessions |
+Model-backed commands require `OPENAI_API_KEY`. This repo mandates OpenAI for
+runtime inference, simulations, judges, evals, probes, and agentic test
+workflows.
 
-Do not treat `railway.json`, Astro `site/dist`, or the old standalone IPOC pack
-as current deployment authority. The retained deployment target is the Nuxt
-keeper service and its verified dependencies.
+## Surface Map
 
-## Which surface should I use?
+| Surface                   | Current role                                     | Use it for                                                                        |
+| ------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `packages/site-nuxt`      | Current keeper website and assistant integration | Website rebuild, page-aware assistant, concierge API, live site proof             |
+| `packages/core`           | TurnPlanner engine and evidence harnesses        | Routing, retrieval, validation, lab API, simulation, Hell Week                    |
+| `packages/contracts`      | Shared Zod schemas and runtime contracts         | `TurnPlan`, `TurnTrace`, `ValidatedTurnResult`, corpus, report types              |
+| `packages/integrated-poc` | Source modules still consumed by Nuxt            | IPOC session/admin code used by the current site; not standalone deploy authority |
+| `packages/lab-ui`         | Engineer diagnostics console                     | Trace, retrieval, overrides, safety flags, session export                         |
+| `packages/mcp-server`     | Agent-accessible lab API wrapper                 | Drive and dump local lab sessions without browser automation                      |
+| `packages/review-*`       | Review shell and sanitized reports               | Review-host checks and report publishing                                          |
+| `packages/demo-*`         | Frozen historical iframe demo                    | Legacy comparison only                                                            |
+| `site/`                   | Historical Astro site                            | Prior parity records; not the current live surface                                |
 
-- `just core-turn` is for one message and one `ValidatedTurnResult`.
-- `just core-chat -- --trace` is for manual turn-by-turn probing in a terminal.
-- `just core-serve -- --port 8787` is the dev-only HTTP lab API over `processTurn`.
-- `just lab` starts the lab API plus the Vue engineer console on `5173`.
-- `just mcp-lab-api` exposes the lab API through local MCP tools for agent-driven sessions.
-- `just core-simulate` runs the fixed journey suite and writes JSONL traces.
-- `just core-persona-simulate` runs persona scenarios and writes transcript/report artifacts.
-- `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
-- `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
-- `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
-- `just site-nuxt-dev` starts the current site surface.
-- `just site-nuxt-build` builds the current site surface.
-- `just demo` starts the historical Loanslam iframe demo around the Phase 0 engine; use `just demo-local` only for legacy local comparison.
-- `just review` starts the MAL review demo around the same engine; use `just review-local` for review-host checks.
-- `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
-- `site/` is historical Astro material only, not a Nuxt input or live deploy surface.
-
-## Repository map
+## Repository Map
 
 ```text
 docs/
-  product-brief.md                  Product scope and safety contract
+  product-brief.md                  Product scope and safety boundary
   llm-turn-planner-architecture.md  Canonical Phase 0 engine architecture
-  stochastic-test-simulator-guide.md
-  prds/                             Time-stamped product and implementation specs
+  hell-week-gauntlet.md             Hostile scenario battery and grading layers
+  hell-week-agent-loop-playbook.md  Bounded tuning loop
+  loanslam-operator/                Human operator manual
 packages/
-  contracts/                        Shared Zod contracts and runtime types
-  core/                             Engine, retrieval, validator, planner adapters, CLI, lab API, evidence harnesses
-  site-nuxt/                        Current keeper site and concierge surface
-  integrated-poc/                   IPOC source/modules consumed by the current Nuxt surface
-  lab-ui/                           Vue engineer console for traces, retrieval, overrides, and session export
-  mcp-server/                       Local MCP wrapper around the lab API
-  demo-widget/                      Frozen historical Loanslam-facing iframe widget demo
-  demo-host/                        Host page for the demo widget
-  review-widget/                    MAL review widget demo
-  review-host/                      Host page for the review widget
-prisma/
-  schema.prisma                     Postgres schema for owner-only demo interaction receipts and Hell Week evidence
-api/
-  index.ts                          Legacy Vercel/review demo entrypoint
+  site-nuxt/                        Current Nuxt website and assistant surface
+  core/                             Engine, planner adapters, validator, lab API, Hell Week
+  contracts/                        Shared schemas and typed contracts
+  integrated-poc/                   Modules consumed by the Nuxt surface
+  lab-ui/                           Local diagnostics console
+  mcp-server/                       MCP wrapper around lab API sessions
 data/
-  public-info/                      Non-deployable synthetic proof corpus for Phase 0 routing evidence
-scripts/
-  throwaway/                        Ad hoc probes, not the operator front door
+  public-info/                      Non-deployable synthetic proof corpus
 artifacts/
-  evidence-index/                   Committed evidence manifests, run indexes, and gate anchors
-  phase0/                           Ignored local traces, reports, dashboards, and session dumps
+  evidence-index/                   Committed evidence anchors and run indexes
+  phase0/                           Ignored local traces, dashboards, run folders
+scripts/
+  *.ts                              Gates, digest, branch-risk, report checks
 ```
 
-## Package roles
+## Development Gates
 
-- `packages/contracts` owns the shared Zod schemas for `CorpusItem`, `TurnPlan`, `TurnTrace`, `ValidatedTurnResult`, simulation reports, stochastic artifacts, and planner ports.
-- `packages/core` owns `processTurn`, corpus loading, retrieval, OpenAI planner adapters, signal extraction, validation, local lab API, CLI commands, simulations, route audits, STS, and Hell Week.
-- `packages/site-nuxt` owns the current keeper site, concierge API, and customer-facing Nuxt surface.
-- `packages/integrated-poc` owns IPOC session/admin modules still consumed by the Nuxt surface; it is not a standalone live deployment target.
-- `packages/lab-ui` visualizes the lab API result with action, serving mode, retrieval, validator overrides, safety flags, requested fields, raw trace JSON, and session export.
-- `packages/mcp-server` lets agents start, drive, dump, reset, and summarize lab API sessions without browser automation.
-- `packages/demo-widget` is frozen for sunset; keep behavior work out of it unless deleting or migrating the package. `packages/demo-host` and `packages/review-*` are legacy/review shells over the current engine; they are not the keeper site deployment.
-
-## Knowledge base and policy data
-
-`data/public-info/loanslam-synthetic-kb.json` is a synthetic Phase 0 proof
-corpus. It is marked `deployment_status: "non_deployable_synthetic"` and
-`deployable: false`; it is useful for routing, grounding, and Hell Week evidence,
-but it is not approved public copy for regulated lending facts or contact
-details. Customer-facing contact facts belong in
-`packages/site-nuxt/data/site-copy/contact.json` until an approved runtime corpus
-replaces the synthetic one.
-
-Inside the proof corpus, `serving_mode` is policy data:
-
-- `answer` means the item can ground a customer-facing answer.
-- `handoff_account_specific` means the subject needs human support with account context.
-- `route_vulnerability` means the turn must route through the vulnerability/escalation path.
-- `excluded` means the subject is recognized but must not be answered substantively.
-
-Retrieval scores are evidence, not release gates. The hard rule is simpler: an
-`answer` needs approved grounding, and non-answer serving modes must route, refuse,
-or fall back safely.
-
-## Evidence workflow
-
-The central evidence object is `ValidatedTurnResult.trace`. It links the customer
-message to retrieval matches, selected/effective serving mode, proposed action,
-final action, validator overrides, safety flags, planner metadata, policy version,
-and request/message IDs.
-
-Use live lab sessions when judging user-visible routing behaviour. Static tests are
-useful guardrails, but they are not enough to prove customer-visible flow.
-
-Use Hell Week for broad model-backed safety and routing evidence. The full
-command surface, receipt semantics (floor-delta), the committed baseline
-anchor, and the Postgres-backed durable reports are documented once in
-[Proof and gates](./docs/loanslam-operator/05-proof-and-gates.md) and the
-[Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md).
-
-## Development gates
-
-These commands do not call a model. They check the local TypeScript workspace
-and generated report pages:
+These checks do not by themselves prove customer-visible behaviour, but they are
+the basic local wiring gate:
 
 ```bash
 npm test
@@ -228,59 +326,43 @@ npm run verify
 npm run format:check
 ```
 
-Run them when you need verification. They are not automatically required for every
-docs-only change. Gate doctrine, `source-policy` semantics, and the pre-commit
-enforcement layer are documented in
-[Proof and gates](./docs/loanslam-operator/05-proof-and-gates.md).
+Use `just branch-risk -- --base <ref>` to learn the proof bar for a branch before
+claiming it is safe. Do not use `just vercel-build` as a substitute for local
+verification; it follows the deployment build path and can apply committed
+Prisma migrations.
 
-Do not use `just vercel-build` as a substitute for these local gates. It follows
-the deployment build path and can apply committed Prisma migrations.
-
-The current site lives in `packages/site-nuxt`. For site changes, run:
-
-```bash
-just site-nuxt-build
-```
-
-The legacy `site/` tree is historical Astro material. Current site content,
-styles, and public assets live under `packages/site-nuxt`.
-
-## Source-of-truth docs
+## Source-Of-Truth Docs
 
 - [Product brief](./docs/product-brief.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
+- [Operator manual](./docs/loanslam-operator/README.md)
+- [Proof and gates](./docs/loanslam-operator/05-proof-and-gates.md)
+- [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
+- [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [Campaign workflow protocol](./docs/campaign-workflow-protocol.md)
 - [Active PRDs and campaign cards](./docs/prds/README.md)
 - [Roadmaps](./docs/roadmaps/README.md)
-- [Operator manual](./docs/loanslam-operator/README.md)
-- [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
-- [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
-- [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)
 - [Hell Week evidence index](./artifacts/evidence-index/hell-week-runs.md)
 
-Closed PRDs and agenda cards under [`docs/prds/closed/`](./docs/prds/closed/)
-are provenance, not active start points.
+Closed PRDs and agenda cards under `docs/prds/closed/` are provenance, not active
+start points, unless an active campaign explicitly points at them.
 
-Documentation cleanup records live under
-[`docs/non-operational/doc-cleanup/`](./docs/non-operational/doc-cleanup/). They
-are not product or runtime authority unless an active campaign card points at them.
+## Not Built In Phase 0
 
-## Not built in Phase 0
-
-- Production Express API
-- Production Vue widget deployment
-- AWS/OpenTofu deployment
+- Production account access or customer-record mutation
+- CRM / loan-database integration
 - Durable production audit store
-- SQL/CRM/customer-record integration
-- Real ticket webhook side effects
 - Real PII intake infrastructure
+- Real ticket webhook side effects
 - Autonomous self-learning
+- A production-grade account-servicing chatbot
 
-These are deferred, not cancelled. Phase 0 earns them by producing credible engine
-and evidence behaviour first.
+These are deferred, not cancelled. Phase 0 earns them by making the site,
+assistant, engine, and evidence loop credible first.
 
 ## License
 
 Proprietary and confidential. All rights reserved. See [LICENSE](./LICENSE). No
-permission is granted to use, copy, modify, repurpose, or distribute this software
-or its materials without prior written permission of the copyright holder.
+permission is granted to use, copy, modify, repurpose, or distribute this
+software or its materials without prior written permission of the copyright
+holder.

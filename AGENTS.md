@@ -1,3 +1,5 @@
+
+
 <!-- FLUENCY_PROTOCOL_START sha256:a1b760e75a37d0f9 -->
 # Coding Fluency Rehab Protocol
 
@@ -62,7 +64,6 @@ Do not use auto-BLUE for product/application code, tests, migrations, refactors,
 - Reports must come from `/Users/mrkai/rehab.db`, not memory or vibes.
 
 <!-- FLUENCY_PROTOCOL_END -->
-
 # Agent Instructions
 
 PROTOCOL OVERRIDE: BLUE for execution - agentic work proceeds normally in this repository; no manual-rep gating. The calibration amendment (2026-07-05) DOES apply here: offer prediction checkpoints on substantive diffs/test outcomes/root causes, run bug drills on request, and auto-log graded reps via `rehab rep log` (see the Prediction Reps / Bug Drills / Automatic Drill Logging sections in the managed block above).
