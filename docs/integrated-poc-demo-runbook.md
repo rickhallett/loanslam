@@ -1,6 +1,11 @@
 # Integrated POC Demo Runbook
 
-Live URL: https://loanslam-ipoc-production.up.railway.app
+Historical live URL: https://loanslam-ipoc-production.up.railway.app
+
+> Status as of 2026-07-06: the standalone `loanslam-ipoc` Railway deployment is
+> a decommission candidate. Do not redeploy it from this repo. Keep the
+> `packages/integrated-poc` source because the Nuxt keeper surface still imports
+> IPOC server modules directly.
 
 > The apply-journey concierge demo on the Nuxt site has its own runbook:
 > `docs/demo-concierge-runbook.md`.
@@ -53,14 +58,13 @@ synthetic demo data; nothing is a real customer record.
 
 ## Operations
 
-- Redeploy: `npm run ipoc-build && node scripts/ipoc-deploy-pack.mjs`, then
-  from `packages/integrated-poc/.railway-pack`: `railway up --ci`
-  (service `loanslam-ipoc`, project `loanslam-staging-site`).
-- Logs: `railway logs --service loanslam-ipoc`.
-- Verify after redeploy:
+- Local dev: `npm --workspace @loanslam/integrated-poc run dev`.
+- Local build: `npm --workspace @loanslam/integrated-poc run build`.
+- Historical live verification, if the service still exists before final
+  decommission:
   `node scripts/ipoc-integration-battery.mjs --base https://loanslam-ipoc-production.up.railway.app`
-- Rollback: redeploy the previous pack (Railway keeps prior deployments; use
-  the dashboard to roll back instantly).
+- Final Railway service deletion requires a separate explicit destructive
+  approval and a fresh inventory receipt.
 
 ## Adapter sunset plan (executable, human-gated)
 
@@ -72,9 +76,8 @@ Source: `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md` (D039).
 - **On trigger, in order:**
   1. Confirm the stakeholder demo needed nothing from the old demo surface.
   2. Retire `demo-host` and `demo-widget` together: remove the packages, the
-     root `railway-build`/`railway-start` demo wiring they own, and the
-     `loanslam-site` embed points that reference them (or migrate the site
-     page to link the POC URL).
+     `loanslam-site` embed points that reference them, and any remaining
+     historical deploy wiring references.
   3. Decommission or repurpose the `loanslam-site` Railway service only after
      step 2 lands and the site build is green without the demo assets.
   4. Leave `review-host`/`review-widget` untouched — separate product

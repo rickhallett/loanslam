@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 // Assemble the Railway deploy artifact for the loanslam-site-nuxt service.
-// Same prebuilt-artifact pattern as scripts/ipoc-deploy-pack.mjs: the upload
-// indexer drops dot-directories and node_modules, so the Nitro output ships
-// as a non-dot dir and its emitted dependency manifest is declared for
-// Railpack to install. The site build bundles all content, CSS, and public
+// The upload indexer drops dot-directories and node_modules, so the Nitro
+// output ships as a non-dot dir and its emitted dependency manifest is declared
+// for Railpack to install. The site build bundles all content, CSS, and public
 // assets, so nothing else is needed at runtime.
 //
 // Usage:
