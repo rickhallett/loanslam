@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { isApplicationHost as compatIsApplicationHost } from "./sitePolicy";
 import {
   isApplicationHost,
   normalizeSitePath,
+  resolveSiteRouteUrl,
   rewriteLinks,
-} from "./sitePolicy";
+} from "./siteRoutePolicy";
 
-describe("sitePolicy", () => {
+describe("siteRoutePolicy", () => {
   it("recognizes current and legacy application hosts", () => {
     expect(isApplicationHost("apply.loanslam.co.uk")).toBe(true);
     expect(isApplicationHost("applyloansbymal.co.uk")).toBe(true);
@@ -33,5 +35,33 @@ describe("sitePolicy", () => {
     expect(rewriteLinks("Read https://loansbymal.co.uk/no-such-page/")).toBe(
       "Read https://loansbymal.co.uk/no-such-page/",
     );
+  });
+
+  it("returns discriminated route-policy outcomes", () => {
+    expect(
+      resolveSiteRouteUrl(new URL("https://loansbymal.co.uk/open-banking/")),
+    ).toMatchObject({
+      kind: "local_route",
+      target: "site",
+      path: "/open-banking/",
+      preservesUrlSuffix: true,
+    });
+    expect(
+      resolveSiteRouteUrl(new URL("https://loansbymal.co.uk/no-such-page/")),
+    ).toMatchObject({
+      kind: "unknown_first_party_path",
+      target: "site",
+      sourcePath: "/no-such-page/",
+    });
+    expect(
+      resolveSiteRouteUrl(new URL("https://www.moneyhelper.org.uk/")),
+    ).toMatchObject({
+      kind: "external_url",
+      sourceHost: "moneyhelper.org.uk",
+    });
+  });
+
+  it("keeps the old import path as a compatibility wrapper", () => {
+    expect(compatIsApplicationHost("apply.loanslam.co.uk")).toBe(true);
   });
 });
