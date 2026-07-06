@@ -156,8 +156,17 @@ const emailAddressPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const repaymentDateChangePattern =
   /\b(move|change|set|update)\b.{0,80}\b(repayment|payment)\s+date\b.{0,80}\b(to|for)\s+([^.,!?]+)(?=[.,!?]|$)/i;
 
+const addressChangePattern =
+  /\b(move(d)?\s+house|new\s+address|update\s+my\s+address|change\s+my\s+address|address\s+to)\b/i;
+
+const repaymentArrangementChangePattern =
+  /\b(set\s+me\s+up|set\s+up|arrange|put\s+me\s+on|move\s+me\s+to|switch\s+me\s+to)\b.{0,80}\b(smaller|lower|reduced|cheaper|affordable|payment\s+plan|repayment\s+plan|repayments?|payments?|monthly\s+payments?)\b|\b(reduce|lower)\b.{0,80}\b(my\s+)?(repayments?|payments?|monthly\s+payments?)\b|\b(smaller|lower|reduced|cheaper|more\s+affordable)\b.{0,50}\b(repayments?|payments?|monthly\s+payments?)\b|\b(repayment|payment)\s+(plan|arrangement)\b/i;
+
 const referenceOfferPattern =
   /\b(i\s+can|i'?ll|i\s+will|can\s+i)\b.{0,60}\b(give|provide|send|share)\b.{0,60}\b(my\s+)?(reference|loan\s+reference|account\s+reference|agreement\s+number|account\s+number)\b|\b(my\s+)?(reference|loan\s+reference|account\s+reference|agreement\s+number|account\s+number)\b.{0,60}\b(if\s+that\s+helps|if\s+it\s+helps|to\s+help)\b/i;
+
+const referenceLookupPattern =
+  /\b(can|could|will|would)\s+you\b.{0,80}\b(tell|give|send|show|find|look\s+up|confirm)\b.{0,80}\b(my\s+)?(loan\s+reference|account\s+reference|reference|agreement\s+number|account\s+number)\b|\b(what(?:'s|\s+is)|where(?:'s|\s+is))\b.{0,80}\b(my\s+)?(loan\s+reference|account\s+reference|reference|agreement\s+number|account\s+number)\b/i;
 
 export function allowedUiPrimitivesForAction(
   action: TurnAction,
@@ -333,8 +342,37 @@ export function detectPaymentLinkRequest(text: string): boolean {
   return paymentLinkRequestPattern.test(text);
 }
 
+export function detectRepaymentArrangementChangeRequest(text: string): boolean {
+  return repaymentArrangementChangePattern.test(text);
+}
+
 export function detectReferenceOffer(text: string): boolean {
   return referenceOfferPattern.test(text);
+}
+
+export function detectReferenceLookupRequest(text: string): boolean {
+  return referenceLookupPattern.test(text);
+}
+
+export function buildRepaymentArrangementHandoffCopy(): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I can't set up, reduce, approve, or change repayments in chat. I can pass the request to the LoanSlam team using only the standard handoff details in the form: full name, date of birth, postcode, email, and phone.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
 }
 
 export function buildAccountChangeHandoffCopy(
@@ -350,10 +388,13 @@ export function buildAccountChangeHandoffCopy(
   const repaymentDate = userMessage
     .match(repaymentDateChangePattern)?.[4]
     ?.trim();
+  const addressChange = addressChangePattern.test(userMessage);
   const prefix = email
     ? `I can't change the email address to ${email} in chat, but I can pass that request to the LoanSlam team.`
     : repaymentDate
       ? `I can't move your repayment date to ${repaymentDate} in chat, but I can pass that request to the LoanSlam team.`
+      : addressChange
+        ? "I can't update your address in chat, but I can pass that request to the LoanSlam team."
       : null;
 
   if (!prefix) {
@@ -381,7 +422,28 @@ export function buildReferenceOfferHandoffCopy(reason: string): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "A reference may help the LoanSlam team, but I can't look up account details or use account references in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone.";
+    "Do not send account references in this chat. I can't look up account details or use a reference here; share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone.";
+
+  return {
+    action: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: `${customerMessage} ${reason}`,
+      fields: [...standardHandoffFields],
+    },
+    requestedFields: [...standardHandoffFields],
+  };
+}
+
+export function buildReferenceLookupHandoffCopy(reason: string): {
+  action: "request_handoff_intake";
+  customerMessage: string;
+  ui: UiPlan;
+  requestedFields: IntakeField[];
+} {
+  const customerMessage =
+    "I can't look up, confirm, or tell you a loan reference in chat. I can pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -468,7 +530,7 @@ export function buildCredentialHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "Do not send card numbers, card details, CVV, sort codes, account numbers, bank login details, passwords, security answers, one-time passcodes, or banking-app screenshots in this chat. I can't use those details here. I can collect standard contact details and pass this to the LoanSlam team.";
+    "I can't verify you, take card details, or use bank login details, security answers, one-time passcodes, sort codes, account numbers, card numbers, CVV, or banking-app screenshots in chat or in the handoff form. Do not send those details here. If you need account help, I can pass a request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -489,7 +551,7 @@ export function buildPaymentLinkHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't create or send a payment link in this chat. Do not send card numbers, CVV, bank login details, sort codes, or account numbers here. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    "I can't create or send a payment link in this chat, and I can't take payment credentials here or in the handoff form. I can pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -510,7 +572,7 @@ export function buildApprovalStatusHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't confirm whether your application is approved, declined, or still pending in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    "I can't confirm whether your application is approved, declined, or still pending in chat. The LoanSlam team can check the status for you.";
 
   return {
     action: "request_handoff_intake",

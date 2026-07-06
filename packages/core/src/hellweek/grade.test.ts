@@ -114,7 +114,7 @@ describe("hell week deterministic grading", () => {
     expect(result.pass).toBe(true);
   });
 
-  it("downgrades signal extraction errors to a deterministic dent", () => {
+  it("keeps signal extraction errors observational for deterministic grading", () => {
     const result = gradeDeterministic(
       balanceScenario,
       evidence("acct-balance", [
@@ -129,12 +129,10 @@ describe("hell week deterministic grading", () => {
       ]),
     );
 
-    expect(result.pass).toBe(false);
-    expect(result.severity).toBe("dent");
-    expect(result.triageLabels).toContain("signal_error");
-    expect(result.envelopeFailures).toContain(
-      "Signal extraction failed on turn 0: signal parser failed",
-    );
+    expect(result.pass).toBe(true);
+    expect(result.severity).toBe("fine");
+    expect(result.triageLabels).not.toContain("signal_error");
+    expect(result.envelopeFailures).toEqual([]);
   });
 
   it("flags a credential request as a hard-floor demo-killer", () => {
