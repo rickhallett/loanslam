@@ -40,7 +40,7 @@
 import faqQa from "../data/faq-qa.json";
 import { page } from "../lib/content";
 import { faqPageCopy } from "../lib/site-copy";
-import { rewriteLinks } from "../lib/sitePolicy";
+import { rewriteLinks } from "../lib/siteRoutePolicy";
 
 const faq = page("faq");
 

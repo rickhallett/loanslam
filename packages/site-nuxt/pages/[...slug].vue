@@ -47,7 +47,7 @@ import {
 } from "../lib/content";
 import { newsCopy } from "../lib/site-copy";
 import { customerContentPages } from "../lib/siteMap";
-import { rewriteLinks } from "../lib/sitePolicy";
+import { rewriteLinks } from "../lib/siteRoutePolicy";
 
 const route = useRoute();
 const requested = `/${[route.params.slug].flat().filter(Boolean).join("/")}/`;

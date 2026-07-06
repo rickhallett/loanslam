@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { formatDate, posts, stripLeadingH1 } from "../../lib/content";
 import { newsCopy } from "../../lib/site-copy";
-import { rewriteLinks } from "../../lib/sitePolicy";
+import { rewriteLinks } from "../../lib/siteRoutePolicy";
 
 const route = useRoute();
 const post = posts.find((p) => p.slug === route.params.slug);

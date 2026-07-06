@@ -60,7 +60,7 @@
 import instalmentQa from "../data/instalment-qa.json";
 import { page } from "../lib/content";
 import { instalmentLoanCopy } from "../lib/site-copy";
-import { rewriteLinks } from "../lib/sitePolicy";
+import { rewriteLinks } from "../lib/siteRoutePolicy";
 
 const record = page("instalment-loan");
 const items = instalmentQa.map((item) => ({

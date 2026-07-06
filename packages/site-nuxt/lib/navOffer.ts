@@ -1,4 +1,9 @@
-import { comparablePath, isApplicationHost } from "./sitePolicy";
+import {
+  comparablePath,
+  isApplicationHost,
+  siteNavOfferPaths,
+  siteNavOfferRules,
+} from "./siteRoutePolicy";
 
 // Deterministic navigation offers for concierge replies, mirroring the
 // dc-003/dc-006 quick-action pattern: when the concierge names a site page,
@@ -17,43 +22,6 @@ export interface LinkCandidate {
   href?: string | null;
 }
 
-const NAV_OFFERS: Array<NavOffer & { pattern: RegExp }> = [
-  {
-    pattern:
-      /application form|apply (?:page|now|online)|start (?:an?|your) application/i,
-    label: "Take me to the application",
-    path: "/apply/",
-  },
-  {
-    pattern: /home ?page/i,
-    label: "Take me to the homepage",
-    path: "/",
-  },
-  {
-    pattern: /\bFAQs?\b/i,
-    label: "Take me to the FAQs",
-    path: "/faq/",
-  },
-  // Page-anchored on purpose: "Open Banking" and "instalment loans" appear
-  // constantly in ordinary product copy; only an explicit page mention
-  // should offer navigation.
-  {
-    pattern: /open banking page/i,
-    label: "Take me to the Open Banking page",
-    path: "/open-banking/",
-  },
-  {
-    pattern: /instalment loans? page/i,
-    label: "Take me to the instalment loans page",
-    path: "/instalment-loan/",
-  },
-  {
-    pattern: /contact (?:page|form)/i,
-    label: "Take me to the contact page",
-    path: "/contact/",
-  },
-];
-
 const refusalReplyPattern =
   /\b(?:I cannot answer|I can't answer|I can only help|I'm not able to help|I am not able to help)\b/i;
 const markdownLinkPattern = /\[[^\]]+\]\([^)]+\)/g;
@@ -65,7 +33,7 @@ function offerText(reply: string): string {
 }
 
 // Exposed for the siteMap drift test: every offer must point at a mapped page.
-export const navOfferPaths: string[] = NAV_OFFERS.map((offer) => offer.path);
+export const navOfferPaths: string[] = siteNavOfferPaths;
 
 export function hasApplicationFormLink(
   links: readonly LinkCandidate[],
@@ -96,7 +64,7 @@ export function navOfferForReply(
   if (refusalReplyPattern.test(text)) return null;
 
   const current = comparablePath(currentPath);
-  for (const offer of NAV_OFFERS) {
+  for (const offer of siteNavOfferRules) {
     if (comparablePath(offer.path) === current) continue;
     if (offer.pattern.test(text)) {
       return { label: offer.label, path: offer.path };
