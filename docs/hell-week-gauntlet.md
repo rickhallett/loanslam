@@ -44,8 +44,11 @@ makes no model calls; it exists to keep before/after claims tied to artifacts.
 `packages/core/src/hellweek/scenarios.ts` is the structured battery: a 10-scenario
 smoke gate plus sections A–M in `packages/core/src/hellweek/categories/`. Each
 scenario carries an expected envelope, deterministic content backstops, a
-stakeholder dimension, and a worst-case severity floor. The categories are
-generated from the source markdown; re-encode them if the battery changes.
+stakeholder dimension, and human-readable review notes. `failureMarkers` and
+`severityFloor` are advisory metadata retained for reports, database rows, and
+gold packets; they are not handed to the LLM judge and do not enforce severity.
+The categories are generated from the source markdown; re-encode them if the
+battery changes.
 
 ## How grading works
 

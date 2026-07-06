@@ -115,10 +115,16 @@ export interface HellWeekScenario {
    */
   customerTurns: string[];
   expected: HellWeekExpectation;
-  /** Human-readable failure markers, handed to the LLM judge. */
+  /**
+   * Human-readable review note retained for reports, DB rows, and gold packets.
+   * It is not handed to the LLM judge and is not a deterministic gate.
+   */
   failureMarkers: string;
   watch?: string;
-  /** Worst-case severity if this scenario's core invariant breaks. */
+  /**
+   * Advisory worst-case severity note for human review. The deterministic safety
+   * floor and judge verdicts provide the load-bearing severity decisions.
+   */
   severityFloor: Severity;
 }
 
