@@ -4,6 +4,11 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import {
+  openAiHellWeekJudgePromptVersion,
+  openAiHellWeekJudgeRubricHash,
+  openAiHellWeekJudgeTool,
+} from "./openaiJudge";
 import { loadJudgeVerdicts, renderFromRun } from "./run";
 import type {
   HellWeekReport,
@@ -63,14 +68,15 @@ describe("Hell Week run rendering", () => {
         schemaVersion: 1,
         metadata: {
           generatedAt: "2026-06-20T16:30:00.000Z",
-          provider: "workflow",
+          provider: "openai",
           mode: "ladder",
           model: "gpt-5.4",
           judgeModel: "gpt-5.4-mini",
           verifierModel: "gpt-5.4",
           finalAdjudicatorModel: "gpt-5.5",
-          promptVersion: "hellweek-judge-v1",
-          rubricHash: "sha256:test-rubric",
+          tool: openAiHellWeekJudgeTool,
+          promptVersion: openAiHellWeekJudgePromptVersion,
+          rubricHash: openAiHellWeekJudgeRubricHash,
           sourceRunId: report.runId,
           sourceRunPath: runDir,
           scenarioCount: 1,
@@ -96,14 +102,15 @@ describe("Hell Week run rendering", () => {
         artifactSchemaVersion: 1,
         verdictCount: 1,
         generatedAt: "2026-06-20T16:30:00.000Z",
-        provider: "workflow",
+        provider: "openai",
         mode: "ladder",
         model: "gpt-5.4",
         judgeModel: "gpt-5.4-mini",
         verifierModel: "gpt-5.4",
         finalAdjudicatorModel: "gpt-5.5",
-        promptVersion: "hellweek-judge-v1",
-        rubricHash: "sha256:test-rubric",
+        tool: openAiHellWeekJudgeTool,
+        promptVersion: openAiHellWeekJudgePromptVersion,
+        rubricHash: openAiHellWeekJudgeRubricHash,
         sourceRunId: report.runId,
         scenarioCount: 1,
       });
@@ -227,6 +234,79 @@ describe("Hell Week judge verdict loading", () => {
           judgeVerdicts: loadJudgeVerdicts(verdictPath),
         }),
       ).toThrow(/unknown scenarioId\(s\): unknown-scenario/);
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects partial judge verdict coverage for the rendered run", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-missing-"));
+
+    try {
+      const firstScenario = oldHumanSupportScenario();
+      const secondScenario = {
+        ...oldHumanSupportScenario(),
+        id: "vuln-cant-pay-repeat",
+        title: "Repeat hardship route",
+      };
+      const firstEvidence = humanSupportEvidence();
+      const secondEvidence = {
+        ...humanSupportEvidence(),
+        scenarioId: secondScenario.id,
+        conversationRef: "hellweek-vuln-cant-pay-repeat",
+      };
+      const report = priorReport({
+        scenario: firstScenario,
+        evidence: firstEvidence,
+      });
+      report.scenarios = [firstScenario, secondScenario];
+      report.evidence = [firstEvidence, secondEvidence];
+      writeRun(runDir, report);
+
+      const verdictPath = join(runDir, "partial.json");
+      writeFileSync(
+        verdictPath,
+        `${JSON.stringify(currentJudgeArtifact(report, [judgeVerdict(firstScenario.id)]))}\n`,
+        "utf8",
+      );
+
+      expect(() =>
+        renderFromRun({
+          runDir,
+          judgeVerdicts: loadJudgeVerdicts(verdictPath),
+        }),
+      ).toThrow(/missing scenarioId\(s\): vuln-cant-pay-repeat/);
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects stale judge rubric metadata before marking a run judged", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "hell-week-judge-stale-rubric-"));
+
+    try {
+      const scenario = oldHumanSupportScenario();
+      const evidence = humanSupportEvidence();
+      const report = priorReport({ scenario, evidence });
+      writeRun(runDir, report);
+
+      const verdictPath = join(runDir, "stale-rubric.json");
+      const artifact = currentJudgeArtifact(report, [
+        judgeVerdict(scenario.id),
+      ]);
+      artifact.metadata.rubricHash = "sha256:stale";
+      writeFileSync(
+        verdictPath,
+        `${JSON.stringify(artifact, null, 2)}\n`,
+        "utf8",
+      );
+
+      expect(() =>
+        renderFromRun({
+          runDir,
+          judgeVerdicts: loadJudgeVerdicts(verdictPath),
+        }),
+      ).toThrow(/rubricHash must be/);
     } finally {
       rmSync(runDir, { recursive: true, force: true });
     }
@@ -357,8 +437,9 @@ function priorReport({
 function writeRun(
   runDir: string,
   report: HellWeekReport,
-  evidence: HellWeekScenarioEvidence,
+  evidence?: HellWeekScenarioEvidence,
 ): void {
+  const evidenceItems = evidence ? [evidence] : report.evidence;
   writeFileSync(
     join(runDir, "report.json"),
     `${JSON.stringify(report, null, 2)}\n`,
@@ -366,7 +447,7 @@ function writeRun(
   );
   writeFileSync(
     join(runDir, "evidence.json"),
-    `${JSON.stringify([evidence], null, 2)}\n`,
+    `${JSON.stringify(evidenceItems, null, 2)}\n`,
     "utf8",
   );
 }
@@ -379,5 +460,30 @@ function judgeVerdict(scenarioId: string): JudgeVerdict {
     triageLabels: [],
     uxScore: 5,
     rationale: "Customer-visible behavior is safe.",
+  };
+}
+
+function currentJudgeArtifact(
+  report: HellWeekReport,
+  verdicts: JudgeVerdict[],
+): JudgeVerdictArtifact {
+  return {
+    schemaVersion: 1,
+    metadata: {
+      generatedAt: "2026-06-20T18:30:00.000Z",
+      provider: "openai",
+      mode: "ladder",
+      model: "gpt-5.4-mini judge, gpt-5.4 verifier, gpt-5.5 final adjudicator",
+      judgeModel: "gpt-5.4-mini",
+      verifierModel: "gpt-5.4",
+      finalAdjudicatorModel: "gpt-5.5",
+      tool: openAiHellWeekJudgeTool,
+      promptVersion: openAiHellWeekJudgePromptVersion,
+      rubricHash: openAiHellWeekJudgeRubricHash,
+      sourceRunId: report.runId,
+      sourceRunPath: "test-run-dir",
+      scenarioCount: verdicts.length,
+    },
+    verdicts,
   };
 }

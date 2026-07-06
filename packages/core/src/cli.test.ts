@@ -13,6 +13,11 @@ import type {
 } from "@loanslam/contracts";
 
 import { runCli } from "./cli";
+import {
+  openAiHellWeekJudgePromptVersion,
+  openAiHellWeekJudgeRubricHash,
+  openAiHellWeekJudgeTool,
+} from "./hellweek/openaiJudge";
 
 const metadata: PlannerMetadata = {
   provider: "openai",
@@ -554,9 +559,13 @@ describe("Phase 0 CLI", () => {
           schemaVersion: 1,
           metadata: {
             generatedAt: "2026-06-20T18:30:00.000Z",
-            tool: "test-workflow",
-            promptVersion: "hellweek-judge-v1",
-            rubricHash: "sha256:test-rubric",
+            provider: "openai",
+            mode: "ladder",
+            model:
+              "gpt-5.4-mini judge, gpt-5.4 verifier, gpt-5.5 final adjudicator",
+            tool: openAiHellWeekJudgeTool,
+            promptVersion: openAiHellWeekJudgePromptVersion,
+            rubricHash: openAiHellWeekJudgeRubricHash,
             sourceRunPath: runDir,
             scenarioCount: 1,
           },
@@ -592,9 +601,9 @@ describe("Phase 0 CLI", () => {
     expect(report.judged).toBe(true);
     expect(report.judge).toMatchObject({
       artifactSchemaVersion: 1,
-      tool: "test-workflow",
-      promptVersion: "hellweek-judge-v1",
-      rubricHash: "sha256:test-rubric",
+      tool: openAiHellWeekJudgeTool,
+      promptVersion: openAiHellWeekJudgePromptVersion,
+      rubricHash: openAiHellWeekJudgeRubricHash,
       verdictCount: 1,
     });
     expect(report.grades[0]).toMatchObject({

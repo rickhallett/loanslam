@@ -14,6 +14,11 @@ import { openHellWeekReportStore } from "./db";
 import { gradeScenario } from "./grade";
 import { renderHellWeekReportHtml } from "./htmlReport";
 import { renderHellWeekJasmineHtml } from "./jasmineReport";
+import {
+  openAiHellWeekJudgePromptVersion,
+  openAiHellWeekJudgeRubricHash,
+  openAiHellWeekJudgeTool,
+} from "./openaiJudge";
 import { runHellWeek } from "./runner";
 import { assertUniqueScenarioIds, selectScenarios } from "./scenarios";
 import { isJudgeTriageLabel, type JudgeTriageLabel } from "./triageLabels";
@@ -378,6 +383,9 @@ function validateJudgeVerdictsForScenarios(
   if (!verdicts) {
     return undefined;
   }
+  if (!source) {
+    throw new Error("Judge verdict source is missing.");
+  }
 
   const scenarioIds = new Set(scenarios.map((scenario) => scenario.id));
   const unknownScenarioIds = [...verdicts.keys()].filter(
@@ -390,7 +398,81 @@ function validateJudgeVerdictsForScenarios(
     );
   }
 
+  const missingScenarioIds = scenarios
+    .map((scenario) => scenario.id)
+    .filter((scenarioId) => !verdicts.has(scenarioId));
+  if (missingScenarioIds.length > 0) {
+    throw new Error(
+      `Judge verdicts are missing scenarioId(s): ${missingScenarioIds.join(", ")}`,
+    );
+  }
+
+  validateJudgeMetadataForCurrentRun(scenarios, source, verdicts.size);
+
   return verdicts;
+}
+
+function validateJudgeMetadataForCurrentRun(
+  scenarios: readonly HellWeekScenario[],
+  source: JudgeVerdictSource,
+  verdictCount: number,
+): void {
+  if (source instanceof Map || !source.artifact || !source.metadata) {
+    throw new Error(
+      "Judge verdicts need schemaVersion 1 artifact metadata before a run can count as judged.",
+    );
+  }
+
+  const metadata = source.metadata;
+  const missingFields: string[] = [];
+  if (metadata.provider === undefined) missingFields.push("provider");
+  if (metadata.model === undefined) missingFields.push("model");
+  if (metadata.tool === undefined) missingFields.push("tool");
+  if (metadata.promptVersion === undefined) missingFields.push("promptVersion");
+  if (metadata.rubricHash === undefined) missingFields.push("rubricHash");
+  if (metadata.scenarioCount === undefined) missingFields.push("scenarioCount");
+
+  if (missingFields.length > 0) {
+    throw new Error(
+      `Judge verdict artifact metadata missing required field(s): ${missingFields.join(", ")}`,
+    );
+  }
+
+  if (metadata.provider !== "openai") {
+    throw new Error(
+      `Judge verdict artifact provider must be openai, got ${metadata.provider}.`,
+    );
+  }
+
+  if (metadata.tool !== openAiHellWeekJudgeTool) {
+    throw new Error(
+      `Judge verdict artifact tool must be ${openAiHellWeekJudgeTool}, got ${metadata.tool}.`,
+    );
+  }
+
+  if (metadata.promptVersion !== openAiHellWeekJudgePromptVersion) {
+    throw new Error(
+      `Judge verdict artifact promptVersion must be ${openAiHellWeekJudgePromptVersion}, got ${metadata.promptVersion}.`,
+    );
+  }
+
+  if (metadata.rubricHash !== openAiHellWeekJudgeRubricHash) {
+    throw new Error(
+      `Judge verdict artifact rubricHash must be ${openAiHellWeekJudgeRubricHash}, got ${metadata.rubricHash}.`,
+    );
+  }
+
+  if (metadata.scenarioCount !== scenarios.length) {
+    throw new Error(
+      `Judge verdict artifact scenarioCount ${metadata.scenarioCount} does not match rendered run scenario count ${scenarios.length}.`,
+    );
+  }
+
+  if (verdictCount !== scenarios.length) {
+    throw new Error(
+      `Judge verdict count ${verdictCount} does not match rendered run scenario count ${scenarios.length}.`,
+    );
+  }
 }
 
 function judgeVerdictMap(
