@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | `status-snapshot` | `scripts/status-snapshot.sh` | yes | orient |
 | `branch-risk -- [--base <ref>] [--json]` | `scripts/branch-risk.ts` | yes | default base `dev` |
-| `self-gate` | `verify` + fallow | yes | zero tokens |
+| `self-gate` | `verify` + reports + fallow | yes | zero tokens |
 | `gate-slice -- [--receipt <path>]` | `scripts/gate-slice.ts` | yes | staged-diff gate |
 | `floor-delta -- <run> [--baseline p] [--out p] [--json]` | `scripts/floor-delta.ts` | yes | writes a receipt |
 | `digest -- <run> [--json] [--floor-delta p]` | `scripts/digest.ts` | yes | report.json only |

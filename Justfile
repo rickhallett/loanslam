@@ -29,7 +29,7 @@ typecheck:
 build:
     npm run build
 
-# Run the reviewable local verification chain.
+# Run the reviewable local verification chain, including report manifest drift.
 verify:
     npm run verify
 
@@ -178,7 +178,7 @@ gate-slice *gate_flags:
     @npm --silent run gate-slice -- {{ gate_flags }}
 
 # Cheap zero-token self-gate: the full verify chain plus a best-effort fallow
-# audit. Behaviour proof still requires Hell Week; this only proves wiring.
+# audit. Behaviour proof still requires Hell Week; this only proves wiring and reports.
 self-gate:
     @npm run --silent verify
     @command -v fallow >/dev/null 2>&1 && fallow audit --format json || echo "self-gate: fallow not on PATH; ran verify only"

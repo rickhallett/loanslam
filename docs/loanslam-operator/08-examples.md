@@ -10,7 +10,7 @@ End-to-end command sequences. Output is abbreviated.
 $ just branch-risk -- --base dev
 ## branch risk
 - required proof bar: TOOLING
-  verify (test + typecheck + build + source-policy).
+  verify (test + typecheck + build + reports check + source-policy).
 
 $ git add docs/loanslam-operator/04-operations.md
 $ git commit -m "docs(ops): clarify operations catalog"
@@ -38,7 +38,7 @@ $ cd /Users/.../slice-validator-2026...
 $ just secrets-render local        # fresh secrets, never copied
 
 # 3. Make the single change, then the cheap gate.
-$ just self-gate                   # verify + fallow audit (zero tokens)
+$ just self-gate                   # verify + report check + fallow audit (zero tokens)
 
 # 4. Behaviour proof: smoke first, then full + judge.
 $ just hell-week -- --profile smoke

@@ -45,7 +45,9 @@ const rules: Rule[] = [
     severity: 5,
     bar: "Secret discipline: never commit decrypted values; sync deployment sinks dry-run first.",
     test: (f) =>
-      f.startsWith("secrets/") || f.endsWith(".sops") || /(?:^|\/)\.env(?:\.|$)/.test(f),
+      f.startsWith("secrets/") ||
+      f.endsWith(".sops") ||
+      /(?:^|\/)\.env(?:\.|$)/.test(f),
   },
   {
     tier: "DEPLOY",
@@ -65,16 +67,18 @@ const rules: Rule[] = [
   {
     tier: "UI",
     severity: 2,
-    bar: "verify + live read-back of the affected widget/host/site; no Hell Week needed.",
+    bar: "verify + live read-back of the affected widget/host/current site/IPOC surface; no Hell Week needed.",
     test: (f) =>
       /^packages\/(?:demo|review)-(?:widget|host)\//.test(f) ||
+      f.startsWith("packages/site-nuxt/") ||
+      f.startsWith("packages/integrated-poc/") ||
       f.startsWith("packages/lab-ui/") ||
       f.startsWith("site/"),
   },
   {
     tier: "TOOLING",
     severity: 2,
-    bar: "verify (test + typecheck + build + source-policy).",
+    bar: "verify (test + typecheck + build + reports check + source-policy).",
     test: (f) =>
       f.startsWith("scripts/") ||
       f === "Justfile" ||
@@ -196,6 +200,9 @@ export function main(argv: string[]): void {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main(process.argv.slice(2));
 }

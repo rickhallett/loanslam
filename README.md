@@ -207,7 +207,8 @@ anchor, and the Postgres-backed durable reports are documented once in
 
 ## Development gates
 
-These commands do not call a model. They check the local TypeScript workspace:
+These commands do not call a model. They check the local TypeScript workspace
+and generated report pages:
 
 ```bash
 just test

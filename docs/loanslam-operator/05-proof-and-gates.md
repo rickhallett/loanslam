@@ -8,7 +8,7 @@ mechanical.
 ## The proof doctrine
 
 > Integration evidence is the only proof of behaviour. A green `just verify` (or
-> a passing smoke run) proves wiring/types/build — the live-model tests
+> a passing smoke run) proves wiring/types/build/report generation — the live-model tests
 > self-skip without `OPENAI_API_KEY`. Route/planner/validator/demo/Hell Week
 > behaviour is proven only by a full Hell Week run scored against the committed
 > baseline.
@@ -21,8 +21,8 @@ mechanical.
 | SECRET | `secrets/`, `.env*`, `.sops` | Secret discipline; never commit decrypted |
 | DEPLOY | `prisma/` | Migration review (vercel-build applies it) |
 | BEHAVIOR_ADJACENT | `packages/core/`, `api/`, `mcp-server` | Lab-API/integration check + verify |
-| UI | widgets/hosts/site | verify + live read-back |
-| TOOLING / DOCS / BASELINE | scripts, configs, docs | verify |
+| UI | widgets/hosts/site, `packages/site-nuxt`, `packages/integrated-poc` | verify + live read-back |
+| TOOLING / DOCS / BASELINE | scripts, configs, docs | verify, including report manifest check |
 
 ## The committed anchor
 

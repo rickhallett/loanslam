@@ -36,7 +36,7 @@ To bypass deliberately (rare): `git commit --no-verify`, and write down why.
 ```sh
 just status-snapshot                 # where am I, which branches are checked out where
 just branch-risk -- --base dev       # what proof bar do my changes owe
-just self-gate                       # cheap, zero-token: verify + fallow audit
+just self-gate                       # cheap, zero-token: verify + report check + fallow audit
 ```
 
 Then, if you have an existing Hell Week run folder:

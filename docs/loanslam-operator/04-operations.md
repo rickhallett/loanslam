@@ -30,7 +30,7 @@ $ just status-snapshot
 
 | Target | Does | Exit |
 | --- | --- | --- |
-| `just self-gate` | `verify` (test+typecheck+build+source-policy) + best-effort fallow audit | non-zero on failure |
+| `just self-gate` | `verify` (test+typecheck+build+reports+source-policy) + best-effort fallow audit | non-zero on failure |
 | `just gate-slice` | Staged-diff keep-commit gate | non-zero on violation |
 | `just floor-delta -- <run-dir>` | Score a run vs the committed anchor | non-zero on REGRESSED/INCONCLUSIVE |
 
