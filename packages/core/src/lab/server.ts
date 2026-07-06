@@ -238,35 +238,13 @@ async function handleRequest({
     conversationRef: "",
   };
 
-  for (const route of labRoutes) {
-    if (method !== route.method) {
-      continue;
-    }
-
-    if (typeof route.match === "string") {
-      if (pathname !== route.match) {
-        continue;
-      }
-
-      await route.handle(labRouteContext);
-      return;
-    }
-
-    const matched = pathname.match(route.match);
-    if (!matched) {
-      continue;
-    }
-
-    await route.handle({
-      ...labRouteContext,
-      conversationRef: decodeURIComponent(matched[1] ?? ""),
-    });
-    return;
-  }
-
-  writeJson(response, 404, {
-    error: "not_found",
-    message: `${method} ${pathname} is not a lab API route.`,
+  await dispatchRoute({
+    routes: labRoutes,
+    method,
+    pathname,
+    context: labRouteContext,
+    response,
+    notFoundMessage: `${method} ${pathname} is not a lab API route.`,
   });
 }
 
@@ -318,48 +296,25 @@ async function handleDemoRequest({
     createdAt,
   };
 
-  for (const route of demoRoutes) {
-    if (method !== route.method) {
-      continue;
-    }
-
-    if (typeof route.match === "string") {
-      if (pathname !== route.match) {
-        continue;
-      }
-
-      await route.handle(demoRouteContext);
-      return;
-    }
-
-    const matched = pathname.match(route.match);
-    if (!matched) {
-      continue;
-    }
-
-    await route.handle({
-      ...demoRouteContext,
-      conversationRef: decodeURIComponent(matched[1] ?? ""),
-    });
-    return;
-  }
-
-  writeJson(response, 404, {
-    error: "not_found",
-    message: `${method} ${pathname} is not a demo API route.`,
+  await dispatchRoute({
+    routes: demoRoutes,
+    method,
+    pathname,
+    context: demoRouteContext,
+    response,
+    notFoundMessage: `${method} ${pathname} is not a demo API route.`,
   });
 }
 
 // --- Route tables ----------------------------------------------------------
 // The lab and demo APIs are declarative tables: each row is (method, path
-// matcher, handler). handleRequest / handleDemoRequest walk their table in
-// order and dispatch the first match. A string matcher is an exact path; a
-// RegExp matcher captures the conversationRef in group 1. Intra-table order is
-// safe because the matchers are mutually exclusive; the top-level ordering in
-// handleRequest (demo + auth, then static assets, then lab) is the part that
-// must not move.
+// matcher, handler). dispatchRoute walks the table in order and dispatches the
+// first match. A string matcher is an exact path; a RegExp matcher captures the
+// conversationRef in group 1. Intra-table order is safe because the matchers are
+// mutually exclusive; the top-level ordering in handleRequest (demo + auth, then
+// static assets, then lab) is the part that must not move.
 
-interface LabRouteContext {
+interface BaseRouteContext {
   request: IncomingMessage;
   response: ServerResponse;
   sessions: Map<string, LabSession>;
@@ -371,7 +326,9 @@ interface LabRouteContext {
   conversationRef: string;
 }
 
-interface DemoRouteContext extends LabRouteContext {
+type LabRouteContext = BaseRouteContext;
+
+interface DemoRouteContext extends BaseRouteContext {
   demoStateTokenSecret: string | undefined;
   demoInteractionLog: DemoInteractionLog | undefined;
   method: string;
@@ -384,6 +341,53 @@ interface Route<Context> {
   method: string;
   match: string | RegExp;
   handle: (context: Context) => Promise<void>;
+}
+
+async function dispatchRoute<Context extends BaseRouteContext>({
+  routes,
+  method,
+  pathname,
+  context,
+  response,
+  notFoundMessage,
+}: {
+  routes: readonly Route<Context>[];
+  method: string;
+  pathname: string;
+  context: Context;
+  response: ServerResponse;
+  notFoundMessage: string;
+}): Promise<void> {
+  for (const route of routes) {
+    if (method !== route.method) {
+      continue;
+    }
+
+    if (typeof route.match === "string") {
+      if (pathname !== route.match) {
+        continue;
+      }
+
+      await route.handle(context);
+      return;
+    }
+
+    const matched = pathname.match(route.match);
+    if (!matched) {
+      continue;
+    }
+
+    await route.handle({
+      ...context,
+      conversationRef: decodeURIComponent(matched[1] ?? ""),
+    });
+    return;
+  }
+
+  writeJson(response, 404, {
+    error: "not_found",
+    message: notFoundMessage,
+  });
 }
 
 const labRoutes: readonly Route<LabRouteContext>[] = [
