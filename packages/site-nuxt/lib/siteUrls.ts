@@ -67,7 +67,7 @@ function pathForDisplayUrl(
   if (host === loginHost) return "/login/";
 
   if (siteHosts.has(host)) {
-    return normalizeSitePath(parsed.pathname) ?? "/";
+    return normalizeSitePath(parsed.pathname);
   }
 
   return null;

@@ -41,13 +41,13 @@ describe("siteUrls", () => {
     );
   });
 
-  it("rewrites stale internal links it cannot place to the homepage", () => {
+  it("leaves stale internal links untouched instead of masking them as homepage", () => {
     expect(
       rewriteDisplayedSiteUrls(
         "Use https://loansbymal.co.uk/no-such-page today.",
         localOrigin,
       ),
-    ).toBe("Use http://127.0.0.1:4123/ today.");
+    ).toBe("Use https://loansbymal.co.uk/no-such-page today.");
   });
 
   it("leaves external advice links alone", () => {
