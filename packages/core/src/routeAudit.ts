@@ -186,52 +186,7 @@ export function buildRouteAuditArtifacts(
       ) ??
       traces[turnRow.turnIndex - 1] ??
       null;
-    const selectedServingMode =
-      turnRow.summary.selectedServingMode ?? trace?.selectedServingMode ?? null;
-    const effectiveServingMode =
-      turnRow.summary.effectiveServingMode ??
-      trace?.effectiveServingMode ??
-      null;
-    const finalAction =
-      turnRow.summary.finalAction ?? trace?.finalAction ?? null;
-    const requestedFields = turnRow.summary.requestedFields;
-    const routeForScoring = effectiveServingMode ?? selectedServingMode;
-    const safetyFlags = normalizeCurrentSafetyFlags({
-      finalAction,
-      routeForScoring,
-      safetyFlags: trace?.safetyFlags ?? turnRow.summary.safetyFlags,
-    });
-    const row: RouteAuditRow = {
-      scenarioId: turnRow.scenarioId,
-      scenarioCategory: scenario?.category ?? null,
-      turnIndex: turnRow.turnIndex,
-      conversationRef:
-        turnRow.conversationRef ?? trace?.conversationRef ?? null,
-      traceId: trace?.traceId ?? null,
-      postedMessage: turnRow.postedMessage,
-      expectedEnvelope: scenario?.expected ?? null,
-      finalAction,
-      proposedAction: trace?.proposedAction ?? null,
-      selectedServingMode,
-      effectiveServingMode,
-      routeForScoring,
-      safetyFlags,
-      stateSafetyFlags: turnRow.summary.safetyFlags,
-      validatorOverrideCodes:
-        turnRow.summary.validatorOverrideCodes.length > 0
-          ? turnRow.summary.validatorOverrideCodes
-          : (trace?.validatorOverrides.map((override) => override.code) ?? []),
-      handoffPending: deriveCurrentHandoffPending(finalAction, requestedFields),
-      stateHandoffPending: turnRow.summary.handoffPending,
-      requestedFields,
-      topRetrievedItem: summarizeRetrievedItem(
-        trace?.retrievedMatches[0] ?? null,
-      ),
-      findings: [],
-    };
-
-    row.findings = classifyAuditRow(row);
-    return row;
+    return buildAuditRow({ turnRow, scenario, trace });
   });
 
   const audit: RouteAuditReport = {
@@ -459,6 +414,58 @@ function summarizeRetrievedItem(
   };
 }
 
+function buildAuditRow({
+  turnRow,
+  scenario,
+  trace,
+}: {
+  turnRow: TurnLogRow;
+  scenario: SummaryScenario | undefined;
+  trace: TurnTrace | null;
+}): RouteAuditRow {
+  const selectedServingMode =
+    turnRow.summary.selectedServingMode ?? trace?.selectedServingMode ?? null;
+  const effectiveServingMode =
+    turnRow.summary.effectiveServingMode ?? trace?.effectiveServingMode ?? null;
+  const finalAction = turnRow.summary.finalAction ?? trace?.finalAction ?? null;
+  const requestedFields = turnRow.summary.requestedFields;
+  const routeForScoring = effectiveServingMode ?? selectedServingMode;
+  const safetyFlags = normalizeCurrentSafetyFlags({
+    finalAction,
+    routeForScoring,
+    safetyFlags: trace?.safetyFlags ?? turnRow.summary.safetyFlags,
+  });
+  const row: RouteAuditRow = {
+    scenarioId: turnRow.scenarioId,
+    scenarioCategory: scenario?.category ?? null,
+    turnIndex: turnRow.turnIndex,
+    conversationRef: turnRow.conversationRef ?? trace?.conversationRef ?? null,
+    traceId: trace?.traceId ?? null,
+    postedMessage: turnRow.postedMessage,
+    expectedEnvelope: scenario?.expected ?? null,
+    finalAction,
+    proposedAction: trace?.proposedAction ?? null,
+    selectedServingMode,
+    effectiveServingMode,
+    routeForScoring,
+    safetyFlags,
+    stateSafetyFlags: turnRow.summary.safetyFlags,
+    validatorOverrideCodes:
+      turnRow.summary.validatorOverrideCodes.length > 0
+        ? turnRow.summary.validatorOverrideCodes
+        : (trace?.validatorOverrides.map((override) => override.code) ?? []),
+    handoffPending: deriveCurrentHandoffPending(finalAction, requestedFields),
+    stateHandoffPending: turnRow.summary.handoffPending,
+    requestedFields,
+    topRetrievedItem: summarizeRetrievedItem(
+      trace?.retrievedMatches[0] ?? null,
+    ),
+    findings: [],
+  };
+
+  return { ...row, findings: classifyAuditRow(row) };
+}
+
 function classifyAuditRow(row: RouteAuditRow): RouteAuditFinding[] {
   const findings: RouteAuditFinding[] = [];
   const hasRawStateCarryoverSignal =
@@ -599,7 +606,7 @@ function renderRouteAuditMarkdown(audit: RouteAuditReport): string {
 }
 
 function markdownReviewRow(row: RouteAuditRow): string {
-  return [
+  return markdownTableRow([
     row.scenarioId,
     String(row.turnIndex),
     formatRoute(row),
@@ -608,11 +615,7 @@ function markdownReviewRow(row: RouteAuditRow): string {
     formatTopRetrievedItem(row.topRetrievedItem),
     row.findings.map((finding) => finding.code).join(", "),
     truncate(row.postedMessage, 100),
-  ]
-    .map(markdownCell)
-    .join("|")
-    .replace(/^/, "|")
-    .replace(/$/, "|");
+  ]);
 }
 
 function scenarioSummaryRows(rows: readonly RouteAuditRow[]): string[] {
@@ -631,17 +634,13 @@ function scenarioSummaryRows(rows: readonly RouteAuditRow[]): string[] {
       entries.flatMap((entry) => entry.findings.map((finding) => finding.code)),
     );
 
-    return [
+    return markdownTableRow([
       scenarioId,
       String(entries.length),
       first?.scenarioCategory ?? "-",
       truncate(first?.expectedEnvelope ?? "-", 110),
       findingCodes.join(", ") || "-",
-    ]
-      .map(markdownCell)
-      .join("|")
-      .replace(/^/, "|")
-      .replace(/$/, "|");
+    ]);
   });
 }
 
@@ -877,6 +876,10 @@ function servingModeOrNull(value: unknown): ServingMode | null {
   }
 
   return null;
+}
+
+function markdownTableRow(cells: readonly string[]): string {
+  return `|${cells.map(markdownCell).join("|")}|`;
 }
 
 function markdownCell(value: string): string {
