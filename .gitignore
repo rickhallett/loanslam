@@ -4,6 +4,7 @@ dist/
 coverage/
 .turbo/
 .vitest/
+.DS_Store
 *.tsbuildinfo
 packages/core/src/generated/prisma/
 var/

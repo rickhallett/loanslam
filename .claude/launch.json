@@ -19,6 +19,15 @@
       "port": 3646
     },
     {
+      "name": "site-nuxt-root-built",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PORT=3648 just secrets-run local -- node packages/site-nuxt/.output/server/index.mjs"
+      ],
+      "port": 3648
+    },
+    {
       "name": "site-nuxt-nav-offer-dev",
       "runtimeExecutable": "bash",
       "runtimeArgs": [

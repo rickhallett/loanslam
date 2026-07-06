@@ -1,289 +1,279 @@
 <template>
-  <Transition name="mal-panel" appear>
-    <div
-      v-show="isOpen"
-      id="mal-panel"
-      role="dialog"
-      :aria-label="chatTitle"
-      :data-mode="seamMode"
-      @keydown.esc="closePanel"
-    >
-      <main class="widget-shell" aria-label="MAL Loans chat widget">
-        <section class="chat-panel">
-          <header class="chat-header">
-            <div>
-              <p class="eyebrow">{{ chatEyebrow }}</p>
-              <h1>{{ chatTitle }}</h1>
-              <!-- The two chat surfaces are deliberately distinct (D045/D046);
+  <div
+    id="mal-panel"
+    :class="{ 'mal-panel-open': isOpen }"
+    role="dialog"
+    :aria-label="chatTitle"
+    :data-mode="seamMode"
+    @keydown.esc="closePanel"
+  >
+    <main class="widget-shell" aria-label="MAL Loans chat widget">
+      <section class="chat-panel">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">{{ chatEyebrow }}</p>
+            <h1>{{ chatTitle }}</h1>
+            <!-- The two chat surfaces are deliberately distinct (D045/D046);
                  both brains are named and badged so the seam stays visible. -->
-              <p id="mal-mode-badge" class="chat-status">
-                <span :key="seamMode" class="mode-pill">
-                  <svg
-                    v-if="seamMode === 'concierge'"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    width="10"
-                    height="10"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"
-                    />
-                  </svg>
-                  <svg
-                    v-else
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    width="10"
-                    height="10"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M12 2l8 3.5V11c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5.5z"
-                    />
-                  </svg>
-                  {{ modeName }}
-                </span>
-                {{ chatStatus }}
-              </p>
-            </div>
-            <div class="chat-header-actions">
-              <button
-                type="button"
-                title="Start over"
-                aria-label="Start over"
-                @click="reset"
-              >
-                &#8635;
-              </button>
-              <button
-                type="button"
-                title="Close"
-                aria-label="Close chat"
-                @click="closePanel"
-              >
-                &times;
-              </button>
-            </div>
-          </header>
-
-          <ul ref="scroller" class="message-list">
-            <li
-              v-for="(message, index) in messages"
-              :key="message.id"
-              :class="[
-                'message',
-                messageClass(message),
-                { 'message-streaming': message.id === streamingMessageId },
-              ]"
-            >
-              <img
-                v-if="showsAvatar(index)"
-                class="assistant-avatar"
-                src="/duck.png"
-                alt=""
-                width="26"
-                height="29"
-                loading="lazy"
-              />
-              <span class="message-text">{{ message.text }}</span>
-              <div v-if="index === 0 && showStarterChips" class="primitive">
-                <div class="choices">
-                  <button
-                    v-for="prompt in starterPrompts"
-                    :key="prompt"
-                    class="chip"
-                    type="button"
-                    @click="submit(prompt)"
-                  >
-                    {{ prompt }}
-                  </button>
-                </div>
-              </div>
-              <div
-                v-if="
-                  index === messages.length - 1 &&
-                  message.role === 'assistant' &&
-                  message.ui &&
-                  hasRenderableContent(message.ui)
-                "
-                class="primitive"
-              >
-                <div
-                  v-if="message.ui.primitive === 'choice_list'"
-                  class="choices"
+            <p id="mal-mode-badge" class="chat-status">
+              <span :key="seamMode" class="mode-pill">
+                <svg
+                  v-if="seamMode === 'concierge'"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  width="10"
+                  height="10"
                 >
-                  <button
-                    v-for="choice in message.ui.choices"
-                    :key="choice.id"
-                    class="chip"
-                    type="button"
-                    @click="submit(choice.label)"
-                  >
-                    {{ choice.label }}
-                  </button>
-                </div>
-                <ChatIntakeForm
-                  v-else-if="message.ui.primitive === 'intake_form'"
-                  :key="message.ui.fields.join(',')"
-                  :fields="message.ui.fields"
-                  @submit="onIntakeSubmit"
-                  @cancel="onIntakeCancel"
-                />
-                <div
-                  v-else-if="
-                    (message.ui.primitive === 'message' ||
-                      message.ui.primitive === 'safe_fallback') &&
-                    message.ui.links.length > 0
-                  "
-                  class="links"
+                  <path
+                    fill="currentColor"
+                    d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  width="10"
+                  height="10"
                 >
-                  <a
-                    v-for="(link, i) in message.ui.links"
-                    :key="i"
-                    class="link"
-                    :href="linkHref(link)"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    {{ link.label }}
-                  </a>
-                </div>
-                <div
-                  v-else-if="message.ui.primitive === 'handoff_confirmation'"
-                  class="handoff"
-                >
-                  Our support team will take it from here.
-                </div>
-              </div>
-              <div
-                v-if="
-                  index === messages.length - 1 &&
-                  message.id === applyOfferMessageId
-                "
-                class="primitive"
-              >
-                <div class="choices">
-                  <button
-                    id="mal-apply-nav"
-                    class="chip"
-                    type="button"
-                    @click="goToApply"
-                  >
-                    Take me to the application
-                  </button>
-                </div>
-              </div>
-              <div
-                v-if="
-                  index === messages.length - 1 &&
-                  message.id === handoffOfferMessageId
-                "
-                class="primitive"
-              >
-                <div class="choices">
-                  <button
-                    id="mal-handoff-nav"
-                    class="chip"
-                    type="button"
-                    @click="connectSupport"
-                  >
-                    Connect me with the support team
-                  </button>
-                </div>
-              </div>
-              <div
-                v-if="
-                  index === messages.length - 1 &&
-                  message.id === navOfferMessageId &&
-                  navOffer
-                "
-                class="primitive"
-              >
-                <div class="choices">
-                  <button
-                    id="mal-concierge-nav"
-                    class="chip"
-                    type="button"
-                    @click="goToNavOffer"
-                  >
-                    {{ navOffer.label }}
-                  </button>
-                </div>
-              </div>
-            </li>
-            <li
-              v-if="isSending && streamingMessageId === null"
-              class="message message-assistant thinking-bubble"
-              aria-label="Assistant is typing"
-            >
-              <img
-                class="assistant-avatar"
-                src="/duck.png"
-                alt=""
-                width="26"
-                height="29"
-                loading="lazy"
-              />
-              <span class="thinking-dots"
-                ><span></span><span></span><span></span
-              ></span>
-            </li>
-          </ul>
-
-          <p v-if="errorMessage" class="error" role="alert">
-            {{ errorMessage }}
-          </p>
-          <p v-if="isChatComplete" class="terminal-note">
-            This handoff is complete. Refresh or start over to begin a new chat.
-          </p>
-
-          <p class="uat-notice uat-notice-composer">
-            Prototype — conversations are recorded. Please use test details
-            only.
-          </p>
-
-          <form
-            class="composer"
-            :data-sending="isSending ? 'true' : undefined"
-            @submit.prevent="submitDraft"
-          >
-            <input
-              ref="inputEl"
-              v-model="draft"
-              type="text"
-              name="message"
-              placeholder="Type your message…"
-              autocomplete="off"
-              aria-label="Message"
-              :disabled="isChatComplete"
-            />
+                  <path
+                    fill="currentColor"
+                    d="M12 2l8 3.5V11c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5.5z"
+                  />
+                </svg>
+                {{ modeName }}
+              </span>
+              {{ chatStatus }}
+            </p>
+          </div>
+          <div class="chat-header-actions">
             <button
-              class="composer-send"
-              type="submit"
-              :disabled="
-                isSending || isChatComplete || draft.trim().length === 0
-              "
-              aria-label="Send message"
-              @mousedown.prevent
+              type="button"
+              title="Start over"
+              aria-label="Start over"
+              @click="reset"
             >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                width="18"
-                height="18"
-              >
-                <path
-                  fill="currentColor"
-                  d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"
-                />
-              </svg>
+              &#8635;
             </button>
-          </form>
-        </section>
-      </main>
-    </div>
-  </Transition>
+            <button
+              type="button"
+              title="Close"
+              aria-label="Close chat"
+              @click="closePanel"
+            >
+              &times;
+            </button>
+          </div>
+        </header>
+
+        <ul ref="scroller" class="message-list">
+          <li
+            v-for="(message, index) in messages"
+            :key="message.id"
+            :class="[
+              'message',
+              messageClass(message),
+              { 'message-streaming': message.id === streamingMessageId },
+            ]"
+          >
+            <img
+              v-if="showsAvatar(index)"
+              class="assistant-avatar"
+              src="/duck.png"
+              alt=""
+              width="26"
+              height="29"
+              loading="lazy"
+            />
+            <span class="message-text">{{ message.text }}</span>
+            <div v-if="index === 0 && showStarterChips" class="primitive">
+              <div class="choices">
+                <button
+                  v-for="prompt in starterPrompts"
+                  :key="prompt"
+                  class="chip"
+                  type="button"
+                  @click="submit(prompt)"
+                >
+                  {{ prompt }}
+                </button>
+              </div>
+            </div>
+            <div
+              v-if="
+                index === messages.length - 1 &&
+                message.role === 'assistant' &&
+                message.ui &&
+                hasRenderableContent(message.ui)
+              "
+              class="primitive"
+            >
+              <div
+                v-if="message.ui.primitive === 'choice_list'"
+                class="choices"
+              >
+                <button
+                  v-for="choice in message.ui.choices"
+                  :key="choice.id"
+                  class="chip"
+                  type="button"
+                  @click="submit(choice.label)"
+                >
+                  {{ choice.label }}
+                </button>
+              </div>
+              <ChatIntakeForm
+                v-else-if="message.ui.primitive === 'intake_form'"
+                :key="message.ui.fields.join(',')"
+                :fields="message.ui.fields"
+                @submit="onIntakeSubmit"
+                @cancel="onIntakeCancel"
+              />
+              <div
+                v-else-if="
+                  (message.ui.primitive === 'message' ||
+                    message.ui.primitive === 'safe_fallback') &&
+                  message.ui.links.length > 0
+                "
+                class="links"
+              >
+                <a
+                  v-for="(link, i) in message.ui.links"
+                  :key="i"
+                  class="link"
+                  :href="linkHref(link)"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {{ link.label }}
+                </a>
+              </div>
+              <div
+                v-else-if="message.ui.primitive === 'handoff_confirmation'"
+                class="handoff"
+              >
+                Our support team will take it from here.
+              </div>
+            </div>
+            <div
+              v-if="
+                index === messages.length - 1 &&
+                message.id === applyOfferMessageId
+              "
+              class="primitive"
+            >
+              <div class="choices">
+                <button
+                  id="mal-apply-nav"
+                  class="chip"
+                  type="button"
+                  @click="goToApply"
+                >
+                  Take me to the application
+                </button>
+              </div>
+            </div>
+            <div
+              v-if="
+                index === messages.length - 1 &&
+                message.id === handoffOfferMessageId
+              "
+              class="primitive"
+            >
+              <div class="choices">
+                <button
+                  id="mal-handoff-nav"
+                  class="chip"
+                  type="button"
+                  @click="connectSupport"
+                >
+                  Connect me with the support team
+                </button>
+              </div>
+            </div>
+            <div
+              v-if="
+                index === messages.length - 1 &&
+                message.id === navOfferMessageId &&
+                navOffer
+              "
+              class="primitive"
+            >
+              <div class="choices">
+                <button
+                  id="mal-concierge-nav"
+                  class="chip"
+                  type="button"
+                  @click="goToNavOffer"
+                >
+                  {{ navOffer.label }}
+                </button>
+              </div>
+            </div>
+          </li>
+          <li
+            v-if="isSending && streamingMessageId === null"
+            class="message message-assistant thinking-bubble"
+            aria-label="Assistant is typing"
+          >
+            <img
+              class="assistant-avatar"
+              src="/duck.png"
+              alt=""
+              width="26"
+              height="29"
+              loading="lazy"
+            />
+            <span class="thinking-dots"
+              ><span></span><span></span><span></span
+            ></span>
+          </li>
+        </ul>
+
+        <p v-if="errorMessage" class="error" role="alert">
+          {{ errorMessage }}
+        </p>
+        <p v-if="isChatComplete" class="terminal-note">
+          This handoff is complete. Refresh or start over to begin a new chat.
+        </p>
+
+        <p class="uat-notice uat-notice-composer">
+          Prototype — conversations are recorded. Please use test details only.
+        </p>
+
+        <form
+          class="composer"
+          :data-sending="isSending ? 'true' : undefined"
+          @submit.prevent="submitDraft"
+        >
+          <input
+            ref="inputEl"
+            v-model="draft"
+            type="text"
+            name="message"
+            placeholder="Type your message…"
+            autocomplete="off"
+            aria-label="Message"
+            :disabled="isChatComplete"
+          />
+          <button
+            class="composer-send"
+            type="submit"
+            :disabled="isSending || isChatComplete || draft.trim().length === 0"
+            aria-label="Send message"
+            @mousedown.prevent
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18">
+              <path
+                fill="currentColor"
+                d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"
+              />
+            </svg>
+          </button>
+        </form>
+      </section>
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -708,8 +698,17 @@ function replyAlreadyLinksApplication(ui: UiPlan): boolean {
   );
 }
 
+// Matches the fullscreen breakpoint in chat-widget.css. On mobile the panel
+// covers the whole viewport, so a same-tab navigation it triggers is
+// otherwise invisible to the customer; on desktop the panel floats over one
+// corner and the destination is already visible behind it, so it stays open.
+function isMobileViewport(): boolean {
+  return window.matchMedia("(max-width: 600px)").matches;
+}
+
 function goToApply(): void {
   applyOfferMessageId.value = null;
+  if (isMobileViewport()) closePanel();
   void navigateTo("/apply/");
 }
 
@@ -717,6 +716,7 @@ function goToNavOffer(): void {
   const target = navOffer.value;
   navOffer.value = null;
   navOfferMessageId.value = null;
+  if (isMobileViewport()) closePanel();
   if (target) void navigateTo(target.path);
 }
 
