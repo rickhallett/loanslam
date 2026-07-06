@@ -105,7 +105,7 @@ default planner model.
 | Surface | Status | Use it for |
 | --- | --- | --- |
 | `packages/site-nuxt` | current keeper site and concierge surface; live service is `loanslam-site-nuxt` | Site, concierge, current deployable proof, Railway read-back |
-| `site/` | historical Astro package/docs only; not the live deploy path | Prior parity source and retained site docs |
+| `site/` | retained historical site docs only; not the live deploy path | Prior parity and application-flow evidence docs |
 | `packages/integrated-poc` | source/shared modules consumed by Nuxt; standalone Railway deployment retired | IPOC server/session/admin code that Nuxt still imports |
 | `packages/demo-*` | historical Loanslam iframe demo shell | Legacy local comparison only |
 | `packages/review-*` | MAL review shell and public sanitized reports | Review/demo host checks and report publishing |

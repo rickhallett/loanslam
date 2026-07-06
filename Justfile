@@ -271,29 +271,6 @@ mcp-lab-api:
 # Site
 # =============================================================================
 
-# Start the Astro site dev server; pass Astro flags after -- when needed.
-[private]
-site-dev *astro_args:
-    @set -- {{ astro_args }}; \
-      if [ "${1:-}" = "--" ]; then \
-        shift; \
-      fi; \
-      npm --prefix site run dev -- "$@"
-
-# Build the Astro site surface.
-[private]
-site-build:
-    @npm --prefix site run build
-
-# Preview the built Astro site; pass Astro flags after -- when needed.
-[private]
-site-preview *astro_args:
-    @set -- {{ astro_args }}; \
-      if [ "${1:-}" = "--" ]; then \
-        shift; \
-      fi; \
-      npm --prefix site run preview -- "$@"
-
 # Start the current Nuxt keeper site; pass Nuxt flags after -- when needed.
 site-nuxt-dev *nuxt_args:
     @set -- {{ nuxt_args }}; \

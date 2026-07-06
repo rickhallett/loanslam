@@ -10,7 +10,7 @@ describe("corpus loader", () => {
     expect(corpus.deployment_status).toBe("non_deployable_synthetic");
     expect(corpus.deployable).toBe(false);
     expect(corpus.canonical_contact_source).toBe(
-      "site/src/data/site-copy/contact.json",
+      "packages/site-nuxt/data/site-copy/contact.json",
     );
     expect(corpus.items.map((item) => item.id)).toContain(
       "what-is-open-banking",
