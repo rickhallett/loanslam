@@ -9,6 +9,7 @@ import type {
   RiskItem,
   Severity,
 } from "./types";
+import { escapeHtml } from "../html";
 
 type Tone = "neg" | "warn" | "pos" | "mute";
 
@@ -509,15 +510,6 @@ function formatDuration(ms: number): string {
   const seconds = Math.round(ms / 1000);
   if (seconds < 90) return `${seconds}s`;
   return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function css(): string {

@@ -4,6 +4,7 @@ import type {
   HellWeekScenarioEvidence,
   HellWeekTurnEvidence,
 } from "./types";
+import { escapeHtml } from "../html";
 
 /**
  * A homage renderer: the Hell Week run dressed up as the classic Jasmine 1.x
@@ -212,15 +213,6 @@ function formatDuration(ms: number): string {
 
 function formatMaybeMs(value: number | undefined): string {
   return typeof value === "number" ? formatDuration(value) : "n/a";
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function css(): string {

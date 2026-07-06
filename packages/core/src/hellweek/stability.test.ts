@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildHellWeekStabilityReport } from "./stability";
+import {
+  buildHellWeekStabilityReport,
+  renderHellWeekStabilityHtml,
+} from "./stability";
 import type { HellWeekGrade, HellWeekReport, HellWeekScenario } from "./types";
 
 const scenarios: HellWeekScenario[] = [
@@ -125,6 +128,23 @@ describe("Hell Week stability report", () => {
       promptVersion: "judge-v1",
       verdictCount: 1,
     });
+  });
+
+  it("escapes apostrophes in stability report HTML", () => {
+    const report = buildHellWeekStabilityReport({
+      setId: "apostrophe-html",
+      label: "Kai's stability <set>",
+      runs: [
+        run("run-1", [grade("stable-pass", true, "fine")]),
+        run("run-2", [grade("stable-pass", true, "fine")]),
+      ],
+      now: () => new Date("2026-06-20T10:30:00.000Z"),
+    });
+
+    const html = renderHellWeekStabilityHtml(report);
+
+    expect(html).toContain("Kai&#39;s stability &lt;set&gt;");
+    expect(html).not.toContain("Kai's stability <set>");
   });
 });
 

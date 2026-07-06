@@ -7,6 +7,7 @@ import {
   type HellWeekComparabilityWarning,
   type HellWeekComparisonJson,
 } from "./compare";
+import { escapeHtml } from "../html";
 import type { TriageLabel } from "./triageLabels";
 import {
   severityRank,
@@ -521,12 +522,4 @@ function signalSummary(signal: HellWeekReport["signalExtractor"]): string {
   }
 
   return `${signal.model ?? "unknown"} / ${signal.promptVersion ?? "unknown"}`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

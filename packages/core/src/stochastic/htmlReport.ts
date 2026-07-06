@@ -4,6 +4,7 @@ import type {
   StochasticHardFailure,
   StochasticRunArtifact,
 } from "@loanslam/contracts";
+import { escapeHtml } from "../html";
 
 export function renderStochasticDashboardHtml(
   report: StochasticRunArtifact,
@@ -359,15 +360,6 @@ function practicalTakeaway(report: StochasticRunArtifact): string {
 
 function clampPercent(value: number): string {
   return Math.max(0, Math.min(100, value)).toFixed(1);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function dashboardCss(): string {
