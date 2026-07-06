@@ -35,23 +35,17 @@
 <script setup lang="ts">
 import {
   normalizeContentHeadings,
-  pages,
   pathFromLink,
   rewriteLinks,
   withToc,
 } from '../lib/content';
 import { newsCopy } from '../lib/site-copy';
-
-// Pages with bespoke templates; everything else renders through this prose
-// layout (mirrors the Astro [...slug] getStaticPaths filter).
-const BESPOKE = new Set(['home', 'faq', 'contact', 'instalment-loan']);
+import { customerContentPages } from '../lib/siteMap';
 
 const route = useRoute();
 const requested = `/${[route.params.slug].flat().filter(Boolean).join('/')}/`;
 
-const record = pages.find(
-  (p) => !BESPOKE.has(p.slug) && pathFromLink(p.link) === requested,
-);
+const record = customerContentPages.find((p) => pathFromLink(p.link) === requested);
 
 if (!record) {
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true });
