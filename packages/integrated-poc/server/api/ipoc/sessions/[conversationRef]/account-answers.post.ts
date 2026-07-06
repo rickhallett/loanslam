@@ -8,11 +8,11 @@ import {
 } from "../../../../../shared/ipoc";
 import {
   appendMessage,
-  getIpocSession,
   getMockCustomerByLoanReference,
   recordSessionActivity,
   type IpocMockCustomerRecord,
 } from "../../../../utils/ipocStore";
+import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 const customerQuestions: Record<IpocAccountQuestion, string> = {
   nextPaymentDate: "What's my next payment date?",
@@ -22,24 +22,7 @@ const customerQuestions: Record<IpocAccountQuestion, string> = {
 
 export default defineEventHandler(
   async (event): Promise<IpocAccountAnswerResponse> => {
-    const conversationRef = getRouterParam(event, "conversationRef");
-
-    if (!conversationRef) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Missing conversation reference.",
-      });
-    }
-
-    const session = getIpocSession(conversationRef);
-
-    if (!session) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: `Session ${conversationRef} was not found.`,
-      });
-    }
-
+    const { conversationRef, session } = requireIpocSession(event);
     const body = await readBody<IpocAccountAnswerRequest>(event);
     const question = body?.question;
 

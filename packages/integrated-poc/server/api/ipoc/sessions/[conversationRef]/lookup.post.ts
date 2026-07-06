@@ -9,30 +9,13 @@ import {
 import {
   appendMessage,
   findMockCustomer,
-  getIpocSession,
   recordSessionActivity,
 } from "../../../../utils/ipocStore";
+import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 export default defineEventHandler(
   async (event): Promise<IpocLookupResponse> => {
-    const conversationRef = getRouterParam(event, "conversationRef");
-
-    if (!conversationRef) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Missing conversation reference.",
-      });
-    }
-
-    const session = getIpocSession(conversationRef);
-
-    if (!session) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: `Session ${conversationRef} was not found.`,
-      });
-    }
-
+    const { conversationRef, session } = requireIpocSession(event);
     const body = await readBody<IpocLookupRequest>(event);
     const validation = validateLookupFields(body?.fields);
 

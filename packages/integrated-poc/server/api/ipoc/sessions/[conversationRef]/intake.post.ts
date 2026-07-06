@@ -8,33 +8,17 @@ import {
 } from "../../../../../shared/ipoc";
 import {
   appendMessage,
-  getIpocSession,
   updateIpocTicketIntake,
 } from "../../../../utils/ipocStore";
-import { buildIntakeTelemetry } from "../../../../utils/turnTelemetry";
+import { requireIpocSession } from "../../../../utils/ipocRoute";
+import { buildIpocTelemetry } from "../../../../utils/turnTelemetry";
 
 export default defineEventHandler(
   async (event): Promise<IpocSubmitIntakeResponse> => {
-    const conversationRef = getRouterParam(event, "conversationRef");
-
-    if (!conversationRef) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Missing conversation reference.",
-      });
-    }
-
-    const session = getIpocSession(conversationRef);
-
-    if (!session) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: `Session ${conversationRef} was not found.`,
-      });
-    }
-
+    const { conversationRef, session } = requireIpocSession(event);
     const body = await readBody<IpocSubmitIntakeRequest>(event);
-    const ticketId = typeof body.ticketId === "string" ? body.ticketId.trim() : "";
+    const ticketId =
+      typeof body.ticketId === "string" ? body.ticketId.trim() : "";
     const validation = validateIntakeFields(body.fields);
 
     if (!ticketId) {
@@ -73,7 +57,8 @@ export default defineEventHandler(
       conversationRef,
       messages: session.messages,
       ticket,
-      telemetry: buildIntakeTelemetry({
+      telemetry: buildIpocTelemetry({
+        source: "structured-intake",
         state: session.state,
         submittedFields: Object.keys(validation.fields),
         turn: session.traces.length,

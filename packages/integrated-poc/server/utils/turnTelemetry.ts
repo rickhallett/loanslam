@@ -12,23 +12,67 @@ import { ipocHandoffFields } from "../../shared/ipoc";
 // review-host/public/devtools.js); only decision metadata travels — never
 // customer words, assistant copy, or collected PII values (D043).
 
-export function buildTurnTelemetry({
-  result,
-  turn,
-}: {
-  result: ValidatedTurnResult;
-  turn: number;
-}): DemoDisplayTelemetry {
-  const trace = result.trace;
+type IpocTelemetryInput =
+  | {
+      source: "turn";
+      result: ValidatedTurnResult;
+      turn: number;
+    }
+  | {
+      source: "structured-intake";
+      state: ConversationState;
+      submittedFields: string[];
+      turn: number;
+    };
 
+export function buildIpocTelemetry(
+  input: IpocTelemetryInput,
+): DemoDisplayTelemetry {
+  if (input.source === "structured-intake") {
+    return {
+      type: "turn-telemetry",
+      turn: input.turn,
+      proposedAction: "create_ticket",
+      finalAction: "create_ticket",
+      servingMode: null,
+      actionChanged: false,
+      overrides: [
+        {
+          code: "handoff_intake_complete",
+          fromAction: "request_handoff_intake",
+          toAction: "create_ticket",
+        },
+      ],
+      safetyFlags: [...input.state.safetyFlags],
+      retrieval: { count: 0, topScore: 0, matches: [] },
+      signal: {
+        status: "disabled",
+        primaryIntent: null,
+        recommendedServingMode: null,
+        uncertainty: null,
+        comparison: null,
+      },
+      intake: {
+        collected: input.submittedFields.filter((field) =>
+          (ipocHandoffFields as readonly string[]).includes(field),
+        ) as DemoDisplayTelemetry["intake"]["collected"],
+        requested: [],
+        handoffPending: false,
+      },
+      uiPrimitive: "handoff_confirmation",
+      source: input.source,
+    };
+  }
+
+  const trace = input.result.trace;
   return {
     type: "turn-telemetry",
-    turn,
+    turn: input.turn,
     proposedAction: trace.proposedAction,
-    finalAction: result.finalAction,
+    finalAction: input.result.finalAction,
     servingMode:
       trace.effectiveServingMode ?? trace.selectedServingMode ?? null,
-    actionChanged: trace.proposedAction !== result.finalAction,
+    actionChanged: trace.proposedAction !== input.result.finalAction,
     overrides: trace.validatorOverrides.map((override) => ({
       code: override.code,
       fromAction: override.fromAction ?? null,
@@ -56,56 +100,12 @@ export function buildTurnTelemetry({
       comparison: trace.shadowSignalComparison?.status ?? null,
     },
     intake: {
-      collected: collectedFieldNames(result.state),
-      requested: [...result.state.requestedFields],
-      handoffPending: result.state.handoffPending,
+      collected: collectedFieldNames(input.result.state),
+      requested: [...input.result.state.requestedFields],
+      handoffPending: input.result.state.handoffPending,
     },
-    uiPrimitive: result.ui.primitive,
-    source: "turn",
-  };
-}
-
-export function buildIntakeTelemetry({
-  state,
-  submittedFields,
-  turn,
-}: {
-  state: ConversationState;
-  submittedFields: string[];
-  turn: number;
-}): DemoDisplayTelemetry {
-  return {
-    type: "turn-telemetry",
-    turn,
-    proposedAction: "create_ticket",
-    finalAction: "create_ticket",
-    servingMode: null,
-    actionChanged: false,
-    overrides: [
-      {
-        code: "handoff_intake_complete",
-        fromAction: "request_handoff_intake",
-        toAction: "create_ticket",
-      },
-    ],
-    safetyFlags: [...state.safetyFlags],
-    retrieval: { count: 0, topScore: 0, matches: [] },
-    signal: {
-      status: "disabled",
-      primaryIntent: null,
-      recommendedServingMode: null,
-      uncertainty: null,
-      comparison: null,
-    },
-    intake: {
-      collected: submittedFields.filter((field) =>
-        (ipocHandoffFields as readonly string[]).includes(field),
-      ) as DemoDisplayTelemetry["intake"]["collected"],
-      requested: [],
-      handoffPending: false,
-    },
-    uiPrimitive: "handoff_confirmation",
-    source: "structured-intake",
+    uiPrimitive: input.result.ui.primitive,
+    source: input.source,
   };
 }
 
