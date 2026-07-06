@@ -6,13 +6,8 @@ import type {
 } from "../../../../domains/ipoc/models/ipoc.model";
 import {
   IpocEngineConfigurationError,
-  maybeBuildTicketFromTurn,
-  runIpocTurn,
 } from "../../../../utils/engineAdapter";
-import {
-  appendMessage,
-  saveIpocTicket,
-} from "../../../../domains/ipoc/stores/ipocSession.store";
+import { processIpocTurn } from "../../../../domains/ipoc/services/ipocTurn.service";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 import { buildIpocTelemetry } from "../../../../utils/turnTelemetry";
 
@@ -29,20 +24,8 @@ export default defineEventHandler(
       });
     }
 
-    appendMessage(session, { role: "customer", content: message });
-
     try {
-      const result = await runIpocTurn({ session, message });
-      appendMessage(session, {
-        role: "assistant",
-        content: result.customerMessage,
-      });
-
-      const ticket = maybeBuildTicketFromTurn({ result });
-
-      if (ticket) {
-        saveIpocTicket(ticket);
-      }
+      const { result, ticket } = await processIpocTurn({ session, message });
 
       return {
         conversationRef,
