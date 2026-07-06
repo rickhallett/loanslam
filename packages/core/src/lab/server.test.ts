@@ -125,9 +125,22 @@ describe("lab server", () => {
     });
   });
 
+  it("does not mount demo routes by default", async () => {
+    const baseUrl = await startTestServer();
+
+    const created = await postJson(`${baseUrl}/demo/sessions`, {});
+
+    expect(created.status).toBe(404);
+    expect(created.body).toEqual({
+      error: "not_found",
+      message: "POST /demo/sessions is not a demo API route.",
+    });
+  });
+
   it("serves demo-safe responses without trusted lab routes in demo-only mode", async () => {
     const baseUrl = await startTestServer({
       enableTrustedLabRoutes: false,
+      enableDemoRoutes: true,
       demoStateTokenSecret: "test-demo-secret",
     });
 
@@ -192,6 +205,7 @@ describe("lab server", () => {
   it("can require an access token for demo routes", async () => {
     const baseUrl = await startTestServer({
       enableTrustedLabRoutes: false,
+      enableDemoRoutes: true,
       demoStateTokenSecret: "test-demo-secret",
       demoAccessToken: "stakeholder-token",
     });
@@ -221,6 +235,7 @@ describe("lab server", () => {
     const log = openInMemoryDemoInteractionLog();
     const baseUrl = await startTestServer({
       enableTrustedLabRoutes: false,
+      enableDemoRoutes: true,
       demoStateTokenSecret: "test-demo-secret",
       demoInteractionLog: log,
     });
@@ -254,6 +269,7 @@ describe("lab server", () => {
     const demoStaticAssets = tempStaticAssets();
     const baseUrl = await startTestServer({
       enableTrustedLabRoutes: false,
+      enableDemoRoutes: true,
       demoStaticAssets,
     });
 

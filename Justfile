@@ -115,6 +115,11 @@ core-chat *chat_flags:
 core-serve *server_flags:
     @npm --silent run core:serve -- {{ server_flags }}
 
+# Start the demo-safe API; default port is 8787, override with -- --port <port>.
+[private]
+core-demo-serve *server_flags:
+    @npm --silent run core:demo-serve -- {{ server_flags }}
+
 # Run journey fixtures, e.g. -- --trace-output artifacts/phase0/traces.jsonl
 [private]
 core-simulate *simulation_flags:
@@ -347,7 +352,7 @@ demo *server_flags:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 --demo-only "$@" & \
+      npm --silent run core:demo-serve -- --port 8788 "$@" & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \
@@ -395,7 +400,7 @@ review *server_flags:
         wait 2>/dev/null || true; \
       }; \
       trap cleanup EXIT INT TERM; \
-      npm --silent run core:serve -- --port 8788 --demo-only "$@" & \
+      npm --silent run core:demo-serve -- --port 8788 "$@" & \
       server_pid=$!; \
       sleep 1; \
       if ! kill -0 "$server_pid" 2>/dev/null; then \

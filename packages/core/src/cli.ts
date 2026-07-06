@@ -1162,31 +1162,52 @@ async function runServer(
   );
   const host = readOption(normalizedArgs, "--host") ?? env.HOST ?? "127.0.0.1";
   const demoOnly = normalizedArgs.includes("--demo-only");
+  const enableDemoRoutes =
+    demoOnly || normalizedArgs.includes("--with-demo-routes");
   const demoStateTokenSecret =
     readOption(normalizedArgs, "--demo-state-token-secret") ??
     env.DEMO_STATE_TOKEN_SECRET ??
-    (demoOnly ? randomUUID() : undefined);
+    (enableDemoRoutes ? randomUUID() : undefined);
   const demoAccessToken =
     readOption(normalizedArgs, "--demo-access-token") ?? env.DEMO_ACCESS_TOKEN;
   const demoInteractionLogDisabled = normalizedArgs.includes("--no-demo-log");
-  const demoInteractionDatabaseUrl = demoInteractionLogDisabled
+  const demoInteractionDatabaseUrl =
+    !enableDemoRoutes || demoInteractionLogDisabled
     ? undefined
     : (readOption(normalizedArgs, "--demo-log-database-url") ??
       readDemoInteractionDatabaseUrl(env));
   const demoStaticHostRoot =
-    readOption(normalizedArgs, "--demo-static-host-root") ??
-    env.DEMO_STATIC_HOST_ROOT;
+    enableDemoRoutes
+      ? (readOption(normalizedArgs, "--demo-static-host-root") ??
+        env.DEMO_STATIC_HOST_ROOT)
+      : undefined;
   const demoStaticWidgetRoot =
-    readOption(normalizedArgs, "--demo-static-widget-root") ??
-    env.DEMO_STATIC_WIDGET_ROOT;
+    enableDemoRoutes
+      ? (readOption(normalizedArgs, "--demo-static-widget-root") ??
+        env.DEMO_STATIC_WIDGET_ROOT)
+      : undefined;
 
   if (!Number.isInteger(port) || port <= 0) {
     return fail("--port must be a positive integer.");
   }
 
-  if (demoOnly && !demoInteractionLogDisabled && !demoInteractionDatabaseUrl) {
+  if (
+    enableDemoRoutes &&
+    !demoInteractionLogDisabled &&
+    !demoInteractionDatabaseUrl
+  ) {
     return fail(
       `Demo interaction logging requires ${demoInteractionDatabaseUrlHelp}. Pass --no-demo-log to disable owner logging locally.`,
+    );
+  }
+
+  if (
+    enableDemoRoutes &&
+    ((demoStaticHostRoot && !demoStaticWidgetRoot) ||
+      (!demoStaticHostRoot && demoStaticWidgetRoot))
+  ) {
+    return fail(
+      "--demo-static-host-root and --demo-static-widget-root must be provided together.",
     );
   }
 
@@ -1201,7 +1222,7 @@ async function runServer(
     plannerFactory,
     ...signalExtractorInput(createSignalExtractor(env)),
     enableTrustedLabRoutes: !demoOnly,
-    enableDemoRoutes: true,
+    enableDemoRoutes,
     ...(demoStateTokenSecret ? { demoStateTokenSecret } : {}),
     ...(demoAccessToken ? { demoAccessToken } : {}),
     ...(demoInteractionLog ? { demoInteractionLog } : {}),
@@ -1861,20 +1882,24 @@ function serverHelpText(): string {
     "LoanSlam Phase 0 lab API",
     "",
     "Usage:",
-    "  serve [--port <port>] [--host <host>] [--demo-only]",
+    "  serve [--port <port>] [--host <host>] [--with-demo-routes|--demo-only]",
     "",
     "Routes:",
     "  POST /sessions",
     "  POST /sessions/:conversationRef/messages",
     "  GET  /sessions/:conversationRef",
     "  POST /sessions/:conversationRef/reset",
+    "  POST /sessions/:conversationRef/intake",
+    "  POST /sessions/:conversationRef/cancel-handoff",
     "  POST /demo/sessions",
     "  POST /demo/sessions/:conversationRef/messages",
     "  POST /demo/sessions/:conversationRef/intake",
+    "  POST /demo/sessions/:conversationRef/cancel-handoff",
     "  POST /demo/sessions/:conversationRef/reset",
     "",
     "Options:",
     "  --host h                      Bind address (default: HOST or 127.0.0.1)",
+    "  --with-demo-routes           Mount /demo routes alongside trusted lab routes",
     "  --demo-only                  Mount only demo-safe /demo routes",
     "  --demo-state-token-secret s  Seal demo state into opaque continuation tokens",
     "  --demo-access-token s        Require a bearer or x-demo-access-token value on /demo routes",
@@ -1883,7 +1908,7 @@ function serverHelpText(): string {
     "  --demo-static-widget-root p   Serve the stakeholder widget from this built asset root",
     "  --no-demo-log                Disable demo interaction logging",
     "",
-    "The /sessions routes are local lab evidence surfaces. Use --demo-only for stakeholder demos.",
+    "The /sessions routes are local lab evidence surfaces. Demo routes are opt-in; use --demo-only for stakeholder demos.",
   ].join("\n");
 }
 

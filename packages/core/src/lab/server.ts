@@ -75,7 +75,7 @@ export function createLabServer({
   idFactory = randomUUID,
   now,
   enableTrustedLabRoutes = true,
-  enableDemoRoutes = true,
+  enableDemoRoutes = false,
   demoStateTokenSecret,
   demoAccessToken,
   demoInteractionLog,
