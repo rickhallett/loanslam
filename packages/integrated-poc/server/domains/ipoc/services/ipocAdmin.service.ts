@@ -2,6 +2,7 @@ import type { IpocAdminTicket, IpocTicketStatus } from "../models/ipoc.model";
 import {
   addIpocTicketNote,
   getIpocAdminTicket,
+  listIpocTickets,
   updateIpocTicketStatus,
 } from "../stores/ipocSession.store";
 
@@ -39,6 +40,10 @@ export function validateIpocAdminNote(note: unknown): IpocNoteValidationResult {
   }
 
   return { ok: true, note: normalized };
+}
+
+export function listIpocAdminTickets(): IpocAdminTicket[] {
+  return listIpocTickets();
 }
 
 export function addIpocAdminTicketNote({

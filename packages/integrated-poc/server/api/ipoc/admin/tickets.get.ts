@@ -1,7 +1,7 @@
-import { listIpocTickets } from "../../../domains/ipoc/stores/ipocSession.store";
+import { listIpocAdminTickets } from "../../../domains/ipoc/services/ipocAdmin.service";
 
 export default defineEventHandler(() => {
   return {
-    tickets: listIpocTickets(),
+    tickets: listIpocAdminTickets(),
   };
 });

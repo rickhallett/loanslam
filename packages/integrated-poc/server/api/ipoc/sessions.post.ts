@@ -1,10 +1,3 @@
-import { createIpocSession } from "../../domains/ipoc/stores/ipocSession.store";
+import { startIpocSession } from "../../domains/ipoc/services/ipocSession.service";
 
-export default defineEventHandler(() => {
-  const session = createIpocSession();
-
-  return {
-    conversationRef: session.state.conversationRef,
-    messages: session.messages,
-  };
-});
+export default defineEventHandler(() => startIpocSession());

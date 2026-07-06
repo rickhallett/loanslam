@@ -1,7 +1,5 @@
-import { cancelHandoff } from "@loanslam/core/engine";
-
 import type { IpocSessionResponse } from "../../../../domains/ipoc/models/ipoc.model";
-import { appendMessage } from "../../../../domains/ipoc/stores/ipocSession.store";
+import { cancelIpocHandoff } from "../../../../domains/ipoc/services/ipocSession.service";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 // Mirrors the demo API's cancel-handoff semantics (D042): the engine's own
@@ -10,15 +8,6 @@ import { requireIpocSession } from "../../../../utils/ipocRoute";
 export default defineEventHandler(
   async (event): Promise<IpocSessionResponse> => {
     const { conversationRef, session } = requireIpocSession(event);
-    session.state = cancelHandoff(session.state);
-    appendMessage(session, {
-      role: "assistant",
-      content: "No problem — ask me anything else about your LoanSlam loan.",
-    });
-
-    return {
-      conversationRef,
-      messages: session.messages,
-    };
+    return cancelIpocHandoff({ conversationRef, session });
   },
 );
