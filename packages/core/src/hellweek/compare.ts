@@ -1,19 +1,13 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 
-import type {
-  HellWeekRuntimeStat,
-  HellWeekRuntimeSummary,
-  Severity,
+import {
+  severityRank,
+  type HellWeekRuntimeStat,
+  type HellWeekRuntimeSummary,
+  type HellWeekVerdict,
+  type Severity,
 } from "./types";
-
-const severityRank: Record<Severity, number> = {
-  fine: 0,
-  dent: 1,
-  demo_killer: 2,
-};
-
-type HellWeekVerdict = "blocked" | "needs_work" | "ship_ready";
 
 interface ReportTotals {
   scenarios: number;
