@@ -99,6 +99,12 @@ type PlannerFactory = () => TurnPlanner & {
 
 type CliEnv = Record<string, string | undefined>;
 
+interface HellWeekJudgeModels {
+  judgeModel: string;
+  verifierModel: string;
+  finalAdjudicatorModel: string;
+}
+
 const defaultTraceDir = "artifacts/phase0";
 const demoInteractionDatabaseUrlHelp =
   "DEMO_INTERACTION_DATABASE_URL or DATABASE_URL";
@@ -227,6 +233,17 @@ function readHellWeekDatabaseUrl(env: CliEnv): string | undefined {
   return env.HELL_WEEK_DATABASE_URL ?? readDemoInteractionDatabaseUrl(env);
 }
 
+function readHellWeekDatabaseUrlOption(
+  args: string[],
+  env: CliEnv,
+): string | undefined {
+  return (
+    readOption(args, "--database-url") ??
+    readOption(args, "--db") ??
+    readHellWeekDatabaseUrl(env)
+  );
+}
+
 function readHellWeekJudgeModel(env: CliEnv): string {
   return (
     env.OPENAI_HELL_WEEK_JUDGE_MODEL?.trim() || defaultOpenAiHellWeekJudgeModel
@@ -245,6 +262,20 @@ function readHellWeekJudgeFinalAdjudicatorModel(env: CliEnv): string {
     env.OPENAI_HELL_WEEK_JUDGE_FINAL_MODEL?.trim() ||
     defaultOpenAiHellWeekFinalAdjudicatorModel
   );
+}
+
+function readHellWeekJudgeModels(
+  args: string[],
+  env: CliEnv,
+): HellWeekJudgeModels {
+  return {
+    judgeModel: readOption(args, "--model") ?? readHellWeekJudgeModel(env),
+    verifierModel:
+      readOption(args, "--verify-model") ?? readHellWeekJudgeVerifierModel(env),
+    finalAdjudicatorModel:
+      readOption(args, "--final-model") ??
+      readHellWeekJudgeFinalAdjudicatorModel(env),
+  };
 }
 
 async function runTurn(
@@ -727,10 +758,7 @@ async function runHellWeekCommand(
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
   const storeDb = normalized.includes("--store-db");
-  const databaseUrl =
-    readOption(normalized, "--database-url") ??
-    readOption(normalized, "--db") ??
-    readHellWeekDatabaseUrl(env);
+  const databaseUrl = readHellWeekDatabaseUrlOption(normalized, env);
 
   if (
     concurrency !== undefined &&
@@ -829,18 +857,9 @@ async function runHellWeekReviewCommand(
   const theme = readOption(normalized, "--theme") ?? "minimal";
   const asJson = normalized.includes("--json");
   const storeDb = normalized.includes("--store-db");
-  const databaseUrl =
-    readOption(normalized, "--database-url") ??
-    readOption(normalized, "--db") ??
-    readHellWeekDatabaseUrl(env);
-  const judgeModel =
-    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
-  const verifierModel =
-    readOption(normalized, "--verify-model") ??
-    readHellWeekJudgeVerifierModel(env);
-  const finalAdjudicatorModel =
-    readOption(normalized, "--final-model") ??
-    readHellWeekJudgeFinalAdjudicatorModel(env);
+  const databaseUrl = readHellWeekDatabaseUrlOption(normalized, env);
+  const { judgeModel, verifierModel, finalAdjudicatorModel } =
+    readHellWeekJudgeModels(normalized, env);
 
   if (!isHellWeekReviewTierProfile(profile)) {
     return fail(
@@ -938,14 +957,8 @@ async function runHellWeekJudgeCommand(
     readOption(normalized, "--run") ??
     normalized.find((arg) => !arg.startsWith("--"));
   const outputPath = readOption(normalized, "--out");
-  const judgeModel =
-    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
-  const verifierModel =
-    readOption(normalized, "--verify-model") ??
-    readHellWeekJudgeVerifierModel(env);
-  const finalAdjudicatorModel =
-    readOption(normalized, "--final-model") ??
-    readHellWeekJudgeFinalAdjudicatorModel(env);
+  const { judgeModel, verifierModel, finalAdjudicatorModel } =
+    readHellWeekJudgeModels(normalized, env);
 
   if (!runDir) {
     return fail(hellWeekJudgeHelpText());
@@ -984,14 +997,11 @@ async function runHellWeekJudgeCalibrationCommand(
   const outputPath =
     readOption(normalized, "--out") ?? defaultCalibrationPath();
   const mode = normalized.includes("--ladder") ? "ladder" : "single_model";
-  const model =
-    readOption(normalized, "--model") ?? readHellWeekJudgeModel(env);
-  const verifierModel =
-    readOption(normalized, "--verify-model") ??
-    readHellWeekJudgeVerifierModel(env);
-  const finalAdjudicatorModel =
-    readOption(normalized, "--final-model") ??
-    readHellWeekJudgeFinalAdjudicatorModel(env);
+  const {
+    judgeModel: model,
+    verifierModel,
+    finalAdjudicatorModel,
+  } = readHellWeekJudgeModels(normalized, env);
   const apiKey = env.OPENAI_API_KEY?.trim();
 
   const result = await runHellWeekJudgeCalibration({
@@ -1027,10 +1037,7 @@ async function runHellWeekStabilityCommand(
   const label = readOption(normalized, "--label");
   const outBaseDir = readOption(normalized, "--out") ?? defaultTraceDir;
   const asJson = normalized.includes("--json");
-  const databaseUrl =
-    readOption(normalized, "--database-url") ??
-    readOption(normalized, "--db") ??
-    readHellWeekDatabaseUrl(env);
+  const databaseUrl = readHellWeekDatabaseUrlOption(normalized, env);
 
   const store = openHellWeekReportStore(databaseUrl);
 
@@ -1173,19 +1180,17 @@ async function runServer(
   const demoInteractionLogDisabled = normalizedArgs.includes("--no-demo-log");
   const demoInteractionDatabaseUrl =
     !enableDemoRoutes || demoInteractionLogDisabled
-    ? undefined
-    : (readOption(normalizedArgs, "--demo-log-database-url") ??
-      readDemoInteractionDatabaseUrl(env));
-  const demoStaticHostRoot =
-    enableDemoRoutes
-      ? (readOption(normalizedArgs, "--demo-static-host-root") ??
-        env.DEMO_STATIC_HOST_ROOT)
-      : undefined;
-  const demoStaticWidgetRoot =
-    enableDemoRoutes
-      ? (readOption(normalizedArgs, "--demo-static-widget-root") ??
-        env.DEMO_STATIC_WIDGET_ROOT)
-      : undefined;
+      ? undefined
+      : (readOption(normalizedArgs, "--demo-log-database-url") ??
+        readDemoInteractionDatabaseUrl(env));
+  const demoStaticHostRoot = enableDemoRoutes
+    ? (readOption(normalizedArgs, "--demo-static-host-root") ??
+      env.DEMO_STATIC_HOST_ROOT)
+    : undefined;
+  const demoStaticWidgetRoot = enableDemoRoutes
+    ? (readOption(normalizedArgs, "--demo-static-widget-root") ??
+      env.DEMO_STATIC_WIDGET_ROOT)
+    : undefined;
 
   if (!Number.isInteger(port) || port <= 0) {
     return fail("--port must be a positive integer.");
