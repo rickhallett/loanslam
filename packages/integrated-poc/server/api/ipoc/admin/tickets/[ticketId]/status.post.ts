@@ -2,20 +2,13 @@ import { createError, readBody } from "h3";
 
 import type {
   IpocAdminTicketResponse,
-  IpocTicketStatus,
   IpocUpdateTicketStatusRequest,
 } from "../../../../../domains/ipoc/models/ipoc.model";
 import {
-  getIpocAdminTicket,
-  updateIpocTicketStatus,
-} from "../../../../../domains/ipoc/stores/ipocSession.store";
-
-const validStatuses: IpocTicketStatus[] = [
-  "open",
-  "intake_captured",
-  "in_review",
-  "resolved",
-];
+  ipocTicketStatuses,
+  isIpocTicketStatus,
+} from "../../../../../domains/ipoc/models/ipoc.model";
+import { changeIpocAdminTicketStatus } from "../../../../../domains/ipoc/services/ipocAdmin.service";
 
 export default defineEventHandler(
   async (event): Promise<IpocAdminTicketResponse> => {
@@ -31,14 +24,14 @@ export default defineEventHandler(
     const body = await readBody<IpocUpdateTicketStatusRequest>(event);
     const status = body?.status;
 
-    if (!status || !validStatuses.includes(status)) {
+    if (!isIpocTicketStatus(status)) {
       throw createError({
         statusCode: 400,
-        statusMessage: `status must be one of: ${validStatuses.join(", ")}.`,
+        statusMessage: `status must be one of: ${ipocTicketStatuses.join(", ")}.`,
       });
     }
 
-    const result = updateIpocTicketStatus(ticketId, status);
+    const result = changeIpocAdminTicketStatus({ ticketId, status });
 
     if (!result.ok) {
       if (result.reason === "not_found") {
@@ -54,15 +47,6 @@ export default defineEventHandler(
       });
     }
 
-    const ticket = getIpocAdminTicket(ticketId);
-
-    if (!ticket) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: `Ticket ${ticketId} was not found.`,
-      });
-    }
-
-    return { ticket };
+    return { ticket: result.ticket };
   },
 );

@@ -5,11 +5,9 @@ import type {
   IpocAdminTicketResponse,
 } from "../../../../../domains/ipoc/models/ipoc.model";
 import {
-  addIpocTicketNote,
-  getIpocAdminTicket,
-} from "../../../../../domains/ipoc/stores/ipocSession.store";
-
-const maxNoteLength = 500;
+  addIpocAdminTicketNote,
+  validateIpocAdminNote,
+} from "../../../../../domains/ipoc/services/ipocAdmin.service";
 
 export default defineEventHandler(
   async (event): Promise<IpocAdminTicketResponse> => {
@@ -23,40 +21,27 @@ export default defineEventHandler(
     }
 
     const body = await readBody<IpocAddTicketNoteRequest>(event);
-    const note = typeof body?.note === "string" ? body.note.trim() : "";
+    const validation = validateIpocAdminNote(body?.note);
 
-    if (!note) {
+    if (!validation.ok) {
       throw createError({
         statusCode: 400,
-        statusMessage: "note is required.",
+        statusMessage: validation.message,
       });
     }
 
-    if (note.length > maxNoteLength) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: `note must be ${maxNoteLength} characters or fewer.`,
-      });
-    }
+    const result = addIpocAdminTicketNote({
+      ticketId,
+      note: validation.note,
+    });
 
-    const updated = addIpocTicketNote(ticketId, note);
-
-    if (!updated) {
+    if (!result.ok) {
       throw createError({
         statusCode: 404,
         statusMessage: `Ticket ${ticketId} was not found.`,
       });
     }
 
-    const ticket = getIpocAdminTicket(ticketId);
-
-    if (!ticket) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: `Ticket ${ticketId} was not found.`,
-      });
-    }
-
-    return { ticket };
+    return { ticket: result.ticket };
   },
 );
