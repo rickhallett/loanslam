@@ -66,35 +66,35 @@ vercel-build:
 
 # Show encrypted secret status without printing values.
 secrets-status *args:
-    @node scripts/secrets.mjs status {{ args }}
+    @npm --silent run lsops -- secrets status {{ args }}
 
 # Initialize an encrypted environment file with empty keys.
 secrets-init env *args:
-    @node scripts/secrets.mjs init {{ env }} {{ args }}
+    @npm --silent run lsops -- secrets init {{ env }} {{ args }}
 
 # Edit an encrypted environment with SOPS.
 secrets-edit env:
-    @node scripts/secrets.mjs edit {{ env }}
+    @npm --silent run lsops -- secrets edit {{ env }}
 
 # Set one encrypted value from stdin, e.g. openssl rand -hex 32 | just secrets-set staging DEMO_STATE_TOKEN_SECRET.
 secrets-set env key:
-    @node scripts/secrets.mjs set {{ env }} {{ key }}
+    @npm --silent run lsops -- secrets set {{ env }} {{ key }}
 
 # Render an encrypted environment to its ignored local cache, e.g. local -> .env.local.
 secrets-render env:
-    @node scripts/secrets.mjs render {{ env }}
+    @npm --silent run lsops -- secrets render {{ env }}
 
 # Run a command with decrypted secrets without writing a plaintext env file.
 secrets-run env *command:
-    @node scripts/secrets.mjs run {{ env }} -- {{ command }}
+    @npm --silent run lsops -- secrets run {{ env }} -- {{ command }}
 
 # Dry-run by default. Add --apply to mutate Vercel environment variables.
 secrets-sync-vercel env *args:
-    @node scripts/secrets.mjs sync-vercel {{ env }} {{ args }}
+    @npm --silent run lsops -- secrets sync vercel {{ env }} {{ args }}
 
 # Dry-run by default. Add --apply to mutate Railway variables.
 secrets-sync-railway env *args:
-    @node scripts/secrets.mjs sync-railway {{ env }} {{ args }}
+    @npm --silent run lsops -- secrets sync railway {{ env }} {{ args }}
 
 # =============================================================================
 # Core Engine
@@ -147,11 +147,11 @@ route-audit *audit_flags:
 
 # Verify the assistant-first contact route finder UX against a running site-nuxt server.
 contact-assistant-proof *proof_flags:
-    @node scripts/contact-assistant-ux-proof.mjs {{ proof_flags }}
+    @npm --silent run lsops -- proof run contact-assistant {{ proof_flags }}
 
 # Verify the concierge/engine seam (badges, header temperature, transcript dividers) against a running site-nuxt server.
 seam-walk-proof *proof_flags:
-    @node scripts/seam-walk-proof.mjs {{ proof_flags }}
+    @npm --silent run lsops -- proof run seam-walk {{ proof_flags }}
 
 # =============================================================================
 # Hell Week Evidence
@@ -234,7 +234,7 @@ status-snapshot:
 # (packages/review-host/reports-manifest.json). Add -- --check to verify only.
 # Build or check sanitized public report pages.
 reports-build *reports_flags:
-    @node scripts/build-reports.mjs {{ reports_flags }}
+    @npm --silent run lsops -- reports build {{ reports_flags }}
 
 # Map this branch's changed files to the proof bar they require. e.g. -- --base dev
 branch-risk *risk_flags:

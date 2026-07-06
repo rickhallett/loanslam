@@ -1,0 +1,27 @@
+{
+  "name": "@loanslam/lsops",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "lsops": "./dist/cli/main.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build --pretty false",
+    "cli": "tsx src/cli/main.ts",
+    "test": "vitest run --root ../.. packages/lsops/src"
+  },
+  "dependencies": {
+    "openai": "^6.9.1",
+    "playwright-core": "^1.61.1",
+    "prettier": "^3.7.4",
+    "zod": "^4.1.13"
+  }
+}

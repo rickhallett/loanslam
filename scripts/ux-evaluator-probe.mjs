@@ -246,6 +246,11 @@ console.log(renderMarkdownSummary(report));
 console.log("");
 console.log(`JSON: ${args.output}`);
 
+if (report.results.length > 0 && report.results.every((result) => result.error)) {
+  console.error("ux-evaluator-probe: all evaluator calls failed");
+  process.exitCode = 1;
+}
+
 async function evaluateCase({ client, model, evaluationCase, repeatIndex }) {
   const input = buildEvaluatorInput(evaluationCase);
   const startedAt = performance.now();
