@@ -106,7 +106,7 @@ arc_002_chain:
   - id: sn-007-chat-panel
     slice_label: sitenuxt-chat-panel-01
     status: completed
-    receipt: artifacts/site-nuxt/sitenuxt-chat-panel-01-browser.png
+    receipt: artifacts/evidence-index/ui-proof-receipts-2026-07-06.md#site-nuxt
     depends_on:
       - sn-006-chat-backend
     summary: Native launcher/frost/panel with widget-parity chrome and texts on /contact/.
@@ -131,7 +131,7 @@ arc_002_chain:
   - id: sn-009-chat-deploy
     slice_label: sitenuxt-chat-deploy-01
     status: completed
-    receipt: artifacts/site-nuxt/sitenuxt-chat-deploy-01-browser.png
+    receipt: artifacts/evidence-index/ui-proof-receipts-2026-07-06.md#site-nuxt
     live_url: https://mal-demo.up.railway.app/contact/
     depends_on:
       - sn-008-chat-proof
@@ -146,7 +146,7 @@ arc_002_chain:
   - id: sn-010-chat-devtools
     slice_label: sitenuxt-chat-devtools-01
     status: completed
-    receipt: artifacts/site-nuxt/sitenuxt-chat-devtools-01-live.png
+    receipt: artifacts/evidence-index/ui-proof-receipts-2026-07-06.md#site-nuxt
     depends_on:
       - sn-009-chat-deploy
     summary: Carry sm-devtools onto the native chat (D043 veto response) via mirrored telemetry.
@@ -162,7 +162,7 @@ arc_003_chain:
   - id: sn-011-contact-context
     slice_label: sitenuxt-contact-context-01
     status: completed
-    receipt: artifacts/site-nuxt/sitenuxt-contact-context-01-live.png
+    receipt: artifacts/evidence-index/ui-proof-receipts-2026-07-06.md#site-nuxt
     depends_on:
       - sn-010-chat-devtools
     summary: Contact-route highlighting from chat context on panel close, derived client-side from telemetry.
