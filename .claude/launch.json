@@ -2,39 +2,22 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "site-nuxt-built",
-      "runtimeExecutable": "node",
-      "runtimeArgs": [
-        ".claude/worktrees/reports-route-01/packages/site-nuxt/.output/server/index.mjs"
-      ],
-      "port": 4381
-    },
-    {
-      "name": "site-nuxt-root-dev",
+      "name": "site-nuxt-dev",
       "runtimeExecutable": "bash",
       "runtimeArgs": [
         "-c",
-        "just secrets-run local -- ./node_modules/.bin/nuxt dev packages/site-nuxt --host localhost --port 3646"
+        "just secrets-run local -- just site-nuxt-dev -- --host localhost --port 3646"
       ],
       "port": 3646
     },
     {
-      "name": "site-nuxt-root-built",
+      "name": "site-nuxt-built",
       "runtimeExecutable": "bash",
       "runtimeArgs": [
         "-c",
-        "PORT=3648 just secrets-run local -- node packages/site-nuxt/.output/server/index.mjs"
+        "PORT=3648 just secrets-run local -- just site-nuxt-start"
       ],
       "port": 3648
-    },
-    {
-      "name": "site-nuxt-nav-offer-dev",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": [
-        "-c",
-        "cd .claude/worktrees/concierge-nav-offer && just secrets-run local -- ./node_modules/.bin/nuxt dev packages/site-nuxt --host localhost --port 3642"
-      ],
-      "port": 3642
     }
   ]
 }
