@@ -9,7 +9,7 @@ excluded-route runtime mismatch.
 
 ## Environment and Baseline
 
-- Worktree: `/Users/mrkai/code/loanslam/.claude/worktrees/static-runtime-audit`
+- Worktree: local `static-runtime-audit` worktree
 - Branch: `worktree-static-runtime-audit`
 - Baseline commit: `ea0a111d2b3f8573f7ae4c7c1e7cad1860e010e9`
 - Generated at: `2026-06-20T14:27:54+01:00`

@@ -17,7 +17,7 @@ No data-loss bug was confirmed.
 
 ## Environment and Baseline
 
-- Worktree: `/Users/mrkai/code/loanslam/.claude/worktrees/hellweek-judge-default`
+- Worktree: local `hellweek-judge-default` worktree
 - Branch: `worktree-hellweek-judge-default`
 - Baseline commit at write time: `bbf414ee2bd8fde7f612326bb1d51014e9630c98`
 - Generated at: `2026-06-23T14:35:06+01:00`

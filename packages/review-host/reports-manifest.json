@@ -77,10 +77,10 @@
       "title": "Hell Week iteration 1 stability report",
       "date": "2026-06-16",
       "campaign": "Phase 0 · Hell Week",
-      "kind": "dashboard",
+      "kind": "narrative",
       "source": {
-        "type": "static-html",
-        "path": "packages/review-host/public/reports/iteration-1-stability.html"
+        "type": "markdown",
+        "path": "docs/reports/2026-06-16-hell-week-iteration-1-stability-summary.md"
       },
       "summary": "Three full Hell Week runs compared to separate stable dents from run-to-run noise.",
       "provenance": ["3 full runs compared", "runs of 2026-06-16"]
@@ -90,10 +90,10 @@
       "title": "Hell Week full run",
       "date": "2026-06-16",
       "campaign": "Phase 0 · Hell Week",
-      "kind": "dashboard",
+      "kind": "narrative",
       "source": {
-        "type": "static-html",
-        "path": "packages/review-host/public/reports/hell-week-full.html"
+        "type": "markdown",
+        "path": "docs/reports/2026-06-16-hell-week-full-summary.md"
       },
       "summary": "The full 122-scenario gauntlet: 95 passed, 27 dents, 0 demo-killers.",
       "provenance": [
