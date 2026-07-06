@@ -1,9 +1,9 @@
 # Loanslam TurnPlanner Core
 
-> **Status: Phase 0 engine proof with integrated POC migration queued.** This
-> repo is proving the TurnPlanner engine before productising ticket webhooks or
-> real PII intake. Existing widget-adapter demo surfaces remain deployable for
-> demonstrations until the integrated POC becomes the new deployable surface.
+> **Status: Nuxt keeper site plus Phase 0 engine proof.** The current live
+> keeper surface is `packages/site-nuxt` (`loanslam-site-nuxt` on Railway). The
+> older Astro deployment path and standalone IPOC deployment path are historical;
+> their source stays only where Nuxt still imports it.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
@@ -11,10 +11,11 @@
 
 ## Practical takeaway
 
-The useful thing in this repo is not a finished chat product yet. It is the
-model-backed decision engine and its evidence loop: customer message plus session
-state goes through retrieval, an untrusted `TurnPlan`, deterministic validation,
-and trace output that reviewers can inspect.
+The useful thing in this repo is not a finished account product yet. It is the
+current Nuxt site surface plus a model-backed decision engine and evidence loop:
+customer message plus session state goes through retrieval, an untrusted
+`TurnPlan`, deterministic validation, and trace output that reviewers can
+inspect.
 
 If you are trying to understand or change behaviour, start with
 [`docs/llm-turn-planner-architecture.md`](./docs/llm-turn-planner-architecture.md)
@@ -83,6 +84,13 @@ Drive the engine interactively:
 just core-chat -- --trace
 ```
 
+Start the current Nuxt site locally:
+
+```bash
+npm run site-nuxt-build
+npm --workspace @loanslam/site-nuxt run dev
+```
+
 Start the local lab API and Vue inspector:
 
 ```bash
@@ -92,32 +100,21 @@ just lab
 Model-backed commands require `OPENAI_API_KEY`. `OPENAI_MODEL` can override the
 default planner model.
 
-## Vercel + Neon demo deployment
+## Current Surface Map
 
-The Vercel entrypoint is [`api/index.ts`](./api/index.ts). It serves the
-demo-safe `/demo` API plus the built review host/widget assets, and it writes
-owner-only interaction receipts through Prisma to Postgres.
+| Surface | Status | Use it for |
+| --- | --- | --- |
+| `packages/site-nuxt` | current keeper site and concierge surface; live service is `loanslam-site-nuxt` | Site, concierge, current deployable proof, Railway read-back |
+| `site/` | Astro source/input tree only; not the live deploy path | Content, styles, and assets still imported by Nuxt until migrated |
+| `packages/integrated-poc` | source/shared modules consumed by Nuxt; standalone Railway deployment retired | IPOC server/session/admin code that Nuxt still imports |
+| `packages/demo-*` | historical Loanslam iframe demo shell | Legacy local comparison only |
+| `packages/review-*` | MAL review shell and public sanitized reports | Review/demo host checks and report publishing |
+| `packages/core` | engine, CLI, Hell Week, STS, lab API | Runtime behavior and proof batteries |
+| `packages/lab-ui` / `packages/mcp-server` | local engineering surfaces | Trace inspection and agent-driven lab sessions |
 
-Required Vercel/Neon environment:
-
-- `DATABASE_URL`: pooled Neon Postgres URL used by runtime Prisma traffic.
-- `DATABASE_URL_UNPOOLED` or `DATABASE_MIGRATE_URL`: direct URL used by Prisma migrations.
-- `DEMO_STATE_TOKEN_SECRET`: stable secret for opaque continuation tokens.
-- `OPENAI_API_KEY`: required for planner-backed demo turns.
-- `DEMO_ACCESS_TOKEN`: optional bearer or `x-demo-access-token` gate for shared demos.
-
-Useful commands:
-
-```bash
-just prisma-generate
-just prisma-migrate-deploy
-just vercel-build
-```
-
-`just prisma-migrate-deploy` and `just vercel-build` are database/deployment
-commands, not routine local checks. `just vercel-build` runs `prisma migrate
-deploy` against the configured migration database before building the deployed
-review assets.
+Do not treat `railway.json`, Astro `site/dist`, or the old standalone IPOC pack
+as current deployment authority. The retained deployment target is the Nuxt
+keeper service and its verified dependencies.
 
 ## Which surface should I use?
 
@@ -131,10 +128,11 @@ review assets.
 - `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
 - `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
 - `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
-- `just demo` starts the historical Loanslam customer-facing iframe demo around the Phase 0 engine; use `just demo-local` for a no-Postgres local UI check.
-- `just review` starts the MAL review demo around the same engine; use `just review-local` for a no-Postgres local UI check.
+- `npm --workspace @loanslam/site-nuxt run dev` starts the current site surface.
+- `npm run site-nuxt-build` builds the current site surface.
+- `just demo` starts the historical Loanslam iframe demo around the Phase 0 engine; use `just demo-local` only for legacy local comparison.
+- `just review` starts the MAL review demo around the same engine; use `just review-local` for review-host checks.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
-- `packages/site-nuxt` is the current keeper site surface. Build it with `npm run site-nuxt-build`.
 - `site/` is still a source/input tree for Nuxt content and assets, not the live deploy surface.
 
 ## Repository map
@@ -148,16 +146,18 @@ docs/
 packages/
   contracts/                        Shared Zod contracts and runtime types
   core/                             Engine, retrieval, validator, planner adapters, CLI, lab API, evidence harnesses
+  site-nuxt/                        Current keeper site and concierge surface
+  integrated-poc/                   IPOC source/modules consumed by the current Nuxt surface
   lab-ui/                           Vue engineer console for traces, retrieval, overrides, and session export
   mcp-server/                       Local MCP wrapper around the lab API
-  demo-widget/                      Loanslam-facing iframe widget demo
+  demo-widget/                      Historical Loanslam-facing iframe widget demo
   demo-host/                        Host page for the demo widget
   review-widget/                    MAL review widget demo
   review-host/                      Host page for the review widget
 prisma/
   schema.prisma                     Postgres schema for owner-only demo interaction receipts and Hell Week evidence
 api/
-  index.ts                          Vercel Function entrypoint for demo deployment
+  index.ts                          Legacy Vercel/review demo entrypoint
 data/
   public-info/                      Synthetic Loanslam corpus treated as approved Phase 0 policy data
 scripts/
@@ -171,9 +171,11 @@ artifacts/
 
 - `packages/contracts` owns the shared Zod schemas for `CorpusItem`, `TurnPlan`, `TurnTrace`, `ValidatedTurnResult`, simulation reports, stochastic artifacts, and planner ports.
 - `packages/core` owns `processTurn`, corpus loading, retrieval, OpenAI planner adapters, signal extraction, validation, local lab API, CLI commands, simulations, route audits, STS, and Hell Week.
+- `packages/site-nuxt` owns the current keeper site, concierge API, and customer-facing Nuxt surface.
+- `packages/integrated-poc` owns IPOC session/admin modules still consumed by the Nuxt surface; it is not a standalone live deployment target.
 - `packages/lab-ui` visualizes the lab API result with action, serving mode, retrieval, validator overrides, safety flags, requested fields, raw trace JSON, and session export.
 - `packages/mcp-server` lets agents start, drive, dump, reset, and summarize lab API sessions without browser automation.
-- `packages/demo-*` and `packages/review-*` are customer-facing demo shells over the current engine; `api/index.ts` mounts the review demo for Vercel.
+- `packages/demo-*` and `packages/review-*` are legacy/review shells over the current engine; they are not the keeper site deployment.
 
 ## Knowledge base and policy data
 
@@ -240,17 +242,21 @@ input is migrated.
 
 - [Product brief](./docs/product-brief.md)
 - [LLM Turn Planner architecture](./docs/llm-turn-planner-architecture.md)
-- [Integrated POC reference](./docs/prds/closed/2026-06-30-integrated-poc-reference.md)
-- [Integrated POC implementation agenda card](./docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md)
-- [Stakeholder demo safe display boundary](./docs/prds/closed/2026-06-16-stakeholder-demo-safe-display-boundary-prd.md)
+- [Campaign workflow protocol](./docs/campaign-workflow-protocol.md)
+- [Active PRDs and campaign cards](./docs/prds/README.md)
+- [Roadmaps](./docs/roadmaps/README.md)
+- [Operator manual](./docs/loanslam-operator/README.md)
 - [Hell Week gauntlet](./docs/hell-week-gauntlet.md)
 - [Hell Week agent loop playbook](./docs/hell-week-agent-loop-playbook.md)
 - [StochasticTestSimulator guide](./docs/stochastic-test-simulator-guide.md)
 - [Hell Week evidence index](./artifacts/evidence-index/hell-week-runs.md)
 
+Closed PRDs and agenda cards under [`docs/prds/closed/`](./docs/prds/closed/)
+are provenance, not active start points.
+
 Documentation cleanup records live under
 [`docs/non-operational/doc-cleanup/`](./docs/non-operational/doc-cleanup/). They
-are not product or runtime authority unless an active agenda card points at them.
+are not product or runtime authority unless an active campaign card points at them.
 
 ## Not built in Phase 0
 

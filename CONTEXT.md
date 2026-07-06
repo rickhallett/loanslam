@@ -2,6 +2,23 @@
 
 This context defines the shared product and engine language for the Loanslam support chat work. It keeps Phase 0 engine proof terms distinct from later productisation terms.
 
+## Current Surface Map
+
+- `packages/site-nuxt` is the current keeper customer-facing site and concierge
+  surface. The live Railway service is `loanslam-site-nuxt`.
+- `site/` is an Astro source/input tree for content, styles, and assets still
+  imported by Nuxt. It is not the live deploy surface.
+- `packages/integrated-poc` contains IPOC source/modules still consumed by the
+  Nuxt surface. Its standalone deployment path is historical.
+- `packages/demo-*` and `packages/review-*` are legacy/review shells over the
+  engine, not the keeper deployment target.
+- `packages/core`, `packages/lab-ui`, and `packages/mcp-server` are engineering
+  and proof surfaces for engine behavior, traces, simulations, Hell Week, STS,
+  and agent-driven lab sessions.
+- New execution starts from active campaign cards, active roadmaps, the decision
+  log, and `docs/campaign-workflow-protocol.md`. Closed agenda cards and PRDs
+  are provenance only.
+
 ## Language
 
 **Phase 0 Engine Proof**:
@@ -9,15 +26,15 @@ The pre-productisation build that proves the conversation engine, retrieval, val
 _Avoid_: MVP app, widget build, full product slice
 
 **Integrated POC**:
-The next product proof surface that wraps the proven engine in a believable customer journey, mock business integrations, human handoff, admin readback, and deployment story.
+The product proof surface that wraps the proven engine in a believable customer journey, mock business integrations, human handoff, admin readback, and deployment story. Its standalone deployment path is historical; retained IPOC modules are consumed through the current Nuxt surface.
 _Avoid_: FAQ widget, final production system, website refresh
 
 **Deployable Surface**:
-The demoable and reviewable customer-facing application surface intended to replace the old demo/widget deployment once the **Integrated POC** is complete.
+The demoable and reviewable customer-facing surface. Today this means the `packages/site-nuxt` keeper site, not the old Astro deploy path or standalone IPOC pack.
 _Avoid_: production artifact, long-term enterprise system, test harness, lab UI
 
 **Integrated POC App**:
-The separate app/package that will host the **Integrated POC** and become the new **Deployable Surface** once complete.
+The separate package that contains retained IPOC code and proof-era app structure. It is source for the Nuxt-integrated proof path, not the current standalone live deployment.
 _Avoid_: existing `site/`, demo host, review host, widget adapter
 
 **Boundary Layering**:
@@ -81,8 +98,8 @@ The acceptance standard for closing the **Documentation Cleanup Gate** with a co
 _Avoid_: matrix only, tidy-looking diff, undocumented deferrals
 
 **Integrated POC Implementation Agenda Card**:
-The post-cleanup start artifact that unlocks **Integrated POC** implementation by referencing the cleanup matrix, final doctrine, in-repo roadmap first chain, and first **Golden Path Slice**.
-_Avoid_: chat-thread start, reference memo as plan, implementation before cleanup closeout
+The closed historical start artifact that unlocked the first **Integrated POC** implementation chain after documentation cleanup. New work now starts from active campaign cards under the campaign workflow protocol.
+_Avoid_: current start point, chat-thread start, reference memo as plan
 
 **Golden Path Slice**:
 The first **Integrated POC** slice that proves the end-to-end infrastructure through one complete customer-to-admin journey before adding richer undeveloped flows.
@@ -109,7 +126,7 @@ The behaviour, journey shape, and evidence a customer or reviewer can observe fr
 _Avoid_: iframe transport, package split, review-host quirk, implementation topology
 
 **Widget-Adapter Architecture**:
-The transitional host/widget delivery model that keeps the existing iframe/native adapter code usable until the **Integrated POC** is complete.
+The transitional host/widget delivery model retained for legacy/review comparison while the Nuxt keeper surface carries current customer-facing proof.
 _Avoid_: long-term default architecture, new deployable target
 
 **TurnPlanner**:
@@ -175,29 +192,29 @@ _Avoid_: Phase 0 engine name
 - A **Journey Envelope** measures whether a simulated conversation stayed inside the intended behavioral bounds.
 - A **Model Comparison Report** uses **Journey Envelopes** from the **Representative Journey Suite** to compare real planner configurations without approving a production model.
 - The **Phase 0 Engine Proof** must prove the turn flow before **ChatService** is productised.
-- The **Integrated POC** becomes the new **Deployable Surface** when complete, but its deployability is about demoability and reviewability rather than production permanence.
-- The **Integrated POC App** is a separate app/package that consumes current engine/contracts and useful site/application assets rather than mutating existing transitional surfaces.
+- The current **Deployable Surface** is the `packages/site-nuxt` keeper site; retained **Integrated POC App** modules support that surface where imported.
+- The **Integrated POC App** remains a separate package for source boundaries and proof-era modules rather than a standalone deployment target.
 - **Boundary Layering** is mandatory at API-like seams and optional elsewhere only when it has demonstrated value.
 - The **In-Repo Roadmap** controls **Integrated POC** execution until an external tracker proves enough QA or review value to justify being added.
 - **Agentic First-Light Arcs** should be measured now but not prematurely optimized; **Agentic Slices** are expected to complete, and **Proof-of-Work Labels** preserve the arc and human-touchpoint trail in commits.
 - An **Agenda Card** must be unambiguous before an **Agentic Slice** starts; after it is green, the **AFK Execution Assumption** applies.
 - **Roadmap Touchstones** beyond the first proof chain provide context for why the first chain exists without becoming granular commitments.
 - The **Documentation Cleanup Gate** protects **Context Hygiene** by keeping only operationally necessary docs near the first few repository layers, rewriting misleading but necessary docs, and moving stale material into **Lazy-Loaded Documentation**, the **Archive Layer**, or deletion.
-- Implementation of the **Integrated POC** waits for the **Documentation Cleanup Gate**; ADR outlines may proceed, but final doctrine should not be treated as settled until cleanup is complete.
+- The **Documentation Cleanup Gate** and first **Integrated POC Implementation Agenda Card** are closed historical records; current execution starts from active campaign cards and roadmaps.
 - The **Documentation Cleanup Gate** covers the whole repository, but it should audit and report in context-risk order so always-loaded and linked docs are resolved first.
 - The **Documentation Cleanup Gate** runs as one **Agenda Card** with two internal phases: classify repository docs, then apply unambiguous cleanup actions while escalating operationally significant ambiguity.
 - The **Archive Layer** is not the default fate for stale docs; ordinary stale docs should be deleted and recovered from git history if needed.
 - The **Cleanup Classification Matrix** records cleanup proof under a non-operational path and should not be treated as active doctrine by future agents.
 - A **High-Risk Cleanup Doc** requires human judgement before delete, move, or rewrite; lower-risk docs can be acted on by the cleanup agent when the classification is clear.
 - The **Documentation Cleanup Gate** closes only when the **Cleanup Proof Bar** is met.
-- The **Integrated POC Implementation Agenda Card** is the artifact that starts implementation after cleanup; the chat thread and reference memo are not enough.
+- The **Integrated POC Implementation Agenda Card** explains how the first implementation chain started after cleanup; it is no longer an active start point.
 - **Lazy-Loaded Documentation** supports **Agentic First-Light Arcs** by reducing always-loaded context before agents execute slices.
 - The **Golden Path Slice** proves one complete customer-to-admin path before second-slice features such as richer existing-customer lookup or account actions.
 - Early **Integrated POC** slices are **Read-Only First**: read/context/review operations come before write/action operations.
 - The **Golden Path Slice** is also a **Migration-First Slice**: it should replicate the current **Customer-Visible Contract** in the new infrastructure before adding undeveloped features.
 - Mock Aryza/SoloSight/support-ticket surfaces support the **Quality POC** and should stay thin, simple, and functional.
 - The **Behavior Proof Bar** for **Integrated POC** work is valid behavior through the real app path; tests are support fabric, not a substitute proof surface.
-- The **Widget-Adapter Architecture** remains usable transitional code until the **Integrated POC** replaces it, then it is due for sunset.
+- The **Widget-Adapter Architecture** remains usable transitional/review code but is not the current deployable target.
 
 ## Example dialogue
 
@@ -216,11 +233,11 @@ _Avoid_: Phase 0 engine name
 - "model comparison" can imply production model approval; resolved: the first **Model Comparison Report** ranks Phase 0 planner configurations and exposes failure modes without fixed score gates.
 - "representative journey suite" can be watered down to a few happy paths; resolved: it must be broad enough to support an hour of credible C-suite probing across multiple customer personalities.
 - "fake planner" can look useful for baseline tests; resolved: Phase 0 product confidence must come from real model-backed planner behavior, not a deterministic fake planner.
-- "integrated POC" can look like either a side demo or a website rewrite; resolved: the **Integrated POC** is the next **Deployable Surface** once complete, while the **Widget-Adapter Architecture** stays only as transitional code due for sunset.
+- "integrated POC" can look like either a side demo or a website rewrite; resolved: retained IPOC modules feed the current Nuxt keeper surface, while the standalone IPOC deployment path is historical.
 - "first integrated POC" can invite too much scope; resolved: the **Golden Path Slice** proves the end-to-end infrastructure with one customer-to-admin journey, while undeveloped richer flows wait for the second slice.
 - "golden path" can sound like an invented demo target; resolved: the first slice is migration-first and should reproduce current proven behaviour in the new infrastructure unless there is a concrete reason to diverge.
 - "what we already have" can mean either behaviour or old plumbing; resolved: replicate the **Customer-Visible Contract**, not iframe transport, package boundaries, or review-host implementation details.
-- "new deployable" can invite mutation of `site/` or existing demo hosts; resolved: build the **Integrated POC App** as a separate app/package, leaving current transitional surfaces intact until sunset.
+- "new deployable" can invite mutation of `site/` or existing demo hosts; resolved: the keeper deployable is `packages/site-nuxt`, while `site/` remains an input tree until its content/assets are migrated.
 - "roadmap" can imply optimizing for iteration speed through an external tracker; resolved: start with an **In-Repo Roadmap** because QA/review externalities matter more than unproven speed gains right now.
 - "page-aware" can imply the assistant may act on application state; resolved: early slices are **Read-Only First**, so page/journey awareness supports context, navigation, handoff, and readback before any mutation or decisioning.
 - "deployable" can imply production-grade or long-lived implementation; resolved: for the **Integrated POC**, deployability means demoability/reviewability for a **Quality POC**, not a claim that the artifact should be employed unchanged in the long run.
@@ -236,7 +253,7 @@ _Avoid_: Phase 0 engine name
 - "cleanup matrix" can become another source of active context; resolved: the **Cleanup Classification Matrix** is a non-operational proof artifact, not guidance.
 - "high-risk cleanup" can become a blanket stop condition; resolved: only **High-Risk Cleanup Docs** require human judgement before cleanup actions.
 - "cleanup done" can mean matrix-only or cosmetic tidying; resolved: the **Cleanup Proof Bar** requires both proof artifacts and applied cleanup changes.
-- "ready to implement" can be inferred from chat agreement; resolved: implementation starts only from the **Integrated POC Implementation Agenda Card** after cleanup closes.
+- "ready to implement" can be inferred from chat agreement; resolved: new implementation starts only from active campaign cards/roadmaps under `docs/campaign-workflow-protocol.md`.
 - "before or as part of the move" can leave cleanup too late; resolved: the **Documentation Cleanup Gate** is pre-implementation work, though ADR outlines may be drafted before it closes.
 - "rewrite" can become a mercy bucket for stale docs; resolved: REWRITE is only for necessary-but-misleading docs, and it must not make DELETE harder when context clarity needs removal.
 - "agent-visible cleanup" can leave stale docs elsewhere in the repo; resolved: the cleanup scope is whole-repository, ordered by context risk rather than limited to first-layer files.
