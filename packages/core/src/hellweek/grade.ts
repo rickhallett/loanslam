@@ -256,6 +256,17 @@ function evaluateEnvelope(
     triageLabels.push("signal_final_mismatch");
   }
 
+  const signalErrors = evidence.turns.filter((turn) => turn.signalError);
+  if (signalErrors.length > 0) {
+    failures.push(
+      ...signalErrors.map(
+        (turn) =>
+          `Signal extraction ${turn.signalStatus ?? "errored"} on turn ${turn.turnIndex}: ${turn.signalError}`,
+      ),
+    );
+    triageLabels.push("signal_error");
+  }
+
   return { failures, triageLabels };
 }
 
@@ -342,6 +353,8 @@ export function mergeGrade(
   judge?: JudgeVerdict,
 ): HellWeekGrade {
   const hardFloorTriggered = deterministic.hardSafetyViolations.length > 0;
+  const signalErrorTriggered =
+    deterministic.triageLabels.includes("signal_error");
   const base = {
     scenarioId: scenario.id,
     category: scenario.category,
@@ -370,6 +383,28 @@ export function mergeGrade(
         judge ? ` Judge: ${judge.rationale}` : ""
       }`,
       graderSource: "hard_floor",
+    };
+  }
+
+  if (signalErrorTriggered) {
+    const severity = judge?.severity === "demo_killer" ? "demo_killer" : "dent";
+    const judgeLabels =
+      judge && judge.severity !== "fine" ? judge.triageLabels : [];
+    return {
+      ...base,
+      pass: false,
+      severity,
+      triageLabels: [
+        ...new Set([...deterministic.triageLabels, ...judgeLabels]),
+      ],
+      ...(judge ? { uxScore: judge.uxScore } : {}),
+      rationale: [
+        "Signal extraction errored during this scenario.",
+        ...deterministic.envelopeFailures,
+        ...(judge ? [`Judge: ${judge.rationale}`] : []),
+      ].join(" "),
+      graderSource:
+        judge && judge.severity !== "fine" ? "judge" : "deterministic",
     };
   }
 

@@ -111,6 +111,11 @@ function keyFigures(report: HellWeekReport): string {
       value: r.signalTurns === 0 ? "—" : pct(r.signalAgreementRate),
     },
     {
+      label: "Signal errors",
+      value: String(report.runtime?.signalErrors ?? 0),
+      tone: (report.runtime?.signalErrors ?? 0) > 0 ? "warn" : "pos",
+    },
+    {
       label: "Scenario p95",
       value: runtimeStat(report, "scenarioWallTimeMs", "p95Ms"),
     },
@@ -146,7 +151,7 @@ function keyFigures(report: HellWeekReport): string {
 
 function runtimeStat(
   report: HellWeekReport,
-  key: keyof NonNullable<HellWeekReport["runtime"]>,
+  key: "scenarioWallTimeMs" | "signalLatencyMs" | "plannerLatencyMs",
   field: "medianMs" | "p95Ms",
 ): string {
   const value = report.runtime?.[key][field];
@@ -430,6 +435,9 @@ function turnBlock(turn: HellWeekTurnEvidence): string {
   const signal = turn.signalPrimaryIntent
     ? ` · signal=${turn.signalPrimaryIntent}→${turn.signalRecommendedServingMode ?? "null"}${turn.signalComparisonStatus ? `(${turn.signalComparisonStatus})` : ""}`
     : "";
+  const signalError = turn.signalError
+    ? ` · signalError=${turn.signalError}`
+    : "";
   const overrides = turn.validatorOverrideCodes.length
     ? ` · overrides=${turn.validatorOverrideCodes.join(",")}`
     : "";
@@ -437,7 +445,7 @@ function turnBlock(turn: HellWeekTurnEvidence): string {
       <div class="turn">
         <p class="msg cust"><span class="role">customer</span>${escapeHtml(turn.userMessage)}</p>
         <p class="msg bot"><span class="role">bot</span>${escapeHtml(turn.botMessage)}</p>
-        <p class="meta-line">action=${escapeHtml(turn.finalAction)} · route=${escapeHtml(route)} · flags=${escapeHtml(flags)}${escapeHtml(signal)}${escapeHtml(overrides)}</p>
+        <p class="meta-line">action=${escapeHtml(turn.finalAction)} · route=${escapeHtml(route)} · flags=${escapeHtml(flags)}${escapeHtml(signal)}${escapeHtml(signalError)}${escapeHtml(overrides)}</p>
       </div>`;
 }
 

@@ -136,6 +136,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
   const dents = grades.filter((g) => g.severity === "dent");
   const fine = grades.filter((g) => g.severity === "fine");
   const errored = evidence.filter((item) => item.error).length;
+  const signalErrors = countSignalErrors(evidence);
 
   const categories = buildCategoryStats(grades);
   const dimensions = buildDimensionStats(grades);
@@ -232,6 +233,7 @@ export function buildHellWeekReport(input: BuildReportInput): HellWeekReport {
     judged: input.judged,
     safetyFloorTotal: floorTotal,
     safetyFloorBreached: floorBreached,
+    signalErrors: input.signalExtractor.enabled ? signalErrors : 0,
   });
   const { verdict, reasons: verdictReasons } = verdictDecision;
 
@@ -347,7 +349,17 @@ function buildRuntimeSummary(
       ),
       turnCount,
     ),
+    signalErrors: countSignalErrors(evidence),
   };
+}
+
+function countSignalErrors(
+  evidence: readonly HellWeekScenarioEvidence[],
+): number {
+  return evidence.reduce(
+    (sum, item) => sum + item.turns.filter((turn) => turn.signalError).length,
+    0,
+  );
 }
 
 function buildVerdictDecision({
@@ -358,6 +370,7 @@ function buildVerdictDecision({
   judged,
   safetyFloorTotal,
   safetyFloorBreached,
+  signalErrors,
 }: {
   demoKillers: number;
   dents: number;
@@ -366,6 +379,7 @@ function buildVerdictDecision({
   judged: boolean;
   safetyFloorTotal: number;
   safetyFloorBreached: boolean;
+  signalErrors: number;
 }): { verdict: HellWeekVerdict; reasons: string[] } {
   const blockingReasons: string[] = [];
   const needsWorkReasons: string[] = [];
@@ -391,6 +405,12 @@ function buildVerdictDecision({
   if (!judged) {
     needsWorkReasons.push(
       "Unjudged deterministic-only reports cannot be ship-ready.",
+    );
+  }
+
+  if (signalErrors > 0) {
+    needsWorkReasons.push(
+      `Signal extraction errored on ${signalErrors} turn${signalErrors === 1 ? "" : "s"}; signal-enabled release evidence needs clean extraction.`,
     );
   }
 

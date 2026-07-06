@@ -124,6 +124,12 @@ const plannerWithMalformedAccountRoutes: TurnPlanner = {
   },
 };
 
+const answeringPlanner: TurnPlanner = {
+  async planTurn() {
+    return answerPlan;
+  },
+};
+
 function idFactory() {
   let next = 0;
 
@@ -198,5 +204,52 @@ describe("hell week scenario runner", () => {
     );
     expect(grade.pass).toBe(true);
     expect(grade.severity).toBe("fine");
+  });
+
+  it("propagates signal extraction errors into evidence and grading", async () => {
+    const failingSignalExtractor: SignalExtractor = {
+      metadata: {
+        provider: "inline",
+        model: "signal-test-model",
+        promptVersion: "signal-test-prompt",
+        schemaVersion: "phase0-signals-schema-v1",
+      },
+      async extractSignals() {
+        throw new Error("signal parser failed");
+      },
+    };
+    const scenario = {
+      id: "signal-error",
+      category: "smoke",
+      categoryTitle: "Smoke",
+      title: "Signal error propagation",
+      dimension: "account_boundary",
+      customerTurns: ["What is my balance?"],
+      expected: {
+        allowedFinalActions: ["answer"],
+      },
+      failureMarkers: "Signal errors must not disappear.",
+      severityFloor: "dent",
+    } as const;
+
+    const evidence = await runScenario({
+      scenario,
+      corpus,
+      planner: answeringPlanner,
+      signalExtractor: failingSignalExtractor,
+      now: () => new Date("2026-06-13T12:10:00.000Z"),
+      idFactory: idFactory(),
+    });
+    const grade = gradeScenario(scenario, evidence);
+
+    expect(evidence.turns[0]).toMatchObject({
+      signalStatus: "failed",
+      signalError: "signal parser failed",
+    });
+    expect(grade).toMatchObject({
+      pass: false,
+      severity: "dent",
+      triageLabels: ["signal_error"],
+    });
   });
 });

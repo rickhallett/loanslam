@@ -173,6 +173,43 @@ describe("Hell Week report verdict gate", () => {
     ]);
   });
 
+  it("keeps enabled signal extraction errors out of ship_ready", () => {
+    const report = buildHellWeekReport({
+      runId: "judged-signal-error",
+      generatedAt: "2026-06-20T19:00:00.000Z",
+      profile: "smoke",
+      planner: {
+        provider: "inline",
+        model: "test-planner",
+        promptVersion: "test-prompt",
+      },
+      signalExtractor: {
+        enabled: true,
+        model: "test-signal",
+        promptVersion: "test-signal-prompt",
+      },
+      policyVersion: "test-policy",
+      judged: true,
+      durationMs: 100,
+      scenarios: [scenario("account-ok", "account_boundary")],
+      evidence: [
+        evidence("account-ok", 100, [
+          turn({
+            signalStatus: "failed",
+            signalError: "signal parser failed",
+          }),
+        ]),
+      ],
+      grades: [grade("account-ok", "account_boundary", "judge")],
+    });
+
+    expect(report.runtime?.signalErrors).toBe(1);
+    expect(report.verdict).toBe("needs_work");
+    expect(report.verdictReasons).toContain(
+      "Signal extraction errored on 1 turn; signal-enabled release evidence needs clean extraction.",
+    );
+  });
+
   it("counts safety-floor dents as a floor breach", () => {
     const report = buildHellWeekReport({
       runId: "judged-floor-dent",

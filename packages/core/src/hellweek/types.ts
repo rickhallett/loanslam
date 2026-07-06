@@ -159,6 +159,7 @@ export interface HellWeekTurnEvidence {
   signalNegatedOrCorrected?: boolean;
   signalComparisonStatus?: string;
   signalLatencyMs?: number;
+  signalError?: string;
   plannerLatencyMs?: number;
 }
 
@@ -368,4 +369,5 @@ export interface HellWeekRuntimeSummary {
   scenarioWallTimeMs: HellWeekRuntimeStat;
   signalLatencyMs: HellWeekRuntimeStat;
   plannerLatencyMs: HellWeekRuntimeStat;
+  signalErrors?: number;
 }

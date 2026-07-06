@@ -5,6 +5,7 @@ import type {
   HellWeekReport,
   HellWeekScenario,
   HellWeekScenarioEvidence,
+  HellWeekTurnEvidence,
 } from "./types";
 
 const fake = vi.hoisted(() => {
@@ -110,6 +111,34 @@ describe("Hell Week report DB persistence", () => {
     expect(fake.clients[0]?.hellWeekRun.rows.get("judged-run")?.judge).toEqual(
       report.judge,
     );
+  });
+
+  it("round-trips turn-level signal errors through DB evidence", async () => {
+    const { openHellWeekReportStore } = await import("./db");
+    const store = openHellWeekReportStore("postgresql://example/test");
+    const report = reportFixture({ runId: "signal-error-run" });
+    const evidence = report.evidence[0];
+    if (!evidence) {
+      throw new Error("fixture evidence missing");
+    }
+    evidence.turns = [
+      turnFixture({
+        signalStatus: "failed",
+        signalError: "signal parser failed",
+      }),
+    ];
+
+    await store.saveReport(report);
+    const loaded = await store.loadReport("signal-error-run");
+
+    expect(loaded?.evidence[0]?.turns[0]).toMatchObject({
+      signalStatus: "failed",
+      signalError: "signal parser failed",
+    });
+    expect(turnRows[0]?.turnJson).toMatchObject({
+      signalStatus: "failed",
+      signalError: "signal parser failed",
+    });
   });
 
   it("loads old deterministic reports without judge metadata", async () => {
@@ -425,5 +454,26 @@ function evidenceFixture(scenarioId: string): HellWeekScenarioEvidence {
     conversationRef: `hellweek-${scenarioId}`,
     turns: [],
     durationMs: 100,
+  };
+}
+
+function turnFixture(
+  overrides: Partial<HellWeekTurnEvidence> = {},
+): HellWeekTurnEvidence {
+  return {
+    turnIndex: 0,
+    userMessage: "Hello",
+    botMessage: "Hello from LoanSlam.",
+    finalAction: "answer",
+    proposedAction: "answer",
+    selectedServingMode: "answer",
+    effectiveServingMode: "answer",
+    routeForScoring: "answer",
+    selectedRouteReason: null,
+    safetyFlags: [],
+    validatorOverrideCodes: [],
+    retrieved: [],
+    uiPrimitive: "message",
+    ...overrides,
   };
 }

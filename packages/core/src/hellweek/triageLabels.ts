@@ -16,7 +16,10 @@ export const judgeTriageLabels = [
   "tone",
 ] as const;
 
-export const deterministicOnlyTriageLabels = ["run_error"] as const;
+export const deterministicOnlyTriageLabels = [
+  "run_error",
+  "signal_error",
+] as const;
 
 export type JudgeTriageLabel = (typeof judgeTriageLabels)[number];
 export type DeterministicOnlyTriageLabel =

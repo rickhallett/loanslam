@@ -155,10 +155,13 @@ function traceLines(turn: HellWeekTurnEvidence): string[] {
   const flags = turn.safetyFlags.length ? turn.safetyFlags.join(",") : "none";
   const planner = formatMaybeMs(turn.plannerLatencyMs);
   const signal = formatMaybeMs(turn.signalLatencyMs);
+  const signalError = turn.signalError
+    ? ` signalError=${turn.signalError}`
+    : "";
   return [
     `    customer> ${oneLine(turn.userMessage)}`,
     `    bot> ${oneLine(turn.botMessage)}`,
-    `      at action=${turn.finalAction} route=${route} flags=[${flags}] planner=${planner} signal=${signal}`,
+    `      at action=${turn.finalAction} route=${route} flags=[${flags}] planner=${planner} signal=${signal}${signalError}`,
   ];
 }
 

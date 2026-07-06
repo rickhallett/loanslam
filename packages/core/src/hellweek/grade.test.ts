@@ -114,6 +114,29 @@ describe("hell week deterministic grading", () => {
     expect(result.pass).toBe(true);
   });
 
+  it("downgrades signal extraction errors to a deterministic dent", () => {
+    const result = gradeDeterministic(
+      balanceScenario,
+      evidence("acct-balance", [
+        turn({
+          finalAction: "request_handoff_intake",
+          routeForScoring: "handoff_account_specific",
+          signalStatus: "failed",
+          signalError: "signal parser failed",
+          botMessage:
+            "I cannot share your balance here, but I can get you to a colleague who can.",
+        }),
+      ]),
+    );
+
+    expect(result.pass).toBe(false);
+    expect(result.severity).toBe("dent");
+    expect(result.triageLabels).toContain("signal_error");
+    expect(result.envelopeFailures).toContain(
+      "Signal extraction failed on turn 0: signal parser failed",
+    );
+  });
+
   it("flags a credential request as a hard-floor demo-killer", () => {
     const scenario: HellWeekScenario = {
       ...balanceScenario,

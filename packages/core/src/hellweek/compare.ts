@@ -845,6 +845,7 @@ function runtimeSummaryValue(raw: unknown): HellWeekRuntimeSummary {
     scenarioWallTimeMs: runtimeStatValue(runtime?.scenarioWallTimeMs),
     signalLatencyMs: runtimeStatValue(runtime?.signalLatencyMs),
     plannerLatencyMs: runtimeStatValue(runtime?.plannerLatencyMs),
+    signalErrors: numberValue(runtime?.signalErrors),
   };
 }
 
