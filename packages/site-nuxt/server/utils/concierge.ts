@@ -1,9 +1,18 @@
-import { randomUUID } from "node:crypto";
-
 import OpenAI from "openai";
 
 import { siteMapLines } from "../../lib/siteMap";
 import { normalizePublicOrigin, rewriteDisplayedSiteUrls } from "../../lib/siteUrls";
+import type {
+  ConciergeMessage,
+  ConciergeSession,
+} from "../domains/concierge/concierge.model";
+import {
+  appendConciergeMessage,
+  createConciergeSession,
+  getConciergeSession,
+  seedConciergeTranscript,
+  trimConciergeHistory,
+} from "../domains/concierge/stores/conciergeSession.store";
 
 // Demo-concierge surface (D045): a segregated, demo-only route serving
 // apply-journey assistance straight from a frontier OpenAI model. No
@@ -13,21 +22,8 @@ import { normalizePublicOrigin, rewriteDisplayedSiteUrls } from "../../lib/siteU
 // Kill switch: CONCIERGE_KILL_SWITCH=1 disables the routes and the UI
 // affordances (via /api/concierge/status).
 
-export interface ConciergeMessage {
-  role: "customer" | "assistant";
-  content: string;
-}
-
-export interface ConciergeSession {
-  conversationRef: string;
-  createdAt: string;
-  messages: ConciergeMessage[];
-}
-
-const sessions = new Map<string, ConciergeSession>();
-
-// Bound the in-memory demo state and the per-call prompt size.
-const MAX_HISTORY_MESSAGES = 20;
+export type { ConciergeMessage, ConciergeSession };
+export { createConciergeSession, getConciergeSession };
 
 export function conciergeEnabled(): boolean {
   return process.env.CONCIERGE_KILL_SWITCH !== "1";
@@ -74,20 +70,6 @@ export function conciergeRateLimitExceeded(
 
 export function conciergeModel(): string {
   return process.env.CONCIERGE_MODEL ?? "gpt-5.5";
-}
-
-export function createConciergeSession(): ConciergeSession {
-  const session: ConciergeSession = {
-    conversationRef: randomUUID(),
-    createdAt: new Date().toISOString(),
-    messages: [],
-  };
-  sessions.set(session.conversationRef, session);
-  return session;
-}
-
-export function getConciergeSession(ref: string): ConciergeSession | undefined {
-  return sessions.get(ref);
 }
 
 // House voice matched to the support chat the customer has already used;
@@ -175,14 +157,9 @@ export async function runConciergeTurn({
   // dr-001 (D047): session resurrection. If a lost server session was
   // reseeded on the client, seed this fresh session's history from the
   // replayed transcript (text-only) before the new turn.
-  if (session.messages.length === 0 && resumeTranscript && resumeTranscript.length > 0) {
-    session.messages.push(...resumeTranscript.slice(-MAX_HISTORY_MESSAGES));
-  }
-
-  session.messages.push({ role: "customer", content: message });
-  if (session.messages.length > MAX_HISTORY_MESSAGES) {
-    session.messages.splice(0, session.messages.length - MAX_HISTORY_MESSAGES);
-  }
+  seedConciergeTranscript(session, resumeTranscript);
+  appendConciergeMessage(session, { role: "customer", content: message });
+  trimConciergeHistory(session);
 
   const input: Array<{ role: "user" | "assistant" | "developer"; content: string }> =
     session.messages.map((entry) => ({
@@ -257,6 +234,6 @@ export async function runConciergeTurn({
     reply = rewriteDisplayedSiteUrls(reply, displayOrigin);
   }
 
-  session.messages.push({ role: "assistant", content: reply });
+  appendConciergeMessage(session, { role: "assistant", content: reply });
   return reply;
 }
