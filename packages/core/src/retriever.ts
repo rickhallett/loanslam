@@ -1,10 +1,11 @@
 import type {
   CorpusItem,
   RetrievedMatch,
-  SafetyFlag,
   ServingMode,
   SignalBundle,
 } from "@loanslam/contracts";
+
+import { hasActiveVulnerabilitySignal } from "./policy";
 
 const fieldWeights = {
   question: 6,
@@ -269,40 +270,6 @@ function signalAllowsServingMode(
   }
 
   return true;
-}
-
-const vulnerabilitySignalFlags = [
-  "vulnerability",
-  "distress",
-  "hardship",
-  "complaint",
-  "legal_threat",
-  "accessibility_need",
-] as const satisfies readonly SafetyFlag[];
-
-function hasAnySignalFlag(
-  signalBundle: SignalBundle | undefined,
-  flags: readonly SafetyFlag[],
-): boolean {
-  return Boolean(
-    signalBundle?.safetySignals.some((flag) => flags.includes(flag)),
-  );
-}
-
-function hasActiveVulnerabilitySignal(
-  signalBundle: SignalBundle | undefined,
-): boolean {
-  if (!signalBundle || signalBundle.negatedOrCorrected) {
-    return false;
-  }
-
-  return (
-    hasAnySignalFlag(signalBundle, vulnerabilitySignalFlags) ||
-    signalBundle.primaryIntent === "vulnerability" ||
-    signalBundle.primaryIntent === "complaint" ||
-    signalBundle.primaryIntent === "legal" ||
-    signalBundle.primaryIntent === "language_barrier"
-  );
 }
 
 function normalizeTerm(term: string): string {

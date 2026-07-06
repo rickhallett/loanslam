@@ -4,6 +4,7 @@ import {
   type ApprovedLink,
   type IntakeField,
   type SafetyFlag,
+  type SignalBundle,
   type TurnAction,
   type UiPlan,
   type UiPrimitive,
@@ -52,6 +53,12 @@ export const vulnerabilitySafetyFlags = [
 export const handoffSafetyFlags = [
   "account_specific_request",
   "change_request",
+] as const satisfies readonly SafetyFlag[];
+
+export const currentTurnInvariantSafetyFlags = [
+  "forbidden_credentials",
+  "sensitive_overshare",
+  "language_barrier",
 ] as const satisfies readonly SafetyFlag[];
 
 const uiPrimitivesByAction = {
@@ -174,6 +181,93 @@ export function hasHandoffSafetyFlag(flags: readonly SafetyFlag[]): boolean {
   return flags.some((flag) => routeFlags.includes(flag));
 }
 
+export function hasActiveVulnerabilitySignal(
+  signalBundle: SignalBundle | undefined,
+): boolean {
+  if (!signalBundle || signalBundle.negatedOrCorrected) {
+    return false;
+  }
+
+  return (
+    hasVulnerabilitySafetyFlag(signalBundle.safetySignals) ||
+    signalBundle.primaryIntent === "vulnerability" ||
+    signalBundle.primaryIntent === "complaint" ||
+    signalBundle.primaryIntent === "legal" ||
+    signalBundle.primaryIntent === "language_barrier"
+  );
+}
+
+export function inferSafetyFlagsFromSignal(
+  signalBundle: SignalBundle | undefined,
+): SafetyFlag[] {
+  if (!signalBundle) {
+    return [];
+  }
+
+  const flags = [...signalBundle.safetySignals];
+
+  if (
+    signalBundle.recommendedServingMode === "route_vulnerability" &&
+    !hasVulnerabilitySafetyFlag(flags)
+  ) {
+    flags.push("vulnerability");
+  }
+
+  if (
+    signalBundle.recommendedServingMode === "handoff_account_specific" &&
+    !hasHandoffSafetyFlag(flags)
+  ) {
+    flags.push("account_specific_request");
+  }
+
+  return uniqueSafetyFlags(flags);
+}
+
+export function alignSafetyFlagsWithSignal(
+  flags: readonly SafetyFlag[],
+  signalBundle: SignalBundle | undefined,
+): SafetyFlag[] {
+  const normalizedFlags = uniqueSafetyFlags(flags);
+  const signalMode = signalBundle?.recommendedServingMode;
+
+  if (!signalMode) {
+    return normalizedFlags;
+  }
+
+  const signalFlags = new Set(inferSafetyFlagsFromSignal(signalBundle));
+
+  return normalizedFlags.filter((flag) => {
+    if (signalFlags.has(flag)) {
+      return true;
+    }
+
+    if (includesSafetyFlag(currentTurnInvariantSafetyFlags, flag)) {
+      return true;
+    }
+
+    if (signalMode === "handoff_account_specific") {
+      return includesSafetyFlag(handoffSafetyFlags, flag);
+    }
+
+    if (signalMode === "route_vulnerability") {
+      return includesSafetyFlag(vulnerabilitySafetyFlags, flag);
+    }
+
+    return false;
+  });
+}
+
+export function uniqueSafetyFlags(flags: readonly SafetyFlag[]): SafetyFlag[] {
+  return [...new Set(flags)];
+}
+
+function includesSafetyFlag(
+  flags: readonly SafetyFlag[],
+  flag: SafetyFlag,
+): boolean {
+  return flags.includes(flag);
+}
+
 export function detectForbiddenCredentialRequest(text: string): boolean {
   if (credentialWarningPattern.test(text)) {
     return false;
@@ -253,7 +347,9 @@ export function buildAccountChangeHandoffCopy(
   requestedFields: IntakeField[];
 } | null {
   const email = userMessage.match(emailAddressPattern)?.[0];
-  const repaymentDate = userMessage.match(repaymentDateChangePattern)?.[4]?.trim();
+  const repaymentDate = userMessage
+    .match(repaymentDateChangePattern)?.[4]
+    ?.trim();
   const prefix = email
     ? `I can't change the email address to ${email} in chat, but I can pass that request to the LoanSlam team.`
     : repaymentDate

@@ -1,4 +1,4 @@
-import type { CorpusItem } from "@loanslam/contracts";
+import type { CorpusItem, SignalBundle } from "@loanslam/contracts";
 import { describe, expect, it } from "vitest";
 
 import { retrieveMatches } from "./retriever";
@@ -59,5 +59,36 @@ describe("lexical retrieval", () => {
     expect(
       retrieveMatches("shared", tiedItems).map((match) => match.itemId),
     ).toEqual(["tie-a", "tie-b"]);
+  });
+
+  it("uses the shared active vulnerability signal policy for vulnerability routes", () => {
+    const vulnerabilityItem: CorpusItem = {
+      id: "hardship-help",
+      question: "I am struggling and need hardship support",
+      serving_mode: "route_vulnerability",
+      route_reason: "Hardship must route to human support.",
+    };
+    const signalBundle: SignalBundle = {
+      primaryIntent: "vulnerability",
+      secondaryIntents: [],
+      recommendedServingMode: "route_vulnerability",
+      safetySignals: ["hardship"],
+      retrievalQueries: [],
+      routeHints: [],
+      uncertainty: 0,
+      negatedOrCorrected: false,
+      parserNotes: [],
+    };
+
+    expect(
+      retrieveMatches("hardship support", [vulnerabilityItem], {
+        signalBundle,
+      }).map((match) => match.itemId),
+    ).toEqual(["hardship-help"]);
+    expect(
+      retrieveMatches("hardship support", [vulnerabilityItem], {
+        signalBundle: { ...signalBundle, negatedOrCorrected: true },
+      }),
+    ).toEqual([]);
   });
 });

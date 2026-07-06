@@ -14,6 +14,7 @@ import {
   buildApprovalEstimateBoundaryCopy,
   buildApprovalStatusHandoffCopy,
   buildAccountChangeHandoffCopy,
+  alignSafetyFlagsWithSignal,
   buildBadCreditEligibilityCopy,
   buildCreditCheckEvasionBoundaryCopy,
   buildExcludedCopy,
@@ -41,10 +42,10 @@ import {
   detectSensitiveOvershare,
   hasHandoffSafetyFlag,
   hasVulnerabilitySafetyFlag,
-  handoffSafetyFlags,
+  inferSafetyFlagsFromSignal,
   standardHandoffFields,
   uiMatchesAction,
-  vulnerabilitySafetyFlags,
+  uniqueSafetyFlags,
 } from "./policy";
 
 export interface ValidateTurnPlanOptions {
@@ -139,7 +140,7 @@ function buildGuardContext(
   options: ValidateTurnPlanOptions,
 ): GuardContext {
   const selectedMatch = selectPolicyMatch(plan, retrievedMatches);
-  const planSafetyFlags = alignPlanSafetyFlagsWithSignal(
+  const planSafetyFlags = alignSafetyFlagsWithSignal(
     plan.safetyFlags,
     options.signalBundle,
   );
@@ -886,79 +887,6 @@ function inferSafetyFlagsFromMessage(message: string): SafetyFlag[] {
   return flags;
 }
 
-function inferSafetyFlagsFromSignal(
-  signalBundle: SignalBundle | undefined,
-): SafetyFlag[] {
-  if (!signalBundle) {
-    return [];
-  }
-
-  const flags = [...signalBundle.safetySignals];
-
-  if (
-    signalBundle.recommendedServingMode === "route_vulnerability" &&
-    !hasVulnerabilitySafetyFlag(flags)
-  ) {
-    flags.push("vulnerability");
-  }
-
-  if (
-    signalBundle.recommendedServingMode === "handoff_account_specific" &&
-    !hasHandoffSafetyFlag(flags)
-  ) {
-    flags.push("account_specific_request");
-  }
-
-  return uniqueSafetyFlags(flags);
-}
-
-function alignPlanSafetyFlagsWithSignal(
-  flags: readonly SafetyFlag[],
-  signalBundle: SignalBundle | undefined,
-): SafetyFlag[] {
-  const normalizedFlags = uniqueSafetyFlags(flags);
-  const signalMode = signalBundle?.recommendedServingMode;
-
-  if (!signalMode) {
-    return normalizedFlags;
-  }
-
-  const signalFlags = new Set(inferSafetyFlagsFromSignal(signalBundle));
-
-  return normalizedFlags.filter((flag) => {
-    if (signalFlags.has(flag)) {
-      return true;
-    }
-
-    if (includesSafetyFlag(currentTurnInvariantSafetyFlags, flag)) {
-      return true;
-    }
-
-    if (signalMode === "handoff_account_specific") {
-      return includesSafetyFlag(handoffSafetyFlags, flag);
-    }
-
-    if (signalMode === "route_vulnerability") {
-      return includesSafetyFlag(vulnerabilitySafetyFlags, flag);
-    }
-
-    return false;
-  });
-}
-
-const currentTurnInvariantSafetyFlags = [
-  "forbidden_credentials",
-  "sensitive_overshare",
-  "language_barrier",
-] as const satisfies readonly SafetyFlag[];
-
-function includesSafetyFlag(
-  flags: readonly SafetyFlag[],
-  flag: SafetyFlag,
-): boolean {
-  return flags.includes(flag);
-}
-
 function answerGroundingFailure(
   plan: TurnPlan,
   retrievedMatches: readonly RetrievedMatch[],
@@ -1190,8 +1118,4 @@ function collectedFactsContainForbiddenCredentials(
   return Object.entries(facts).some(([key, value]) =>
     containsForbiddenCredentialTerm(`${key} ${value}`),
   );
-}
-
-function uniqueSafetyFlags(flags: readonly SafetyFlag[]): SafetyFlag[] {
-  return [...new Set(flags)];
 }
