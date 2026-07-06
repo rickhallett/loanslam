@@ -4,10 +4,14 @@ Captured from `https://applyloansbymal.co.uk/step-one/step-one.html` on 2026-06-
 
 ## Capture Summary
 
-- `source/` contains downloaded live HTML and JavaScript for the application routes.
 - `dom/*.snapshot.txt` contains browser accessibility-tree snapshots.
 - `dom/*.dom.json` contains extracted headings, controls, visible text, options, and current values.
-- `screenshots/*.png` contains full-page screenshots for the browser-reachable states.
+- `retention-2026-07-06.md` records the raw source and screenshot files that
+  were removed from the git index.
+
+Raw downloaded HTML/JavaScript and screenshot receipts are local-only capture
+artifacts. They are ignored by git and should not be used as the source of truth
+for the application flow.
 
 ## Route Map
 
@@ -32,7 +36,9 @@ Most backend updates can redirect to `application-declined/application-declined.
 - Selecting the first Addressy option populated city but left Address Line 1 empty in the captured session, so Address Line 1 was filled manually as "Buckingham Palace".
 - Submitting the fake applicant redirected to `application-declined/application-declined.html`.
 - Direct route loading allowed browser capture for steps two, three, four, six, seven, eight, and open banking.
-- `step-five` redirected back to step one when loaded directly, so its layout/copy is preserved from `source/step-five.html` rather than a live screenshot.
+- `step-five` redirected back to step one when loaded directly. Its raw source
+  capture was removed from git; treat the absence of a DOM/screenshot receipt as
+  a capture limitation.
 - Several direct-route captures include backend/session artefacts, for example zero loan figures or `30th December 1899` repayment dates. Treat those as capture limitations, not intended customer copy.
 
 ## Implementation Rule
@@ -41,6 +47,6 @@ The local Vue SPA mirrors the journey and copy but must not call production prop
 
 ## Local SPA Verification
 
-- `screenshots/local-apply-start.png` captures the `/apply/` Vue SPA at the first applicant-details step.
-- `screenshots/local-apply-mobile-start.png` captures the same step under a 390px mobile viewport.
-- `screenshots/local-apply-final.png` captures the locally completed journey at the verify-account step.
+Local SPA screenshots are no longer committed here. Regenerate local visual
+receipts from the current `packages/site-nuxt` surface when a site slice needs
+them.
