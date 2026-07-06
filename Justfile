@@ -288,6 +288,14 @@ site-nuxt-dev *nuxt_args:
 site-nuxt-build:
     @npm run site-nuxt-build
 
+# Start the built current Nuxt keeper site; build first with `just site-nuxt-build`.
+site-nuxt-start *start_args:
+    @set -- {{ start_args }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm run site-nuxt-start -- "$@"
+
 # =============================================================================
 # Local Apps
 # =============================================================================

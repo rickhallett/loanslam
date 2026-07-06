@@ -99,6 +99,7 @@ What does **not** transfer:
   references/*.md               # Tier 2 (9 files)
   workflows/*.md                # Tier 4 arcs
   workflows/ratchet.config.json # Tier 4 config
+.agents/skills/loanslam-operator -> .claude/skills/loanslam-operator
 scripts/                        # Tier 3 (repo root)
   gate-slice.ts  floor-delta.ts  digest.ts  branch-risk.ts
   status-snapshot.sh  slice-worktree.sh  checkpoint-packet.sh

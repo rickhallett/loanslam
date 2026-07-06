@@ -6,7 +6,7 @@ This is a smoke audit for the operator surface. It does not redefine proof
 doctrine; the canonical ladder is [Proof and gates](05-proof-and-gates.md).
 
 Run it when changing `docs/loanslam-operator/`, `.claude/skills/loanslam-operator/`,
-or the root proof scripts.
+the `.agents` skill compatibility link, or the root proof scripts.
 
 ## Deterministic self-audit
 
@@ -15,6 +15,11 @@ or the root proof scripts.
    python3 - <<'PY'
    import glob, os, re
    bad = 0
+   agent_link = ".agents/skills/loanslam-operator"
+   expected_target = "../../.claude/skills/loanslam-operator"
+   if not os.path.islink(agent_link) or os.readlink(agent_link) != expected_target:
+       print("BROKEN", agent_link, "must point to", expected_target)
+       bad += 1
    for base in [".claude/skills/loanslam-operator", "docs/loanslam-operator"]:
        for path in glob.glob(base + "/**/*.md", recursive=True):
            root = os.path.dirname(path)

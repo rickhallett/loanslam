@@ -61,6 +61,7 @@
 | `.claude/skills/loanslam-operator/references/*.md` | link-only references |
 | `.claude/skills/loanslam-operator/workflows/*.md` | named arcs |
 | `.claude/skills/loanslam-operator/workflows/ratchet.config.json` | controller config |
+| `.agents/skills/loanslam-operator` | compatibility symlink to the `.claude` skill tree |
 | `scripts/*.ts`, `scripts/*.sh` | deterministic tier |
 | `scripts/hooks/pre-commit` | enforcement hook (opt-in) |
 | `artifacts/evidence-index/baseline.json` | committed floor anchor |
