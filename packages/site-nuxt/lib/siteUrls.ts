@@ -3,9 +3,9 @@ import {
   localPathForFirstPartyUrl,
   normalizePublicOrigin,
   normalizeSitePath,
-} from "./sitePolicy";
+} from "./siteRoutePolicy";
 
-export { normalizePublicOrigin, normalizeSitePath } from "./sitePolicy";
+export { normalizePublicOrigin, normalizeSitePath } from "./siteRoutePolicy";
 
 const urlPattern = /\bhttps?:\/\/[^\s<>"')\]]+/gi;
 const trailingUrlPunctuation = /[.,!?;:]+$/;

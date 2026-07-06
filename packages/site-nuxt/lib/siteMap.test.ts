@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { pages, pathFromLink, posts } from "./content";
-import { navOfferPaths } from "./navOffer";
+import { siteNavOfferPaths } from "./siteRoutePolicy";
 import {
   customerContentPages,
   excludedContentSlugs,
@@ -64,7 +64,7 @@ describe("siteMap", () => {
 
   it("backs every navigation offer with a mapped page", () => {
     const mapped = new Set(sitePages.map((p) => p.path));
-    for (const offerPath of navOfferPaths) {
+    for (const offerPath of siteNavOfferPaths) {
       expect(mapped, `nav offer ${offerPath} missing from siteMap`).toContain(offerPath);
     }
   });

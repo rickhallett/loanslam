@@ -3,7 +3,7 @@ import {
   loansByMalSiteHost,
   loanSlamApplicationHost,
   loanSlamSiteHost,
-} from "./sitePolicy";
+} from "./siteRoutePolicy";
 
 function literalPattern(value: string): RegExp {
   return new RegExp(
