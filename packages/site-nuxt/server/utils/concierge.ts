@@ -1,13 +1,14 @@
-import OpenAI from "openai";
-
 import { rewriteDisplayedSiteUrls } from "../../lib/siteUrls";
 import type {
   ConciergeMessage,
   ConciergeSession,
 } from "../domains/concierge/concierge.model";
 import {
+  conciergeModel,
+  createConciergeReply,
+} from "../domains/concierge/services/conciergeOpenAi.client";
+import {
   buildConciergePromptInput,
-  conciergeInstructions,
 } from "../domains/concierge/services/conciergePrompt.service";
 import { conciergeRateLimitExceeded } from "../domains/concierge/services/conciergeRateLimit.service";
 import {
@@ -28,24 +29,11 @@ import {
 
 export type { ConciergeMessage, ConciergeSession };
 export { createConciergeSession, getConciergeSession };
+export { conciergeModel };
 export { conciergeRateLimitExceeded };
 
 export function conciergeEnabled(): boolean {
   return process.env.CONCIERGE_KILL_SWITCH !== "1";
-}
-
-export function conciergeModel(): string {
-  return process.env.CONCIERGE_MODEL ?? "gpt-5.5";
-}
-
-let client: OpenAI | null = null;
-
-function getClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not configured for the concierge.");
-  }
-  client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  return client;
 }
 
 export async function runConciergeTurn({
@@ -81,38 +69,7 @@ export async function runConciergeTurn({
     publicOrigin,
   });
 
-  // Reasoning effort stays low and the output budget generous: on a
-  // reasoning model a small max_output_tokens can be consumed entirely by
-  // deliberation (observed on "use javascript" pressure turns), which
-  // surfaced as empty or mid-sentence replies in the panel.
-  let reply: string;
-  if (onDelta) {
-    const stream = await getClient().responses.create({
-      model: conciergeModel(),
-      instructions: conciergeInstructions,
-      input,
-      reasoning: { effort: "low" },
-      max_output_tokens: 1200,
-      stream: true,
-    });
-    let full = "";
-    for await (const chunk of stream) {
-      if (chunk.type === "response.output_text.delta") {
-        full += chunk.delta;
-        onDelta(chunk.delta);
-      }
-    }
-    reply = full.trim();
-  } else {
-    const response = await getClient().responses.create({
-      model: conciergeModel(),
-      instructions: conciergeInstructions,
-      input,
-      reasoning: { effort: "low" },
-      max_output_tokens: 1200,
-    });
-    reply = response.output_text.trim();
-  }
+  let reply = await createConciergeReply({ input, onDelta });
 
   if (reply === "") {
     // Do not record a silent turn; the route handler converts this into the
