@@ -943,10 +943,7 @@ function hasCollectedHandoffField(
   facts: Record<string, string>,
   field: IntakeField,
 ): boolean {
-  const exactValue = facts[field]?.trim();
-  const candidateValue = facts[`${field}_candidate`]?.trim();
-
-  return Boolean(exactValue || candidateValue);
+  return Boolean(facts[field]?.trim());
 }
 
 function sameIntakeFields(

@@ -921,9 +921,9 @@ describe("processTurn", () => {
     const initialState: ConversationState = {
       ...state(),
       collectedFacts: {
-        fullName_candidate: "Bob Junior",
-        dateOfBirth_candidate: "7 Dec 1900",
-        postcode_candidate: "SW1A 1AA",
+        fullName: "Bob Junior",
+        dateOfBirth: "7 Dec 1900",
+        postcode: "SW1A 1AA",
         phone: "07845729939",
         email: "bob@example.com",
       },
@@ -962,6 +962,79 @@ describe("processTurn", () => {
       expect.objectContaining({
         code: "handoff_intake_complete",
         toAction: "create_ticket",
+      }),
+    );
+  });
+
+  it("does not confirm handoff from unconfirmed candidate intake fields", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "Please complete the short details below so we can route you.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "Please complete the short details below so we can route you.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: null,
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Planner repeated the full handoff form.",
+        };
+      },
+    };
+    const initialState: ConversationState = {
+      ...state(),
+      collectedFacts: {
+        fullName_candidate: "Bob Junior",
+        dateOfBirth_candidate: "7 Dec 1900",
+        postcode_candidate: "SW1A 1AA",
+        phone: "07845729939",
+        email: "bob@example.com",
+      },
+      requestedFields: [...standardHandoffFields],
+      safetyFlags: ["account_specific_request"],
+      handoffPending: true,
+    };
+
+    const result = await processTurn({
+      state: initialState,
+      userMessage: "I have told you my details",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:07:02.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).not.toContain(
+      "I've passed this to the LoanSlam team.",
+    );
+    expect(result.ui).toMatchObject({
+      primitive: "intake_form",
+      fields: ["fullName", "dateOfBirth", "postcode"],
+    });
+    expect(result.state.handoffPending).toBe(true);
+    expect(result.state.requestedFields).toEqual([
+      "fullName",
+      "dateOfBirth",
+      "postcode",
+    ]);
+    expect(result.state.collectedFacts).toMatchObject({
+      fullName_candidate: "Bob Junior",
+      dateOfBirth_candidate: "7 Dec 1900",
+      postcode_candidate: "SW1A 1AA",
+      phone: "07845729939",
+      email: "bob@example.com",
+    });
+    expect(result.validatorOverrides).not.toContainEqual(
+      expect.objectContaining({
+        code: "handoff_intake_complete",
       }),
     );
   });
