@@ -44,16 +44,13 @@ the existing DB-backed stability surface. Do not invent missing numbers.
 - The bounded tuning loop is documented in `docs/hell-week-agent-loop-playbook.md`.
 - Existing read-only helpers are exposed through `just hell-week-compare` and
   `just hell-week-stability`.
-- `scripts/phase0-cheap-model-quality-probe.ts` references these prior full-run
-  artifact paths:
-  - `artifacts/phase0/hell-week-full-2026-06-16T06-25-23-998Z`
-  - `artifacts/phase0/hell-week-full-2026-06-16T07-29-14-032Z`
-  - `artifacts/phase0/hell-week-full-2026-06-16T07-47-56-459Z`
-  - `artifacts/phase0/hell-week-iteration-1-stability-2026-06-16.html`
-- Those historical full-run directories were not present as tracked files in
-  this fresh worktree at setup time; the pickup agent should find the live local
-  artifact source, DB-backed run set, or copied evidence bundle before analysis.
-- Prior Iteration 1 context to verify against the actual artifacts: three full
+- Historical 2026-06-16 full runs are indexed in
+  `artifacts/evidence-index/hell-week-runs.md` with DB-backed replay commands;
+  use that index instead of local `artifacts/phase0` directories.
+- The retired cheap-model probe raw outputs are inventoried in
+  `artifacts/evidence-index/phase0-retention-2026-07-06.md`; they are not a
+  runnable proof surface in this checkout.
+- Prior Iteration 1 context to verify through the evidence index: three full
   runs were previously summarized as `95/122`, `96/122`, and `95/122`, with
   stable, recurring, and one-off dents classified separately.
 

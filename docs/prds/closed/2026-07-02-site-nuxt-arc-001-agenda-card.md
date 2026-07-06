@@ -18,10 +18,16 @@ cutover stays human-gated.
 
 ## Parity standard (the proof mechanism)
 
-- The Astro production build's emitted routes are the parity contract; a
-  committed route manifest is generated from `site/dist`.
-- `scripts/site-parity-harness.mjs` loads every route on both apps
-  (animations disabled, fonts settled) and produces per route, per viewport
+Historical note, 2026-07-06: the Astro package and the Astro-to-Nuxt parity
+scripts were retired after the Nuxt surface became the owned site. Current route
+and UI proof receipts live in
+`artifacts/evidence-index/ui-proof-receipts-2026-07-06.md` and
+`packages/site-nuxt/route-manifest.json`.
+
+- The Astro production build's emitted routes were the parity contract; a
+  committed route manifest was generated from `site/dist`.
+- The now-retired parity harness loaded every route on both apps
+  (animations disabled, fonts settled) and produced per route, per viewport
   (1280x900, 375x812): a normalized DOM-text diff and a pixel-diff ratio.
 - Pass: text matches exactly and pixel ratio <= 0.5%. Failing routes emit
   diff images for human review; passing routes need no human eyes.
