@@ -1,5 +1,5 @@
 {
-  "source": "site/dist",
+  "source": "packages/site-nuxt/data/content",
   "routes": [
     {
       "route": "/",

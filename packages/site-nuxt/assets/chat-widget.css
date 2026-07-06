@@ -1,7 +1,7 @@
 /* GENERATED in part: the "widget styles" section below is transformed from
    packages/review-widget/src/styles.css (selectors prefixed with #mal-panel).
-   Chrome values mirror site/src/pages/contact.astro malChatConfig + the
-   review-host loader.js (D042). */
+   Chrome values mirror the former Astro contact-page malChatConfig + the
+   review-host loader.js (D042); site-nuxt now owns the deployed copy. */
 
 #mal-panel {
   position: fixed;

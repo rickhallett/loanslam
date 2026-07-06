@@ -3,7 +3,7 @@
 > **Status: Nuxt keeper site plus Phase 0 engine proof.** The current live
 > keeper surface is `packages/site-nuxt` (`loanslam-site-nuxt` on Railway). The
 > older Astro deployment path and standalone IPOC deployment path are historical;
-> their source stays only where Nuxt still imports it.
+> site-nuxt now owns the migrated site content, styles, and public assets.
 
 > **Confidential and proprietary.** This is private client work. See
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
@@ -105,7 +105,7 @@ default planner model.
 | Surface | Status | Use it for |
 | --- | --- | --- |
 | `packages/site-nuxt` | current keeper site and concierge surface; live service is `loanslam-site-nuxt` | Site, concierge, current deployable proof, Railway read-back |
-| `site/` | Astro source/input tree only; not the live deploy path | Content, styles, and assets still imported by Nuxt until migrated |
+| `site/` | historical Astro package/docs only; not the live deploy path | Prior parity source and retained site docs |
 | `packages/integrated-poc` | source/shared modules consumed by Nuxt; standalone Railway deployment retired | IPOC server/session/admin code that Nuxt still imports |
 | `packages/demo-*` | historical Loanslam iframe demo shell | Legacy local comparison only |
 | `packages/review-*` | MAL review shell and public sanitized reports | Review/demo host checks and report publishing |
@@ -133,7 +133,7 @@ keeper service and its verified dependencies.
 - `just demo` starts the historical Loanslam iframe demo around the Phase 0 engine; use `just demo-local` only for legacy local comparison.
 - `just review` starts the MAL review demo around the same engine; use `just review-local` for review-host checks.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
-- `site/` is still a source/input tree for Nuxt content and assets, not the live deploy surface.
+- `site/` is historical Astro material only, not a Nuxt input or live deploy surface.
 
 ## Repository map
 
@@ -184,8 +184,8 @@ corpus. It is marked `deployment_status: "non_deployable_synthetic"` and
 `deployable: false`; it is useful for routing, grounding, and Hell Week evidence,
 but it is not approved public copy for regulated lending facts or contact
 details. Customer-facing contact facts belong in
-`site/src/data/site-copy/contact.json` until an approved runtime corpus replaces
-the synthetic one.
+`packages/site-nuxt/data/site-copy/contact.json` until an approved runtime corpus
+replaces the synthetic one.
 
 Inside the proof corpus, `serving_mode` is policy data:
 
@@ -242,8 +242,8 @@ The current site lives in `packages/site-nuxt`. For site changes, run:
 just site-nuxt-build
 ```
 
-The legacy `site/` tree still supplies content and assets to Nuxt until that
-input is migrated.
+The legacy `site/` tree is historical Astro material. Current site content,
+styles, and public assets live under `packages/site-nuxt`.
 
 ## Source-of-truth docs
 

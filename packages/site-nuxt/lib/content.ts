@@ -10,7 +10,7 @@ export interface ContentRecord {
   html: string;
 }
 
-const mods = import.meta.glob('../../../site/src/data/content/*.json', { eager: true });
+const mods = import.meta.glob('../data/content/*.json', { eager: true });
 const records: ContentRecord[] = Object.values(mods).map(
   (m) => ((m as { default?: ContentRecord }).default ?? m) as ContentRecord,
 );

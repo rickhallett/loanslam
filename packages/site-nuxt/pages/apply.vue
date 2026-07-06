@@ -19,9 +19,7 @@
 </template>
 
 <script setup lang="ts">
-// Consumed in place from the Astro site (single source until cutover, D041);
-// it was already a Vue component hydrated via client:load there.
-import ApplicationJourney from '../../../site/src/components/ApplicationJourney.vue';
+import ApplicationJourney from '../components/ApplicationJourney.vue';
 import { applyCopy } from '../lib/site-copy';
 
 useHead({

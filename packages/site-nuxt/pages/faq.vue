@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import faqQa from '../../../site/src/data/faq-qa.json';
+import faqQa from '../data/faq-qa.json';
 import { page, rewriteLinks } from '../lib/content';
 import { faqPageCopy } from '../lib/site-copy';
 

@@ -1,12 +1,12 @@
-import applicationJourneyRaw from '../../../site/src/data/site-copy/application-journey.json';
-import applyRaw from '../../../site/src/data/site-copy/apply.json';
-import chromeRaw from '../../../site/src/data/site-copy/chrome.json';
-import contactRaw from '../../../site/src/data/site-copy/contact.json';
-import faqPageRaw from '../../../site/src/data/site-copy/faq-page.json';
-import homeRaw from '../../../site/src/data/site-copy/home.json';
-import instalmentLoanRaw from '../../../site/src/data/site-copy/instalment-loan.json';
-import newsRaw from '../../../site/src/data/site-copy/news.json';
-import notFoundRaw from '../../../site/src/data/site-copy/not-found.json';
+import applicationJourneyRaw from '../data/site-copy/application-journey.json';
+import applyRaw from '../data/site-copy/apply.json';
+import chromeRaw from '../data/site-copy/chrome.json';
+import contactRaw from '../data/site-copy/contact.json';
+import faqPageRaw from '../data/site-copy/faq-page.json';
+import homeRaw from '../data/site-copy/home.json';
+import instalmentLoanRaw from '../data/site-copy/instalment-loan.json';
+import newsRaw from '../data/site-copy/news.json';
+import notFoundRaw from '../data/site-copy/not-found.json';
 
 type UnknownRecord = Record<string, unknown>;
 

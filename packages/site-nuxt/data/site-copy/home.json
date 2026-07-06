@@ -1,0 +1,87 @@
+{
+  "hero": {
+    "overline": "Direct lender · Powered by Open Banking",
+    "titleHtml": "Fair and <em>affordable</em> unsecured loans",
+    "body": "Borrow £1,000 – £5,000 over up to 36 months. APR from 22.0% to 93.8%, personalised to your circumstances — and checking your eligibility won’t touch your credit score.",
+    "ctas": [
+      { "label": "Apply now", "href": "/apply/" },
+      { "label": "How it works", "href": "/instalment-loan/" }
+    ],
+    "fineprint": "Applicants must be aged 21–71, earn at least £1,300 a month, and live in the UK."
+  },
+  "quote": {
+    "title": "Your quick quote",
+    "amountLabel": "I’d like to borrow",
+    "amountDefault": "£2,500",
+    "amountMinLabel": "£1,000",
+    "amountMaxLabel": "£5,000",
+    "termLabel": "repaid over",
+    "termDefault": "24 months",
+    "termMinLabel": "9 mo",
+    "termMaxLabel": "36 mo",
+    "monthlyLabel": "Monthly repayment",
+    "monthlyDefault": "£154.38",
+    "totalLabel": "Total repayable",
+    "totalDefault": "£3,705.12",
+    "illustrativeNote": "Illustrative, based on our representative 24.1% p.a. fixed rate — your personalised rate may differ.",
+    "cta": { "label": "Get your personalised quote", "href": "/apply/" },
+    "representativeExample": "Representative example: on an assumed loan amount of £2,500 over a 24 month repayment period. Rate of interest 24.1% per annum (fixed). Representative 49.6% APR. Total amount payable is £3,705.12 of which £1,205.12 is interest, 24 monthly repayments of £154.38."
+  },
+  "trustSignals": [
+    { "html": "<strong>FCA</strong> authorised & regulated — firm ref 912359" },
+    { "html": "<strong>37,500</strong> customers helped" },
+    { "html": "Rated <strong>‘Excellent’</strong> on Trustpilot", "href": "https://www.trustpilot.com/review/loansbymal.co.uk" },
+    { "html": "<strong>Direct lender</strong> — not a broker" },
+    { "html": "<strong>100% online</strong> — no documents required" }
+  ],
+  "trustSignalsLabel": "Trust signals",
+  "why": {
+    "overline": "Unsecured loans up to £5,000",
+    "titleHtml": "The bank said no.<br />We look properly.",
+    "paragraphsHtml": [
+      "<strong>Loans by MAL</strong> is a direct lender offering unsecured loans from £1,000 to £5,000, over terms of 9 to 36 months. We lend to a wide range of customers, using a combination of credit file and Open Banking data to make responsible and personalised lending decisions.",
+      "By using Open Banking technology, we can often help customers who are unable to borrow from banks and other lenders — we read the real picture, not just the score."
+    ],
+    "cta": { "label": "More about us", "href": "/about-us/" }
+  },
+  "stats": [
+    { "valueHtml": "37,500", "label": "customers helped since 2020" },
+    { "valueHtml": "22.0<span class=\"stat-unit\">%</span>", "label": "APR from*, personalised to you" },
+    { "valueHtml": "£5k", "label": "borrow £1,000 up to £5,000" },
+    { "valueHtml": "0", "label": "documents, branches or brokers" }
+  ],
+  "statsFootnote": "*Subject to status. Terms & conditions apply.",
+  "eligibility": {
+    "overline": "Eligibility",
+    "title": "Four quick checks before you apply",
+    "items": [
+      { "title": "Age", "body": "Aged between 21 and 71 years old at the time of application." },
+      { "title": "UK residency", "body": "You live and work in the UK on a permanent basis." },
+      { "title": "Income", "body": "You earn at least £1,300 per month after tax — employment, self-employment or pensions." },
+      { "title": "Bank account", "body": "A UK bank account that supports Open Banking connections." }
+    ]
+  },
+  "process": {
+    "overline": "How it works",
+    "title": "Easy as one, two, funded.",
+    "lede": "Quick and easy application — with a fast in-principle decision.",
+    "items": [
+      { "title": "Apply online", "body": "Choose your amount and term, tell us a little about yourself. The first two steps won’t impact your credit score." },
+      { "title": "We check affordability", "body": "Credit file plus Open Banking data — a responsible, personalised lending decision, not a tick-box one." },
+      { "title": "Sign. Funds land.", "body": "Sign, verify your banking, and after a quick 5–10 minute call we pay out — usually within hours." }
+    ],
+    "cta": { "label": "Start your application", "href": "/apply/" }
+  },
+  "review": {
+    "quote": "Very easy to deal with. Professional people who look after you. Very impressed — thank you for the outstanding service.",
+    "ratingLabel": "Five star rating",
+    "link": { "label": "Rated ‘Excellent’ on Trustpilot", "href": "https://www.trustpilot.com/review/loansbymal.co.uk" },
+    "note": "We encourage all customers to leave an honest review of their experience with Loans by MAL."
+  },
+  "news": {
+    "overline": "Money guides & news",
+    "title": "Borrow smarter",
+    "allGuides": { "label": "All guides", "href": "/news/" },
+    "featuredLabel": "Read the guide"
+  }
+}

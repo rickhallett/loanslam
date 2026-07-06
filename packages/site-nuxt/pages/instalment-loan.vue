@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import instalmentQa from '../../../site/src/data/instalment-qa.json';
+import instalmentQa from '../data/instalment-qa.json';
 import { page, rewriteLinks } from '../lib/content';
 import { instalmentLoanCopy } from '../lib/site-copy';
 
