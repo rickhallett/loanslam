@@ -1,15 +1,13 @@
 import { createError, readBody } from "h3";
 
 import {
-  ipocHandoffFields,
-  type IpocHandoffIntake,
   type IpocSubmitIntakeRequest,
   type IpocSubmitIntakeResponse,
 } from "../../../../domains/ipoc/models/ipoc.model";
 import {
-  appendMessage,
-  updateIpocTicketIntake,
-} from "../../../../domains/ipoc/stores/ipocSession.store";
+  captureIpocIntake,
+  validateIpocIntakeFields,
+} from "../../../../domains/ipoc/services/ipocIntake.service";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 import { buildIpocTelemetry } from "../../../../utils/turnTelemetry";
 
@@ -19,7 +17,7 @@ export default defineEventHandler(
     const body = await readBody<IpocSubmitIntakeRequest>(event);
     const ticketId =
       typeof body.ticketId === "string" ? body.ticketId.trim() : "";
-    const validation = validateIntakeFields(body.fields);
+    const validation = validateIpocIntakeFields(body.fields);
 
     if (!ticketId) {
       throw createError({
@@ -35,7 +33,8 @@ export default defineEventHandler(
       });
     }
 
-    const ticket = updateIpocTicketIntake({
+    const ticket = captureIpocIntake({
+      session,
       ticketId,
       conversationRef,
       fields: validation.fields,
@@ -47,11 +46,6 @@ export default defineEventHandler(
         statusMessage: `Ticket ${ticketId} was not found for this session.`,
       });
     }
-
-    appendMessage(session, {
-      role: "assistant",
-      content: `Demo handoff fields captured for ticket ${ticket.id}. A human agent can now read them back.`,
-    });
 
     return {
       conversationRef,
@@ -66,46 +60,3 @@ export default defineEventHandler(
     };
   },
 );
-
-type IntakeValidationResult =
-  | { ok: true; fields: IpocHandoffIntake }
-  | { ok: false; message: string };
-
-function validateIntakeFields(
-  fields: IpocSubmitIntakeRequest["fields"] | undefined,
-): IntakeValidationResult {
-  if (!fields || typeof fields !== "object") {
-    return { ok: false, message: "Handoff fields are required." };
-  }
-
-  const normalized = {} as IpocHandoffIntake;
-
-  for (const field of ipocHandoffFields) {
-    const value = fields[field]?.trim() ?? "";
-
-    if (!value) {
-      return { ok: false, message: `${field} is required.` };
-    }
-
-    normalized[field] = value;
-  }
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized.dateOfBirth)) {
-    return {
-      ok: false,
-      message: "dateOfBirth must use YYYY-MM-DD for the demo form.",
-    };
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized.email)) {
-    return { ok: false, message: "email must be a valid demo email address." };
-  }
-
-  const phoneDigits = normalized.phone.replace(/\D/g, "");
-
-  if (phoneDigits.length < 10 || phoneDigits.length > 15) {
-    return { ok: false, message: "phone must contain 10 to 15 digits." };
-  }
-
-  return { ok: true, fields: normalized };
-}
