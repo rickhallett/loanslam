@@ -131,7 +131,7 @@ function renderIndex(reports: ReportEntry[]): string {
       "<header>",
       '<p class="kicker">LoanSlam</p>',
       "<h1>Evidence reports</h1>",
-      "<p>Sanitized report views from the testing record: Hell Week gauntlets, adversarial probes, audits, and reviews across the product's evolution. These pages are generated summaries, not raw traces, run JSON, or lab session dumps.</p>",
+      "<p>Private Hell Week result and variance reports from the testing record. These pages are report outputs, not raw run JSON, lab session dumps, code-health reviews, or repository-surface audits.</p>",
       "</header>",
       '<section class="hero">',
       '<p class="kicker">Latest</p>',

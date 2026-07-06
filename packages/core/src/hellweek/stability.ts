@@ -192,6 +192,7 @@ export function writeHellWeekStabilityArtifacts({
 export function renderHellWeekStabilityHtml(
   report: HellWeekStabilityReport,
 ): string {
+  const comparabilityWarnings = report.comparability?.warnings ?? [];
   const rows = report.scenarios
     .map(
       (scenario) => `<tr>
@@ -246,8 +247,8 @@ export function renderHellWeekStabilityHtml(
       : ""
   }
   ${
-    report.comparability.warnings.length > 0
-      ? `<section><h2>Comparability Warnings</h2><ul>${report.comparability.warnings
+    comparabilityWarnings.length > 0
+      ? `<section><h2>Comparability Warnings</h2><ul>${comparabilityWarnings
           .map(
             (warning) =>
               `<li><strong>${escapeHtml(warning.field)}</strong>: ${escapeHtml(warning.baseline)} -> ${escapeHtml(warning.candidate)}. ${escapeHtml(warning.message)}</li>`,
@@ -262,7 +263,7 @@ export function renderHellWeekStabilityHtml(
       ${report.runs
         .map(
           (run) =>
-            `<tr><td>${run.position + 1}</td><td>${escapeHtml(run.runId)}</td><td>${escapeHtml(run.verdict)}</td><td>${run.totals.passed}/${run.totals.scenarios}</td><td>${escapeHtml(`${run.planner.model} / ${run.planner.promptVersion}`)}</td><td>${escapeHtml(signalSummary(run.signalExtractor))}</td><td>${escapeHtml(run.policyVersion)}</td><td>${run.judged ? "yes" : "no"}</td><td>${escapeHtml(run.generatedAt)}</td></tr>`,
+            `<tr><td>${run.position + 1}</td><td>${escapeHtml(run.runId)}</td><td>${escapeHtml(run.verdict)}</td><td>${escapeHtml(totalsSummary(run.totals))}</td><td>${escapeHtml(plannerSummary(run.planner))}</td><td>${escapeHtml(signalSummary(run.signalExtractor))}</td><td>${escapeHtml(run.policyVersion ?? "unknown")}</td><td>${run.judged ? "yes" : "no"}</td><td>${escapeHtml(run.generatedAt)}</td></tr>`,
         )
         .join("\n")}
     </tbody>
@@ -516,8 +517,20 @@ function metric(label: string, value: string): string {
   return `<div><span class="k">${escapeHtml(label)}</span><span class="v">${escapeHtml(value)}</span></div>`;
 }
 
-function signalSummary(signal: HellWeekReport["signalExtractor"]): string {
-  if (!signal.enabled) {
+function totalsSummary(totals: HellWeekReport["totals"] | undefined): string {
+  return totals ? `${totals.passed}/${totals.scenarios}` : "unknown";
+}
+
+function plannerSummary(
+  planner: HellWeekReport["planner"] | undefined,
+): string {
+  return `${planner?.model ?? "unknown"} / ${planner?.promptVersion ?? "unknown"}`;
+}
+
+function signalSummary(
+  signal: HellWeekReport["signalExtractor"] | undefined,
+): string {
+  if (!signal?.enabled) {
     return "disabled";
   }
 

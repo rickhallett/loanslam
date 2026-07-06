@@ -77,7 +77,8 @@ export function chips(report: ReportEntry): string {
 }
 
 export function reportHref(report: ReportEntry): string {
-  return report.source.type === "static-html"
+  const fileName = report.source.type === "static-html"
     ? basename(report.source.path)
     : `${report.id}.html`;
+  return `/reports/${fileName}`;
 }

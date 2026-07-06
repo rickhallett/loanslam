@@ -236,6 +236,18 @@ status-snapshot:
 reports-build *reports_flags:
     @npm --silent run lsops -- reports build {{ reports_flags }}
 
+# Recover/publish the rich styled Hell Week reports and regenerate the /reports index.
+reports-publish-styled *reports_flags:
+    @npm --silent run reports:publish-styled -- {{ reports_flags }}
+
+# Generate private authenticated /reports HTML from persisted Hell Week DB records.
+reports-publish-db *reports_flags:
+    @npm --silent run reports:publish-db -- {{ reports_flags }}
+
+# Generate the private interactive /reports/trends.html dashboard from DB runs.
+reports-publish-trends *reports_flags:
+    @npm --silent run reports:publish-trends -- {{ reports_flags }}
+
 # Map this branch's changed files to the proof bar they require. e.g. -- --base dev
 branch-risk *risk_flags:
     @npm --silent run branch-risk -- {{ risk_flags }}

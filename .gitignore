@@ -9,6 +9,7 @@ coverage/
 *.tsbuildinfo
 packages/core/src/generated/prisma/
 var/
+var/reports/
 
 # Local secret caches generated from encrypted SOPS sources.
 .env
@@ -22,8 +23,13 @@ traces/
 reports/
 !docs/reports/
 !docs/reports/*.md
+!packages/site-nuxt/server/routes/reports/
+!packages/site-nuxt/server/routes/reports/*.ts
 !packages/review-host/public/reports/
-!packages/review-host/public/reports/*.html
+packages/review-host/public/reports/*
+!packages/review-host/public/reports/index.html
+!packages/review-host/public/reports/hell-week-full.html
+!packages/review-host/public/reports/iteration-1-stability.html
 exports/
 artifacts/
 !artifacts/

@@ -1,77 +1,6 @@
 {
-  "description": "Opt-in publish manifest for the /reports route. Every entry here is rendered/served publicly by scripts/build-reports.mjs; anything not listed does not ship. Sources must already be sanitized summaries — no raw traces, run JSON, transcripts, or lab session dumps. Provenance is metadata only: run ids and campaign ids, never links into docs/prds/.",
+  "description": "Opt-in publish manifest for the /reports route fallback. This route is for private Hell Week results and variance/stability reports behind reports auth. Every entry here is listed by scripts/build-reports.mjs; anything not listed does not ship. Sources are static report outputs, not raw run JSON or lab session dumps. Do not add code-health reviews, repository-surface audits, or implementation assessments.",
   "reports": [
-    {
-      "id": "concierge-probe-report",
-      "title": "Concierge adversarial probe report",
-      "date": "2026-07-02",
-      "campaign": "Concierge probes",
-      "kind": "narrative",
-      "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-07-02-concierge-probe-report.md"
-      },
-      "summary": "10 adversarial probes against production and staging: the concierge guardrail held 10/10 on both surfaces, and a deliberately-broken control scored 3/3 broke, proving the judge discriminates.",
-      "provenance": [
-        "campaign concierge-probes-001",
-        "judge gpt-5.4-mini, adjudication gpt-5.5"
-      ]
-    },
-    {
-      "id": "widget-adapter-sunset-assessment",
-      "title": "Widget-adapter sunset assessment",
-      "date": "2026-07-01",
-      "campaign": "Integrated POC",
-      "kind": "narrative",
-      "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-07-01-widget-adapter-sunset-assessment.md"
-      },
-      "summary": "Assesses whether the Integrated POC can replace the widget-adapter demo stack: freeze the adapter, do not delete, until the POC has a deployed URL a stakeholder can click.",
-      "provenance": ["arc ipoc-arc-003", "docs-only assessment"]
-    },
-    {
-      "id": "full-repo-code-review",
-      "title": "Full repository code review",
-      "date": "2026-06-23",
-      "campaign": "Code health & review",
-      "kind": "narrative",
-      "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-06-23-full-repo-code-review.md"
-      },
-      "summary": "Full-repo review of the TurnPlanner architecture: sound in intent, with two fronts named to close before the safety and auditability claims can be asserted outright.",
-      "provenance": [
-        "~131 TS/TSX files, ~41k lines reviewed",
-        "OpenAI-only provider mandate verified clean"
-      ]
-    },
-    {
-      "id": "static-runtime-code-health-audit",
-      "title": "Static and runtime code health audit",
-      "date": "2026-06-20",
-      "campaign": "Code health & review",
-      "kind": "narrative",
-      "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-06-20-static-runtime-code-health-audit.md"
-      },
-      "summary": "Static analysis plus runtime gates: repo runnable, demo safety smoke green, formatting drift found and fixed; not yet a safe delete pass.",
-      "provenance": ["fallow static analysis + runtime gate battery"]
-    },
-    {
-      "id": "repository-surface-audit",
-      "title": "Repository surface audit",
-      "date": "2026-06-20",
-      "campaign": "Code health & review",
-      "kind": "narrative",
-      "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-06-20-repository-surface-audit.md"
-      },
-      "summary": "Maps every operator surface in the repo — engine, evidence harnesses, lab apps, deploys, secrets — and flags command ambiguity and commands that can touch external state.",
-      "provenance": ["read-only audit, no source behavior changed"]
-    },
     {
       "id": "iteration-1-stability",
       "title": "Hell Week iteration 1 stability report",
@@ -79,8 +8,8 @@
       "campaign": "Phase 0 · Hell Week",
       "kind": "narrative",
       "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-06-16-hell-week-iteration-1-stability-summary.md"
+        "type": "static-html",
+        "path": "packages/review-host/public/reports/iteration-1-stability.html"
       },
       "summary": "Three full Hell Week runs compared to separate stable dents from run-to-run noise.",
       "provenance": ["3 full runs compared", "runs of 2026-06-16"]
@@ -92,8 +21,8 @@
       "campaign": "Phase 0 · Hell Week",
       "kind": "narrative",
       "source": {
-        "type": "markdown",
-        "path": "docs/reports/2026-06-16-hell-week-full-summary.md"
+        "type": "static-html",
+        "path": "packages/review-host/public/reports/hell-week-full.html"
       },
       "summary": "The full 122-scenario gauntlet: 95 passed, 27 dents, 0 demo-killers.",
       "provenance": [

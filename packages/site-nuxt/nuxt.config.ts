@@ -23,14 +23,6 @@ export default defineNuxtConfig({
   nitro: {
     publicAssets: [
       { dir: fileURLToPath(new URL("./public", import.meta.url)) },
-      // The Hell Week report dashboards the old site service exposed (D044);
-      // consumed in place from review-host like the other shared sources.
-      {
-        dir: fileURLToPath(
-          new URL("../review-host/public/reports", import.meta.url),
-        ),
-        baseURL: "/reports",
-      },
     ],
   },
   vite: {

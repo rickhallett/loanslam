@@ -15,13 +15,35 @@ import type {
 export interface HellWeekReportStore {
   verifyConnection(): Promise<void>;
   saveReport(report: HellWeekReport): Promise<void>;
+  listReports(): Promise<HellWeekReportListItem[]>;
   loadReport(runId: string): Promise<HellWeekReport | undefined>;
   loadReports(runIds: readonly string[]): Promise<HellWeekReport[]>;
   saveStabilityReport(report: HellWeekStabilityReport): Promise<void>;
+  listStabilityReports(): Promise<HellWeekStabilityReportListItem[]>;
   loadStabilityReport(
     setId: string,
   ): Promise<HellWeekStabilityReport | undefined>;
   close(): Promise<void>;
+}
+
+export interface HellWeekReportListItem {
+  runId: string;
+  generatedAt: string;
+  profile: string;
+  verdict: HellWeekReport["verdict"];
+  headline: string;
+  totals: HellWeekReport["totals"];
+  judged: boolean;
+}
+
+export interface HellWeekStabilityReportListItem {
+  setId: string;
+  generatedAt: string;
+  profile: string;
+  label: string;
+  runCount: number;
+  scenarioCount: number;
+  summary: HellWeekStabilityReport["summary"];
 }
 
 const hellWeekDatabaseRequirement =
@@ -211,6 +233,31 @@ class PrismaHellWeekReportStore implements HellWeekReportStore {
     });
   }
 
+  async listReports(): Promise<HellWeekReportListItem[]> {
+    const rows = await this.prisma.hellWeekRun.findMany({
+      orderBy: { generatedAt: "desc" },
+      select: {
+        runId: true,
+        generatedAt: true,
+        profile: true,
+        verdict: true,
+        headline: true,
+        totals: true,
+        judged: true,
+      },
+    });
+
+    return rows.map((row) => ({
+      runId: row.runId,
+      generatedAt: row.generatedAt.toISOString(),
+      profile: row.profile,
+      verdict: row.verdict as HellWeekReport["verdict"],
+      headline: row.headline,
+      totals: castJson<HellWeekReport["totals"]>(row.totals),
+      judged: row.judged,
+    }));
+  }
+
   async loadReports(runIds: readonly string[]): Promise<HellWeekReport[]> {
     const reports: HellWeekReport[] = [];
 
@@ -316,6 +363,31 @@ class PrismaHellWeekReportStore implements HellWeekReportStore {
     return runSet
       ? castJson<HellWeekStabilityReport>(runSet.reportJson)
       : undefined;
+  }
+
+  async listStabilityReports(): Promise<HellWeekStabilityReportListItem[]> {
+    const rows = await this.prisma.hellWeekRunSet.findMany({
+      orderBy: { generatedAt: "desc" },
+      select: {
+        setId: true,
+        generatedAt: true,
+        profile: true,
+        label: true,
+        runCount: true,
+        scenarioCount: true,
+        summary: true,
+      },
+    });
+
+    return rows.map((row) => ({
+      setId: row.setId,
+      generatedAt: row.generatedAt.toISOString(),
+      profile: row.profile,
+      label: row.label,
+      runCount: row.runCount,
+      scenarioCount: row.scenarioCount,
+      summary: castJson<HellWeekStabilityReport["summary"]>(row.summary),
+    }));
   }
 
   async close(): Promise<void> {
