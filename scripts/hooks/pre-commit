@@ -10,7 +10,8 @@
 # own committed copy of scripts/hooks, so the relative path resolves locally.)
 #
 # It runs:
-#   1. source-policy:check  - extensionless-TS + OpenAI-only mandate over the tree
+#   1. source-policy:check  - extensionless-TS + OpenAI-only provider policy
+#                             over the tree
 #   2. gate-slice --staged  - secret/evidence path + content scan, engine-touch
 #                             receipt requirement, demo<->review separation
 #

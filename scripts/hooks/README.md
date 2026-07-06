@@ -17,8 +17,9 @@ relative path resolves to the local copy.
 
 Runs two deterministic gates and aborts the commit on either failure:
 
-- `npm run source-policy:check` — extensionless-TypeScript imports and the
-  OpenAI-only provider mandate (no Anthropic SDK imports), over the whole tree.
+- `npm run source-policy:check` — extensionless-TypeScript imports, no
+  non-OpenAI inference provider SDK imports, and provider-env manifest policy,
+  over the whole tree.
 - `npm run gate-slice -- --staged` — staged-diff gate: blocks rendered env
   caches / `evidence.json`, decrypted-key-shaped content, an engine-touching
   change (`packages/core/src/**`) without a `REPAIRED`/`HOLDING` floor-delta

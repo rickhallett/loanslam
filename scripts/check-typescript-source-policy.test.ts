@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  findProviderEnvManifestViolations,
+  findSourcePolicyViolations,
   findTypeScriptSourcePolicyViolations,
   isForbiddenAnthropicProviderSpecifier,
+  isForbiddenNonOpenAIProviderSpecifier,
   isForbiddenProjectJavaScriptSpecifier,
 } from "./check-typescript-source-policy";
 
@@ -81,12 +84,145 @@ describe("TypeScript source policy", () => {
 
     expect(violations).toEqual([
       {
-        kind: "anthropic-provider",
+        kind: "non-openai-provider-import",
         filePath: "fixture.ts",
         line: 1,
         column: 23,
         specifier: "@anthropic-ai/sdk",
       },
     ]);
+  });
+
+  it("flags non-OpenAI provider imports in JavaScript source", () => {
+    const violations = findSourcePolicyViolations(
+      "fixture.mjs",
+      `
+        import { GoogleGenAI } from "@google/genai";
+        const Anthropic = require("@anthropic-ai/sdk");
+      `,
+    );
+
+    expect(violations.map((violation) => violation.specifier)).toEqual([
+      "@google/genai",
+      "@anthropic-ai/sdk",
+    ]);
+    expect(violations.map((violation) => violation.kind)).toEqual([
+      "non-openai-provider-import",
+      "non-openai-provider-import",
+    ]);
+  });
+
+  it("does not apply TypeScript extensionless-import policy to JavaScript source", () => {
+    const violations = findSourcePolicyViolations(
+      "scripts/example.mjs",
+      `import helper from "./helper.js";`,
+    );
+
+    expect(violations).toEqual([]);
+  });
+
+  it("rejects common non-OpenAI inference provider package specifiers", () => {
+    expect(isForbiddenNonOpenAIProviderSpecifier("@google/genai")).toBe(true);
+    expect(
+      isForbiddenNonOpenAIProviderSpecifier(
+        "@aws-sdk/client-bedrock-runtime",
+      ),
+    ).toBe(true);
+    expect(isForbiddenNonOpenAIProviderSpecifier("groq-sdk")).toBe(true);
+    expect(isForbiddenNonOpenAIProviderSpecifier("@mistralai/mistralai")).toBe(
+      true,
+    );
+    expect(isForbiddenNonOpenAIProviderSpecifier("openai")).toBe(false);
+    expect(
+      isForbiddenNonOpenAIProviderSpecifier("@google-cloud/storage"),
+    ).toBe(false);
+  });
+
+  it("requires non-OpenAI provider env keys to be allowlisted and undeployed", () => {
+    const violations = findProviderEnvManifestViolations(
+      "secrets/manifest.json",
+      JSON.stringify(
+        {
+          variables: {
+            ANTHROPIC_API_KEY: {
+              required: ["production"],
+              targets: ["railway"],
+              providerPolicy: {
+                allowlisted: true,
+                reason: "Temporary provider migration test.",
+              },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    expect(violations).toEqual([
+      expect.objectContaining({
+        kind: "non-openai-provider-env-key",
+        specifier: "ANTHROPIC_API_KEY",
+      }),
+    ]);
+  });
+
+  it("allows explicitly documented legacy provider env keys with no runtime use", () => {
+    const violations = findProviderEnvManifestViolations(
+      "secrets/manifest.json",
+      JSON.stringify({
+        variables: {
+          GEMINI_API_KEY: {
+            required: [],
+            targets: [],
+            providerPolicy: {
+              allowlisted: true,
+              reason: "Legacy encrypted carryover only; not project runtime.",
+            },
+          },
+        },
+      }),
+    );
+
+    expect(violations).toEqual([]);
+  });
+
+  it("requires provider-adjacent non-inference exceptions to be documented", () => {
+    expect(
+      findProviderEnvManifestViolations(
+        "secrets/manifest.json",
+        JSON.stringify({
+          variables: {
+            CLAUDE_CODE_OAUTH_TOKEN: {
+              required: [],
+              targets: [],
+            },
+          },
+        }),
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "undocumented-provider-env-exception",
+        specifier: "CLAUDE_CODE_OAUTH_TOKEN",
+      }),
+    ]);
+
+    expect(
+      findProviderEnvManifestViolations(
+        "secrets/manifest.json",
+        JSON.stringify({
+          variables: {
+            CLAUDE_CODE_OAUTH_TOKEN: {
+              required: [],
+              targets: [],
+              providerPolicy: {
+                nonInference: true,
+                reason: "Agent CLI credential; not project runtime inference.",
+              },
+            },
+          },
+        }),
+      ),
+    ).toEqual([]);
   });
 });

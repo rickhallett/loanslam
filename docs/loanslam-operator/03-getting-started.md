@@ -25,7 +25,8 @@ pre-commit until the bundle reaches it. Reverse with
 
 Once active, every commit runs:
 
-- `source-policy:check` — extensionless-TS imports + the OpenAI-only mandate.
+- `source-policy:check` — extensionless-TS imports + OpenAI-only source and
+  provider-env policy.
 - `gate-slice --staged` — secret/evidence path + content scan, the engine-touch
   receipt requirement, and demo↔review separation.
 

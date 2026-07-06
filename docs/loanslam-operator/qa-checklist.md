@@ -110,14 +110,14 @@ npm run --silent core:hell-week -- --from-db "$RUN_ID" --out "$RUN_BASE"
 
 - [x] **C1 — source-policy passes on the real tree**
   - Run: `npm run --silent source-policy:check`
-  - Pass if: stdout contains `source policy passed` and
-    `no ... Anthropic provider imports found`; exit 0.
-  - Observed: `TypeScript source policy passed; scanned 140 source files; no Anthropic provider imports found; exit 0.`
+  - Pass if: stdout contains `Source policy passed` and
+    `no ... forbidden provider imports`; exit 0.
+  - Observed: `Historical baseline before provider-env broadening: TypeScript source policy passed; scanned 140 source files; no Anthropic provider imports found; exit 0.`
 
 - [x] **C2 — provider detection unit tests pass**
   - Run: `npx vitest run scripts/check-typescript-source-policy.test.ts`
-  - Pass if: stdout contains `Tests  7 passed`; exit 0.
-  - Observed: `Test Files 1 passed; Tests 7 passed; exit 0.`
+  - Pass if: stdout contains `Tests` and `passed`; exit 0.
+  - Observed: `Historical baseline before provider-env broadening: Test Files 1 passed; Tests 7 passed; exit 0.`
 
 - [x] **C3 — a live Anthropic import is flagged (negative test)**
   - Run:
@@ -126,9 +126,10 @@ npm run --silent core:hell-week -- --from-db "$RUN_ID" --out "$RUN_BASE"
     npm run --silent source-policy:check; echo "exit:$?"
     rm -rf scratch-qa
     ```
-  - Pass if: stdout contains `forbidden Anthropic provider import` and `exit:1`.
+  - Pass if: stdout contains `forbidden non-OpenAI inference provider import`
+    and `exit:1`.
     After cleanup, `git status --porcelain` is empty.
-  - Observed: `Printed forbidden Anthropic provider import; exit:1; post-cleanup git status output empty.`
+  - Observed: `Historical baseline before generic provider broadening: Printed forbidden Anthropic provider import; exit:1; post-cleanup git status output empty.`
 
 ---
 

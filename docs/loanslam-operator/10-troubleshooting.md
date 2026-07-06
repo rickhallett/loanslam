@@ -13,7 +13,9 @@ Read the violation list — it names the file and reason.
 | `engine-touching commit requires a floor-delta receipt` | `packages/core/src/**` changed with no valid receipt | Run `just floor-delta -- <run-dir>` first (REPAIRED/HOLDING) |
 | `floor-delta receipt status is REGRESSED` | The last run regressed the floor | Fix the regression; do not commit |
 | `widget cross-pollination` | A demo↔review import was added | Remove the cross-boundary import (they stay separate) |
-| `forbidden Anthropic provider import` | An `anthropic` / `@anthropic-ai/*` import | Replace with the OpenAI path; this repo is OpenAI-only |
+| `forbidden non-OpenAI inference provider import` | A non-OpenAI inference provider SDK import | Replace with the OpenAI path; this repo is OpenAI-only |
+| `non-OpenAI inference provider env key` | A provider env key is required/deployed or lacks explicit manifest allowlist metadata | Keep it undeployed, document legacy carryover in `providerPolicy`, or remove it |
+| `provider-adjacent non-inference env key` | A provider-named key is for agent/tooling use but lacks `providerPolicy.nonInference` | Add the manifest metadata or remove the key |
 
 To bypass deliberately (rare, write down why): `git commit --no-verify`.
 

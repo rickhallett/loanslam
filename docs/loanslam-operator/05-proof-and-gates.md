@@ -73,7 +73,7 @@ human-review item.
 ```mermaid
 flowchart LR
     commit["git commit"] --> hook{pre-commit hook}
-    hook --> sp["source-policy:check\n(extensionless-TS + OpenAI-only)"]
+    hook --> sp["source-policy:check\n(extensionless-TS + OpenAI-only provider policy)"]
     hook --> gs["gate-slice --staged"]
     sp -->|fail| block["commit aborted"]
     gs -->|fail| block
@@ -86,8 +86,12 @@ Activate it with `just hooks-install`. See [Getting started](03-getting-started.
 
 ## Why the OpenAI-only mandate is mechanical
 
-`scripts/check-typescript-source-policy.ts` flags Anthropic SDK **imports**
-(`anthropic`, `@anthropic-ai/*`) via the AST — not a text grep, so it never
-false-matches the word in comments, model ids, or docs. It runs inside
+`scripts/check-typescript-source-policy.ts` flags non-OpenAI inference provider
+SDK **imports** across TypeScript and JavaScript source via the AST — not a text
+grep, so it never false-matches words in comments, model ids, or docs. It also
+checks `secrets/manifest.json` for provider env keys: legacy non-OpenAI provider
+keys must be explicitly allowlisted, have no required environments, and have no
+deploy targets. Provider-adjacent non-inference exceptions, such as agent CLI
+credentials, must carry `providerPolicy.nonInference`. The check runs inside
 `test`, `typecheck`, `build`, and the pre-commit hook, so the mandate is checked
 on every quality command.
