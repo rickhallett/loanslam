@@ -12,6 +12,7 @@ import type {
   JudgeVerdictArtifact,
   StakeholderDimension,
 } from "./types";
+import { mapLimit } from "./concurrency";
 import { safetyFloorDimensions, severityRank } from "./types";
 import { judgeTriageLabels, type JudgeTriageLabel } from "./triageLabels";
 
@@ -389,29 +390,6 @@ function discoverScenarioIds(runDir: string): string[] {
   }
 
   return scenarioIds;
-}
-
-export async function judgeScenario({
-  client,
-  runDir,
-  scenarioId,
-  model,
-  promptVersion,
-}: {
-  client: OpenAiHellWeekJudgeClient;
-  runDir: string;
-  scenarioId: string;
-  model: string;
-  promptVersion: string;
-}): Promise<JudgeVerdict> {
-  const packet = readScenarioPacket(runDir, scenarioId);
-  return judgeScenarioPacket({
-    client,
-    packetJson: packet.json,
-    scenarioId,
-    model,
-    promptVersion,
-  });
 }
 
 export async function judgeScenarioPacket({
@@ -978,29 +956,6 @@ function worstVerdict(first: JudgeVerdict, second: JudgeVerdict): JudgeVerdict {
   return severityRank[second.severity] > severityRank[first.severity]
     ? second
     : first;
-}
-
-async function mapLimit<T, U>(
-  items: readonly T[],
-  limit: number,
-  worker: (item: T, index: number) => Promise<U>,
-): Promise<U[]> {
-  const results = new Array<U>(items.length);
-  let nextIndex = 0;
-
-  async function runWorker(): Promise<void> {
-    while (nextIndex < items.length) {
-      const index = nextIndex;
-      nextIndex += 1;
-      results[index] = await worker(items[index] as T, index);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, () => runWorker()),
-  );
-
-  return results;
 }
 
 function modelSummary(

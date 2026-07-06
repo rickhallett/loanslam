@@ -440,12 +440,18 @@ for (const [name, content] of outputs) {
 // Guard against leftovers: every .html in the folder must be generated,
 // a manifest-listed static dashboard, or the index.
 const known = new Set([...outputs.keys(), ...staticFiles]);
+const unmanifested = [];
 for (const file of readdirSync(outDir)) {
   if (file.endsWith(".html") && !known.has(file)) {
-    console.warn(
-      `build-reports: warning: ${file} is not in the manifest and will be served anyway; list it or delete it`,
-    );
+    unmanifested.push(file);
   }
+}
+if (unmanifested.length) {
+  fail(
+    `unmanifested public report HTML would be served: ${unmanifested.join(
+      ", ",
+    )}. List it in packages/review-host/reports-manifest.json or delete it.`,
+  );
 }
 
 if (checkMode) {
