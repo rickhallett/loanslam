@@ -1,21 +1,14 @@
-import { sitePages } from "./siteMap";
+import {
+  canonicalHost,
+  localPathForFirstPartyUrl,
+  normalizePublicOrigin,
+  normalizeSitePath,
+} from "./sitePolicy";
 
-const sitePagePaths = new Set(sitePages.map((page) => page.path));
-
-const applicationHosts = new Set([
-  "apply.loansbymal.co.uk",
-  "apply.loanslam.co.uk",
-  "applyloansbymal.co.uk",
-]);
-const siteHosts = new Set(["loansbymal.co.uk", "loanslam.co.uk"]);
-const loginHost = "monthlyadvanceloans.anchor.co.uk";
+export { normalizePublicOrigin, normalizeSitePath } from "./sitePolicy";
 
 const urlPattern = /\bhttps?:\/\/[^\s<>"')\]]+/gi;
 const trailingUrlPunctuation = /[.,!?;:]+$/;
-
-function canonicalHost(hostname: string): string {
-  return hostname.toLowerCase().replace(/^www\./, "");
-}
 
 function splitTrailingPunctuation(candidate: string): {
   urlText: string;
@@ -25,25 +18,6 @@ function splitTrailingPunctuation(candidate: string): {
   return trailing
     ? { urlText: candidate.slice(0, -trailing.length), trailing }
     : { urlText: candidate, trailing: "" };
-}
-
-export function normalizePublicOrigin(origin: string): string {
-  try {
-    return new URL(origin).origin;
-  } catch {
-    return "http://localhost";
-  }
-}
-
-export function normalizeSitePath(pathname: string): string | null {
-  const withLeadingSlash = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  if (withLeadingSlash === "/faqs" || withLeadingSlash === "/faqs/")
-    return "/faq/";
-
-  const normalized = withLeadingSlash.endsWith("/")
-    ? withLeadingSlash
-    : `${withLeadingSlash}/`;
-  return sitePagePaths.has(normalized) ? normalized : null;
 }
 
 function pathForDisplayUrl(
@@ -62,15 +36,7 @@ function pathForDisplayUrl(
     new URL(normalizePublicOrigin(publicOrigin)).hostname,
   );
 
-  if (host === currentHost) return normalizeSitePath(parsed.pathname);
-  if (applicationHosts.has(host)) return "/apply/";
-  if (host === loginHost) return "/login/";
-
-  if (siteHosts.has(host)) {
-    return normalizeSitePath(parsed.pathname);
-  }
-
-  return null;
+  return localPathForFirstPartyUrl(parsed, currentHost);
 }
 
 export function displaySiteUrl(

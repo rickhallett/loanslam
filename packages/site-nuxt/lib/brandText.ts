@@ -1,3 +1,17 @@
+import {
+  loansByMalApplicationHost,
+  loansByMalSiteHost,
+  loanSlamApplicationHost,
+  loanSlamSiteHost,
+} from "./sitePolicy";
+
+function literalPattern(value: string): RegExp {
+  return new RegExp(
+    `\\b${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+    "gi",
+  );
+}
+
 export function normalizeDemoBrandText(text: string): string {
   return text
     .replace(/\bthe LoanSlam team\b/g, "the support team")
@@ -6,6 +20,6 @@ export function normalizeDemoBrandText(text: string): string {
     .replace(/\bLoanslam team\b/g, "support team")
     .replace(/\bLoanSlam\b/g, "Loans by MAL")
     .replace(/\bLoanslam\b/g, "Loans by MAL")
-    .replace(/\bapply\.loanslam\.co\.uk\b/gi, "applyloansbymal.co.uk")
-    .replace(/\bloanslam\.co\.uk\b/gi, "loansbymal.co.uk");
+    .replace(literalPattern(loanSlamApplicationHost), loansByMalApplicationHost)
+    .replace(literalPattern(loanSlamSiteHost), loansByMalSiteHost);
 }

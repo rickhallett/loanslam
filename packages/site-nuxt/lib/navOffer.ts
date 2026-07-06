@@ -1,3 +1,5 @@
+import { comparablePath, isApplicationHost } from "./sitePolicy";
+
 // Deterministic navigation offers for concierge replies, mirroring the
 // dc-003/dc-006 quick-action pattern: when the concierge names a site page,
 // the panel renders a one-tap chip to it. The model never navigates; this
@@ -57,12 +59,6 @@ const refusalReplyPattern =
 const markdownLinkPattern = /\[[^\]]+\]\([^)]+\)/g;
 const applicationFormLabelPattern =
   /\b(?:application form|apply(?: now| online)?)\b/i;
-const applicationFormHost = "apply.loanslam.co.uk";
-
-function normalizePath(routePath: string): string {
-  const trimmed = routePath.replace(/\/+$/, "");
-  return trimmed === "" ? "/" : trimmed;
-}
 
 function offerText(reply: string): string {
   return reply.replace(markdownLinkPattern, "");
@@ -80,9 +76,9 @@ export function hasApplicationFormLink(
 
     try {
       const url = new URL(target, "https://mal-demo.local");
-      const path = normalizePath(url.pathname);
+      const path = comparablePath(url.pathname);
       const pointsToApplication =
-        url.hostname === applicationFormHost || path === "/apply";
+        isApplicationHost(url.hostname) || path === "/apply";
       return (
         pointsToApplication && applicationFormLabelPattern.test(link.label)
       );
@@ -99,9 +95,9 @@ export function navOfferForReply(
   const text = offerText(reply);
   if (refusalReplyPattern.test(text)) return null;
 
-  const current = normalizePath(currentPath);
+  const current = comparablePath(currentPath);
   for (const offer of NAV_OFFERS) {
-    if (normalizePath(offer.path) === current) continue;
+    if (comparablePath(offer.path) === current) continue;
     if (offer.pattern.test(text)) {
       return { label: offer.label, path: offer.path };
     }
