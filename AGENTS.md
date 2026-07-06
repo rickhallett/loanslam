@@ -78,9 +78,9 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
-- Documentation cleanup is governed by `docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md` and the current classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; older cleanup records under `docs/non-operational/doc-cleanup/` are prior art only.
-- Integrated POC implementation starts from `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`; do not start from chat context or older reference memos.
-- New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics; completed cards remain historical records).
+- Documentation cleanup history is recorded in `docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md` and the classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; both are historical proof records, not current execution starts.
+- Integrated POC implementation history is recorded in `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`; new work starts from active campaign cards/roadmaps and `docs/campaign-workflow-protocol.md`, not closed agenda cards or chat context.
+- New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics; completed cards and closed roadmaps remain historical records).
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
 ## Provider Mandate

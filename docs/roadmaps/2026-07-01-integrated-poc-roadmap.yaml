@@ -1,6 +1,7 @@
 version: 1
 title: Integrated POC Roadmap
-status: active
+status: closed  # historical roadmap; arc-004 closed 2026-07-02
+closed_note: "Receipt index only. New IPOC work starts from an active campaign card under docs/campaign-workflow-protocol.md."
 updated: 2026-07-02
 source_agenda: docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md
 epic: ipoc
@@ -8,7 +9,7 @@ active_arc: ipoc-arc-004
 active_slice: ipoc-demo-runbook-01
 active_slice_status: completed
 latest_proof_receipt: artifacts/integrated-poc/ipoc-arc-004-closeout.md
-active_agenda_card: docs/prds/closed/2026-07-02-integrated-poc-arc-004-agenda-card.md
+last_agenda_card: docs/prds/closed/2026-07-02-integrated-poc-arc-004-agenda-card.md
 branch:
   base: dev
   implementation: feature/ipoc-deploy-01

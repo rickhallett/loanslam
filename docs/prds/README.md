@@ -12,3 +12,6 @@ When a campaign or arc closes, the closeout flips the card's status line to
 `closed` with its receipt path and moves the card here into `closed/`,
 updating inbound references outside `artifacts/` (frozen evidence keeps its
 original paths).
+
+See [`closed/README.md`](closed/README.md) for the closed-material rule: use
+closed files as provenance only, never as the start point for fresh work.
