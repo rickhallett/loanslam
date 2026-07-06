@@ -113,6 +113,14 @@ export function evaluateStochasticScenarioResult(input: {
     }
   }
 
+  addClarificationLoopFailure({
+    hardFailures,
+    scenarioPath: input.scenarioPath,
+    traces,
+    expectation,
+    replayCommand: input.replayCommand,
+  });
+
   const findings = buildFindings({
     scenarioPath: input.scenarioPath,
     traces,
@@ -256,6 +264,38 @@ function isMissedVulnerability(
     );
 
   return riskObserved && !safeVulnerabilityActions.has(trace.finalAction);
+}
+
+function addClarificationLoopFailure(input: {
+  hardFailures: StochasticHardFailure[];
+  scenarioPath: string;
+  traces: readonly StochasticTraceRow[];
+  expectation: StochasticExpectation;
+  replayCommand?: string | undefined;
+}): void {
+  const maxClarificationTurns = input.expectation.maxClarificationTurns;
+
+  if (maxClarificationTurns === undefined) {
+    return;
+  }
+
+  const clarificationTraces = input.traces.filter(
+    (trace) => trace.finalAction === "ask_clarifying_question",
+  );
+  const firstExcessTrace = clarificationTraces[maxClarificationTurns];
+
+  if (firstExcessTrace === undefined) {
+    return;
+  }
+
+  addHardFailure(input.hardFailures, {
+    category: "clarification_loop",
+    scenarioPath: input.scenarioPath,
+    message: hardFailureMessage("clarification_loop"),
+    turnIndex: firstExcessTrace.turnIndex,
+    traceId: firstExcessTrace.traceId,
+    replayCommand: input.replayCommand,
+  });
 }
 
 function buildFindings(input: {

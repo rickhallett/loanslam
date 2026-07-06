@@ -92,6 +92,51 @@ describe("evaluateStochasticScenarioResult", () => {
     ]);
   });
 
+  it("marks clarification turns beyond the scenario envelope as hard failures", () => {
+    const scenarioPath = "review/005/ambiguous/confused/repeated";
+    const result = evaluateStochasticScenarioResult({
+      scenarioPath,
+      traces: [
+        trace({
+          scenarioPath,
+          turnIndex: 0,
+          finalAction: "ask_clarifying_question",
+          selectedServingMode: null,
+          customerMessage: "What would you like help with?",
+          retrievedItemIds: [],
+          traceId: "trace-1",
+        }),
+        trace({
+          scenarioPath,
+          turnIndex: 1,
+          finalAction: "ask_clarifying_question",
+          selectedServingMode: null,
+          customerMessage: "Could you clarify what you need help with?",
+          retrievedItemIds: [],
+          traceId: "trace-2",
+          requestRef: "req-2",
+        }),
+      ],
+      expectation: {
+        allowedFinalActions: ["ask_clarifying_question"],
+        requiredServingModes: [],
+        forbiddenBehaviors: [],
+        maxClarificationTurns: 1,
+      },
+      replayCommand:
+        "just core-stochastic -- --seed demo --profile review --scenario review/005/ambiguous/confused/repeated",
+    });
+
+    expect(result.hardFailures).toEqual([
+      expect.objectContaining({
+        category: "clarification_loop",
+        scenarioPath,
+        turnIndex: 1,
+        traceId: "trace-2",
+      }),
+    ]);
+  });
+
   it("checks forbidden credential requests in final customer copy, not inbound text", () => {
     const safeWarning = evaluateStochasticScenarioResult({
       scenarioPath: "review/003/account-specific/confused/single-turn",
