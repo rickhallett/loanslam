@@ -100,6 +100,7 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Git Branch Discipline
 
 - Check `git status --short --branch`, `git branch -vv`, and relevant upstream refs before moving branch pointers.
+- Never use `git add .`; stage explicit paths only (`git add -- path/to/file`) so unrelated work is not swept into commits.
 - Promotion path is `feature/*` / `fix/*` / worktree branches -> `dev` -> `staging` -> `main`.
 - `main` accepts only promotions from `staging`; `staging` accepts only `dev`; `dev` accepts completed branches or worktrees.
 - Use fast-forward, non-squash promotions when ancestry permits; stop on divergence or surprises.
