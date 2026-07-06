@@ -87,8 +87,8 @@ just core-chat -- --trace
 Start the current Nuxt site locally:
 
 ```bash
-npm run site-nuxt-build
-npm --workspace @loanslam/site-nuxt run dev
+just site-nuxt-build
+just site-nuxt-dev
 ```
 
 Start the local lab API and Vue inspector:
@@ -128,8 +128,8 @@ keeper service and its verified dependencies.
 - `just core-stochastic` runs the StochasticTestSimulator evidence workflow.
 - `just hell-week` runs the hostile scenario gauntlet and writes an HTML dashboard; pass `--store-db --db <url>` to persist the run to Postgres.
 - `just hell-week-stability` classifies repeated Hell Week runs already persisted in Postgres.
-- `npm --workspace @loanslam/site-nuxt run dev` starts the current site surface.
-- `npm run site-nuxt-build` builds the current site surface.
+- `just site-nuxt-dev` starts the current site surface.
+- `just site-nuxt-build` builds the current site surface.
 - `just demo` starts the historical Loanslam iframe demo around the Phase 0 engine; use `just demo-local` only for legacy local comparison.
 - `just review` starts the MAL review demo around the same engine; use `just review-local` for review-host checks.
 - `just demo-log-summary` queries owner-only demo interaction receipts from Postgres.
@@ -213,12 +213,12 @@ These commands do not call a model. They check the local TypeScript workspace
 and generated report pages:
 
 ```bash
-just test
-just source-policy
-just typecheck
-just build
-just verify
-just format-check
+npm test
+npm run source-policy:check
+npm run typecheck
+npm run build
+npm run verify
+npm run format:check
 ```
 
 Run them when you need verification. They are not automatically required for every
@@ -232,7 +232,7 @@ the deployment build path and can apply committed Prisma migrations.
 The current site lives in `packages/site-nuxt`. For site changes, run:
 
 ```bash
-npm run site-nuxt-build
+just site-nuxt-build
 ```
 
 The legacy `site/` tree still supplies content and assets to Nuxt until that

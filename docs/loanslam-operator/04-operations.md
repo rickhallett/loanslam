@@ -48,11 +48,19 @@ floor-delta: HOLDING
 | --- | --- |
 | `just hell-week -- --profile smoke` | 10-scenario fast tripwire |
 | `just hell-week` | Full 122-scenario battery + HTML dashboard |
+| `just hell-week-review -- <flags>` | Full battery → ladder judge → regrade |
 | `just hell-week-judge -- <run-dir>` | Independent OpenAI judge → judge-verdicts.json |
-| `just hell-week-compare -- <a> <b>` | Read-only before/after diff (zero model calls) |
 | `just hell-week-stability -- --runs <r1,r2,r3>` | Classify stable / recurring / one-off |
 | `just digest -- <run-dir>` | Typed-numbers digest (never reads transcripts) |
-| `just route-audit -- <run-folder>` | Read-only routing summary |
+
+## Current site
+
+| Target | Does |
+| --- | --- |
+| `just site-nuxt-dev` | Start the current Nuxt keeper site |
+| `just site-nuxt-build` | Build the current Nuxt keeper site |
+| `just contact-assistant-proof -- <url>` | Browser proof for assistant-first contact route finder |
+| `just seam-walk-proof -- <url>` | Browser proof for concierge/engine seam UI |
 
 ## Worktrees and slices
 

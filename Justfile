@@ -5,7 +5,7 @@ set dotenv-filename := ".env.local"
 # General
 # =============================================================================
 
-# Show the available Phase 0 operator commands.
+# Show the public Loanslam operator commands.
 default:
     @just --list
 
@@ -14,6 +14,7 @@ default:
 # =============================================================================
 
 # Run all Vitest suites.
+[private]
 test:
     npm test
 
@@ -22,10 +23,12 @@ source-policy:
     npm run source-policy:check
 
 # Type-check all npm workspaces.
+[private]
 typecheck:
     npm run typecheck
 
 # Build all npm workspaces.
+[private]
 build:
     npm run build
 
@@ -34,6 +37,7 @@ verify:
     npm run verify
 
 # Check formatting without changing files.
+[private]
 format-check:
     npm run format:check
 
@@ -42,14 +46,17 @@ format-check:
 # =============================================================================
 
 # Generate the Prisma client from the committed Postgres schema.
+[private]
 prisma-generate:
     npx prisma generate
 
 # Apply committed Prisma migrations to the configured Postgres database.
+[private]
 prisma-migrate-deploy:
     npx prisma migrate deploy
 
 # Run the Vercel build path locally; applies committed Prisma migrations to the configured database.
+[private]
 vercel-build:
     npm run vercel-build
 
@@ -94,34 +101,42 @@ secrets-sync-railway env *args:
 # =============================================================================
 
 # Probe one planner-backed turn, e.g. -- --message "How do I apply?"
+[private]
 core-turn *turn_flags:
     @npm --silent run core:turn -- {{ turn_flags }}
 
 # Drive the Phase 0 engine turn by turn; use -- --trace for compact trace output.
+[private]
 core-chat *chat_flags:
     @npm --silent run core:chat -- {{ chat_flags }}
 
 # Start the dev-only lab API; default port is 8787, override with -- --port <port>.
+[private]
 core-serve *server_flags:
     @npm --silent run core:serve -- {{ server_flags }}
 
 # Run journey fixtures, e.g. -- --trace-output artifacts/phase0/traces.jsonl
+[private]
 core-simulate *simulation_flags:
     @npm --silent run core:simulate -- {{ simulation_flags }}
 
 # Write a model comparison report, e.g. -- --output artifacts/phase0/comparison.json
+[private]
 core-compare *comparison_flags:
     @npm --silent run core:compare -- {{ comparison_flags }}
 
 # Run persona scenarios, e.g. -- --transcripts-output <jsonl> --report-output <json>
+[private]
 core-persona-simulate *persona_flags:
     @npm --silent run core:persona-simulate -- {{ persona_flags }}
 
 # Run stochastic scenarios, e.g. -- --profile smoke|review|soak --seed <value>
+[private]
 core-stochastic *stochastic_flags:
     @npm --silent run core:stochastic -- {{ stochastic_flags }}
 
 # Generate a route audit from a completed lab API run folder.
+[private]
 route-audit *audit_flags:
     @npm --silent run core:route-audit -- {{ audit_flags }}
 
@@ -150,10 +165,12 @@ hell-week-judge *judge_flags:
     @npm --silent run core:hell-week-judge -- {{ judge_flags }}
 
 # Run the frozen Hell Week judge gold-set calibration with OpenAI.
+[private]
 hell-week-judge-calibrate *calibration_flags:
     @npm --silent run core:hell-week-judge-calibrate -- {{ calibration_flags }}
 
 # Compare two Hell Week report.json files or run folders.
+[private]
 hell-week-compare *compare_flags:
     @npm --silent run core:hell-week-compare -- {{ compare_flags }}
 
@@ -167,35 +184,40 @@ hell-week-stability *stability_flags:
 
 # Score a candidate Hell Week run vs the committed baseline anchor; writes a
 # REPAIRED|HOLDING|REGRESSED|INCONCLUSIVE receipt and exits non-zero on a
-# regression. e.g. just floor-delta -- <run-dir-or-report.json>
+# regression.
+# Score a candidate Hell Week run against the committed baseline.
 floor-delta *delta_flags:
     @npm --silent run floor-delta -- {{ delta_flags }}
 
 # Deterministic keep-commit gate over the staged diff: blocks staged secret
 # caches/evidence.json, decrypted key content, engine changes without a valid
 # floor-delta receipt, and demo<->review widget cross-pollination.
+# Run the deterministic staged-diff keep-commit gate.
 gate-slice *gate_flags:
     @npm --silent run gate-slice -- {{ gate_flags }}
 
 # Cheap zero-token self-gate: the full verify chain plus a best-effort fallow
 # audit. Behaviour proof still requires Hell Week; this only proves wiring and reports.
+# Run verify plus a best-effort fallow audit.
 self-gate:
     @npm run --silent verify
     @command -v fallow >/dev/null 2>&1 && fallow audit --format json || echo "self-gate: fallow not on PATH; ran verify only"
 
 # Activate the ops-loop pre-commit gate (sets the shared core.hooksPath).
-# Reverse with: git config --unset core.hooksPath
+# Install the shared pre-commit gate.
 hooks-install:
     @git config core.hooksPath scripts/hooks
     @echo "ops-loop pre-commit gate active (core.hooksPath=scripts/hooks)"
 
 # Privacy-preserving Hell Week digest (typed numbers from report.json only,
-# never evidence.json transcripts). e.g. just digest -- <run-dir> [--json]
+# never evidence.json transcripts).
+# Build a privacy-preserving Hell Week digest.
 digest *digest_flags:
     @npm --silent run digest -- {{ digest_flags }}
 
 # Prepare an isolated worktree for one disjoint-scope slice; refuses to touch
-# protected/checked-out branches. e.g. just slice-new -- validator --dry-run
+# protected/checked-out branches.
+# Prepare an isolated worktree for one slice.
 slice-new *slice_flags:
     @bash scripts/slice-worktree.sh {{ slice_flags }}
 
@@ -205,6 +227,7 @@ status-snapshot:
 
 # Regenerate the /reports static pages from the publish manifest
 # (packages/review-host/reports-manifest.json). Add -- --check to verify only.
+# Build or check sanitized public report pages.
 reports-build *reports_flags:
     @node scripts/build-reports.mjs {{ reports_flags }}
 
@@ -222,14 +245,17 @@ checkpoint-packet *packet_flags:
 # =============================================================================
 
 # Summarize stakeholder demo interactions from Postgres.
+[private]
 demo-log-summary *log_flags:
     @npm --silent run core:demo-log -- summary {{ log_flags }}
 
 # Show a stakeholder demo conversation, e.g. just demo-log-session -- conv-ref --full
+[private]
 demo-log-session *log_flags:
     @npm --silent run core:demo-log -- session {{ log_flags }}
 
 # Show one logged stakeholder demo turn, e.g. just demo-log-turn -- conv-ref 2 --full
+[private]
 demo-log-turn *log_flags:
     @npm --silent run core:demo-log -- turn {{ log_flags }}
 
@@ -246,6 +272,7 @@ mcp-lab-api:
 # =============================================================================
 
 # Start the Astro site dev server; pass Astro flags after -- when needed.
+[private]
 site-dev *astro_args:
     @set -- {{ astro_args }}; \
       if [ "${1:-}" = "--" ]; then \
@@ -254,16 +281,30 @@ site-dev *astro_args:
       npm --prefix site run dev -- "$@"
 
 # Build the Astro site surface.
+[private]
 site-build:
     @npm --prefix site run build
 
 # Preview the built Astro site; pass Astro flags after -- when needed.
+[private]
 site-preview *astro_args:
     @set -- {{ astro_args }}; \
       if [ "${1:-}" = "--" ]; then \
         shift; \
       fi; \
       npm --prefix site run preview -- "$@"
+
+# Start the current Nuxt keeper site; pass Nuxt flags after -- when needed.
+site-nuxt-dev *nuxt_args:
+    @set -- {{ nuxt_args }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm --workspace @loanslam/site-nuxt run dev -- "$@"
+
+# Build the current Nuxt keeper site.
+site-nuxt-build:
+    @npm run site-nuxt-build
 
 # =============================================================================
 # Local Apps
@@ -303,6 +344,7 @@ lab:
       wait "$ui_pid"
 
 # Start engine (8788), customer widget (5174) and host page (5180) together; pass core:serve flags after --.
+[private]
 demo *server_flags:
     @set -e; \
       set -- {{ server_flags }}; \
@@ -343,12 +385,14 @@ demo *server_flags:
       wait "$host_pid"
 
 # Start the Loanslam demo locally without Postgres owner logging.
+[private]
 demo-local:
     @just demo -- --no-demo-log
 
 # Start engine (8788), MAL review widget (5175) and MAL contact page (5181).
 
 # This is the original mock Sam saw, driven by the loanslam engine; pass core:serve flags after --.
+[private]
 review *server_flags:
     @set -e; \
       set -- {{ server_flags }}; \
@@ -389,10 +433,12 @@ review *server_flags:
       wait "$host_pid"
 
 # Start the legacy review demo locally without Postgres owner logging.
+[private]
 review-local:
     @just review -- --no-demo-log
 
 # Start the local Vue lab console; pass Vite flags after -- when needed.
+[private]
 lab-ui *vite_args:
     @set -- {{ vite_args }}; \
       if [ "${1:-}" = "--" ]; then \
@@ -401,5 +447,6 @@ lab-ui *vite_args:
       npm --silent run lab-ui:dev -- "$@"
 
 # Build the local Phase 0 Vue lab console.
+[private]
 lab-ui-build:
     @npm --silent run lab-ui:build
