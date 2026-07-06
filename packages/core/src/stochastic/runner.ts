@@ -188,6 +188,13 @@ function toStochasticTraceRow({
   userMessage: string;
   result: ValidatedTurnResult;
 }): StochasticTraceRow {
+  const signalStatus =
+    result.trace.signalStatus ?? result.trace.shadowSignalStatus;
+  const signalBundle =
+    result.trace.signalBundle ?? result.trace.shadowSignalBundle;
+  const signalComparison =
+    result.trace.signalComparison ?? result.trace.shadowSignalComparison;
+
   return {
     scenarioPath: scenario.scenarioPath,
     turnIndex,
@@ -205,14 +212,23 @@ function toStochasticTraceRow({
     retrievedItemIds: result.trace.retrievedMatches.map(
       (match) => match.itemId,
     ),
-    ...(result.trace.shadowSignalStatus
-      ? { shadowSignalStatus: result.trace.shadowSignalStatus }
+    ...(signalStatus
+      ? {
+          signalStatus,
+          shadowSignalStatus: signalStatus,
+        }
       : {}),
-    ...(result.trace.shadowSignalBundle
-      ? { shadowSignalBundle: result.trace.shadowSignalBundle }
+    ...(signalBundle
+      ? {
+          signalBundle,
+          shadowSignalBundle: signalBundle,
+        }
       : {}),
-    ...(result.trace.shadowSignalComparison
-      ? { shadowSignalComparison: result.trace.shadowSignalComparison }
+    ...(signalComparison
+      ? {
+          signalComparison,
+          shadowSignalComparison: signalComparison,
+        }
       : {}),
     traceId: result.trace.traceId,
     requestRef: result.trace.requestRef,

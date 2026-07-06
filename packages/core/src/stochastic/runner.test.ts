@@ -137,11 +137,17 @@ describe("runStochasticTestSimulator", () => {
     const trace = JSON.parse(traceLine ?? "{}");
 
     expect(result.traces[0]).toMatchObject({
+      signalStatus: "fulfilled",
+      signalBundle,
+      signalComparison: expect.objectContaining({ parseStatus: "ok" }),
       shadowSignalStatus: "fulfilled",
       shadowSignalBundle: signalBundle,
       shadowSignalComparison: expect.objectContaining({ parseStatus: "ok" }),
     });
     expect(trace).toMatchObject({
+      signalStatus: "fulfilled",
+      signalBundle,
+      signalComparison: expect.objectContaining({ parseStatus: "ok" }),
       shadowSignalStatus: "fulfilled",
       shadowSignalBundle: signalBundle,
       shadowSignalComparison: expect.objectContaining({ parseStatus: "ok" }),

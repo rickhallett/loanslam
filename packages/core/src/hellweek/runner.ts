@@ -47,6 +47,12 @@ function toTurnEvidence(
   result: ValidatedTurnResult,
 ): HellWeekTurnEvidence {
   const trace = result.trace;
+  const signalBundle = trace.signalBundle ?? trace.shadowSignalBundle;
+  const signalComparison =
+    trace.signalComparison ?? trace.shadowSignalComparison;
+  const signalLatencyMs = trace.signalLatencyMs ?? trace.shadowSignalLatencyMs;
+  const signalError = trace.signalError ?? trace.shadowSignalError;
+  const signalStatus = trace.signalStatus ?? trace.shadowSignalStatus;
 
   return {
     turnIndex,
@@ -68,26 +74,19 @@ function toTurnEvidence(
       score: match.score,
     })),
     uiPrimitive: result.ui.primitive,
-    ...(trace.shadowSignalStatus
-      ? { signalStatus: trace.shadowSignalStatus }
-      : {}),
-    ...(trace.shadowSignalBundle
+    ...(signalStatus ? { signalStatus } : {}),
+    ...(signalBundle
       ? {
-          signalPrimaryIntent: trace.shadowSignalBundle.primaryIntent,
-          signalRecommendedServingMode:
-            trace.shadowSignalBundle.recommendedServingMode,
-          signalNegatedOrCorrected: trace.shadowSignalBundle.negatedOrCorrected,
+          signalPrimaryIntent: signalBundle.primaryIntent,
+          signalRecommendedServingMode: signalBundle.recommendedServingMode,
+          signalNegatedOrCorrected: signalBundle.negatedOrCorrected,
         }
       : {}),
-    ...(trace.shadowSignalComparison
-      ? { signalComparisonStatus: trace.shadowSignalComparison.status }
+    ...(signalComparison
+      ? { signalComparisonStatus: signalComparison.status }
       : {}),
-    ...(typeof trace.shadowSignalLatencyMs === "number"
-      ? { signalLatencyMs: trace.shadowSignalLatencyMs }
-      : {}),
-    ...(trace.shadowSignalError
-      ? { signalError: trace.shadowSignalError }
-      : {}),
+    ...(typeof signalLatencyMs === "number" ? { signalLatencyMs } : {}),
+    ...(signalError ? { signalError } : {}),
     ...(typeof trace.plannerLatencyMs === "number"
       ? { plannerLatencyMs: trace.plannerLatencyMs }
       : {}),

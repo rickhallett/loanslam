@@ -121,6 +121,9 @@ function telemetryForTurnResult({
   turn: number;
 }): DemoDisplayTelemetry {
   const trace = result.trace;
+  const signalBundle = trace.signalBundle ?? trace.shadowSignalBundle;
+  const signalComparison =
+    trace.signalComparison ?? trace.shadowSignalComparison;
 
   return {
     type: "turn-telemetry",
@@ -149,12 +152,11 @@ function telemetryForTurnResult({
       })),
     },
     signal: {
-      status: trace.shadowSignalStatus ?? "disabled",
-      primaryIntent: trace.shadowSignalBundle?.primaryIntent ?? null,
-      recommendedServingMode:
-        trace.shadowSignalBundle?.recommendedServingMode ?? null,
-      uncertainty: trace.shadowSignalBundle?.uncertainty ?? null,
-      comparison: trace.shadowSignalComparison?.status ?? null,
+      status: trace.signalStatus ?? trace.shadowSignalStatus ?? "disabled",
+      primaryIntent: signalBundle?.primaryIntent ?? null,
+      recommendedServingMode: signalBundle?.recommendedServingMode ?? null,
+      uncertainty: signalBundle?.uncertainty ?? null,
+      comparison: signalComparison?.status ?? null,
     },
     intake: {
       collected: collectedFieldNames(result.state),

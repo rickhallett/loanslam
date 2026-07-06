@@ -65,6 +65,10 @@ export function buildIpocTelemetry(
   }
 
   const trace = input.result.trace;
+  const signalBundle = trace.signalBundle ?? trace.shadowSignalBundle;
+  const signalComparison =
+    trace.signalComparison ?? trace.shadowSignalComparison;
+
   return {
     type: "turn-telemetry",
     turn: input.turn,
@@ -92,12 +96,11 @@ export function buildIpocTelemetry(
       })),
     },
     signal: {
-      status: trace.shadowSignalStatus ?? "disabled",
-      primaryIntent: trace.shadowSignalBundle?.primaryIntent ?? null,
-      recommendedServingMode:
-        trace.shadowSignalBundle?.recommendedServingMode ?? null,
-      uncertainty: trace.shadowSignalBundle?.uncertainty ?? null,
-      comparison: trace.shadowSignalComparison?.status ?? null,
+      status: trace.signalStatus ?? trace.shadowSignalStatus ?? "disabled",
+      primaryIntent: signalBundle?.primaryIntent ?? null,
+      recommendedServingMode: signalBundle?.recommendedServingMode ?? null,
+      uncertainty: signalBundle?.uncertainty ?? null,
+      comparison: signalComparison?.status ?? null,
     },
     intake: {
       collected: collectedFieldNames(input.result.state),

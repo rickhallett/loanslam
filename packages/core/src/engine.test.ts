@@ -357,6 +357,16 @@ describe("processTurn", () => {
     expect(result.trace).toMatchObject({
       finalAction: "answer",
       effectiveServingMode: "answer",
+      signalStatus: "fulfilled",
+      signalMetadata,
+      signalBundle: answerSignalBundle,
+      signalComparison: {
+        status: "match",
+        recommendedServingMode: "answer",
+        finalServingMode: "answer",
+        parseStatus: "ok",
+        reasonCodes: ["serving_mode_match", "safety_flags_match"],
+      },
       shadowSignalStatus: "fulfilled",
       shadowSignalMetadata: signalMetadata,
       shadowSignalBundle: answerSignalBundle,
@@ -390,6 +400,15 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("answer");
     expect(result.trace).toMatchObject({
+      signalStatus: "failed",
+      signalMetadata,
+      signalError: "signal parser failed",
+      signalComparison: {
+        status: "inconclusive",
+        finalServingMode: "answer",
+        parseStatus: "failed",
+        reasonCodes: ["signal_extraction_failed"],
+      },
       shadowSignalStatus: "failed",
       shadowSignalMetadata: signalMetadata,
       shadowSignalError: "signal parser failed",
@@ -429,6 +448,14 @@ describe("processTurn", () => {
     expect(aborted).toBe(true);
     expect(result.finalAction).toBe("answer");
     expect(result.trace).toMatchObject({
+      signalStatus: "timed_out",
+      signalMetadata,
+      signalComparison: {
+        status: "inconclusive",
+        finalServingMode: "answer",
+        parseStatus: "timed_out",
+        reasonCodes: ["signal_extraction_timed_out"],
+      },
       shadowSignalStatus: "timed_out",
       shadowSignalMetadata: signalMetadata,
       shadowSignalComparison: {
@@ -608,7 +635,8 @@ describe("processTurn", () => {
       async planTurn() {
         return {
           action: "answer",
-          customerMessage: "Here is your payment link: https://pay.example/test",
+          customerMessage:
+            "Here is your payment link: https://pay.example/test",
           ui: {
             primitive: "message",
             message: "Here is your payment link: https://pay.example/test",
@@ -638,7 +666,9 @@ describe("processTurn", () => {
     });
 
     expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.customerMessage).toMatch(/can't create or send a payment link/i);
+    expect(result.customerMessage).toMatch(
+      /can't create or send a payment link/i,
+    );
     expect(result.customerMessage).not.toMatch(/https:\/\/pay\.example/i);
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({

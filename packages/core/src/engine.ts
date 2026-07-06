@@ -67,8 +67,8 @@ export async function processTurn({
 
   // Routing signal: load-bearing. Its bundle feeds retrieval filtering
   // (retrieveMatches) and the validator's safety-flag inference
-  // (validateTurnPlan) on every turn. The `shadowSignal*` trace fields and
-  // `compareSignalToOutcome` below are observational telemetry only.
+  // (validateTurnPlan) on every turn. The `signal*` trace fields are canonical;
+  // the legacy `shadowSignal*` aliases remain for historical artifact readers.
   const routingSignal = await extractRoutingSignal({
     signalExtractor,
     state,
@@ -106,7 +106,7 @@ export async function processTurn({
     validated,
     traceSafetyFlags,
   );
-  const shadowSignalComparison = compareSignalToOutcome({
+  const signalComparison = compareSignalToOutcome({
     signalBundle:
       routingSignal.status === "fulfilled" ? routingSignal.bundle : undefined,
     finalServingMode: effectiveServingMode,
@@ -138,9 +138,11 @@ export async function processTurn({
     plannerLatencyMs,
     policyVersion,
     retrievedMatches,
+    signalStatus: routingSignal.status,
     shadowSignalStatus: routingSignal.status,
-    ...shadowSignalTraceFields(routingSignal),
-    shadowSignalComparison,
+    ...signalTraceFields(routingSignal),
+    signalComparison,
+    shadowSignalComparison: signalComparison,
     selectedServingMode: validated.selectedServingMode,
     effectiveServingMode,
     selectedRouteReason: validated.selectedRouteReason,
@@ -249,24 +251,43 @@ function signalMetadataField(metadata: SignalExtractorMetadata | undefined): {
   return metadata ? { metadata } : {};
 }
 
-function shadowSignalTraceFields(outcome: RoutingSignalOutcome): {
+function signalTraceFields(outcome: RoutingSignalOutcome): {
+  signalMetadata?: SignalExtractorMetadata;
+  signalLatencyMs?: number;
+  signalError?: string;
+  signalBundle?: SignalBundle;
   shadowSignalMetadata?: SignalExtractorMetadata;
   shadowSignalLatencyMs?: number;
   shadowSignalError?: string;
   shadowSignalBundle?: SignalBundle;
 } {
   if (outcome.status === "disabled") {
-    return { shadowSignalLatencyMs: outcome.latencyMs };
+    return {
+      signalLatencyMs: outcome.latencyMs,
+      shadowSignalLatencyMs: outcome.latencyMs,
+    };
   }
 
   return {
-    ...(outcome.metadata ? { shadowSignalMetadata: outcome.metadata } : {}),
+    ...(outcome.metadata
+      ? {
+          signalMetadata: outcome.metadata,
+          shadowSignalMetadata: outcome.metadata,
+        }
+      : {}),
+    signalLatencyMs: outcome.latencyMs,
     shadowSignalLatencyMs: outcome.latencyMs,
     ...(outcome.status === "fulfilled"
-      ? { shadowSignalBundle: outcome.bundle }
+      ? {
+          signalBundle: outcome.bundle,
+          shadowSignalBundle: outcome.bundle,
+        }
       : {}),
     ...(outcome.status === "failed" || outcome.status === "timed_out"
-      ? { shadowSignalError: outcome.errorMessage }
+      ? {
+          signalError: outcome.errorMessage,
+          shadowSignalError: outcome.errorMessage,
+        }
       : {}),
   };
 }
@@ -461,14 +482,14 @@ function applyHandoffStateRules(
     );
   }
 
-  const customerMessage = currentValidated.safetyFlags.includes(
-    "forbidden_credentials",
-  ) || shouldPreserveValidatorHandoffMessage(currentValidated)
-    ? currentValidated.customerMessage
-    : buildHandoffIntroMessage({
-        servingMode: currentValidated.selectedServingMode,
-        safetyFlags: currentValidated.safetyFlags,
-      });
+  const customerMessage =
+    currentValidated.safetyFlags.includes("forbidden_credentials") ||
+    shouldPreserveValidatorHandoffMessage(currentValidated)
+      ? currentValidated.customerMessage
+      : buildHandoffIntroMessage({
+          servingMode: currentValidated.selectedServingMode,
+          safetyFlags: currentValidated.safetyFlags,
+        });
 
   if (sameIntakeFields(currentValidated.ui.fields, missingStandardFields)) {
     return {
