@@ -150,7 +150,7 @@ packages/
   integrated-poc/                   IPOC source/modules consumed by the current Nuxt surface
   lab-ui/                           Vue engineer console for traces, retrieval, overrides, and session export
   mcp-server/                       Local MCP wrapper around the lab API
-  demo-widget/                      Historical Loanslam-facing iframe widget demo
+  demo-widget/                      Frozen historical Loanslam-facing iframe widget demo
   demo-host/                        Host page for the demo widget
   review-widget/                    MAL review widget demo
   review-host/                      Host page for the review widget
@@ -175,7 +175,7 @@ artifacts/
 - `packages/integrated-poc` owns IPOC session/admin modules still consumed by the Nuxt surface; it is not a standalone live deployment target.
 - `packages/lab-ui` visualizes the lab API result with action, serving mode, retrieval, validator overrides, safety flags, requested fields, raw trace JSON, and session export.
 - `packages/mcp-server` lets agents start, drive, dump, reset, and summarize lab API sessions without browser automation.
-- `packages/demo-*` and `packages/review-*` are legacy/review shells over the current engine; they are not the keeper site deployment.
+- `packages/demo-widget` is frozen for sunset; keep behavior work out of it unless deleting or migrating the package. `packages/demo-host` and `packages/review-*` are legacy/review shells over the current engine; they are not the keeper site deployment.
 
 ## Knowledge base and policy data
 

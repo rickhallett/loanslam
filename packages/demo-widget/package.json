@@ -1,6 +1,7 @@
 {
   "name": "@loanslam/demo-widget",
   "version": "0.0.0",
+  "description": "Frozen legacy iframe demo skin retained for historical receipts.",
   "private": true,
   "type": "module",
   "scripts": {
