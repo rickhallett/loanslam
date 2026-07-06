@@ -72,6 +72,9 @@ export async function runStochasticTestSimulator(
   const seed = input.seed ?? timestampSeed(runStartedAt);
   const paths = buildStochasticArtifactPaths({
     seed,
+    ...(input.scenarioPath !== undefined
+      ? { scenarioPath: input.scenarioPath }
+      : {}),
     ...(input.outputDir !== undefined ? { outputDir: input.outputDir } : {}),
     ...(input.summaryOutput !== undefined
       ? { summaryOutput: input.summaryOutput }

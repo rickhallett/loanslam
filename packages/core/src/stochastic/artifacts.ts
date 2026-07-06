@@ -16,6 +16,7 @@ import {
 
 export interface BuildStochasticArtifactPathsInput {
   outputDir?: string;
+  scenarioPath?: string;
   seed: string;
   summaryOutput?: string;
 }
@@ -33,18 +34,29 @@ const safeArtifactTokenPattern = /^[A-Za-z0-9._-]+$/;
 
 export function buildStochasticArtifactPaths({
   outputDir = "artifacts/phase0",
+  scenarioPath,
   seed,
   summaryOutput,
 }: BuildStochasticArtifactPathsInput): StochasticArtifactPaths {
   assertSafeArtifactToken(seed);
+  const artifactToken =
+    scenarioPath === undefined
+      ? seed
+      : `${seed}--scenario-${scenarioPathArtifactToken(scenarioPath)}`;
 
   return {
-    runJson: join(outputDir, `stochastic-run-${seed}.json`),
-    scenariosJsonl: join(outputDir, `stochastic-scenarios-${seed}.jsonl`),
-    tracesJsonl: join(outputDir, `stochastic-traces-${seed}.jsonl`),
+    runJson: join(outputDir, `stochastic-run-${artifactToken}.json`),
+    scenariosJsonl: join(
+      outputDir,
+      `stochastic-scenarios-${artifactToken}.jsonl`,
+    ),
+    tracesJsonl: join(outputDir, `stochastic-traces-${artifactToken}.jsonl`),
     summaryMarkdown:
-      summaryOutput ?? join(outputDir, `stochastic-summary-${seed}.md`),
-    dashboardHtml: join(outputDir, `stochastic-dashboard-${seed}.html`),
+      summaryOutput ?? join(outputDir, `stochastic-summary-${artifactToken}.md`),
+    dashboardHtml: join(
+      outputDir,
+      `stochastic-dashboard-${artifactToken}.html`,
+    ),
   };
 }
 
@@ -99,6 +111,18 @@ function assertSafeArtifactToken(seed: string): void {
       "STS seed must be filename-safe: use only letters, numbers, dot, underscore, and hyphen.",
     );
   }
+}
+
+function scenarioPathArtifactToken(scenarioPath: string): string {
+  const token = scenarioPath.split("/").join("--");
+
+  if (!safeArtifactTokenPattern.test(token)) {
+    throw new Error(
+      "STS scenario path must produce filename-safe artifacts: use only letters, numbers, slash, dot, underscore, and hyphen.",
+    );
+  }
+
+  return token;
 }
 
 function assertRunArtifactsMatchPaths(

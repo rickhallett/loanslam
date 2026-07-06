@@ -40,7 +40,9 @@ just core-stochastic -- --seed 2026-06-14-demo --profile review
 ```
 
 Seeds are also used in artifact filenames. Use filename-safe seeds containing only
-letters, numbers, dots, underscores, and hyphens.
+letters, numbers, dots, underscores, and hyphens. Replays with `--scenario`
+append a filename-safe scenario token so they do not overwrite full-run
+artifacts for the same seed.
 
 Replay one generated scenario:
 
@@ -92,7 +94,8 @@ roles are part of the spec.
 ## Required Artifacts
 
 Each run writes five artifacts under `artifacts/phase0/` unless `--output-dir`
-overrides the destination.
+overrides the destination. A narrowed replay appends `--scenario-<scenario-token>`
+to the artifact stem, with `/` in the scenario path replaced by `--`.
 
 ```text
 stochastic-run-<seed-or-timestamp>.json
@@ -100,6 +103,12 @@ stochastic-scenarios-<seed-or-timestamp>.jsonl
 stochastic-traces-<seed-or-timestamp>.jsonl
 stochastic-summary-<seed-or-timestamp>.md
 stochastic-dashboard-<seed-or-timestamp>.html
+
+stochastic-run-<seed>--scenario-<scenario-token>.json
+stochastic-scenarios-<seed>--scenario-<scenario-token>.jsonl
+stochastic-traces-<seed>--scenario-<scenario-token>.jsonl
+stochastic-summary-<seed>--scenario-<scenario-token>.md
+stochastic-dashboard-<seed>--scenario-<scenario-token>.html
 ```
 
 ### Run JSON

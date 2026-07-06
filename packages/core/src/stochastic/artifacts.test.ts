@@ -40,6 +40,26 @@ describe("STS artifacts", () => {
     });
   });
 
+  it("adds the scenario path to narrowed replay artifact filenames", () => {
+    expect(
+      buildStochasticArtifactPaths({
+        seed: "demo",
+        scenarioPath: "smoke/004/account-specific/impatient/topic-switch",
+      }),
+    ).toEqual({
+      runJson:
+        "artifacts/phase0/stochastic-run-demo--scenario-smoke--004--account-specific--impatient--topic-switch.json",
+      scenariosJsonl:
+        "artifacts/phase0/stochastic-scenarios-demo--scenario-smoke--004--account-specific--impatient--topic-switch.jsonl",
+      tracesJsonl:
+        "artifacts/phase0/stochastic-traces-demo--scenario-smoke--004--account-specific--impatient--topic-switch.jsonl",
+      summaryMarkdown:
+        "artifacts/phase0/stochastic-summary-demo--scenario-smoke--004--account-specific--impatient--topic-switch.md",
+      dashboardHtml:
+        "artifacts/phase0/stochastic-dashboard-demo--scenario-smoke--004--account-specific--impatient--topic-switch.html",
+    });
+  });
+
   it("rejects seeds that are unsafe for artifact filenames", () => {
     expect(() =>
       buildStochasticArtifactPaths({ seed: "../demo seed" }),

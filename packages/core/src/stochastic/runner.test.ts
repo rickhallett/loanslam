@@ -70,6 +70,10 @@ describe("runStochasticTestSimulator", () => {
     })[3]?.scenarioPath;
 
     expect(scenarioPath).toBeDefined();
+    if (scenarioPath === undefined) {
+      throw new Error("expected generated replay scenario path");
+    }
+    const scenarioToken = scenarioPath.split("/").join("--");
 
     const result = await runStochasticTestSimulator({
       seed: "demo",
@@ -88,6 +92,9 @@ describe("runStochasticTestSimulator", () => {
       result.traces.every((trace) => trace.scenarioPath === scenarioPath),
     ).toBe(true);
     expect(result.run.scenarioCount).toBe(1);
+    expect(result.paths.runJson).toBe(
+      join(outputDir, `stochastic-run-demo--scenario-${scenarioToken}.json`),
+    );
   });
 
   it("propagates shadow signal evidence into STS trace artifacts", async () => {
