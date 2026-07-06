@@ -68,12 +68,16 @@ Rehearse before the demo (the exact choreography above, headless):
 - Kill switch (instant off, support chat unaffected): set
   `CONCIERGE_KILL_SWITCH=1` on the `loanslam-site-nuxt` service variables and
   redeploy; set back to `0` to restore. Proven live 2026-07-02.
-- Redeploy: `npm run site-nuxt-build && node scripts/site-nuxt-deploy-pack.mjs`,
+- Redeploy: `npm run site-nuxt-build &&
+  ALLOW_SYNTHETIC_CORPUS_DEPLOY_PACK=1 node scripts/site-nuxt-deploy-pack.mjs`,
   then copy the `.railway-pack` contents to a directory OUTSIDE the repo and
   from there: `railway up --ci -p <project-id> -s loanslam-site-nuxt
   -e production`. (Since 2026-07-02 the Railway CLI walks up to the git root
   when run inside a repo, uploading the whole workspace instead of the pack;
   running from outside the repo with explicit flags avoids it.)
+  The opt-in is required because the current proof corpus is synthetic and
+  non-deployable by default; replace it with an approved runtime corpus before
+  treating chat answers as production lending copy.
 - Model: `gpt-5.5` (`CONCIERGE_MODEL` variable to override).
 - Post-demo: D045 names the revert path — kill switch, then route deletion.
   Productizing any concierge behavior is a new decision-log entry.

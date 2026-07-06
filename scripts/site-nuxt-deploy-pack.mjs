@@ -24,6 +24,31 @@ import { resolve } from "node:path";
 const root = process.cwd();
 const output = resolve(root, "packages/site-nuxt/.output");
 const pack = resolve(root, "packages/site-nuxt/.railway-pack");
+const corpus = "data/public-info/loanslam-synthetic-kb.json";
+const corpusPath = resolve(root, corpus);
+const syntheticCorpusOptIn = "ALLOW_SYNTHETIC_CORPUS_DEPLOY_PACK";
+const corpusDocument = JSON.parse(readFileSync(corpusPath, "utf8"));
+const corpusIsNonDeployableSynthetic =
+  corpusDocument &&
+  typeof corpusDocument === "object" &&
+  (corpusDocument.deployment_status === "non_deployable_synthetic" ||
+    corpusDocument.deployable === false);
+
+if (
+  corpusIsNonDeployableSynthetic &&
+  process.env[syntheticCorpusOptIn] !== "1"
+) {
+  console.error(
+    `Refusing to pack non-deployable synthetic corpus ${corpus}. Set ${syntheticCorpusOptIn}=1 only for an explicit proof/demo deployment, or replace it with an approved runtime corpus.`,
+  );
+  process.exit(1);
+}
+
+if (corpusIsNonDeployableSynthetic) {
+  console.warn(
+    `Packing ${corpus} because ${syntheticCorpusOptIn}=1 is set. Do not treat this corpus as approved public copy.`,
+  );
+}
 
 if (!existsSync(resolve(output, "server/index.mjs"))) {
   console.error("No build output found. Run `npm run site-nuxt-build` first.");
@@ -70,9 +95,8 @@ cpSync(output, resolve(pack, "output"), { recursive: true });
 
 // The contact chat runs the engine on this service; the corpus is read from
 // the filesystem at runtime (cwd/data candidate in engineAdapter).
-const corpus = "data/public-info/loanslam-synthetic-kb.json";
 mkdirSync(resolve(pack, "data/public-info"), { recursive: true });
-cpSync(resolve(root, corpus), resolve(pack, corpus));
+cpSync(corpusPath, resolve(pack, corpus));
 
 const nitroPackage = JSON.parse(
   readFileSync(resolve(output, "server/package.json"), "utf8"),

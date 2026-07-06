@@ -1,6 +1,9 @@
 {
   "version": "loanslam-synthetic-kb-2026-06-13",
-  "note": "Synthetic corpus modelled on loan-slam-faq.json and the observed support voice. Treated as real for build and review. Canonical brand is LoanSlam (loanslam.co.uk); the legacy brand name from earlier source material must not appear anywhere in this corpus. serving_mode is the answerable-vs-route gate; answer_text is present only when serving_mode is 'answer'.",
+  "deployment_status": "non_deployable_synthetic",
+  "deployable": false,
+  "canonical_contact_source": "site/src/data/site-copy/contact.json",
+  "note": "Synthetic proof corpus modelled on loan-slam-faq.json and the observed support voice. It is not approved public copy and must not be deployed as the runtime source of contact details or regulated lending facts. Canonical brand is LoanSlam (loanslam.co.uk); the legacy brand name from earlier source material must not appear anywhere in this corpus. serving_mode is the answerable-vs-route gate; answer_text is present only when serving_mode is 'answer'.",
   "item_count": 60,
   "contacts": {
     "phone": "0800 138 7777",

@@ -64,7 +64,7 @@ Facts from the current implementation:
 
 ```mermaid
 flowchart TD
-  A[Corpus JSON<br/>data/public-info/loanslam-synthetic-kb.json] --> B[parseCorpusDocument and loadCorpusFromFile]
+  A[Non-deployable synthetic corpus JSON<br/>data/public-info/loanslam-synthetic-kb.json] --> B[parseCorpusDocument and loadCorpusFromFile]
   B --> C[CorpusItem array<br/>serving_mode policy data]
 
   U[User message plus ConversationState] --> S{Optional SignalExtractor}
@@ -101,6 +101,11 @@ flowchart TD
   OUT --> SIM[Journey, persona, stochastic, and Hell Week runs]
   SIM --> REP[JSONL traces, transcripts, reports, dashboards]
 ```
+
+The default corpus is marked `deployment_status: "non_deployable_synthetic"` and
+`deployable: false`. It supports proof runs and route-shaping evidence; a live
+deployment must either use an approved runtime corpus or explicitly opt in to
+packing the synthetic corpus for a proof/demo deployment.
 
 `serving_mode` is policy data, not decoration:
 

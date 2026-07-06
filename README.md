@@ -159,7 +159,7 @@ prisma/
 api/
   index.ts                          Legacy Vercel/review demo entrypoint
 data/
-  public-info/                      Synthetic Loanslam corpus treated as approved Phase 0 policy data
+  public-info/                      Non-deployable synthetic proof corpus for Phase 0 routing evidence
 scripts/
   throwaway/                        Ad hoc probes, not the operator front door
 artifacts/
@@ -179,8 +179,15 @@ artifacts/
 
 ## Knowledge base and policy data
 
-`data/public-info/loanslam-synthetic-kb.json` is the Phase 0 corpus. Its
-`serving_mode` field is live policy data:
+`data/public-info/loanslam-synthetic-kb.json` is a synthetic Phase 0 proof
+corpus. It is marked `deployment_status: "non_deployable_synthetic"` and
+`deployable: false`; it is useful for routing, grounding, and Hell Week evidence,
+but it is not approved public copy for regulated lending facts or contact
+details. Customer-facing contact facts belong in
+`site/src/data/site-copy/contact.json` until an approved runtime corpus replaces
+the synthetic one.
+
+Inside the proof corpus, `serving_mode` is policy data:
 
 - `answer` means the item can ground a customer-facing answer.
 - `handoff_account_specific` means the subject needs human support with account context.
