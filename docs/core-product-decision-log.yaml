@@ -13,7 +13,7 @@ authority:
     - docs/product-brief.md
     - docs/architecture.md
     - docs/llm-turn-planner-architecture.md
-    - docs/prds/2026-06-20-site-widget-integration-architecture-prd.md
+    - docs/prds/closed/2026-06-20-site-widget-integration-architecture-prd.md
     - docs/prds/closed/2026-06-30-integrated-poc-reference.md
     - data/public-info/loanslam-synthetic-kb.json
 decisions:

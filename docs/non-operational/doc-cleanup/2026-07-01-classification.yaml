@@ -381,7 +381,7 @@ decisions:
     risk: audit-prd
     action: "Keep as prior art."
     reason: "Repository audit setup record."
-  - path: "docs/prds/2026-06-20-site-widget-integration-architecture-prd.md"
+  - path: "docs/prds/closed/2026-06-20-site-widget-integration-architecture-prd.md"
     state: LAZY-LOAD
     risk: architecture-prd
     action: "Keep as prior art until integrated POC supersedes it."

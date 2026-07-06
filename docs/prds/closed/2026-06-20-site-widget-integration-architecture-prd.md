@@ -1,5 +1,10 @@
 # PRD: Site and Chat Widget Integration Architecture
 
+> **Historical record.** This PRD is no longer active architecture guidance.
+> D012-D016 in `docs/core-product-decision-log.yaml` supersede it: the
+> Integrated POC becomes the next deployable surface, and the widget-adapter
+> architecture remains transitional code due for sunset.
+
 ## Problem Statement
 
 The project needs to bring a redesigned website and the chat-widget prototype
