@@ -342,7 +342,6 @@ const CONTACT_AVAILABILITY_NOTE =
   "You can also ask me about our loans and how we work. Anything account-specific, I'll route to the right team.";
 const CONTACT_COMPLETE_AVAILABILITY_NOTE =
   "If you have another question, start over and I can help with that too.";
-const CONTACT_CLOSE_REVEAL_ENABLED = false;
 const ROUTE_FINDER_WELCOME = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${CONTACT_AVAILABILITY_NOTE}`;
 const LEGACY_ROUTE_FINDER_WELCOME_V2 = `Tell me what you need help with and I'll take it one step at a time. I can help with applications, repayments, existing loans, complaints, or finding the right contact route. ${LEGACY_CONTACT_AVAILABILITY_NOTE}`;
 
@@ -416,7 +415,6 @@ const navOfferMessageId = ref<number | null>(null);
 const conciergeAvailable = ref(false);
 const conciergeSessionRef = ref<string | null>(null);
 const applyIntroDone = ref(false);
-const storedContext = ref<"vulnerability" | "handoff" | "general" | null>(null);
 const messages = ref<ChatMessage[]>([]);
 const sessionRef = ref<string | null>(null);
 const activeTicketId = ref<string | null>(null);
@@ -589,7 +587,6 @@ function persistState(): void {
         conciergeSessionRef: conciergeSessionRef.value,
         activeTicketId: activeTicketId.value,
         applyIntroDone: applyIntroDone.value,
-        storedContext: storedContext.value,
         lastSeamBrain: lastSeamBrain.value,
         isChatComplete: isChatComplete.value,
       }),
@@ -609,7 +606,6 @@ function restoreState(): boolean {
       conciergeSessionRef?: string | null;
       activeTicketId?: string | null;
       applyIntroDone?: boolean;
-      storedContext?: typeof storedContext.value;
       lastSeamBrain?: "engine" | "concierge" | null;
       isChatComplete?: boolean;
     };
@@ -627,7 +623,6 @@ function restoreState(): boolean {
     conciergeSessionRef.value = saved.conciergeSessionRef ?? null;
     activeTicketId.value = saved.activeTicketId ?? null;
     applyIntroDone.value = saved.applyIntroDone ?? false;
-    storedContext.value = saved.storedContext ?? null;
     lastSeamBrain.value = saved.lastSeamBrain ?? null;
     isChatComplete.value = saved.isChatComplete ?? false;
     return true;
@@ -660,25 +655,7 @@ function emitTelemetry(telemetry: unknown): void {
   // Same-window loopback the sm-devtools panel already accepts: content-free
   // decision metadata for the stakeholder engine-internals view (D043).
   window.postMessage(telemetry, window.location.origin);
-  storedContext.value = contextForTelemetry(telemetry as DemoDisplayTelemetry);
 }
-
-// Mirrors core/lab/demoDisplay hostContextForState (D044): the coarse
-// session context that promotes the matching contact route card on close.
-const VULNERABLE_FLAGS = new Set([
-  "vulnerability",
-  "distress",
-  "hardship",
-  "accessibility_need",
-  "language_barrier",
-  "legal_threat",
-  "complaint",
-]);
-const HANDOFF_ACTIONS = new Set([
-  "request_handoff_intake",
-  "create_ticket",
-  "escalate",
-]);
 
 function applyOfferEligible(telemetry: DemoDisplayTelemetry): boolean {
   // The kill switch silences every concierge affordance, including the
@@ -732,22 +709,6 @@ function connectSupport(): void {
       forceEngine: true,
     },
   );
-}
-
-function contextForTelemetry(
-  telemetry: DemoDisplayTelemetry,
-): "vulnerability" | "handoff" | "general" {
-  if (telemetry.safetyFlags.some((flag) => VULNERABLE_FLAGS.has(flag))) {
-    return "vulnerability";
-  }
-  if (
-    telemetry.intake.handoffPending ||
-    HANDOFF_ACTIONS.has(telemetry.finalAction) ||
-    telemetry.uiPrimitive === "handoff_confirmation"
-  ) {
-    return "handoff";
-  }
-  return "general";
 }
 
 async function ensureSession(): Promise<string> {
@@ -1100,13 +1061,6 @@ function focusInput(): void {
 
 function handleOpenRequest(): void {
   ensureContextWelcome();
-  // Highlights belong to the closed state (loader parity): clear any reveal
-  // while the assistant is open.
-  if (CONTACT_CLOSE_REVEAL_ENABLED) {
-    document
-      .getElementById("contact-section")
-      ?.removeAttribute("data-revealed");
-  }
   if (props.routeFinderTopic?.title) pushTopicPrimer(props.routeFinderTopic);
   focusInput();
   maybeApplyIntro();
@@ -1114,16 +1068,6 @@ function handleOpenRequest(): void {
 
 function closePanel(): void {
   emit("close");
-  if (!CONTACT_CLOSE_REVEAL_ENABLED) return;
-  // Loader parity: re-apply the stored context on close and bring the
-  // promoted contact route card into view.
-  if (storedContext.value !== null) {
-    const section = document.getElementById("contact-section");
-    if (section) {
-      section.setAttribute("data-revealed", storedContext.value);
-      section.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }
 }
 
 watch(

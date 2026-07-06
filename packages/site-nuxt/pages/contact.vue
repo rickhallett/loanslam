@@ -439,41 +439,6 @@ useHead({
     color: var(--teal-500);
   }
 
-  #contact-section[data-revealed] .contact-route {
-    opacity: 0.42;
-    filter: grayscale(0.22);
-  }
-
-  #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'],
-  #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'],
-  #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] {
-    opacity: 1;
-    filter: none;
-    border-color: rgba(0, 135, 155, 0.48);
-    box-shadow: 0 24px 50px -28px rgba(0, 135, 155, 0.7);
-    transform: translateY(-2px);
-  }
-
-  #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'] .route-title::before,
-  #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'] .route-title::before,
-  #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] .route-title::before {
-    content: 'Relevant to your query';
-    display: block;
-    margin-bottom: 0.28rem;
-    color: var(--teal-500);
-    font-family: var(--font-body);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  #contact-section[data-revealed='vulnerability'] .contact-route[data-type='vulnerability'] .route-index,
-  #contact-section[data-revealed='handoff'] .contact-route[data-type='update-settle'] .route-index,
-  #contact-section[data-revealed='general'] .contact-route[data-type='new-loan'] .route-index {
-    color: var(--amber-400);
-  }
-
   @media (max-width: 920px) {
     .assistant-first,
     .contact-routes {
