@@ -162,7 +162,8 @@ data/
 scripts/
   throwaway/                        Ad hoc probes, not the operator front door
 artifacts/
-  phase0/                           Generated local traces, reports, dashboards, and session dumps
+  evidence-index/                   Committed evidence manifests, run indexes, and gate anchors
+  phase0/                           Ignored local traces, reports, dashboards, and session dumps
 ```
 
 ## Package roles

@@ -30,7 +30,9 @@ mechanical.
 breached starting point (currently 41/50: `human_support` 9/11, `prompt_injection`
 6/9, `regulatory_boundary` 5/9). A candidate run is always measured against this
 file's numbers — not a human markdown table, and not a freshly re-frozen live
-run. Re-pin only by deliberate human decision, to a run you inspected.
+run. The raw baseline report is not checked in; use the DB replay command in the
+anchor when you need to regenerate a local report. Re-pin only by deliberate
+human decision, to a run you inspected.
 
 ## floor-delta — the content-aware receipt
 

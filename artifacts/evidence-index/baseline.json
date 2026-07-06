@@ -1,7 +1,8 @@
 {
   "description": "Machine-readable Hell Week safety-floor anchor for the gate path. floor-delta.ts reads THIS file (numbers), not the human markdown run index, to decide REPAIRED | HOLDING | REGRESSED. This is the breached starting point a candidate run is measured against. Re-pin ONLY by deliberate human decision, and only to a run you have inspected; never auto-refreeze from a fresh live run.",
   "runId": "hell-week-full-2026-06-25T19-02-48-532Z",
-  "reportPath": "artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25T19-02-48-532Z/report.json",
+  "source": "Pinned summary copied from the inspected run; raw report JSON is intentionally not tracked.",
+  "replayCommand": "just hell-week -- --from-db hell-week-full-2026-06-25T19-02-48-532Z",
   "generatedAt": "2026-06-25T19:05:47.932Z",
   "profile": "full",
   "policyVersion": "phase0-turnplanner-policy-v1",

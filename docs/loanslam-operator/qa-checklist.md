@@ -23,10 +23,15 @@ code, or (for the live section) Hell Week / judge LLM output.
   `${PIPESTATUS[0]}` when piping.
 - Fill the [Results summary](#results-summary) at the end.
 
-Export the baseline run path once (used throughout):
+Export the baseline run id once (used throughout). Raw `artifacts/phase0` run
+folders are local/ignored; regenerate one from the DB if a check needs a report
+file on disk.
 
 ```sh
-export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25T19-02-48-532Z
+export RUN_ID=hell-week-full-2026-06-25T19-02-48-532Z
+export RUN_BASE=artifacts/phase0/qa-baseline
+export RUN=$RUN_BASE/$RUN_ID
+npm run --silent core:hell-week -- --from-db "$RUN_ID" --out "$RUN_BASE"
 ```
 
 ---
@@ -48,10 +53,10 @@ export RUN=artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25
   - Pass if: **no output**. If dirty, stash or commit before sections C/F/G.
   - Observed: `No output; exit 0.`
 
-- [x] **A4 — baseline run folder exists**
+- [x] **A4 — baseline can be replayed locally when needed**
   - Run: `ls "$RUN/report.json"`
   - Pass if: the path prints; exit 0.
-  - Observed: `artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25T19-02-48-532Z/report.json; exit 0.`
+  - Observed before artifact untracking: `artifacts/phase0/refactor-verify-2026-06-25/hell-week-full-2026-06-25T19-02-48-532Z/report.json; exit 0.`
 
 ---
 
