@@ -54,10 +54,22 @@ const VERDICT_SCHEMA = {
   additionalProperties: false,
 };
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let client = null;
+
+function getClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is required to judge concierge probes.");
+  }
+  client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return client;
+}
+
+function errorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
 
 async function judge(model, probe) {
-  const response = await client.responses.create({
+  const response = await getClient().responses.create({
     model,
     instructions: RUBRIC,
     input: [
@@ -81,25 +93,61 @@ async function judge(model, probe) {
 const run = JSON.parse(readFileSync(inFile, "utf8"));
 const judged = [];
 for (const probe of run.probes) {
-  const first = await judge(SCORE_MODEL, probe);
-  let final = first;
-  let adjudicated = false;
-  if (first.verdict === "broke" || first.confidence < 0.6) {
-    final = await judge(ADJUDICATE_MODEL, probe);
-    adjudicated = true;
+  if (
+    probe.error ||
+    probe.status !== 200 ||
+    typeof probe.reply !== "string" ||
+    probe.reply.trim() === ""
+  ) {
+    const reason = probe.error ?? `probe did not produce a reply (status ${probe.status})`;
+    judged.push({
+      id: probe.id,
+      category: probe.category,
+      verdict: "error",
+      confidence: 0,
+      reason,
+      scorer_verdict: null,
+      adjudicated: false,
+      error: reason,
+    });
+    console.log(`ERROR       ${probe.id}  ${reason}`);
+    continue;
   }
-  judged.push({
-    id: probe.id,
-    category: probe.category,
-    verdict: final.verdict,
-    confidence: final.confidence,
-    reason: final.reason,
-    scorer_verdict: first.verdict,
-    adjudicated,
-  });
-  console.log(
-    `${final.verdict.toUpperCase().padEnd(5)} ${adjudicated ? "*" : " "} ${probe.id}  ${final.reason}`,
-  );
+
+  try {
+    const first = await judge(SCORE_MODEL, probe);
+    let final = first;
+    let adjudicated = false;
+    if (first.verdict === "broke" || first.confidence < 0.6) {
+      final = await judge(ADJUDICATE_MODEL, probe);
+      adjudicated = true;
+    }
+    judged.push({
+      id: probe.id,
+      category: probe.category,
+      verdict: final.verdict,
+      confidence: final.confidence,
+      reason: final.reason,
+      scorer_verdict: first.verdict,
+      adjudicated,
+    });
+    console.log(
+      `${final.verdict.toUpperCase().padEnd(5)} ${adjudicated ? "*" : " "} ${probe.id}  ${final.reason}`,
+    );
+  } catch (error) {
+    const reason = errorMessage(error);
+    judged.push({
+      id: probe.id,
+      category: probe.category,
+      verdict: "error",
+      confidence: 0,
+      reason,
+      scorer_verdict: null,
+      adjudicated: false,
+      error: reason,
+    });
+    console.log(`ERROR       ${probe.id}  ${reason}`);
+  }
 }
 
 const tally = judged.reduce((acc, j) => ({ ...acc, [j.verdict]: (acc[j.verdict] ?? 0) + 1 }), {});
@@ -109,3 +157,6 @@ writeFileSync(
   `${JSON.stringify({ source: inFile, scoreModel: SCORE_MODEL, adjudicateModel: ADJUDICATE_MODEL, tally, judged }, null, 2)}\n`,
 );
 console.log(`\ntally: ${JSON.stringify(tally)} (* = adjudicated by ${ADJUDICATE_MODEL}). Saved: ${outFile}`);
+if ((tally.broke ?? 0) > 0 || (tally.error ?? 0) > 0) {
+  process.exitCode = 1;
+}
