@@ -31,8 +31,8 @@ mechanism. The verification fabric has since matured past that assumption:
 
 - Behavior claims are proven by full integration batteries against real
   engines and live URLs, not static tests (Evidence And Test Discipline).
-- The parity harness makes visual/content regressions machine-detectable to
-  a 0.5% pixel and exact-text bar.
+- Site route and UI proof receipts make visual/content regressions auditable
+  without keeping raw screenshots or retired parity scripts in git.
 - Per-slice proof receipts, `just gate-slice`, `just verify`, and
   `just branch-risk` already run without human eyes.
 - Arcs ipoc-003/004 and sitenuxt-001/002 completed under batch authorization
@@ -99,8 +99,8 @@ points.
 | --- | --- |
 | Per commit | `just gate-slice -- --staged` |
 | Per slice | Proof bar met; receipt committed; `just verify` for code slices |
-| Per arc close | Full integration battery for the touched surface; parity harness where the site is in scope; `just branch-risk -- --base dev` |
-| Promotion to dev | Battery + parity re-run on the merged result, plus the consistency check below |
+| Per arc close | Full integration battery for the touched surface; route/UI proof receipt where the site is in scope; `just branch-risk -- --base dev` |
+| Promotion to dev | Battery + route/UI proof on the merged result, plus the consistency check below |
 
 **Consistency check (new, required before promotion):** roadmap entries,
 campaign card, implementation diff, and receipts must agree mechanically —

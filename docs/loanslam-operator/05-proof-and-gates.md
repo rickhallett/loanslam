@@ -24,6 +24,26 @@ mechanical.
 | UI | widgets/hosts/site, `packages/site-nuxt`, `packages/integrated-poc` | verify + live read-back |
 | TOOLING / DOCS / BASELINE | scripts, configs, docs | verify, including report manifest check |
 
+## The current proof ladder
+
+Use this sequence when a slice affects runtime behaviour:
+
+1. **Classify:** `just branch-risk -- --base <ref>` tells you the required bar.
+2. **Capture:** run the integration path for the touched surface. For engine
+   behavior, capture a fresh Hell Week run; for UI/demo behavior, capture the
+   live browser/API receipt named by the roadmap.
+3. **Judge:** run `just hell-week-judge -- <run-dir>` when Hell Week behavior is
+   in scope, then re-render or regrade with the judge verdicts.
+4. **Floor:** `just floor-delta -- <run-dir>` writes
+   `artifacts/evidence-index/floor-delta-latest.json`.
+5. **Gate:** `just gate-slice -- --staged` checks the staged diff against the
+   receipt and secret/evidence path rules.
+6. **Package:** `just digest -- <run-dir>` or
+   `just checkpoint-packet -- <run-dir>` creates the review-safe summary.
+
+Older QA notes, decision-log entries, and closed PRDs are historical records.
+When they disagree with this ladder, this page wins.
+
 ## The committed anchor
 
 `artifacts/evidence-index/baseline.json` pins one specific Hell Week run as the
