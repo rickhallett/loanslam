@@ -5,13 +5,13 @@ import {
   type IpocAccountAnswerRequest,
   type IpocAccountAnswerResponse,
   type IpocAccountQuestion,
-} from "../../../../../shared/ipoc";
+} from "../../../../domains/ipoc/models/ipoc.model";
 import {
   appendMessage,
   getMockCustomerByLoanReference,
   recordSessionActivity,
   type IpocMockCustomerRecord,
-} from "../../../../utils/ipocStore";
+} from "../../../../domains/ipoc/stores/ipocSession.store";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 const customerQuestions: Record<IpocAccountQuestion, string> = {

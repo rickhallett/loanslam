@@ -3,11 +3,11 @@ import { createError, readBody } from "h3";
 import type {
   IpocAddTicketNoteRequest,
   IpocAdminTicketResponse,
-} from "../../../../../../shared/ipoc";
+} from "../../../../../domains/ipoc/models/ipoc.model";
 import {
   addIpocTicketNote,
   getIpocAdminTicket,
-} from "../../../../../utils/ipocStore";
+} from "../../../../../domains/ipoc/stores/ipocSession.store";
 
 const maxNoteLength = 500;
 

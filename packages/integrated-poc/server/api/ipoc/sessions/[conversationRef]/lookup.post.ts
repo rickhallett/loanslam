@@ -5,12 +5,12 @@ import {
   type IpocLookupFieldValues,
   type IpocLookupRequest,
   type IpocLookupResponse,
-} from "../../../../../shared/ipoc";
+} from "../../../../domains/ipoc/models/ipoc.model";
 import {
   appendMessage,
   findMockCustomer,
   recordSessionActivity,
-} from "../../../../utils/ipocStore";
+} from "../../../../domains/ipoc/stores/ipocSession.store";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 
 export default defineEventHandler(

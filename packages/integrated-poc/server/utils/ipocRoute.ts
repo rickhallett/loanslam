@@ -1,6 +1,9 @@
 import { createError, getRouterParam } from "h3";
 
-import { getIpocSession, type IpocSession } from "./ipocStore";
+import {
+  getIpocSession,
+  type IpocSession,
+} from "../domains/ipoc/stores/ipocSession.store";
 
 export interface RequiredIpocSession {
   conversationRef: string;

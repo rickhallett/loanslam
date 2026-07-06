@@ -5,11 +5,11 @@ import {
   type IpocHandoffIntake,
   type IpocSubmitIntakeRequest,
   type IpocSubmitIntakeResponse,
-} from "../../../../../shared/ipoc";
+} from "../../../../domains/ipoc/models/ipoc.model";
 import {
   appendMessage,
   updateIpocTicketIntake,
-} from "../../../../utils/ipocStore";
+} from "../../../../domains/ipoc/stores/ipocSession.store";
 import { requireIpocSession } from "../../../../utils/ipocRoute";
 import { buildIpocTelemetry } from "../../../../utils/turnTelemetry";
 
