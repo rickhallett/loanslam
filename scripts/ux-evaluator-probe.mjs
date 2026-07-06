@@ -246,6 +246,12 @@ console.log(renderMarkdownSummary(report));
 console.log("");
 console.log(`JSON: ${args.output}`);
 
+const errorCount = results.filter((result) => result.error).length;
+if (errorCount > 0) {
+  console.error(`${errorCount} evaluator call(s) failed.`);
+  process.exitCode = 1;
+}
+
 async function evaluateCase({ client, model, evaluationCase, repeatIndex }) {
   const input = buildEvaluatorInput(evaluationCase);
   const startedAt = performance.now();
