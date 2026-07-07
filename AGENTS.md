@@ -79,6 +79,7 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
+- Markdown context pruning is tracked in `docs/prds/2026-07-06-markdown-context-pruning-spec.md`; treat old docs as guilty until this spec keeps them.
 - Documentation cleanup history is recorded in `docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md` and the classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; both are historical proof records, not current execution starts.
 - Integrated POC implementation history is recorded in `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`; new work starts from active campaign cards/roadmaps and `docs/campaign-workflow-protocol.md`, not closed agenda cards or chat context.
 - New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics; completed cards and closed roadmaps remain historical records).
