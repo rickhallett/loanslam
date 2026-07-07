@@ -4,11 +4,10 @@ Date: 2026-07-02
 Status: active
 
 This document is the canonical execution workflow for new multi-arc work. It
-supersedes the per-arc batch-authorization mechanics defined in the agenda
-cards (`docs/prds/closed/2026-07-02-integrated-poc-arc-004-agenda-card.md` and the
-cards that reference its "batch mechanics") as the default authorization
-unit. Completed agenda cards remain the historical record for their arcs; new
-work is authorized at the campaign level under this protocol.
+supersedes the per-arc batch-authorization mechanics defined in the (now
+archived) integrated-poc arc-004 agenda card and its sibling cards as the
+default authorization unit. New work is authorized at the campaign level
+under this protocol.
 
 Unchanged by this document:
 

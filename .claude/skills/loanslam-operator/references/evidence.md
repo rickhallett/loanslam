@@ -14,7 +14,8 @@ Turn a run into typed receipts and a review packet.
   `just checkpoint-packet -- <run-dir>` (orient + proof bar + digest).
 - ship_ready requires judge verdicts (`just hell-week-judge -- <run-dir>`) plus
   safety-floor coverage; a deterministic-only run caps at needs_work.
-- Human run index: `artifacts/evidence-index/hell-week-runs.md`. The full
+- Historical runs are persisted in Postgres, not a tracked index file; use
+  `just hell-week-stability` to classify repeated runs already there. The full
   capture/judge/compare model lives in `docs/hell-week-gauntlet.md`.
 
 Persist the digest/compare summary INLINE into the PR body — `artifacts/` is

@@ -4,10 +4,11 @@ Date: 2026-07-06
 Status: proposed
 Owner: architecture/refactor
 
-Source inputs:
+Source inputs (the two audit reports are archived, not tracked; their
+findings are fully restated below):
 
-- `docs/reports/2026-07-06-design-patterns-audit-staff-bar.md`
-- `docs/reports/2026-07-06-mal-service-layer-fit-audit.md`
+- the staff-bar design-patterns audit and the MAL service-layer fit audit
+  (2026-07-06)
 - `docs/llm-turn-planner-architecture.md`
 - `docs/prds/2026-07-06-lsops-operator-tools-spec.md`
 
@@ -566,10 +567,8 @@ The durable rule is:
 
 ## References
 
-- `docs/reports/2026-07-06-design-patterns-audit-staff-bar.md`
-- `docs/reports/2026-07-06-mal-service-layer-fit-audit.md`
+- the staff-bar design-patterns audit and the MAL service-layer fit audit
+  (2026-07-06, archived; findings restated above)
 - `docs/llm-turn-planner-architecture.md`
-- `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`
 - `docs/prds/2026-07-06-lsops-operator-tools-spec.md`
-- `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md`
 - `docs/loanslam-operator/02-architecture.md`

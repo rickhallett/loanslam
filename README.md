@@ -342,10 +342,11 @@ Prisma migrations.
 - [Campaign workflow protocol](./docs/campaign-workflow-protocol.md)
 - [Active PRDs and campaign cards](./docs/prds/README.md)
 - [Roadmaps](./docs/roadmaps/README.md)
-- [Hell Week evidence index](./artifacts/evidence-index/hell-week-runs.md)
 
-Closed PRDs and agenda cards under `docs/prds/closed/` are provenance, not active
-start points, unless an active campaign explicitly points at them.
+Historical evidence (closed PRDs, dated audit reports, campaign proof receipts
+under `artifacts/`) is archived rather than tracked in git; see
+`docs/prds/2026-07-06-markdown-context-pruning-spec.md`. Git history remains
+the fallback for provenance.
 
 ## Not Built In Phase 0
 

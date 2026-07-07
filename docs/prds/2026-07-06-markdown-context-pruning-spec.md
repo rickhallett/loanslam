@@ -182,15 +182,15 @@ docs/reports/2026-07-06-design-patterns-audit.md
 docs/reports/2026-07-06-design-pattern-refactor-implementation-log.md
 ```
 
-**Not touched this pass (reference-blocked, verified not just assumed):**
+**Not touched this pass, deliberately (reference-blocked, verified not just
+assumed) — all archived in the third burn pass instead, see below:**
 
 - 13 `docs/prds/closed/*.md` files named by path in
   `docs/core-product-decision-log.yaml`, a roadmap `receipt:`/prose
   reference, `AGENTS.md`, or `docs/campaign-workflow-protocol.md`.
 - All 36 `artifacts/**/*.md` receipts: every one is a roadmap `receipt:`
   path; `scripts/campaign-consistency-check.mjs` would fail if any moved
-  without a coordinated roadmap/checker rewrite (see High-Priority Remaining
-  Burn Targets item 2, unchanged).
+  without a coordinated roadmap/checker rewrite.
 - 5 `docs/reports/*.md` files: one hard roadmap receipt
   (`2026-07-01-widget-adapter-sunset-assessment.md`), two cited by the active
   `2026-07-06-design-pattern-refactor-spec.md`
@@ -199,9 +199,10 @@ docs/reports/2026-07-06-design-pattern-refactor-implementation-log.md
   provenance from kept evidence-index docs
   (`2026-07-05-adversarial-cleanup-review.md`,
   `2026-07-02-concierge-probe-report.md`).
-- `docs/loanslam-operator/*` — deferred per the original High-Priority Remaining
-  Burn Targets item 4; reducing it is a content rewrite of a live skill
-  manual, not a mechanical reference-blocked move.
+
+`docs/loanslam-operator/*` was deferred per the original High-Priority
+Remaining Burn Targets item 4; the operator later overrode that deferral
+entirely (keep, not reduce — see the third burn pass).
 
 **Non-doc finding surfaced during review (not acted on here):** the validator
 review flagged that `packages/core/src/policy.ts`'s
@@ -214,39 +215,145 @@ Expected tracked-Markdown count after this pass is committed: 104 paths
 (129 after first pass - 25 archived this pass). Verify with
 `git ls-files '*.md' | wc -l` post-commit.
 
-## High-Priority Remaining Burn Targets
+## Third Burn Pass (2026-07-07, operator-directed)
 
-1. `docs/prds/closed/*.md`
-   - Classification: QUARANTINE.
-   - Reason: every file is explicitly historical. Current starts are active
-     campaign cards, active roadmaps, the decision log, and the campaign
-     workflow protocol.
-   - Blocker: `docs/core-product-decision-log.yaml` and roadmap provenance
-     links still point at selected closed files. Move only with a link-repair or
-     "archived in git history" policy.
+The second pass applied a receipt-integrity lens: keep anything a mechanical
+checker or live citation still points at. The operator rejected that lens for
+this pass and asked a different question instead: not "is this referenced,"
+but "would deleting this stop someone from building the next feature or
+catching a real quality problem." Under that test, roughly 60% of what
+survived the second pass was still audit trail, not reference material.
 
-2. Closed roadmaps plus completed receipt Markdown under `artifacts/`
-   - Classification: QUARANTINE as a cluster.
-   - Reason: proof receipts and completed roadmaps are historical evidence, not
-     active execution context.
-   - Blocker: `scripts/campaign-consistency-check.mjs` requires completed
-     roadmap receipt paths to exist. Retire/rewrite closed roadmaps and receipt
-     checks in the same slice before moving those receipts.
+Content review (not just a reference grep) found two files the receipt-lens
+pass would have wrongly filed as droppable:
 
-3. `docs/reports/*.md`
-   - Classification: BURN or QUARANTINE by report.
-   - Keep temporarily only when an active card directly cites the report as
-     input, such as the current design-pattern and cleanup reports.
-   - Convert stable decisions into `CONTEXT.md`, `README.md`, active cards, or
-     `docs/core-product-decision-log.yaml`; archive the narrative report.
+- `docs/reports/2026-07-05-adversarial-cleanup-review.md` is not a stale
+  report; it is a live 33-item numbered punch list (production-restart proof
+  defaults to redeploying production, `clarification_loop` declared but never
+  emitted, generated report allowlist fails open, and 30 more). At least one
+  item has been separately checked off; the rest look open.
+- `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md` carries a
+  still-binding constraint: freeze investment in `demo-host`/`demo-widget`
+  until the Integrated POC has a deployed URL. Both packages still exist on
+  disk, so the freeze is still active.
 
-4. `docs/loanslam-operator/01-*.md`, `08-examples.md`, `09-reference.md`,
-   `10-troubleshooting.md`, and `qa-checklist.md`
-   - Classification: KEEP_FOR_NOW, reduce next.
-   - Reason: operational, but too broad for the new context budget.
-   - Target end state: one human README plus the thin `.claude/skills`
-     dispatcher; details should live in `just --list`, scripts, or compact
-     references.
+The operator was told this and explicitly overrode it anyway: **delete both,
+along with every other file in `docs/reports/`, every file in
+`docs/prds/closed/` (all 13, not just the 22 from pass two), and all 36
+`artifacts/**/*.md` receipts** (their JSON/txt siblings — parity reports,
+battery results, `evidence-index/baseline.json`,
+`evidence-index/floor-delta-latest.json` — were left in place; live tooling
+reads those, not the Markdown).
+
+Archived, same destination as passes one and two
+(`var/doc-archive/2026-07-06-hellfire/`, preserving relative paths):
+
+```text
+docs/prds/closed/2026-06-20-site-widget-integration-architecture-prd.md
+docs/prds/closed/2026-06-30-integrated-poc-reference.md
+docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md
+docs/prds/closed/2026-07-01-integrated-poc-arc-003-agenda-card.md
+docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md
+docs/prds/closed/2026-07-02-concierge-probes-campaign-001-card.md
+docs/prds/closed/2026-07-02-demo-concierge-campaign-001-card.md
+docs/prds/closed/2026-07-02-demo-concierge-campaign-002-card.md
+docs/prds/closed/2026-07-02-demo-resilience-campaign-001-card.md
+docs/prds/closed/2026-07-02-integrated-poc-arc-004-agenda-card.md
+docs/prds/closed/2026-07-02-site-nuxt-arc-001-agenda-card.md
+docs/prds/closed/2026-07-02-site-nuxt-arc-003-agenda-card.md
+docs/prds/closed/README.md
+docs/reports/2026-07-01-widget-adapter-sunset-assessment.md
+docs/reports/2026-07-02-concierge-probe-report.md
+docs/reports/2026-07-05-adversarial-cleanup-review.md
+docs/reports/2026-07-06-design-patterns-audit-staff-bar.md
+docs/reports/2026-07-06-mal-service-layer-fit-audit.md
+artifacts/concierge-probes/concierge-probes-001-closeout.md
+artifacts/demo-concierge/*.md (11 files)
+artifacts/demo-resilience/*.md (3 files)
+artifacts/evidence-index/*.md (5 files)
+artifacts/integrated-poc/*.md (11 files)
+artifacts/site-nuxt/*.md (5 files)
+```
+
+`docs/loanslam-operator/*` was explicitly kept in full (see High-Priority
+Remaining Burn Targets item 4 below) — the opposite direction from every
+other cluster in this pass.
+
+**Dangling references repaired in the same pass** (front doors and live docs
+that pointed at now-archived files):
+
+- `docs/prds/README.md` — rewrote the "cards move to `closed/`" workflow
+  description; there is no tracked `closed/` anymore.
+- `AGENTS.md` — removed two Working Notes bullets citing specific archived
+  closed-card paths as provenance.
+- `README.md` — removed the direct link to the now-archived
+  `artifacts/evidence-index/hell-week-runs.md` and the "Closed PRDs... are
+  provenance" line.
+- `.claude/skills/loanslam-operator/references/evidence.md`,
+  `docs/hell-week-gauntlet.md`, `docs/hell-week-agent-loop-playbook.md` —
+  repointed from the archived human run index to the live Postgres-backed
+  mechanism (`just hell-week-stability`).
+- `docs/integrated-poc-demo-runbook.md` — repointed the widget-adapter-sunset
+  citation from the archived report to decision log D039.
+- `docs/campaign-workflow-protocol.md` — softened a specific closed-card
+  filename citation to note it's archived.
+- `docs/prds/2026-07-06-design-pattern-refactor-spec.md` — the two archived
+  audit reports' findings are fully restated in this spec's own prose
+  already; softened the "Source inputs" and "References" lists to describe
+  them by name instead of by dead path.
+
+Not repaired: prose citations of specific archived filenames inside
+`docs/core-product-decision-log.yaml` and closed/active roadmap YAML files.
+Those are dated historical entries citing what was true when written: lower
+stakes than an active front door pointing nowhere, and a much larger edit
+surface. Flagged, not fixed, per operator instruction to not worry about
+receipt/citation completeness in this pass.
+
+Tracked Markdown after this pass: 50 paths (104 after second pass - 54
+archived this pass). Verify with `git ls-files '*.md' | wc -l` post-commit.
+
+## High-Priority Remaining Burn Targets (status after third burn pass)
+
+1. `docs/prds/closed/*.md` — DONE. The second burn pass already archived the
+   22 files with zero live references. This third pass archived the
+   remaining 13 (the whole directory, including `README.md`) despite live
+   references, on explicit operator direction: `2026-06-30-integrated-poc-reference.md`
+   (content already in `docs/core-product-decision-log.yaml` D012),
+   `2026-06-20-site-widget-integration-architecture-prd.md` (opens with its
+   own "no longer active architecture guidance" banner), and 11 closed
+   campaign/arc cards whose receipts live independently under `artifacts/`.
+   Prose citations of specific closed-card filenames in
+   `docs/campaign-workflow-protocol.md` were softened to note the card is
+   archived rather than left dangling.
+
+2. `artifacts/**/*.md` receipts — DONE, operator-directed. All 36 receipt
+   Markdown files archived; their JSON/txt siblings (parity reports, battery
+   results, `evidence-index/baseline.json` and `floor-delta-latest.json`) were
+   left in place since live tooling (`scripts/floor-delta.ts`, `digest.ts`,
+   `gate-slice.ts`) reads those, not the Markdown. The mechanical blocker this
+   item originally cited was real but narrower than stated: of the 7 roadmaps
+   with receipts pointing into these directories, 6 are already
+   `status: closed`; none of the 4 currently `active` roadmaps
+   (demo-concierge-003, audit-log-001, demo-killbeat-001, sts-v2-001) cite any
+   of the archived receipts. `campaign-consistency-check` was not rewritten to
+   accommodate this — running it against the closed roadmaps will now report
+   missing receipt paths, which is expected and accepted.
+
+3. `docs/reports/*.md` — DONE, operator-directed. All 5 archived, including
+   two this spec had argued should stay (`2026-07-05-adversarial-cleanup-review.md`,
+   a live 33-item punch list with items still open; `2026-07-01-widget-adapter-sunset-assessment.md`,
+   whose investment-freeze recommendation is still binding since the
+   demo-adapter packages have not been retired). The operator's call, made
+   explicitly and knowingly. Live citations of these two were repointed to the
+   decision log (D039) or softened to note the source is archived; the
+   design-pattern-refactor spec's inlined summary of the other two reports'
+   findings was left intact (the reports were provenance, not unique content).
+
+4. `docs/loanslam-operator/*.md`
+   - Classification: KEEP, explicit override (2026-07-07). An earlier draft of
+     this spec proposed reducing the manual to just its README plus the thin
+     `.claude/skills` dispatcher. The operator overrode that: keep the full
+     12-file manual. Not a reduction target.
 
 5. Legacy package docs for non-keeper surfaces
    - Classification: BURN unless a current campaign names the package.
@@ -255,16 +362,16 @@ Expected tracked-Markdown count after this pass is committed: 104 paths
    - Do not delete source packages in this doc cleanup; source retirement is a
      separate live-surface decision.
 
-## Execution Plan
+## Execution Plan (superseded by the third burn pass)
+
+Items 1-3 below describe the first and second passes. The third pass did not
+wait for a "coordinated slice" on the receipt checker (item 4) or condense the
+operator manual (item 5, reversed by explicit override, see Burn Target 4
+above) — the operator directed the cut regardless of those blockers.
 
 1. Archive self-contained zombie Markdown to ignored `var/doc-archive/...`.
 2. Add this spec and the `AGENTS.md` backref.
 3. Verify the archive copies exist and only intended Markdown paths changed.
-4. In a later coordinated slice, retire closed PRD/roadmap/proof-receipt
-   clusters together so `campaign-consistency-check` does not fail on missing
-   historical receipt paths.
-5. Condense the operator manual and remove duplicated pages once the README and
-   skill references carry the required workflow.
 
 ## Acceptance Criteria
 
@@ -272,9 +379,12 @@ Expected tracked-Markdown count after this pass is committed: 104 paths
 - The first burn pass removes at least the 16 archived zombie docs from tracked
   Markdown.
 - No current product/application code is changed by this cleanup.
-- No proof receipt required by an active roadmap is moved.
-- Future burn passes preserve either a working mechanical checker path or an
-  explicit replacement policy for closed evidence.
+- Proof receipts for the 4 currently-active roadmaps
+  (demo-concierge-003, audit-log-001, demo-killbeat-001, sts-v2-001) are
+  never moved by any pass of this spec; receipts belonging to closed
+  roadmaps were archived in the third pass on explicit operator direction,
+  accepting that `campaign-consistency-check` will report missing paths if
+  run against those closed roadmaps.
 
 ## Verification
 
