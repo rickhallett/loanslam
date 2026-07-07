@@ -102,14 +102,14 @@ points.
 | Per arc close | Full integration battery for the touched surface; route/UI proof receipt where the site is in scope; `just branch-risk -- --base dev` |
 | Promotion to dev | Battery + route/UI proof on the merged result, plus the consistency check below |
 
-**Consistency check (new, required before promotion):** roadmap entries,
-campaign card, implementation diff, and receipts must agree mechanically —
-every completed chain id has a receipt path that exists, every receipt names
-a commit that is an ancestor of the merge, and no write scope was exceeded.
-Disagreement was previously a prose-checked stop condition; under campaigns
-it must be checked by a script and its output committed with the closeout.
-Until that script exists, the first campaign's first arc builds it; no
-campaign promotes without it thereafter.
+**Consistency check (required before promotion):** roadmap entries, campaign
+card, implementation diff, and receipts must agree mechanically — every
+completed chain id has a receipt path that exists, every receipt names a
+commit that is an ancestor of the merge, and no write scope was exceeded.
+Run `just campaign-consistency-check -- <roadmap.yaml> [more.yaml...]`
+(`scripts/campaign-consistency-check.mjs`) against every roadmap touched by
+the promotion and commit its output with the closeout. No campaign promotes
+without a clean run.
 
 ## Irreducible human gates
 
