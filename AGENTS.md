@@ -1,4 +1,4 @@
-<!-- FLUENCY_PROTOCOL_START sha256:af9d6c8a04a53bdb -->
+<!-- FLUENCY_PROTOCOL_START sha256:bfa0059cbbbf449a -->
 # Coding Fluency Rehab Protocol
 
 Operational extract. Full sources:
@@ -20,11 +20,18 @@ Operational extract. Full sources:
 - Vague calls grade as miss; push for a call that can be wrong.
 
 ## Canonical Folder Map
-- Active human-facing repositories live directly under `~/work`: `cockpit`, `cue`, `jobpipe`, `loanslam`, `normal`, `oceanheart`, and `sarahs-studio`.
-- Agent and machine operations live under `~/_ops`; private company state under `~/vault`; reference material under `~/reference`; inactive material under `~/archive`.
-- Hidden worktrees live under `~/_ops/worktrees` or inside their parent repository. They are not separate entrance points.
-- `~/code` is a temporary read-only Sarah's Studio review hold. Do not create or edit active projects there; editable Sarah's Studio work belongs in `~/work/sarahs-studio`.
-- DND is retired and remains archived. Do not recreate a visible DND workspace.
+- This is a macOS machine rooted at `/Users/mrkai`; Fish is the interactive shell and mise owns language runtimes.
+- Before editing or deploying, resolve the real checkout, Git root, branch, registered worktree, dirty state, and actual runtime or deployment path. Never infer them from a folder, service, or environment name.
+- The only normal project entrances are the seven direct children of `~/work`: `cockpit`, `cue`, `jobpipe`, `loanslam`, `normal`, `oceanheart`, and `sarahs-studio`.
+- Agent and machine operations live under `~/_ops`; private state under `~/vault`; durable evidence under `~/reference`; inactive material under `~/archive`. These are not alternative project entrances.
+- Worktrees must be Git-registered and remain subordinate to their repository. Branch-backed worktrees may be maintained centrally; detached worktrees are opt-in mutation targets.
+- Repository-local ownership is the default. Cockpit indexes and composes the system; it is not a miscellaneous shared-library home. Do not create cross-project code without an explicit owner and repeated need.
+- Closest repository `AGENTS.md` or `CLAUDE.md`, README, runbook, and deploy documentation govern project specifics. Never hand-edit managed Fluency Protocol blocks; edit `~/_ops/fluency` and render them.
+- Preserve existing work, stage narrowly, commit only intended files to the active branch, and never push or mutate remote infrastructure without explicit authority.
+- Runtime, browser, and API evidence outrank static tests for live-behaviour claims. Environment names do not prove branch or deployment lineage.
+- Keep `~/vault`, `/Users/mrkai/rehab.db`, credentials, ignored databases, and private evidence local. Never publish or broadly sync them.
+- `~/code` is only the temporary read-only Sarah's Studio review hold. Product edits belong in `~/work/sarahs-studio`; do not modify or dispose of the retained source until review ends.
+- DND is retired and remains archived. Do not recreate a visible DND workspace or silently reactivate archived systems.
 
 ## Bug Drills
 - Historical drills from real repos (thepit, loanslam first): worktree at the PARENT of a fix commit, symptom only, timebox 25-45 min, operator diagnoses via reading + hand-written probes, reveal real fix, grade, debrief, remove worktree.
