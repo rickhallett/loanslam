@@ -117,6 +117,21 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Do not move a branch that is checked out in another worktree; operate from that worktree or choose a non-destructive path.
 - Preserve old branch state before reparenting or cleanup, usually with an archive branch rather than destructive history edits.
 
+### Railway Staging Exception — Owner Decision
+
+- Recorded Saturday, 18 July 2026 at 05:59 BST: the Railway service named
+  `loanslam-site-nuxt-staging` is intentionally left backed by the parked
+  `feature/demo-concierge-03` lineage. It is not the deployment of the Git
+  `staging` branch.
+- The owner explicitly decided to keep this mismatch in place because it is
+  not worth changing now and must be revisited separately later.
+- Do not merge this parked feature into live production code, repoint or
+  redeploy the Railway staging service, or infer that it represents Git
+  `staging` without fresh owner instruction.
+- The retired branch lineage and deployment context are preserved under
+  `archive/2026-07-18/demo-concierge-03` and the external worktree-retirement
+  archive recorded in the project README.
+
 ## Secret Discipline
 
 - Canonical secret values live in encrypted `secrets/*.env.sops`; `.env.local`, `.env.staging`, and `.env.production` are ignored generated caches.

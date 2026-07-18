@@ -10,6 +10,16 @@
 > [LICENSE](./LICENSE). Do not copy, repurpose, redistribute, or publish this
 > repository or its materials without permission.
 
+> **Railway staging exception — explicit owner decision, Saturday 18 July
+> 2026 at 05:59 BST.** The Railway service named
+> `loanslam-site-nuxt-staging` remains backed by the parked
+> `feature/demo-concierge-03` lineage; it is not the Git `staging` branch.
+> Leave the service as-is until the owner deliberately returns to it. Do not
+> promote that feature into live production, repoint or redeploy the service,
+> or treat it as proof of Git `staging`. The lineage is retained as
+> `archive/2026-07-18/demo-concierge-03`, with the recovery snapshot at
+> `/Users/mrkai/code/archive/loanslam/worktree-retirement-2026-07-18/`.
+
 ## Practical Takeaway
 
 LoanSlam is now best understood as one connected system:

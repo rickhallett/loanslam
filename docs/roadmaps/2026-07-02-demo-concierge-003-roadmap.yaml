@@ -1,19 +1,24 @@
 version: 1
-title: Demo Concierge 003 Roadmap (active guidance, staging only)
-status: active
-updated: 2026-07-02
+title: Demo Concierge 003 Roadmap (retired lineage; Railway staging exception)
+status: closed  # retired by owner without promotion on 2026-07-18
+updated: 2026-07-18
 source_agenda: docs/prds/2026-07-02-demo-concierge-campaign-003-card.md
 epic: demo-concierge
 campaign: demo-concierge-003
 active_arc: concierge3-arc-001
 active_slice: concierge-suggest-nav-01
-active_slice_status: pending
+active_slice_status: retired
 latest_proof_receipt: null
 branch:
   base: feature/demo-concierge-02 (campaign-002 closeout commit)
-  implementation: feature/demo-concierge-03
-  worktree: .claude/worktrees/demo-concierge-01
+  implementation: archive/2026-07-18/demo-concierge-03
+  worktree: retired; recover from the 2026-07-18 worktree archive if required
   merge_gate: does NOT merge to dev until human UAT accepts (D046)
+retirement:
+  recorded_at: 2026-07-18T05:59:00+01:00
+  decision: preserve lineage only; do not promote into live production code
+  railway_exception: loanslam-site-nuxt-staging remains backed by this lineage
+  recovery_archive: /Users/mrkai/code/archive/loanslam/worktree-retirement-2026-07-18
 proof_of_work_labels:
   epic: demo-concierge
   slice: concierge-suggest-nav-01
@@ -29,7 +34,7 @@ arc_001_chain:
   # Tricksy tier (D046): the model proposes, the user disposes.
   - id: dc3-001-suggest-nav
     slice_label: concierge-suggest-nav-01
-    status: pending
+    status: retired
     depends_on: []
     summary: Structured concierge output with optional navigation target,
       validated server-side against the committed route manifest; rendered
@@ -43,7 +48,7 @@ arc_001_chain:
         non-apply route; an off-manifest target is dropped server-side.
   - id: dc3-002-form-fill
     slice_label: concierge-form-fill-01
-    status: pending
+    status: retired
     depends_on:
       - dc3-001-suggest-nav
     summary: Structured output may propose apply-form values (known field
@@ -59,7 +64,7 @@ arc_001_chain:
 arc_002_chain:
   - id: dc3-003-staging
     slice_label: concierge3-staging-01
-    status: pending
+    status: retired
     depends_on:
       - dc3-002-form-fill
     summary: Create loanslam-site-nuxt-staging service, key sync (dry-run
@@ -73,7 +78,7 @@ arc_002_chain:
         service untouched by this campaign (spot check).
   - id: dc3-004-rehearsal
     slice_label: concierge3-rehearsal-01
-    status: pending
+    status: retired
     depends_on:
       - dc3-003-staging
     summary: Staging rehearsal including suggestion and fill beats; closeout
