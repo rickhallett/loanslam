@@ -2,7 +2,7 @@
 
 Date: 2026-07-12
 Status: draft (strategy only; no execution yet)
-Driver: `~/fluency-protocol/reference/market-jump-focus-2026-07.md` item 2 —
+Driver: `~/_ops/fluency/reference/market-jump-focus-2026-07.md` item 2 —
 a sanitised, own-IP-only demo asset derived from the MAL engine architecture,
 serving both the Applied AI Engineer and FDE interview loops.
 
