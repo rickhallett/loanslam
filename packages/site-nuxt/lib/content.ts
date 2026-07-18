@@ -1,3 +1,26 @@
+import pageAboutUs from "../data/content/page-about-us.json";
+import pageComplaints from "../data/content/page-complaints.json";
+import pageContact from "../data/content/page-contact.json";
+import pageCovid19Help from "../data/content/page-covid-19-help.json";
+import pageCreditScore from "../data/content/page-credit-score.json";
+import pageExistingCustomers from "../data/content/page-existing-customers.json";
+import pageExtraSupport from "../data/content/page-extra-support.json";
+import pageFaq from "../data/content/page-faq.json";
+import pageHome from "../data/content/page-home.json";
+import pageInstalmentLoan from "../data/content/page-instalment-loan.json";
+import pageOpenBanking from "../data/content/page-open-banking.json";
+import pagePersonalLoans from "../data/content/page-personal-loans.json";
+import pagePositiveOutcomes from "../data/content/page-positive-outcomes.json";
+import pagePrivacyPolicy from "../data/content/page-privacy-policy.json";
+import pageSorry from "../data/content/page-sorry.json";
+import pageTermsAndConditions from "../data/content/page-terms-and-conditions.json";
+import postCanIGetAPersonalLoanWithAPoorCreditScore from "../data/content/post-can-i-get-a-personal-loan-with-a-poor-credit-score.json";
+import postHowCanIBoostMyCreditScore from "../data/content/post-how-can-i-boost-my-credit-score.json";
+import postHowCanICheckMyCreditScoreForFree from "../data/content/post-how-can-i-check-my-credit-score-for-free.json";
+import postHowToCheckYourCreditHistory from "../data/content/post-how-to-check-your-credit-history.json";
+import postWhatsACreditBuilderCard from "../data/content/post-whats-a-credit-builder-card.json";
+import postWillAPersonalLoanAffectMyCreditScore from "../data/content/post-will-a-personal-loan-affect-my-credit-score.json";
+
 export interface ContentRecord {
   kind: "page" | "post";
   slug: string;
@@ -10,10 +33,30 @@ export interface ContentRecord {
   html: string;
 }
 
-const mods = import.meta.glob("../data/content/*.json", { eager: true });
-const records: ContentRecord[] = Object.values(mods).map(
-  (m) => ((m as { default?: ContentRecord }).default ?? m) as ContentRecord,
-);
+const records = [
+  pageAboutUs,
+  pageComplaints,
+  pageContact,
+  pageCovid19Help,
+  pageCreditScore,
+  pageExistingCustomers,
+  pageExtraSupport,
+  pageFaq,
+  pageHome,
+  pageInstalmentLoan,
+  pageOpenBanking,
+  pagePersonalLoans,
+  pagePositiveOutcomes,
+  pagePrivacyPolicy,
+  pageSorry,
+  pageTermsAndConditions,
+  postCanIGetAPersonalLoanWithAPoorCreditScore,
+  postHowCanIBoostMyCreditScore,
+  postHowCanICheckMyCreditScoreForFree,
+  postHowToCheckYourCreditHistory,
+  postWhatsACreditBuilderCard,
+  postWillAPersonalLoanAffectMyCreditScore,
+] as ContentRecord[];
 
 export const pages = records.filter((r) => r.kind === "page");
 export const posts = records
