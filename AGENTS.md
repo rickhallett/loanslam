@@ -1,13 +1,12 @@
-
-
-<!-- FLUENCY_PROTOCOL_START sha256:a1b760e75a37d0f9 -->
+<!-- FLUENCY_PROTOCOL_START sha256:af9d6c8a04a53bdb -->
 # Coding Fluency Rehab Protocol
 
 Operational extract. Full sources:
-- `/Users/mrkai/fluency-protocol/protocol.md`
-- `/Users/mrkai/fluency-protocol/protocol-db.md`
-- `/Users/mrkai/fluency-protocol/protocol-guard.md`
-- `/Users/mrkai/fluency-protocol/protocol-calibration.md` (adopted 2026-07-05; wins on conflict)
+- `/Users/mrkai/_ops/fluency/protocol.md`
+- `/Users/mrkai/_ops/fluency/protocol-db.md`
+- `/Users/mrkai/_ops/fluency/protocol-guard.md`
+- `/Users/mrkai/_ops/fluency/protocol-calibration.md` (adopted 2026-07-05; wins on conflict)
+- `/Users/mrkai/_ops/fluency/reference/canonical-folder-map.md` (adopted 2026-07-18)
 
 ## Core Rule (calibration amendment, 2026-07-05)
 - Primary target is calibrated judgment, not generative fluency: prediction reps in BAU, historical bug drills, adversarial reading. Hand-typing drills are retired; probe-writing during drills stays manual.
@@ -20,10 +19,17 @@ Operational extract. Full sources:
 - Operator controls: "rep:" requests one, "skip" declines without re-offers this session, "no reps" disables for the session.
 - Vague calls grade as miss; push for a call that can be wrong.
 
+## Canonical Folder Map
+- Active human-facing repositories live directly under `~/work`: `cockpit`, `cue`, `jobpipe`, `loanslam`, `normal`, `oceanheart`, and `sarahs-studio`.
+- Agent and machine operations live under `~/_ops`; private company state under `~/vault`; reference material under `~/reference`; inactive material under `~/archive`.
+- Hidden worktrees live under `~/_ops/worktrees` or inside their parent repository. They are not separate entrance points.
+- `~/code` is a temporary read-only Sarah's Studio review hold. Do not create or edit active projects there; editable Sarah's Studio work belongs in `~/work/sarahs-studio`.
+- DND is retired and remains archived. Do not recreate a visible DND workspace.
+
 ## Bug Drills
 - Historical drills from real repos (thepit, loanslam first): worktree at the PARENT of a fix commit, symptom only, timebox 25-45 min, operator diagnoses via reading + hand-written probes, reveal real fix, grade, debrief, remove worktree.
 - Agent is quartermaster/scorekeeper, never co-detective; a requested hint caps the grade at partial.
-- Runbooks: `~/fluency-protocol/reference/bug-drills.md`, `~/fluency-protocol/reference/prediction-reps.md`.
+- Runbooks: `~/_ops/fluency/reference/bug-drills.md`, `~/_ops/fluency/reference/prediction-reps.md`.
 
 ## Automatic Drill Logging (agent duty)
 - Log every graded prediction and drill in the same turn as the grade: `rehab rep log --stdin` with rep_type "predict" or "drill", expected_result = the call, actual_result = the truth, outcome hit|partial|miss, authored_by_user 1.
@@ -64,6 +70,7 @@ Do not use auto-BLUE for product/application code, tests, migrations, refactors,
 - Reports must come from `/Users/mrkai/rehab.db`, not memory or vibes.
 
 <!-- FLUENCY_PROTOCOL_END -->
+
 # Agent Instructions
 
 PROTOCOL OVERRIDE: BLUE for execution - agentic work proceeds normally in this repository; no manual-rep gating. The calibration amendment (2026-07-05) DOES apply here: offer prediction checkpoints on substantive diffs/test outcomes/root causes, run bug drills on request, and auto-log graded reps via `rehab rep log` (see the Prediction Reps / Bug Drills / Automatic Drill Logging sections in the managed block above).
