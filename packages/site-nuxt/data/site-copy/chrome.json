@@ -9,6 +9,11 @@
   "accessibility": {
     "skipLinkLabel": "Skip to content"
   },
+  "demoNotice": {
+    "ariaLabel": "Demonstration site notice",
+    "label": "Demo only",
+    "body": "This is not the official Loans by MAL website. It is an independent rendition for demonstration purposes."
+  },
   "header": {
     "menuLabel": "Open menu",
     "navigationLabel": "Main navigation",
@@ -68,9 +73,9 @@
     ],
     "legalParagraphsHtml": [
       "Late repayments can lead to serious money problems. For debt counselling advice please visit <a href=\"https://www.moneyhelper.org.uk\">moneyhelper.org.uk</a>.",
-      "<strong>Loans by MAL</strong> is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a Consumer Credit Lender notified with the Office of the Information Commissioner, registration number ZA553679. Monthly Advance Loans Limited is a private limited company registered in England and Wales (company number 12070468) and has its registered office at Bourne Park, Exeter Park Road, Bournemouth BH2 5BD. Monthly Advance Loans Limited is a consumer credit lender not a broker."
+      "<strong>LoanSlam</strong>"
     ],
-    "copyright": "© Monthly Advance Loans Limited",
+    "copyright": "LoanSlam",
     "policyLinks": [
       { "label": "Privacy policy", "href": "/privacy-policy/" },
       { "label": "Terms & conditions", "href": "/terms-and-conditions/" },

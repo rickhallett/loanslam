@@ -1,5 +1,18 @@
 <template>
   <header class="site-header">
+    <aside class="demo-notice" :aria-label="demoNotice.ariaLabel">
+      <div class="container demo-notice__inner">
+        <span class="demo-notice__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M12 3 2.8 20h18.4L12 3Z" />
+            <path d="M12 8.2v5.7M12 17.2v.1" />
+          </svg>
+        </span>
+        <strong>{{ demoNotice.label }}</strong>
+        <span class="demo-notice__message">{{ demoNotice.body }}</span>
+      </div>
+    </aside>
+
     <div class="container bar">
       <a class="brand" href="/">
         <img src="/logo.png" :alt="brand.logoAlt" width="132" height="51" />
@@ -40,7 +53,7 @@
 <script setup lang="ts">
 import { siteChrome } from '../lib/site-copy';
 
-const { applyUrl, brand, header, loginUrl } = siteChrome;
+const { applyUrl, brand, demoNotice, header, loginUrl } = siteChrome;
 </script>
 
 <style scoped>
@@ -51,6 +64,71 @@ const { applyUrl, brand, header, loginUrl } = siteChrome;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--line);
+  }
+
+  .demo-notice {
+    background: #fff4d6;
+    border-bottom: 2px solid var(--amber-500);
+    box-shadow: inset 0 3px 0 var(--amber-400);
+    color: var(--ink-950);
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .demo-notice__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 46px;
+    padding-block: 0.55rem;
+    text-align: center;
+  }
+
+  .demo-notice__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: var(--ink-950);
+  }
+
+  .demo-notice__icon svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .demo-notice__icon path:first-child {
+    fill: var(--amber-400);
+    stroke: currentColor;
+    stroke-linejoin: round;
+    stroke-width: 1.5;
+  }
+
+  .demo-notice__icon path:last-child {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .demo-notice strong {
+    flex: none;
+    border-radius: 999px;
+    background: var(--ink-950);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    padding: 0.42rem 0.58rem;
+    text-transform: uppercase;
+  }
+
+  .demo-notice__message {
+    font-weight: 650;
   }
 
   .bar {
@@ -152,6 +230,20 @@ const { applyUrl, brand, header, loginUrl } = siteChrome;
   }
 
   @media (max-width: 920px) {
+    .demo-notice__inner {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      text-align: left;
+    }
+
+    .demo-notice__icon {
+      grid-row: 1 / span 2;
+    }
+
+    .demo-notice strong {
+      justify-self: start;
+    }
+
     .burger {
       display: flex;
       flex-direction: column;

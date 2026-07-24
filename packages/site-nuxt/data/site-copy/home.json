@@ -28,7 +28,7 @@
     "representativeExample": "Representative example: on an assumed loan amount of £2,500 over a 24 month repayment period. Rate of interest 24.1% per annum (fixed). Representative 49.6% APR. Total amount payable is £3,705.12 of which £1,205.12 is interest, 24 monthly repayments of £154.38."
   },
   "trustSignals": [
-    { "html": "<strong>FCA</strong> authorised & regulated — firm ref 912359" },
+    { "html": "<strong>LoanSlam</strong> repository demo" },
     { "html": "<strong>37,500</strong> customers helped" },
     { "html": "Rated <strong>‘Excellent’</strong> on Trustpilot", "href": "https://www.trustpilot.com/review/loansbymal.co.uk" },
     { "html": "<strong>Direct lender</strong> — not a broker" },
