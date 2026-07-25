@@ -13,9 +13,8 @@ Co-Authored-By: (the agent's name and attribution byline)
 ## Working Notes
 
 - Keep handoff docs concise; link to source docs rather than duplicating them.
-- Documentation cleanup history is recorded in `docs/prds/closed/2026-07-01-documentation-cleanup-agenda-card.md` and the classification matrix in `docs/non-operational/doc-cleanup/2026-07-01-classification.yaml`; both are historical proof records, not current execution starts.
-- Integrated POC implementation history is recorded in `docs/prds/closed/2026-07-01-integrated-poc-implementation-agenda-card.md`; new work starts from active campaign cards/roadmaps and `docs/campaign-workflow-protocol.md`, not closed agenda cards or chat context.
-- New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics; completed cards and closed roadmaps remain historical records).
+- Markdown context pruning is tracked in `docs/prds/2026-07-06-markdown-context-pruning-spec.md`; treat old docs as guilty until this spec keeps them. There is no tracked `docs/prds/closed/` or `docs/reports/` directory as of the 2026-07-07 pass; closed cards and dated audits are archived, not retained as agent context.
+- New multi-arc work is authorized and executed under `docs/campaign-workflow-protocol.md` (campaigns supersede per-arc agenda-card batch mechanics); durable decisions live in `docs/core-product-decision-log.yaml`, not in closed cards.
 - Preserve unrelated user changes. Stage narrowly and check `git status` before committing.
 
 ## Provider Mandate
@@ -51,6 +50,21 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Do not copy stale `.env` or `.env.local` between worktrees. Render fresh local caches from encrypted secrets instead.
 - Do not move a branch that is checked out in another worktree; operate from that worktree or choose a non-destructive path.
 - Preserve old branch state before reparenting or cleanup, usually with an archive branch rather than destructive history edits.
+
+### Railway Staging Exception — Owner Decision
+
+- Recorded Saturday, 18 July 2026 at 05:59 BST: the Railway service named
+  `loanslam-site-nuxt-staging` is intentionally left backed by the parked
+  `feature/demo-concierge-03` lineage. It is not the deployment of the Git
+  `staging` branch.
+- The owner explicitly decided to keep this mismatch in place because it is
+  not worth changing now and must be revisited separately later.
+- Do not merge this parked feature into live production code, repoint or
+  redeploy the Railway staging service, or infer that it represents Git
+  `staging` without fresh owner instruction.
+- The retired branch lineage and deployment context are preserved under
+  `archive/2026-07-18/demo-concierge-03` and the external worktree-retirement
+  archive recorded in the project README.
 
 ## Secret Discipline
 

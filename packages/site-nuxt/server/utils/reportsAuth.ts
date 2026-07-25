@@ -6,6 +6,7 @@ import type { H3Event } from "h3";
 import {
   createError,
   getCookie,
+  getQuery,
   getRequestURL,
   sendRedirect,
   sendStream,
@@ -19,6 +20,8 @@ const defaultSessionTtlSeconds = 2 * 60 * 60;
 export interface ReportsAuthConfig {
   password?: string;
   sessionSecret?: string;
+  accessKey?: string;
+  disabled: boolean;
   ttlSeconds: number;
 }
 
@@ -28,6 +31,8 @@ export function reportsAuthConfig(
   return {
     password: env.REPORTS_ACCESS_PASSWORD,
     sessionSecret: env.REPORTS_SESSION_SECRET,
+    accessKey: env.REPORTS_ACCESS_KEY,
+    disabled: env.REPORTS_AUTH_DISABLED === "1",
     ttlSeconds: reportsSessionTtlSeconds(env.REPORTS_SESSION_TTL_SECONDS),
   };
 }
@@ -40,17 +45,34 @@ export function reportsSessionTtlSeconds(value: string | undefined): number {
 }
 
 export function reportsAuthConfigured(config = reportsAuthConfig()): boolean {
-  return Boolean(config.password && config.sessionSecret);
+  return Boolean(
+    config.disabled ||
+    (config.password && config.sessionSecret) ||
+    config.accessKey,
+  );
 }
 
 export function reportsAuthRequiredForHostname(
   hostname: string | undefined,
   config = reportsAuthConfig(),
 ): boolean {
+  if (config.disabled) {
+    return false;
+  }
   if (reportsAuthConfigured(config)) {
     return true;
   }
   return !reportsHostnameIsLocal(hostname);
+}
+
+export function reportsAccessKeyMatches(
+  candidate: string,
+  config = reportsAuthConfig(),
+): boolean {
+  if (!config.accessKey) {
+    return false;
+  }
+  return constantTimeEqual(candidate, config.accessKey);
 }
 
 export function reportsPasswordMatches(
@@ -144,6 +166,25 @@ export async function requireReportsAuth(event: H3Event): Promise<boolean> {
     return true;
   }
 
+  const queryKey = reportAccessKeyFromQuery(getQuery(event).reports_key);
+  if (queryKey && reportsAccessKeyMatches(queryKey, config)) {
+    if (!config.sessionSecret) {
+      return true;
+    }
+
+    setReportsSessionCookie(
+      event,
+      createReportsSessionToken({ config }),
+      config,
+    );
+    await sendRedirect(
+      event,
+      cleanReportsAccessKeyUrl(getRequestURL(event)),
+      302,
+    );
+    return false;
+  }
+
   if (!reportsAuthConfigured(config)) {
     throw createError({
       statusCode: 503,
@@ -160,6 +201,22 @@ export async function requireReportsAuth(event: H3Event): Promise<boolean> {
   const next = encodeURIComponent(`${url.pathname}${url.search}`);
   await sendRedirect(event, `/reports/login?next=${next}`, 302);
   return false;
+}
+
+function reportAccessKeyFromQuery(value: unknown): string | null {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value) && typeof value[0] === "string") {
+    return value[0];
+  }
+  return null;
+}
+
+function cleanReportsAccessKeyUrl(url: URL): string {
+  const clean = new URL(url);
+  clean.searchParams.delete("reports_key");
+  return `${clean.pathname}${clean.search}`;
 }
 
 export function safeReportsNext(value: unknown): string {

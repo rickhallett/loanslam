@@ -55,7 +55,8 @@
     "integrated-poc:build": "npm --workspace @loanslam/integrated-poc run build",
     "integrated-poc:typecheck": "npm --workspace @loanslam/integrated-poc run typecheck",
     "site-nuxt-build": "npm --workspace @loanslam/site-nuxt run build",
-    "site-nuxt-start": "node packages/site-nuxt/.output/server/index.mjs"
+    "site-nuxt-start": "node packages/site-nuxt/.output/server/index.mjs",
+    "campaign-consistency-check": "node scripts/campaign-consistency-check.mjs"
   },
   "dependencies": {
     "@prisma/adapter-neon": "^7.8.0",

@@ -5,8 +5,8 @@ Hell Week is the structured hostile scenario battery encoded under
 the live, model-backed engine and produces a stakeholder HTML dashboard with the
 numbers a Phase 0 reviewer cares about: the compliance safety floor,
 demo-killers, deflection, routing precision, and per-category / per-dimension
-pass rates. Imported historical runs are indexed in
-`artifacts/evidence-index/hell-week-runs.md`.
+pass rates. Historical runs are persisted in Postgres, browsable via
+`just hell-week-stability`, not a tracked index file.
 
 ## Run it
 

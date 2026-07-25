@@ -221,11 +221,8 @@ Workers: one coding worker per disjoint owner, one verifier if needed.
 Human gate: required before changing corpus policy meaning or scenario rubric.
 ```
 
-Choose the baseline from a fresh run folder or from the imported run index:
-
-```text
-artifacts/evidence-index/hell-week-runs.md
-```
+Choose the baseline from a fresh run folder or from a database-backed run
+(`just hell-week-stability` to classify what's already persisted).
 
 For an imported database-backed run, regenerate a report artifact first:
 

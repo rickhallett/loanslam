@@ -68,7 +68,8 @@ synthetic demo data; nothing is a real customer record.
 
 ## Adapter sunset plan (executable, human-gated)
 
-Source: `docs/reports/2026-07-01-widget-adapter-sunset-assessment.md` (D039).
+Source: decision log D039 (`docs/core-product-decision-log.yaml`); the
+assessment report that produced D039 is archived, not tracked.
 
 - **Trigger:** one completed stakeholder demo run from this runbook on the
   live URL. Until then the demo-adapter stack stays frozen (no new work) but

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createReportsSessionToken,
+  reportsAccessKeyMatches,
   reportsAuthRequiredForHostname,
   reportsPasswordMatches,
   reportsSessionTtlSeconds,
@@ -12,6 +13,8 @@ import {
 const config = {
   password: "open-sesame",
   sessionSecret: "test-session-secret",
+  accessKey: undefined,
+  disabled: false,
   ttlSeconds: 60,
 };
 
@@ -35,8 +38,29 @@ describe("reports auth", () => {
     expect(reportsPasswordMatches("wrong", config)).toBe(false);
   });
 
+  it("compares the configured access key", () => {
+    expect(
+      reportsAccessKeyMatches("stakeholder-demo", {
+        ...config,
+        accessKey: "stakeholder-demo",
+      }),
+    ).toBe(true);
+    expect(
+      reportsAccessKeyMatches("wrong", {
+        ...config,
+        accessKey: "stakeholder-demo",
+      }),
+    ).toBe(false);
+  });
+
   it("only bypasses password auth on localhost when auth is unconfigured", () => {
-    const unconfigured = { password: undefined, sessionSecret: undefined, ttlSeconds: 60 };
+    const unconfigured = {
+      password: undefined,
+      sessionSecret: undefined,
+      accessKey: undefined,
+      disabled: false,
+      ttlSeconds: 60,
+    };
 
     expect(reportsAuthRequiredForHostname("localhost", unconfigured)).toBe(
       false,
@@ -52,6 +76,12 @@ describe("reports auth", () => {
       true,
     );
     expect(reportsAuthRequiredForHostname("localhost", config)).toBe(true);
+    expect(
+      reportsAuthRequiredForHostname("example.com", {
+        ...unconfigured,
+        disabled: true,
+      }),
+    ).toBe(false);
   });
 
   it("keeps redirects inside the reports area", () => {

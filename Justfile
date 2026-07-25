@@ -252,6 +252,15 @@ reports-publish-trends *reports_flags:
 branch-risk *risk_flags:
     @npm --silent run branch-risk -- {{ risk_flags }}
 
+# Verify roadmap/card/diff/receipt consistency required before promotion (docs/campaign-workflow-protocol.md).
+# e.g. just campaign-consistency-check -- docs/roadmaps/2026-07-03-sts-v2-001-roadmap.yaml
+campaign-consistency-check *roadmap_flags:
+    @set -- {{ roadmap_flags }}; \
+      if [ "${1:-}" = "--" ]; then \
+        shift; \
+      fi; \
+      npm --silent run campaign-consistency-check -- "$@"
+
 # Compact checkpoint packet (orient + proof bar + evidence) for review/PR bodies.
 # e.g. just checkpoint-packet -- <run-dir>
 checkpoint-packet *packet_flags:

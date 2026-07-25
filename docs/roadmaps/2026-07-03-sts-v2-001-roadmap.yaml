@@ -1,18 +1,22 @@
 version: 1
-title: STS v2 Roadmap (reactive battery - measurement infrastructure only)
-status: active
-updated: 2026-07-03
+title: STS v2 Roadmap (retired lineage - measurement infrastructure only)
+status: closed  # retired by owner without promotion on 2026-07-18
+updated: 2026-07-18
 source_agenda: docs/prds/2026-07-03-sts-v2-campaign-001-card.md
 epic: sts-v2
 campaign: sts-v2-001
 active_arc: sts2-arc-001
 active_slice: sim-harness-01
-active_slice_status: open
+active_slice_status: retired
 latest_proof_receipt: null
 branch:
   base: dev
-  implementation: feature/sts-v2-01
-  worktree: .claude/worktrees/sts-v2-01
+  implementation: archive/2026-07-18/sts-v2
+  worktree: retired; recover from the 2026-07-18 worktree archive if required
+retirement:
+  recorded_at: 2026-07-18T05:59:00+01:00
+  decision: preserve lineage only; do not promote into live production code
+  recovery_archive: /Users/mrkai/code/archive/loanslam/worktree-retirement-2026-07-18
 proof_of_work_labels:
   epic: sts-v2
   slice: sim-harness-01
@@ -28,7 +32,7 @@ doctrine:
 arc_001_chain:
   - id: sv2-001-harness
     slice_label: sim-harness-01
-    status: open
+    status: retired
     receipt: null
     depends_on: []
     summary: Initialization sampler (extends the STS v1 generator),
@@ -49,7 +53,7 @@ arc_001_chain:
 arc_002_chain:
   - id: sv2-002-judge
     slice_label: trajectory-judge-01
-    status: pending
+    status: retired
     receipt: null
     depends_on:
       - sv2-001-harness
@@ -69,7 +73,7 @@ arc_002_chain:
 arc_003_chain:
   - id: sv2-003-coverage
     slice_label: coverage-01
-    status: pending
+    status: retired
     receipt: null
     depends_on:
       - sv2-002-judge
@@ -89,7 +93,7 @@ arc_003_chain:
 arc_004_chain:
   - id: sv2-004-closeout
     slice_label: closeout-01
-    status: pending
+    status: retired
     receipt: null
     depends_on:
       - sv2-003-coverage
