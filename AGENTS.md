@@ -91,8 +91,8 @@ done < <(git worktree list --porcelain | awk '/^worktree / {print $2}')
 
 ## Fluency block removal (transition note, 2026-07-25)
 
-The machine-context protocol block was removed from this repository's
-instruction files on main. Branches that still carry it: `dev`, `staging`,
-and local feature branches cut before 2026-07-25. When merging into main,
-resolve AGENTS.md in favor of main and do not reintroduce the block.
-Remove this note once every branch is clean.
+The machine-context protocol block was removed from every branch on the
+public remote (main, dev, staging, and side branches) on 2026-07-25. Local
+feature and archive branches cut before that date may still carry it. When
+merging into main, resolve AGENTS.md in favor of main and do not
+reintroduce the block. Remove this note once local branches are clean.
