@@ -74,3 +74,11 @@ done < <(git worktree list --porcelain | awk '/^worktree / {print $2}')
 ```
 
 - Quote words starting with `=` (for example `echo '==='`); unquoted, zsh applies `=cmd` filename expansion and the command fails with `== not found`.
+
+## Fluency block removal (transition note, 2026-07-25)
+
+The machine-context protocol block was removed from this repository's
+instruction files on main. Branches that still carry it: `dev`, `staging`,
+and local feature branches cut before 2026-07-25. When merging into main,
+resolve AGENTS.md in favor of main and do not reintroduce the block.
+Remove this note once every branch is clean.
