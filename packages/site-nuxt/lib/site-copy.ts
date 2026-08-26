@@ -52,6 +52,11 @@ export interface SiteChromeCopy {
   accessibility: {
     skipLinkLabel: string;
   };
+  demoNotice: {
+    ariaLabel: string;
+    label: string;
+    body: string;
+  };
   header: {
     menuLabel: string;
     navigationLabel: string;
@@ -469,6 +474,7 @@ function validateChrome(raw: unknown): SiteChromeCopy {
   const root = objectAt(raw, 'chrome');
   const brand = objectAt(root.brand, 'chrome.brand');
   const accessibility = objectAt(root.accessibility, 'chrome.accessibility');
+  const demoNotice = objectAt(root.demoNotice, 'chrome.demoNotice');
   const header = objectAt(root.header, 'chrome.header');
   const headerActions = objectAt(header.actions, 'chrome.header.actions');
   const footer = objectAt(root.footer, 'chrome.footer');
@@ -482,6 +488,11 @@ function validateChrome(raw: unknown): SiteChromeCopy {
     },
     accessibility: {
       skipLinkLabel: stringAt(accessibility.skipLinkLabel, 'chrome.accessibility.skipLinkLabel'),
+    },
+    demoNotice: {
+      ariaLabel: stringAt(demoNotice.ariaLabel, 'chrome.demoNotice.ariaLabel'),
+      label: stringAt(demoNotice.label, 'chrome.demoNotice.label'),
+      body: stringAt(demoNotice.body, 'chrome.demoNotice.body'),
     },
     header: {
       menuLabel: stringAt(header.menuLabel, 'chrome.header.menuLabel'),

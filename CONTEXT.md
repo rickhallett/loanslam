@@ -5,7 +5,12 @@ This context defines the shared product and engine language for the Loanslam sup
 ## Current Surface Map
 
 - `packages/site-nuxt` is the current keeper customer-facing site and concierge
-  surface. The live Railway service is `loanslam-site-nuxt`.
+  surface. The live Railway service is `loanslam-site-nuxt`, currently exposed
+  at `https://mal-demo.up.railway.app`. The `mal-demo` hostname is legacy and
+  misleading: it serves the full Nuxt website, not the old standalone demo.
+- `https://x827e1872-production.up.railway.app` is the older standalone
+  LoanSlam demo surface. It is not the keeper Nuxt deployment and should not be
+  used as the public CV link.
 - `site/` is an Astro source/input tree for content, styles, and assets still
   imported by Nuxt. It is not the live deploy surface.
 - `packages/integrated-poc` contains IPOC source/modules still consumed by the

@@ -151,7 +151,7 @@
   },
   "footer": {
     "reviews": "Customer Reviews",
-    "legalHtml": "<strong>loans by mal</strong> is the trading name of Monthly Advance Loans Limited. Authorised and regulated by the Financial Conduct Authority (firm reference 912359). Monthly Advance Loans Limited is a consumer credit lender not a broker.",
+    "legalHtml": "<strong>LoanSlam</strong>",
     "navigationLabel": "Application footer",
     "links": [
       { "label": "FAQs", "href": "/faq/" },
