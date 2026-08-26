@@ -47,6 +47,8 @@ Co-Authored-By: (the agent's name and attribution byline)
 - Start worktree-sensitive tasks with `git worktree list --porcelain`.
 - Work in the checkout the user named; do not assume sibling worktrees have the same files, env, or ignored context.
 - When creating worktrees, copy required ignored local context such as `.claude/`, `.fallow/`, and `.env.example`; Git does not copy ignored files.
+- NOTE: .claude contains the worktree directory itself, so copy the useful local .claude context while
+  excluding nested worktrees. That keeps the new checkout ready without accidentally stuffing sibling checkouts inside it.
 - Do not copy stale `.env` or `.env.local` between worktrees. Render fresh local caches from encrypted secrets instead.
 - Do not move a branch that is checked out in another worktree; operate from that worktree or choose a non-destructive path.
 - Preserve old branch state before reparenting or cleanup, usually with an archive branch rather than destructive history edits.
