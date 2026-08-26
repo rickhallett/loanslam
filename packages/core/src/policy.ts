@@ -133,6 +133,12 @@ const forbiddenCredentialRefusalSentence =
 const secondaryBorrowingAdvicePattern =
   /\bshould\s+i\b.{0,80}\bborrow\b.{0,80}\b(another|other|different)\s+lender\b|\bborrow\b.{0,80}\b(another|other|different)\s+lender\b.{0,80}\b(pay|repay|cover|clear)\b|\b(can|could|should|do)\s+i\b.{0,80}\b(apply|borrow|take\s+out|get)\b.{0,80}\b(another|second|more|extra)\s+(loanslam\s+)?loan\b|\b(can|could|should|do)\s+i\b.{0,80}\b(top\s*up|increase)\b.{0,80}\b(my\s+)?(loan|borrowing)\b|\bborrow\s+more\b|\btop\s*up\s+(my\s+)?loan\b|\b(second|another)\s+(loanslam\s+)?loan\b/i;
 
+const regulatedDebtSolutionAdvicePattern =
+  /\b(should|could|would|do)\s+i\b.{0,100}\b(go\s+bankrupt|go\s+into\s+bankruptcy|bankruptcy|enter\s+(an?\s+)?iva|iva|debt\s+management\s+plan|dmp)\b|\b(go\s+bankrupt|bankruptcy|iva|debt\s+management\s+plan|dmp)\b.{0,100}\b(instead|better|best|right|good\s+idea|recommend|should)\b/i;
+
+const complaintCompensationDemandPattern =
+  /\b(how\s+much|what\s+(amount|figure)|amount)\b.{0,100}\b(compensation|redress)\b|\b(compensation|redress)\b.{0,100}\b(how\s+much|what\s+(amount|figure)|demand|ask\s+for|claim)\b/i;
+
 const creditCheckEvasionRequestPattern =
   /\b(hide|conceal|mask|bypass|avoid|get\s+around|trick|game)\b.{0,100}\b(bad\s+credit|poor\s+credit|low\s+credit\s+score|credit\s+score|credit\s+file|credit\s+history|credit\s+check|credit\s+checks?|open\s+banking|affordability\s+check|creditworthiness\s+check)\b|\b(bad\s+credit|poor\s+credit|low\s+credit\s+score|credit\s+score|credit\s+file|credit\s+history|credit\s+check|credit\s+checks?|open\s+banking|affordability\s+check|creditworthiness\s+check)\b.{0,100}\b(hide|conceal|mask|bypass|avoid|get\s+around|trick|game)\b/i;
 
@@ -309,6 +315,18 @@ export function detectSecondaryBorrowingAdviceRequest(text: string): boolean {
   return secondaryBorrowingAdvicePattern.test(text);
 }
 
+export function detectRegulatedDebtSolutionAdviceRequest(
+  text: string,
+): boolean {
+  return regulatedDebtSolutionAdvicePattern.test(text);
+}
+
+export function detectComplaintCompensationDemandRequest(
+  text: string,
+): boolean {
+  return complaintCompensationDemandPattern.test(text);
+}
+
 export function detectCreditCheckEvasionRequest(text: string): boolean {
   return creditCheckEvasionRequestPattern.test(text);
 }
@@ -447,7 +465,7 @@ export function buildHandoffCopy(reason: string): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    "I can't view, confirm, or change personal account or application details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -489,7 +507,7 @@ export function buildPaymentLinkHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't create or send a payment link in this chat. Do not send card numbers, CVV, bank login details, sort codes, or account numbers here. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    "I can't create or send a payment link in this chat. Do not send payment-link details, card details, or bank details here. I can pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -510,7 +528,7 @@ export function buildApprovalStatusHandoffCopy(): {
   requestedFields: IntakeField[];
 } {
   const customerMessage =
-    "I can't confirm whether your application is approved, declined, or still pending in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    "I can't answer yes or no on whether your application is approved, declined, or still pending in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
 
   return {
     action: "request_handoff_intake",
@@ -589,6 +607,51 @@ export function buildSecondaryBorrowingBoundaryCopy(): {
       primitive: "safe_fallback",
       message: customerMessage,
       links: [...links],
+    },
+  };
+}
+
+export function buildRegulatedDebtSolutionBoundaryCopy(): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const links = [
+    { label: "StepChange", href: "https://www.stepchange.org" },
+    {
+      label: "MoneyHelper",
+      href: "https://www.moneyhelper.org.uk/debt-advice-locator",
+    },
+  ] as const satisfies readonly ApprovedLink[];
+  const customerMessage =
+    "I can't advise you on whether to go bankrupt, enter an IVA, use a debt management plan, or choose another debt solution. Free, impartial debt advice is available from StepChange or MoneyHelper, and the LoanSlam team can discuss your existing account or repayment support.";
+
+  return {
+    action: "refuse",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: customerMessage,
+      links: [...links],
+    },
+  };
+}
+
+export function buildComplaintCompensationBoundaryCopy(): {
+  action: "refuse";
+  customerMessage: string;
+  ui: UiPlan;
+} {
+  const customerMessage =
+    "I can't tell you how much compensation or redress to demand in chat. If you want to make or continue a complaint, I can pass that to the LoanSlam team so a person can look into it.";
+
+  return {
+    action: "refuse",
+    customerMessage,
+    ui: {
+      primitive: "safe_fallback",
+      message: customerMessage,
+      links: [],
     },
   };
 }

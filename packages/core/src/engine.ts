@@ -400,10 +400,14 @@ function applyHandoffStateRules(
       : {
           ...validated,
           collectedFacts: {
-            ...extractedFacts,
             ...validated.collectedFacts,
+            ...extractedFacts,
           },
         };
+  const correctedHandoffFact = hasCorrectedHandoffFact(
+    state.collectedFacts,
+    extractedFacts,
+  );
 
   const urgentRisk = detectUrgentRisk(userMessage);
 
@@ -450,6 +454,7 @@ function applyHandoffStateRules(
       missingStandardFields,
       "handoff_intake_progress_preserved",
       "A pending handoff turn collected intake facts and should ask only for the next missing standard field.",
+      { correctedFact: correctedHandoffFact },
     );
   }
 
@@ -471,6 +476,13 @@ function applyHandoffStateRules(
     currentValidated.ui.primitive !== "intake_form"
   ) {
     return currentValidated;
+  }
+
+  if (state.handoffPending && asksWhyHandoffDetailsAreNeeded(userMessage)) {
+    return buildHandoffDetailsReasonFragment(
+      currentValidated,
+      missingStandardFields,
+    );
   }
 
   if (missingStandardFields.length === 0) {
@@ -583,6 +595,7 @@ function buildNextHandoffQuestionFragment(
   missingFields: readonly IntakeField[],
   code: string,
   reason: string,
+  options: { correctedFact?: boolean } = {},
 ): ValidatedPlanFragment {
   const nextField = missingFields[0];
 
@@ -591,7 +604,9 @@ function buildNextHandoffQuestionFragment(
   }
 
   const question = handoffFieldQuestion(nextField);
-  const customerMessage = `Thanks, I have that. ${question}`;
+  const customerMessage = options.correctedFact
+    ? `Thanks, I've updated that. ${question}`
+    : `Thanks, I have that. ${question}`;
   const override: ValidatorOverride = {
     code,
     reason,
@@ -613,6 +628,45 @@ function buildNextHandoffQuestionFragment(
     selectedRouteReason: null,
     validatorOverrides: [...validated.validatorOverrides, override],
   };
+}
+
+function buildHandoffDetailsReasonFragment(
+  validated: ValidatedPlanFragment,
+  missingFields: readonly IntakeField[],
+): ValidatedPlanFragment {
+  const customerMessage =
+    "I need those details so the LoanSlam team can find the right account and contact you safely. I can't view account details in chat, but I can pass the request to them. Please share only the standard details in the form.";
+  const override: ValidatorOverride = {
+    code: "handoff_details_reason_explained",
+    reason:
+      "A pending handoff received a question about why intake details are needed, so explain the boundary instead of repeating the intake copy.",
+    fromAction: validated.finalAction,
+    toAction: "request_handoff_intake",
+  };
+
+  return {
+    ...validated,
+    finalAction: "request_handoff_intake",
+    customerMessage,
+    ui: {
+      primitive: "intake_form",
+      message: customerMessage,
+      fields: [...missingFields],
+    },
+    requestedFields: [...missingFields],
+    validatorOverrides: [...validated.validatorOverrides, override],
+  };
+}
+
+function asksWhyHandoffDetailsAreNeeded(message: string): boolean {
+  return (
+    /\bwhy\b.{0,80}\b(need|want|ask(?:ing)?\s+for|collect|share|give|provide)\b.{0,80}\b(details|that|all\s+that|info(?:rmation)?|contact|form)\b/i.test(
+      message,
+    ) ||
+    /\bwhy\b.{0,80}\b(details|that|all\s+that|info(?:rmation)?|contact|form)\b.{0,80}\b(need|needed|wanted|required|asked\s+for)\b/i.test(
+      message,
+    )
+  );
 }
 
 function handoffFieldQuestion(field: IntakeField): string {
@@ -820,15 +874,27 @@ function buildHandoffIntroMessage({
     return "I'm sorry you've had a poor experience. I'll pass this to the LoanSlam team as a complaint so a person can look into it properly. Please share a few contact details below so they can get back to you.";
   }
 
+  if (safetyFlags.includes("language_barrier")) {
+    return "This chat is in English only. I can pass this to a person who can help explain the loan letter in simple English. Please share a few contact details below so the LoanSlam team can get back to you.";
+  }
+
+  if (safetyFlags.includes("accessibility_need")) {
+    return "I can pass this to a person who can help explain the loan letter in plain English. Please share a few contact details below so the LoanSlam team can get back to you.";
+  }
+
+  if (safetyFlags.includes("hardship")) {
+    return "I'm sorry you are dealing with this. I'll pass this to a person who can help with repayment support carefully. Please share a few contact details below so the LoanSlam team can get back to you.";
+  }
+
   if (hasVulnerabilitySafetyFlag(safetyFlags)) {
-    return "I'd rather get you to a person who can help with your loan, repayment, or account support properly. Please share a few contact details below and the LoanSlam team will be in touch.";
+    return "I'm sorry you are dealing with this. I'll pass this to a person who can help look at it carefully. Please share a few contact details below so the LoanSlam team can get back to you.";
   }
 
   if (
     servingMode === "handoff_account_specific" ||
     hasHandoffSafetyFlag(safetyFlags)
   ) {
-    return "I can't view, confirm, or change personal account, application, balance, approval, payment, repayment arrangement, or contact details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
+    return "I can't view, confirm, or change personal account or application details in chat. Share only the standard handoff details in the form: full name, date of birth, postcode, email, and phone, and I'll pass the request to the LoanSlam team.";
   }
 
   return "I'll pass this to the LoanSlam team so a person can help. Please share a few contact details below so they can get back to you.";
@@ -960,6 +1026,24 @@ function hasAnyStandardHandoffFact(facts: Record<string, string>): boolean {
   return standardHandoffFields.some((field) => Boolean(facts[field]?.trim()));
 }
 
+function hasCorrectedHandoffFact(
+  currentFacts: Record<string, string>,
+  extractedFacts: Record<string, string>,
+): boolean {
+  return standardHandoffFields.some((field) => {
+    const currentValue = normalizeHandoffFact(currentFacts[field]);
+    const extractedValue = normalizeHandoffFact(extractedFacts[field]);
+
+    return Boolean(
+      currentValue && extractedValue && currentValue !== extractedValue,
+    );
+  });
+}
+
+function normalizeHandoffFact(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
 function hasCollectedHandoffField(
   facts: Record<string, string>,
   field: IntakeField,
@@ -1017,16 +1101,23 @@ async function planAndValidateTurn({
       traceSummary: traceReason,
     };
 
+    const recoveryPlan = buildMalformedVagueClarificationRecoveryPlan(
+      userMessage,
+      signalBundle,
+    );
+
     if (
+      recoveryPlan ||
       canRecoverMalformedPlanFromRouteEvidence(signalBundle, retrievedMatches)
     ) {
-      const recovered = validateTurnPlan(plan, retrievedMatches, {
+      const planToValidate = recoveryPlan ?? plan;
+      const recovered = validateTurnPlan(planToValidate, retrievedMatches, {
         userMessage,
         ...(signalBundle ? { signalBundle } : {}),
       });
 
       return {
-        plan,
+        plan: planToValidate,
         plannerLatencyMs,
         validated: {
           ...recovered,
@@ -1074,6 +1165,48 @@ async function planAndValidateTurn({
       ...(signalBundle ? { signalBundle } : {}),
     }),
   };
+}
+
+function buildMalformedVagueClarificationRecoveryPlan(
+  userMessage: string,
+  signalBundle: SignalBundle | undefined,
+): TurnPlan | null {
+  if (
+    signalBundle?.recommendedServingMode !== "answer" ||
+    signalBundle.safetySignals.length !== 0 ||
+    !isVagueLoanHelpRequest(userMessage)
+  ) {
+    return null;
+  }
+
+  const customerMessage =
+    "Is this about applying for a LoanSlam loan, or an existing LoanSlam account?";
+
+  return {
+    action: "ask_clarifying_question",
+    customerMessage,
+    ui: {
+      primitive: "clarifying_prompt",
+      message: customerMessage,
+      questions: [customerMessage],
+    },
+    reasonCode: "malformed_plan_vague_help_recovered",
+    collectedFacts: {},
+    requestedFields: [],
+    grounding: null,
+    safetyFlags: [],
+    traceSummary:
+      "Recovered a malformed planner response for a vague, low-risk LoanSlam help request.",
+  };
+}
+
+function isVagueLoanHelpRequest(message: string): boolean {
+  return (
+    /\b(help|support)\b.{0,50}\b(money|loan|loanslam)\b/i.test(message) &&
+    !/\b(balance|payment\s+date|settlement|reference|approved|approval|application\s+status|can't\s+pay|cannot\s+pay|cant\s+pay|afford|arrears|complain|complaint|legal|sue|court|password|passcode|otp|sort\s*code|account\s*number|card)\b/i.test(
+      message,
+    )
+  );
 }
 
 function canRecoverMalformedPlanFromRouteEvidence(

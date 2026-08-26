@@ -157,15 +157,19 @@ export interface HellWeekTurnEvidence {
   selectedRouteReason: string | null;
   safetyFlags: SafetyFlag[];
   validatorOverrideCodes: string[];
+  validatorOverrides?: Array<{
+    code: string;
+    reason: string;
+  }>;
   retrieved: HellWeekRetrieved[];
   uiPrimitive: string;
   signalStatus?: string;
+  signalError?: string;
   signalPrimaryIntent?: string;
   signalRecommendedServingMode?: ServingMode | null;
   signalNegatedOrCorrected?: boolean;
   signalComparisonStatus?: string;
   signalLatencyMs?: number;
-  signalError?: string;
   plannerLatencyMs?: number;
 }
 

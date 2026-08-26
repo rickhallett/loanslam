@@ -30,7 +30,10 @@ import {
 import { judgeTriageLabels, type JudgeTriageLabel } from "./triageLabels";
 import type { StakeholderDimension } from "./types";
 
-const liveOpenAiIt = process.env.OPENAI_API_KEY ? it : it.skip;
+const liveOpenAiIt =
+  process.env.RUN_LIVE_LLM_TESTS === "1" && process.env.OPENAI_API_KEY
+    ? it
+    : it.skip;
 
 describe("OpenAI Hell Week judge", () => {
   it("writes the judge-verdicts artifact and verifies non-floor demo-killers", async () => {
