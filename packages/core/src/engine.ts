@@ -909,6 +909,8 @@ function shouldPreserveValidatorHandoffMessage(
       "approval_status_handoff_required",
       "payment_link_handoff_required",
       "reference_offer_handoff_contextualized",
+      "reference_lookup_handoff_contextualized",
+      "repayment_arrangement_handoff_required",
     ].includes(override.code),
   );
 }

@@ -11,6 +11,8 @@ import {
   detectCredentialBoundaryRequest,
   detectForbiddenCredentialRequest,
   detectPaymentLinkRequest,
+  detectReferenceLookupRequest,
+  detectRepaymentArrangementChangeRequest,
   detectSecondaryBorrowingAdviceRequest,
   detectSensitiveOvershare,
   standardHandoffFields,
@@ -154,6 +156,22 @@ const policyPredicateFixtures = [
     expectedLayer: "regex",
     guard: "detectPaymentLinkRequest",
     detect: detectPaymentLinkRequest,
+  },
+  {
+    name: "reference lookup request catches direct loan-reference query",
+    text: "Can you tell me my loan reference?",
+    expected: true,
+    expectedLayer: "regex",
+    guard: "detectReferenceLookupRequest",
+    detect: detectReferenceLookupRequest,
+  },
+  {
+    name: "repayment arrangement catches smaller-payment setup",
+    text: "Set me up for smaller payments from next month.",
+    expected: true,
+    expectedLayer: "regex",
+    guard: "detectRepaymentArrangementChangeRequest",
+    detect: detectRepaymentArrangementChangeRequest,
   },
   // known gap: covered by judge
   {

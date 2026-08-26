@@ -27,6 +27,8 @@ describe("safetyGuardPipeline", () => {
       "guardBadCreditEligibilityAnswer",
       "guardStickyHandoffPublicAnswer",
       "guardApprovalStatusHandoff",
+      "guardRepaymentArrangementHandoff",
+      "guardReferenceLookupHandoff",
       "guardReferenceOfferHandoff",
       "guardAccountChangeHandoffAcknowledgement",
       "guardPromisedAccountValue",
@@ -500,6 +502,30 @@ describe("validateTurnPlan", () => {
     );
   });
 
+  it("acknowledges address-change handoff requests without promising the update", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        safetyFlags: ["account_specific_request", "change_request"],
+      }),
+      [contactChangeRequestMatch],
+      {
+        userMessage: "I moved house. Update my address to 1 Test Street.",
+      },
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/can't update your address/i);
+    expect(result.customerMessage).toMatch(/pass that request/i);
+    expect(result.customerMessage).not.toMatch(
+      /has been updated|will be updated/i,
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "account_change_handoff_contextualized",
+      }),
+    );
+  });
+
   it("keeps reference offers on account handoff instead of contact-detail update copy", () => {
     const result = validateTurnPlan(
       handoffPlan({
@@ -514,12 +540,69 @@ describe("validateTurnPlan", () => {
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.selectedServingMode).toBe("handoff_account_specific");
     expect(result.selectedRouteReason).toMatch(/Reference numbers/i);
-    expect(result.customerMessage).toMatch(/reference may help/i);
+    expect(result.customerMessage).toMatch(/Do not send account references/i);
     expect(result.customerMessage).toMatch(/can't look up account details/i);
+    expect(result.customerMessage).not.toMatch(/reference may help/i);
     expect(result.customerMessage).not.toMatch(/change.*contact/i);
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
         code: "reference_offer_handoff_contextualized",
+      }),
+    );
+  });
+
+  it("keeps reference lookup requests on concise account handoff copy", () => {
+    const result = validateTurnPlan(
+      handoffPlan({
+        safetyFlags: ["account_specific_request"],
+      }),
+      [contactChangeRequestMatch],
+      {
+        userMessage: "Can you tell me my loan reference?",
+      },
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.selectedRouteReason).toMatch(/Loan references/i);
+    expect(result.customerMessage).toMatch(/can't look up, confirm, or tell/i);
+    expect(result.customerMessage).toMatch(/LoanSlam team/i);
+    expect(result.customerMessage).not.toMatch(/full name|date of birth/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "reference_lookup_handoff_contextualized",
+      }),
+    );
+  });
+
+  it("routes repayment arrangement changes to account handoff", () => {
+    const result = validateTurnPlan(
+      plan({
+        customerMessage:
+          "You can ask the team to adjust your repayment amount so your payments are smaller.",
+        ui: {
+          primitive: "message",
+          message:
+            "You can ask the team to adjust your repayment amount so your payments are smaller.",
+          links: [],
+        },
+      }),
+      [answerMatch],
+      {
+        userMessage: "Set me up for smaller payments from next month.",
+      },
+    );
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.customerMessage).toMatch(/can't set up, reduce, approve/i);
+    expect(result.customerMessage).not.toMatch(/they.ll update/i);
+    expect(result.safetyFlags).toEqual(
+      expect.arrayContaining(["account_specific_request", "change_request"]),
+    );
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "repayment_arrangement_handoff_required",
       }),
     );
   });
@@ -855,6 +938,7 @@ describe("validateTurnPlan", () => {
     expect(result.selectedServingMode).toBe("handoff_account_specific");
     expect(result.customerMessage).toMatch(/answer yes or no/i);
     expect(result.customerMessage).toMatch(/approved, declined, or still pending/i);
+    expect(result.customerMessage).not.toMatch(/full name|date of birth/i);
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
         code: "approval_status_handoff_required",
@@ -902,7 +986,7 @@ describe("validateTurnPlan", () => {
     });
 
     expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/can't verify you/i);
     expect(result.customerMessage).toMatch(/bank login details/i);
     expect(result.customerMessage).not.toMatch(/Please share a few contact/i);
     expect(result.safetyFlags).toEqual(
@@ -922,11 +1006,11 @@ describe("validateTurnPlan", () => {
     });
 
     expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/can't verify you/i);
     expect(result.customerMessage).toMatch(/bank login details/i);
     expect(result.customerMessage).toMatch(/card details/i);
     expect(result.customerMessage).not.toMatch(/Take my card number/i);
-    expect(result.selectedServingMode).toBeNull();
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
     expect(result.safetyFlags).toEqual(
       expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),
     );
@@ -944,10 +1028,10 @@ describe("validateTurnPlan", () => {
     });
 
     expect(result.finalAction).toBe("request_handoff_intake");
-    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/can't verify you/i);
     expect(result.customerMessage).toMatch(/bank login details/i);
     expect(result.customerMessage).toMatch(/card details/i);
-    expect(result.selectedServingMode).toBeNull();
+    expect(result.selectedServingMode).toBe("handoff_account_specific");
     expect(result.selectedRouteReason).toMatch(/Credential boundary risk/i);
     expect(result.safetyFlags).toEqual(
       expect.arrayContaining(["forbidden_credentials", "sensitive_overshare"]),

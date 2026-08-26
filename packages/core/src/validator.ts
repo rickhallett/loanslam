@@ -26,6 +26,8 @@ import {
   buildPaymentLinkHandoffCopy,
   buildReferenceOfferHandoffCopy,
   buildRegulatedDebtSolutionBoundaryCopy,
+  buildReferenceLookupHandoffCopy,
+  buildRepaymentArrangementHandoffCopy,
   buildSecondaryBorrowingBoundaryCopy,
   buildVulnerabilityCopy,
   containsForbiddenCredentialTerm,
@@ -42,6 +44,8 @@ import {
   detectPromisedAccountValueOrOutcome,
   detectRegulatedDebtSolutionAdviceRequest,
   detectReferenceOffer,
+  detectReferenceLookupRequest,
+  detectRepaymentArrangementChangeRequest,
   detectSecondaryBorrowingAdviceRequest,
   detectSensitiveOvershare,
   hasHandoffSafetyFlag,
@@ -114,6 +118,8 @@ export const safetyGuardPipeline: readonly TurnGuard[] = [
   guardBadCreditEligibilityAnswer,
   guardStickyHandoffPublicAnswer,
   guardApprovalStatusHandoff,
+  guardRepaymentArrangementHandoff,
+  guardReferenceLookupHandoff,
   guardReferenceOfferHandoff,
   guardAccountChangeHandoffAcknowledgement,
   guardPromisedAccountValue,
@@ -258,6 +264,7 @@ function guardCredentialBoundary(
   }
 
   const handoff = buildCredentialHandoffCopy();
+  const safetyFlags = credentialBoundarySafetyFlags(base.safetyFlags, true);
 
   return applyOverride(
     base,
@@ -273,14 +280,10 @@ function guardCredentialBoundary(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
-      selectedServingMode: null,
+      selectedServingMode: "handoff_account_specific",
       selectedRouteReason:
         "Credential boundary risk takes precedence over retrieved routes.",
-      safetyFlags: uniqueSafetyFlags([
-        ...base.safetyFlags,
-        "forbidden_credentials",
-        "sensitive_overshare",
-      ]),
+      safetyFlags,
     },
   );
 }
@@ -328,6 +331,7 @@ function guardForbiddenCredentialRequestInPlan(
   }
 
   const handoff = buildCredentialHandoffCopy();
+  const safetyFlags = credentialBoundarySafetyFlags(base.safetyFlags);
 
   return applyOverride(
     base,
@@ -343,13 +347,10 @@ function guardForbiddenCredentialRequestInPlan(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
-      selectedServingMode: null,
+      selectedServingMode: "handoff_account_specific",
       selectedRouteReason:
         "Credential boundary risk takes precedence over retrieved routes.",
-      safetyFlags: uniqueSafetyFlags([
-        ...base.safetyFlags,
-        "forbidden_credentials",
-      ]),
+      safetyFlags,
     },
   );
 }
@@ -364,6 +365,7 @@ function guardForbiddenCredentialsInFacts(
   }
 
   const handoff = buildCredentialHandoffCopy();
+  const safetyFlags = credentialBoundarySafetyFlags(base.safetyFlags);
 
   return applyOverride(
     base,
@@ -379,15 +381,30 @@ function guardForbiddenCredentialsInFacts(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       collectedFacts: {},
-      selectedServingMode: null,
+      selectedServingMode: "handoff_account_specific",
       selectedRouteReason:
         "Credential boundary risk takes precedence over retrieved routes.",
-      safetyFlags: uniqueSafetyFlags([
-        ...base.safetyFlags,
-        "forbidden_credentials",
-      ]),
+      safetyFlags,
     },
   );
+}
+
+function credentialBoundarySafetyFlags(
+  flags: readonly SafetyFlag[],
+  includeSensitiveOvershare = false,
+): SafetyFlag[] {
+  const filteredFlags = flags.filter((flag) => !hasVulnerabilitySafetyFlag([flag]));
+  const credentialFlags: SafetyFlag[] = [
+    ...filteredFlags,
+    "forbidden_credentials",
+    "account_specific_request",
+  ];
+
+  if (includeSensitiveOvershare) {
+    credentialFlags.push("sensitive_overshare");
+  }
+
+  return uniqueSafetyFlags(credentialFlags);
 }
 
 function guardSecondaryBorrowingAdvice(
@@ -687,6 +704,43 @@ function guardApprovalStatusHandoff(
   );
 }
 
+function guardRepaymentArrangementHandoff(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, userMessage } = context;
+
+  if (!detectRepaymentArrangementChangeRequest(userMessage)) {
+    return null;
+  }
+
+  const handoff = buildRepaymentArrangementHandoffCopy();
+  const reason =
+    "Repayment amount or arrangement changes are account-specific and require the LoanSlam team.";
+
+  return applyOverride(
+    base,
+    {
+      code: "repayment_arrangement_handoff_required",
+      reason,
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      collectedFacts: {},
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+        "change_request",
+      ]),
+    },
+  );
+}
+
 function guardReferenceOfferHandoff(
   context: GuardContext,
 ): ValidatedPlanFragment | null {
@@ -727,6 +781,45 @@ function guardReferenceOfferHandoff(
   );
 }
 
+function guardReferenceLookupHandoff(
+  context: GuardContext,
+): ValidatedPlanFragment | null {
+  const { base, userMessage } = context;
+
+  if (
+    base.finalAction !== "request_handoff_intake" ||
+    !detectReferenceLookupRequest(userMessage)
+  ) {
+    return null;
+  }
+
+  const reason =
+    "Loan references are account-specific and should be handled by the LoanSlam team.";
+  const handoff = buildReferenceLookupHandoffCopy(reason);
+
+  return applyOverride(
+    base,
+    {
+      code: "reference_lookup_handoff_contextualized",
+      reason:
+        "Reference-lookup handoff copy should refuse lookup without asking for account references in chat.",
+      toAction: handoff.action,
+    },
+    {
+      finalAction: handoff.action,
+      customerMessage: handoff.customerMessage,
+      ui: handoff.ui,
+      requestedFields: handoff.requestedFields,
+      selectedServingMode: "handoff_account_specific",
+      selectedRouteReason: reason,
+      safetyFlags: uniqueSafetyFlags([
+        ...base.safetyFlags,
+        "account_specific_request",
+      ]),
+    },
+  );
+}
+
 function guardAccountChangeHandoffAcknowledgement(
   context: GuardContext,
 ): ValidatedPlanFragment | null {
@@ -745,6 +838,8 @@ function guardAccountChangeHandoffAcknowledgement(
       "Account changes must be handled by the LoanSlam team.",
     userMessage,
   );
+  const routeReason =
+    "Account contact or repayment changes are account-specific and require the LoanSlam team.";
 
   if (!handoff || base.customerMessage === handoff.customerMessage) {
     return null;
@@ -764,7 +859,7 @@ function guardAccountChangeHandoffAcknowledgement(
       ui: handoff.ui,
       requestedFields: handoff.requestedFields,
       selectedServingMode: "handoff_account_specific",
-      selectedRouteReason: selectedMatch.item?.route_reason ?? null,
+      selectedRouteReason: routeReason,
       safetyFlags: uniqueSafetyFlags([
         ...base.safetyFlags,
         "account_specific_request",

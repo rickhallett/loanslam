@@ -526,6 +526,42 @@ describe("processTurn", () => {
     expect(result.customerMessage).not.toContain("GBP 425");
   });
 
+  it("routes repayment arrangement requests to handoff before generic answers", async () => {
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Set me up for smaller payments from next month.",
+      planner: answerPlanner({
+        customerMessage:
+          "You can ask the team to adjust your repayment amount so your payments are smaller.",
+        ui: {
+          primitive: "message",
+          message:
+            "You can ask the team to adjust your repayment amount so your payments are smaller.",
+          links: [],
+        },
+        grounding: {
+          citedItemIds: ["how-do-i-apply"],
+          servingMode: "answer",
+          confidence: "supported",
+        },
+        traceSummary: "Answered with generic repayment guidance.",
+      }),
+      corpus,
+      now: new Date("2026-06-13T12:05:00.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.trace.selectedServingMode).toBe("handoff_account_specific");
+    expect(result.customerMessage).toMatch(/can't set up, reduce, approve/i);
+    expect(result.customerMessage).not.toMatch(/payments are smaller/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "repayment_arrangement_handoff_required",
+      }),
+    );
+  });
+
   it("asks only the next handoff field after partial free-text intake progress", async () => {
     const planner: TurnPlanner = {
       async planTurn() {
@@ -783,10 +819,58 @@ describe("processTurn", () => {
     expect(result.customerMessage).toMatch(
       /can't create or send a payment link/i,
     );
+    expect(result.customerMessage).toMatch(/can't take payment credentials/i);
+    expect(result.customerMessage).not.toMatch(/card numbers|sort codes/i);
     expect(result.customerMessage).not.toMatch(/https:\/\/pay\.example/i);
     expect(result.validatorOverrides).toContainEqual(
       expect.objectContaining({
         code: "payment_link_handoff_required",
+      }),
+    );
+  });
+
+  it("preserves reference-lookup validator handoff copy during intake rendering", async () => {
+    const planner: TurnPlanner = {
+      async planTurn() {
+        return {
+          action: "request_handoff_intake",
+          customerMessage:
+            "Share your full name, date of birth, postcode, email, phone, and reference.",
+          ui: {
+            primitive: "intake_form",
+            message:
+              "Share your full name, date of birth, postcode, email, phone, and reference.",
+            fields: [...standardHandoffFields],
+          },
+          reasonCode: "generic_account_handoff",
+          collectedFacts: {},
+          requestedFields: [...standardHandoffFields],
+          grounding: {
+            citedItemIds: ["whats-my-account-number"],
+            servingMode: "handoff_account_specific",
+            confidence: "supported",
+          },
+          safetyFlags: ["account_specific_request"],
+          traceSummary: "Generic account-specific handoff.",
+        };
+      },
+    };
+
+    const result = await processTurn({
+      state: state(),
+      userMessage: "Can you tell me my loan reference?",
+      planner,
+      corpus,
+      now: new Date("2026-06-13T12:06:45.000Z"),
+      idFactory: idFactory(),
+    });
+
+    expect(result.finalAction).toBe("request_handoff_intake");
+    expect(result.customerMessage).toMatch(/can't look up, confirm, or tell/i);
+    expect(result.customerMessage).not.toMatch(/full name|date of birth/i);
+    expect(result.validatorOverrides).toContainEqual(
+      expect.objectContaining({
+        code: "reference_lookup_handoff_contextualized",
       }),
     );
   });
@@ -1966,7 +2050,7 @@ describe("processTurn", () => {
 
     expect(result.finalAction).toBe("request_handoff_intake");
     expect(result.ui.primitive).toBe("intake_form");
-    expect(result.trace.selectedServingMode).toBeNull();
+    expect(result.trace.selectedServingMode).toBe("handoff_account_specific");
     expect(result.trace.effectiveServingMode).toBe("handoff_account_specific");
     expect(result.trace.safetyFlags).toEqual(
       expect.arrayContaining([
@@ -1975,7 +2059,7 @@ describe("processTurn", () => {
         "sensitive_overshare",
       ]),
     );
-    expect(result.customerMessage).toMatch(/Do not send card numbers/i);
+    expect(result.customerMessage).toMatch(/can't verify you/i);
     expect(result.customerMessage).toMatch(/bank login details/i);
     expect(result.validatorOverrides.map((override) => override.code)).toEqual([
       "malformed_plan",
